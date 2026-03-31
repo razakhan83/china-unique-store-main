@@ -1,0 +1,349 @@
+.pageShell {
+  position: relative;
+}
+
+.pageShell::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 24rem;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent 52%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--color-accent) 18%, transparent), transparent 38%);
+  opacity: 0.9;
+}
+
+.pageShell > * {
+  position: relative;
+}
+
+.intro {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 14%, white);
+  background: color-mix(in oklab, var(--color-card) 82%, white);
+  padding: 0.45rem 0.85rem;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 70%, transparent),
+    0 14px 30px -24px color-mix(in oklab, var(--color-primary) 48%, transparent);
+  color: color-mix(in oklab, var(--color-primary) 82%, black);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 13ch;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 40rem;
+  color: var(--color-muted-foreground);
+  font-size: 1rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.factGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.factCard {
+  display: grid;
+  gap: 0.35rem;
+  border-radius: calc(var(--radius-xl) + 0.125rem);
+  border: 1px solid color-mix(in oklab, var(--color-border) 84%, white);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-card) 96%, white), color-mix(in oklab, var(--color-muted) 52%, white));
+  padding: 0.95rem 1rem;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 24px 40px -34px color-mix(in oklab, black 18%, transparent);
+}
+
+.factLabel {
+  color: var(--color-muted-foreground);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.factValue {
+  color: var(--color-foreground);
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.sectionCard {
+  border-color: color-mix(in oklab, var(--color-border) 82%, white);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--color-card) 98%, white), color-mix(in oklab, var(--color-muted) 34%, white));
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 26px 44px -38px color-mix(in oklab, black 30%, transparent);
+}
+
+.sectionHeader {
+  gap: 0.55rem;
+}
+
+.sectionKicker {
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sectionTitle {
+  text-wrap: balance;
+}
+
+.sectionDescription {
+  max-width: 34rem;
+  text-wrap: pretty;
+}
+
+.summaryCard {
+  overflow: visible;
+}
+
+.summaryHeader {
+  gap: 0.8rem;
+}
+
+.summaryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.summaryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 88%, white);
+  padding: 0.35rem 0.75rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.summaryPill strong {
+  color: var(--color-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.shippingTone {
+  color: color-mix(in oklab, var(--color-primary) 78%, black);
+}
+
+.shippingFree {
+  color: color-mix(in oklab, var(--color-success) 78%, black);
+}
+
+.summaryItems {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.summaryItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  border-radius: calc(var(--radius-xl) + 0.125rem);
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 90%, white);
+  padding: 0.7rem;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 20px 30px -34px color-mix(in oklab, black 24%, transparent);
+}
+
+.summaryImage {
+  position: relative;
+  height: 4.35rem;
+  width: 4.35rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--color-muted) 78%, white);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, black 6%, white),
+    0 14px 24px -22px color-mix(in oklab, black 32%, transparent);
+}
+
+.summaryImage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, white 72%, transparent);
+  pointer-events: none;
+}
+
+.summaryText {
+  min-width: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.summaryName {
+  text-wrap: pretty;
+}
+
+.summaryBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.qtyBadge {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-muted) 82%, white);
+  padding: 0.35rem 0.75rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.priceStack {
+  text-align: right;
+}
+
+.unitPrice {
+  color: var(--color-muted-foreground);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.linePrice {
+  color: var(--color-foreground);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.totalsPanel {
+  border-radius: calc(var(--radius-xl) + 0.125rem);
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 86%, white);
+  padding: 1rem;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 70%, transparent),
+    0 20px 32px -32px color-mix(in oklab, black 24%, transparent);
+}
+
+.totalRow {
+  font-variant-numeric: tabular-nums;
+}
+
+.ctaButton {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 75%, transparent),
+    0 16px 30px -24px color-mix(in oklab, var(--color-primary) 48%, transparent);
+  transition-property: transform, background-color, border-color, color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ctaButton:active {
+  transform: scale(0.96);
+}
+
+.trustNote {
+  text-wrap: pretty;
+}
+
+.dialogPanel {
+  border-color: color-mix(in oklab, var(--color-border) 82%, white);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--color-card) 98%, white), color-mix(in oklab, var(--color-muted) 36%, white));
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 36px 60px -34px color-mix(in oklab, black 28%, transparent);
+}
+
+.orderIdPanel {
+  border-radius: calc(var(--radius-xl) + 0.125rem);
+  border: 1px solid color-mix(in oklab, var(--color-border) 84%, white);
+  background: color-mix(in oklab, var(--color-card) 84%, white);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 18px 28px -32px color-mix(in oklab, black 22%, transparent);
+}
+
+.orderIdValue {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.enter {
+  opacity: 0;
+  animation: checkout-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--checkout-delay, 0ms);
+}
+
+@keyframes checkout-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    opacity: 1;
+    animation: none;
+  }
+
+  .ctaButton {
+    transition: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .factGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryMeta {
+    align-items: flex-start;
+  }
+}
