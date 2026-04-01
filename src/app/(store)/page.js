@@ -1,9 +1,8 @@
-import { Suspense } from 'react';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import HomeClientWrapper from '@/components/HomeClientWrapper';
 import HomeCategories from '@/components/HomeCategories';
-import HomePageSkeleton from '@/components/HomePageSkeleton';
-import { getHomeSections, getStoreCategories } from '@/lib/data';
+import { getHomeSections } from '@/lib/data';
 
 const heroSlides = [
   { mobileSrc: '/hero1.webp', pcSrc: '/hero1pc.webp', alt: 'Kitchen Promotion 1' },
@@ -12,19 +11,12 @@ const heroSlides = [
   { mobileSrc: '/hero4.webp', pcSrc: '/hero4pc.webp', alt: 'Home Decor Promotion 4' },
 ];
 
-export default function Home() {
-  return (
-    <Suspense fallback={<HomePageSkeleton />}>
-      <HomeContent />
-    </Suspense>
-  );
-}
+export default async function Home() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('home-sections', 'products', 'categories', 'cover-photos', 'settings');
 
-async function HomeContent() {
-  const [{ coverPhotos, sections }, categories] = await Promise.all([
-    getHomeSections(),
-    getStoreCategories(),
-  ]);
+  const { coverPhotos, sections, categories } = await getHomeSections();
   const activeHeroSlides = coverPhotos.length
     ? coverPhotos.map((item, index) => ({
         desktopImage: item.desktopImage,

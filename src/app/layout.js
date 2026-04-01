@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { cacheLife, cacheTag } from 'next/cache';
 import "./globals.css";
 import { getStoreSettings } from "@/lib/data";
 import TrackingScripts from "@/components/TrackingScripts";
@@ -37,6 +38,10 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('settings');
+
   const settings = await getStoreSettings();
 
   return (
