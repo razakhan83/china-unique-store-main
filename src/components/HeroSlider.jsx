@@ -3,18 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
-
-function resolveViewport() {
-  if (typeof window === 'undefined') return 'desktop';
-  if (window.innerWidth < 768) return 'mobile';
-  if (window.innerWidth < 1024) return 'tablet';
-  return 'desktop';
-}
 
 function isPreloadCandidate(index, activeIndex, total) {
   if (total <= 1) return true;
@@ -23,77 +15,44 @@ function isPreloadCandidate(index, activeIndex, total) {
   return index === activeIndex || index === prevIndex || index === nextIndex;
 }
 
-function getActiveAsset(slide, viewport) {
+function getSlideAssets(slide) {
   const desktopAsset = slide?.desktopImage || null;
   const tabletAsset = slide?.tabletImage || desktopAsset;
   const mobileAsset = slide?.mobileImage || desktopAsset;
 
-  if (viewport === 'mobile') {
-    return {
-      src: optimizeCloudinaryUrl(
-        mobileAsset?.url || slide?.mobileSrc || slide?.image || slide?.src || '',
-        CLOUDINARY_IMAGE_PRESETS.heroOriginal
-      ),
-      blurDataURL: mobileAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
-    };
-  }
-
-  if (viewport === 'tablet') {
-    return {
-      src: optimizeCloudinaryUrl(
-        tabletAsset?.url || slide?.tabletSrc || slide?.pcSrc || slide?.image || slide?.src || '',
-        CLOUDINARY_IMAGE_PRESETS.heroOriginal
-      ),
-      blurDataURL: tabletAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
-    };
-  }
-
   return {
-    src: optimizeCloudinaryUrl(
-      desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
-      CLOUDINARY_IMAGE_PRESETS.heroOriginal
-    ),
-    blurDataURL: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    mobile: {
+      src: mobileAsset?.url || slide?.mobileSrc || desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
+      blurDataURL: mobileAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    },
+    tablet: {
+      src: tabletAsset?.url || slide?.tabletSrc || desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
+      blurDataURL: tabletAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    },
+    desktop: {
+      src: desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
+      blurDataURL: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    },
   };
 }
 
 export default function HeroSlider({ slides = [] }) {
-  const [viewport, setViewport] = useState('desktop');
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartXRef = useRef(null);
   const touchStartYRef = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-
-    const queries = [
-      window.matchMedia('(max-width: 767px)'),
-      window.matchMedia('(min-width: 768px) and (max-width: 1023px)'),
-    ];
-
-    const syncViewport = () => {
-      const nextViewport = queries[0].matches ? 'mobile' : queries[1].matches ? 'tablet' : 'desktop';
-      setViewport((current) => (current === nextViewport ? current : nextViewport));
-    };
-
-    syncViewport();
-    queries.forEach((query) => query.addEventListener('change', syncViewport));
-
-    return () => {
-      queries.forEach((query) => query.removeEventListener('change', syncViewport));
-    };
-  }, []);
 
   const resolvedSlides = useMemo(
     () =>
       slides
         .map((slide, index) => ({
           ...slide,
-          asset: getActiveAsset(slide, viewport),
+          assets: getSlideAssets(slide),
           alt: slide?.alt || `Slide ${index + 1}`,
         }))
-        .filter((slide) => slide.asset?.src),
-    [slides, viewport]
+        .filter(
+          (slide) => slide.assets?.desktop?.src || slide.assets?.tablet?.src || slide.assets?.mobile?.src
+        ),
+    [slides]
   );
   const safeActiveIndex =
     resolvedSlides.length > 0 ? activeIndex % resolvedSlides.length : 0;
@@ -161,27 +120,58 @@ export default function HeroSlider({ slides = [] }) {
   return (
     <section
       data-testid="hero-main-slider"
-      className="relative w-full overflow-hidden bg-black"
+      className="relative w-full overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-black md:h-[460px] lg:h-[560px]">
+      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => (
           <div
-            key={slide.id || `${slide.asset.src}-${viewport}-${index}`}
+            key={
+              slide.id ||
+              `${slide.assets.desktop.src || slide.assets.tablet.src || slide.assets.mobile.src}-${index}`
+            }
             className={`hero-fade-slide ${safeActiveIndex === index ? 'is-active' : ''}`}
             aria-hidden={safeActiveIndex !== index}
           >
-            <Image
-              src={slide.asset.src}
-              alt={slide.alt}
-              fill
-              sizes="100vw"
-              priority={index === 0}
-              loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
-              className="object-cover"
-              {...getBlurPlaceholderProps(slide.asset.blurDataURL)}
-            />
+            <div className="block h-full w-full md:hidden">
+              <Image
+                src={slide.assets.mobile.src}
+                alt={slide.alt}
+                fill
+                sizes="100vw"
+                priority={index === 0}
+                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                className="object-cover"
+                {...getBlurPlaceholderProps(slide.assets.mobile.blurDataURL)}
+              />
+            </div>
+
+            <div className="hidden h-full w-full md:block lg:hidden">
+              <Image
+                src={slide.assets.tablet.src}
+                alt={slide.alt}
+                fill
+                sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
+                priority={index === 0}
+                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                className="object-cover"
+                {...getBlurPlaceholderProps(slide.assets.tablet.blurDataURL)}
+              />
+            </div>
+
+            <div className="hidden h-full w-full lg:block">
+              <Image
+                src={slide.assets.desktop.src}
+                alt={slide.alt}
+                fill
+                sizes="(min-width: 1024px) 100vw, 100vw"
+                priority={index === 0}
+                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                className="object-cover"
+                {...getBlurPlaceholderProps(slide.assets.desktop.blurDataURL)}
+              />
+            </div>
 
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.16))]" />
           </div>
