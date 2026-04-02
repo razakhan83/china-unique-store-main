@@ -371,13 +371,12 @@ export default function AddProduct() {
           <div>
             <div className="mb-2 flex items-center justify-between">
               <Label>Categories</Label>
-              <button
-                type="button"
-                onClick={() => setIsCategoryModalOpen(true)}
+              <Link
+                href="/admin/categories"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
               >
                 <PlusCircle className="size-3.5" /> Manage Categories
-              </button>
+              </Link>
             </div>
             <div className="flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
               {allCategories.length === 0 ? (
