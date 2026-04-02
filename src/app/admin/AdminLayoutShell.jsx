@@ -128,7 +128,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
       />
 
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-border bg-primary md:block">{sidebar}</aside>
+        <aside className="hidden w-72 shrink-0 border-r border-border bg-primary md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto">{sidebar}</aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
