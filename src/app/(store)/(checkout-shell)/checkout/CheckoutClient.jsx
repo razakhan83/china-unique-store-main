@@ -3,17 +3,15 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { startTransition, useEffect, useMemo, useState } from 'react';
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
-  Check,
   CheckCircle2,
-  ChevronsUpDown,
+  Check,
   Clock3,
   Copy,
   Loader2,
   Lock,
   MapPin,
-  ShieldCheck,
   Truck,
   Wallet,
 } from 'lucide-react';
@@ -21,17 +19,19 @@ import {
 import { getLastOrderDetailsAction, submitOrderAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  Combobox,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+} from '@/components/ui/combobox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Empty,
@@ -49,7 +49,6 @@ import {
   FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useCartActions, useCartItems } from '@/context/CartContext';
@@ -62,6 +61,44 @@ import styles from './CheckoutClient.module.css';
 
 const formatPrice = (raw) => Number(raw || 0);
 const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
+const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
+const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
+const SEARCH_RESULTS_LIMIT = 24;
+
+function normalizeCitySearchValue(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function formatCityLabel(city) {
+  return city
+    .toLowerCase()
+    .split(' ')
+    .map((word) => {
+      if (!word) return word;
+      if (word.startsWith('(') || word.includes('.')) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+const CITY_OPTIONS = Array.from(new Map(PAKISTAN_CITIES.map((city) => [city.toLowerCase(), city])).values())
+  .map((city) => ({
+    value: formatCityLabel(city),
+    label: formatCityLabel(city),
+    sortKey: normalizeCitySearchValue(city),
+  }))
+  .sort((left, right) => {
+    const leftPriority = PRIORITY_CITY_KEYS.indexOf(left.sortKey);
+    const rightPriority = PRIORITY_CITY_KEYS.indexOf(right.sortKey);
+    const normalizedLeftPriority = leftPriority === -1 ? Number.MAX_SAFE_INTEGER : leftPriority;
+    const normalizedRightPriority = rightPriority === -1 ? Number.MAX_SAFE_INTEGER : rightPriority;
+
+    if (normalizedLeftPriority !== normalizedRightPriority) {
+      return normalizedLeftPriority - normalizedRightPriority;
+    }
+
+    return left.label.localeCompare(right.label, 'en-PK');
+  });
 
 export default function CheckoutClient({ settings }) {
   const router = useRouter();
@@ -78,7 +115,6 @@ export default function CheckoutClient({ settings }) {
     landmark: '',
     instructions: '',
   });
-  const [cityOpen, setCityOpen] = useState(false);
   const [orderPopupShown, setOrderPopupShown] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +122,7 @@ export default function CheckoutClient({ settings }) {
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -142,7 +179,18 @@ export default function CheckoutClient({ settings }) {
     [cart]
   );
 
-  const isKarachi = formData.city === 'Karachi';
+  const selectedCity =
+    CITY_OPTIONS.find((city) => normalizeCitySearchValue(city.value) === normalizeCitySearchValue(formData.city)) ?? null;
+  const deferredCitySearch = useDeferredValue(citySearch);
+  const normalizedCitySearch = normalizeCitySearchValue(deferredCitySearch);
+  const visibleCityOptions = useMemo(() => {
+    if (!normalizedCitySearch) {
+      return CITY_OPTIONS.filter((city) => PRIORITY_CITY_KEYS.includes(city.sortKey)).slice(0, INITIAL_CITY_COUNT);
+    }
+
+    return CITY_OPTIONS.filter((city) => city.sortKey.includes(normalizedCitySearch)).slice(0, SEARCH_RESULTS_LIMIT);
+  }, [normalizedCitySearch]);
+  const isKarachi = normalizeCitySearchValue(formData.city) === 'karachi';
   const shippingBase = isKarachi
     ? Number(settings.karachiDeliveryFee || 0)
     : Number(settings.outsideKarachiDeliveryFee || 0);
@@ -251,7 +299,7 @@ export default function CheckoutClient({ settings }) {
 
   if (cart.length === 0 && !orderState.orderId) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      <section className="flex min-h-[60vh] items-center justify-center px-4">
         <Empty className="surface-card w-full max-w-md rounded-[1.4rem] border border-border/80 py-10 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
           <EmptyHeader>
             <EmptyTitle className="text-2xl font-bold text-foreground [text-wrap:balance]">Your cart is empty</EmptyTitle>
@@ -265,12 +313,12 @@ export default function CheckoutClient({ settings }) {
             </Button>
           </EmptyContent>
         </Empty>
-      </main>
+      </section>
     );
   }
 
   return (
-    <main className="min-h-screen bg-background pb-16 pt-8">
+    <>
       <Dialog open={!!orderState.orderId && !orderPopupShown} onOpenChange={(open) => !open && handleModalClose()}>
         <DialogContent className={cn('p-8 text-center sm:max-w-md', styles.dialogPanel)} hideClose>
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[1.35rem] bg-success/10 text-success shadow-[0_18px_32px_-26px_color-mix(in_oklab,var(--color-success)_52%,transparent)]">
@@ -315,61 +363,16 @@ export default function CheckoutClient({ settings }) {
 
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
 
-      <div className={cn('container mx-auto max-w-6xl px-4', styles.pageShell)}>
-        <div className="mb-6">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/products">Products</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Checkout</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-
-        <section className={cn('mb-8 md:mb-10', styles.intro, styles.enter)} style={{ '--checkout-delay': '40ms' }}>
-          <span className={styles.eyebrow}>Final step</span>
-          <div className="space-y-3">
-            <h1 className={cn('text-3xl font-bold tracking-tight text-foreground sm:text-4xl', styles.title)}>Secure Checkout</h1>
-            <p className={styles.lede}>
-              Review your delivery details, confirm cash on delivery, and place your order with a clear breakdown before we finalize it.
-            </p>
-          </div>
-          <div className={styles.factGrid}>
-            <div className={styles.factCard}>
-              <span className={styles.factLabel}>Payment</span>
-              <span className={styles.factValue}>Cash on delivery</span>
-            </div>
-            <div className={styles.factCard}>
-              <span className={styles.factLabel}>Delivery</span>
-              <span className={styles.factValue}>2 to 3 working days</span>
-            </div>
-            <div className={styles.factCard}>
-              <span className={styles.factLabel}>Support</span>
-              <span className={styles.factValue}>Server-side order confirmation</span>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-7">
-            <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '90ms' }}>
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
+          <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '90ms' }}>
               <CardHeader className={styles.sectionHeader}>
                 <span className={styles.sectionKicker}>Delivery details</span>
                 <CardTitle className={cn('flex items-center gap-2 text-xl', styles.sectionTitle)}>
                   <MapPin className="size-5 text-primary" />
                   Shipping Information
                 </CardTitle>
-                <CardDescription className={styles.sectionDescription}>
-                  Enter your contact details and delivery address for this order.
-                </CardDescription>
+                <CardDescription className={styles.sectionDescription}>Contact and address information for this order.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handlePlaceOrder} className="space-y-6">
@@ -416,66 +419,67 @@ export default function CheckoutClient({ settings }) {
                       </Field>
                       <Field data-invalid={errors.city ? 'true' : undefined}>
                         <FieldLabel htmlFor="city">City *</FieldLabel>
-                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={cityOpen}
-                              aria-invalid={Boolean(errors.city)}
-                              className={cn(
-                                'h-11 w-full justify-between rounded-xl border px-3.5 text-sm font-normal transition-[border-color,background-color,box-shadow,color] duration-200',
-                                'border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] text-foreground',
-                                'hover:border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] hover:bg-[color:color-mix(in_oklab,var(--color-input)_94%,white)]',
-                                'focus-visible:border-[color:color-mix(in_oklab,var(--color-primary)_34%,var(--color-border))] focus-visible:bg-[color:color-mix(in_oklab,var(--color-input)_96%,white)] focus-visible:ring-4 focus-visible:ring-[color:color-mix(in_oklab,var(--color-primary)_14%,transparent)] focus-visible:shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_18%,transparent),0_10px_24px_-18px_color-mix(in_oklab,var(--color-primary)_45%,transparent)]',
-                                !formData.city && 'text-muted-foreground',
-                                errors.city && 'border-destructive bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] ring-4 ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)]'
-                              )}
-                            >
-                              {formData.city || 'Select City'}
-                              <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[var(--radix-popover-trigger-width)] rounded-xl border border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-popover)_96%,white)] p-0"
-                            align="start"
+                        <Combobox
+                          id="city"
+                          items={CITY_OPTIONS}
+                          filteredItems={visibleCityOptions}
+                          value={selectedCity}
+                          autoHighlight="always"
+                          onInputValueChange={setCitySearch}
+                          onValueChange={(city) => {
+                            setFormData((previous) => ({ ...previous, city: city?.value || '' }));
+                            setCitySearch('');
+                            if (errors.city) {
+                              setErrors((previous) => ({ ...previous, city: '' }));
+                            }
+                          }}
+                        >
+                          <ComboboxInput
+                            placeholder="Search city name"
+                            aria-invalid={Boolean(errors.city)}
+                            showClear={Boolean(formData.city)}
+                            inputClassName={cn(
+                              'transition-none shadow-none',
+                              'hover:border-transparent hover:bg-transparent',
+                              'focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:shadow-none',
+                              'data-[pressed]:scale-100 data-[pressed]:translate-y-0'
+                            )}
+                            triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
+                            className={cn(
+                              'h-11 rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
+                              'hover:border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] hover:bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]',
+                              'focus-within:border-[color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-border))] focus-within:bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] focus-within:ring-3 focus-within:ring-[color:color-mix(in_oklab,var(--color-primary)_10%,transparent)]',
+                              '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
+                              errors.city && 'border-destructive bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] ring-4 ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)]'
+                            )}
+                          />
+                          <ComboboxContent
+                            className="rounded-xl border border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-popover)_96%,white)] p-0 shadow-lg"
                             sideOffset={8}
                           >
-                            <Command className="rounded-xl! bg-transparent p-2">
-                              <CommandInput placeholder="Search city..." className="text-sm" />
-                              <CommandList className="max-h-60 overflow-y-auto pt-2">
-                                <CommandEmpty>No city found.</CommandEmpty>
-                                <CommandGroup className="flex flex-col gap-1.5 p-1">
-                                  {PAKISTAN_CITIES.map((city) => (
-                                    <CommandItem
-                                      key={city}
+                            <ComboboxList className="max-h-72 p-2">
+                              <ComboboxEmpty className="px-3 py-4 text-sm">No matching city found.</ComboboxEmpty>
+                              <ComboboxGroup>
+                                <ComboboxLabel>{normalizedCitySearch ? 'Search results' : 'Main cities'}</ComboboxLabel>
+                                <ComboboxCollection>
+                                  {(city) => (
+                                    <ComboboxItem
+                                      key={city.value}
                                       value={city}
-                                      className="justify-between rounded-lg px-3.5 py-2.5 text-sm font-semibold tracking-[-0.01em] text-foreground transition-[background-color,color] duration-200 data-selected:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)]"
-                                      onSelect={(currentValue) => {
-                                        const exactCity =
-                                          PAKISTAN_CITIES.find((candidate) => candidate.toLowerCase() === currentValue.toLowerCase()) || currentValue;
-                                        handleChange({ target: { name: 'city', value: exactCity === formData.city ? '' : exactCity } });
-                                        setCityOpen(false);
-                                      }}
+                                      className={cn(
+                                        'rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-[background-color,color] duration-200 data-highlighted:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)] sm:px-3.5',
+                                        selectedCity?.value === city.value &&
+                                          'bg-[color:color-mix(in_oklab,var(--color-primary)_8%,white)] text-primary'
+                                      )}
                                     >
-                                      <span className="truncate leading-5">{city}</span>
-                                      <span
-                                        className={cn(
-                                          'inline-flex size-5 items-center justify-center rounded-full border transition-[opacity,transform,background-color,border-color,color] duration-200',
-                                          formData.city === city
-                                            ? 'scale-100 border-[color:color-mix(in_oklab,var(--color-primary)_20%,white)] bg-primary/10 text-primary opacity-100'
-                                            : 'scale-75 border-transparent bg-transparent text-transparent opacity-0'
-                                        )}
-                                      >
-                                        <Check className="size-3.5" />
-                                      </span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                                      <span className="truncate leading-5">{city.label}</span>
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxCollection>
+                              </ComboboxGroup>
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
                         <FieldError>{errors.city}</FieldError>
                       </Field>
                     </FieldGroup>
@@ -501,7 +505,7 @@ export default function CheckoutClient({ settings }) {
                         <FieldLabel htmlFor="instructions">Special Notes</FieldLabel>
                         <FieldContent>
                           <Textarea id="instructions" name="instructions" value={formData.instructions} onChange={handleChange} rows={3} />
-                          <FieldDescription>Optional delivery notes, landmarks, or timing preferences.</FieldDescription>
+                          <FieldDescription>Optional delivery notes.</FieldDescription>
                         </FieldContent>
                       </Field>
                     </FieldGroup>
@@ -517,9 +521,9 @@ export default function CheckoutClient({ settings }) {
                   <button type="submit" id="checkout-submit" className="hidden" />
                 </form>
               </CardContent>
-            </Card>
+          </Card>
 
-            <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '150ms' }}>
+          <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '150ms' }}>
               <CardHeader className={styles.sectionHeader}>
                 <span className={styles.sectionKicker}>Payment</span>
                 <CardTitle className={cn('flex items-center gap-2 text-xl', styles.sectionTitle)}>
@@ -531,34 +535,32 @@ export default function CheckoutClient({ settings }) {
                 <Alert className="rounded-[1.15rem] border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_92%,white)] shadow-[0_18px_28px_-30px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
                   <Wallet className="text-primary" />
                   <AlertTitle>Cash on Delivery</AlertTitle>
-                  <AlertDescription className="[text-wrap:pretty]">
-                    Pay with cash when your order reaches you. We confirm everything server-side before it is locked in.
-                  </AlertDescription>
+                  <AlertDescription className="[text-wrap:pretty]">Pay when your order arrives.</AlertDescription>
                 </Alert>
               </CardContent>
-            </Card>
-          </div>
+          </Card>
+        </div>
 
-          <div className="lg:col-span-5">
-            <Card className={cn('surface-panel sticky top-24', styles.sectionCard, styles.summaryCard, styles.enter)} style={{ '--checkout-delay': '120ms' }}>
-              <CardHeader className={cn('mb-2', styles.summaryHeader)}>
-                <div className={styles.summaryMeta}>
-                  <div>
-                    <p className={styles.sectionKicker}>Order summary</p>
-                    <CardTitle className={cn('mt-2 text-xl', styles.sectionTitle)}>Everything in your cart</CardTitle>
-                  </div>
-                  <span className={styles.summaryPill}>
-                    <strong>{cart.length}</strong>
-                    {cart.length === 1 ? 'item' : 'items'}
-                  </span>
+        <div className="lg:col-span-5">
+          <Card className={cn('surface-panel sticky top-24', styles.sectionCard, styles.summaryCard, styles.enter)} style={{ '--checkout-delay': '120ms' }}>
+            <CardHeader className={cn('mb-2', styles.summaryHeader)}>
+              <div className={styles.summaryMeta}>
+                <div>
+                  <p className={styles.sectionKicker}>Order summary</p>
+                  <CardTitle className={cn('mt-2 text-xl', styles.sectionTitle)}>Your cart</CardTitle>
                 </div>
-                <CardDescription className={styles.sectionDescription}>
-                  <span className={cn(isFreeShipping ? styles.shippingFree : styles.shippingTone)}>{shippingStatusLabel}</span>{' '}
-                  {shippingSupportLabel}
-                </CardDescription>
-              </CardHeader>
+                <span className={styles.summaryPill}>
+                  <strong>{cart.length}</strong>
+                  {cart.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <CardDescription className={styles.sectionDescription}>
+                <span className={cn(isFreeShipping ? styles.shippingFree : styles.shippingTone)}>{shippingStatusLabel}</span>{' '}
+                {shippingSupportLabel}
+              </CardDescription>
+            </CardHeader>
 
-              <CardContent>
+            <CardContent>
                 <div className={cn('mb-6 max-h-[320px] overflow-y-auto pr-1', styles.summaryItems)}>
                   {cart.map((item, index) => {
                     const itemPrice = item.discountedPrice != null ? item.discountedPrice : item.Price || item.price;
@@ -608,20 +610,21 @@ export default function CheckoutClient({ settings }) {
                 <Separator className="mb-4" />
 
                 <div className={cn('mb-8 flex items-center justify-between text-xl font-bold text-foreground', styles.totalRow)}>
-                  <span>Total</span>
+                  <span>Net Amount</span>
                   <span>Rs. {total.toLocaleString('en-PK')}</span>
                 </div>
 
-                <Button className={cn('w-full', styles.ctaButton)} size="lg" onClick={() => document.getElementById('checkout-submit')?.click()} disabled={submitting}>
+                <Button
+                  className={cn('hidden w-full md:inline-flex', styles.ctaButton)}
+                  size="lg"
+                  onClick={() => document.getElementById('checkout-submit')?.click()}
+                  disabled={submitting}
+                >
                   {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-                  {submitting ? 'Placing Order...' : 'Complete Order'}
+                  {submitting ? 'Placing Order...' : 'Place Order'}
                 </Button>
 
                 <div className="mt-4 grid gap-2 text-xs font-medium text-muted-foreground">
-                  <p className={cn('flex items-center justify-center gap-1.5 text-center', styles.trustNote)}>
-                    <ShieldCheck className="size-3.5 text-primary" />
-                    Securing your order with server-side confirmation
-                  </p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="flex items-center justify-center gap-1.5 rounded-full bg-background/70 px-3 py-2">
                       <Truck className="size-3.5 text-primary" />
@@ -633,11 +636,23 @@ export default function CheckoutClient({ settings }) {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </main>
+
+      <div className={styles.mobileCheckoutBar}>
+        <div className={styles.mobileCheckoutInner}>
+          <div className={styles.mobileAmount}>
+            <span className={styles.mobileAmountLabel}>Net Amount</span>
+            <strong>Rs. {total.toLocaleString('en-PK')}</strong>
+          </div>
+          <Button className={cn('min-w-[10rem]', styles.ctaButton)} size="lg" onClick={() => document.getElementById('checkout-submit')?.click()} disabled={submitting}>
+            {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
+            {submitting ? 'Placing...' : 'Place Order'}
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }

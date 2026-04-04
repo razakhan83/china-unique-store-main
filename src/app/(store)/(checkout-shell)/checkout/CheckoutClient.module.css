@@ -3,15 +3,7 @@
 }
 
 .pageShell::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 24rem;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top left, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent 52%),
-    radial-gradient(circle at top right, color-mix(in oklab, var(--color-accent) 18%, transparent), transparent 38%);
-  opacity: 0.9;
+  content: none;
 }
 
 .pageShell > * {
@@ -23,70 +15,46 @@
   gap: 1rem;
 }
 
-.eyebrow {
+.introHeader {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.factStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.factStrip span {
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  gap: 0.55rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 14%, white);
-  background: color-mix(in oklab, var(--color-card) 82%, white);
-  padding: 0.45rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--color-border) 84%, white);
+  background: color-mix(in oklab, var(--color-card) 88%, white);
+  padding: 0.5rem 0.9rem;
   box-shadow:
     0 1px 0 color-mix(in oklab, white 70%, transparent),
-    0 14px 30px -24px color-mix(in oklab, var(--color-primary) 48%, transparent);
-  color: color-mix(in oklab, var(--color-primary) 82%, black);
-  font-size: 0.72rem;
+    0 14px 30px -26px color-mix(in oklab, black 18%, transparent);
+  color: color-mix(in oklab, var(--color-foreground) 84%, white);
+  font-size: 0.77rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .title {
-  max-width: 13ch;
+  max-width: 11ch;
   text-wrap: balance;
 }
 
 .lede {
-  max-width: 40rem;
+  max-width: 26rem;
   color: var(--color-muted-foreground);
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: 0.98rem;
+  line-height: 1.55;
   text-wrap: pretty;
-}
-
-.factGrid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.factCard {
-  display: grid;
-  gap: 0.35rem;
-  border-radius: calc(var(--radius-xl) + 0.125rem);
-  border: 1px solid color-mix(in oklab, var(--color-border) 84%, white);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-card) 96%, white), color-mix(in oklab, var(--color-muted) 52%, white));
-  padding: 0.95rem 1rem;
-  box-shadow:
-    0 1px 0 color-mix(in oklab, white 72%, transparent),
-    0 24px 40px -34px color-mix(in oklab, black 18%, transparent);
-}
-
-.factLabel {
-  color: var(--color-muted-foreground);
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.factValue {
-  color: var(--color-foreground);
-  font-size: 0.96rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
 }
 
 .sectionCard {
@@ -284,6 +252,55 @@
   text-wrap: pretty;
 }
 
+.mobileCheckoutBar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 40;
+  display: none;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom));
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--color-background) 8%, transparent), color-mix(in oklab, var(--color-background) 94%, white) 28%);
+  backdrop-filter: blur(18px);
+}
+
+.mobileCheckoutInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin: 0 auto;
+  width: min(100%, 32rem);
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, white);
+  border-radius: 1.35rem;
+  background: color-mix(in oklab, var(--color-card) 92%, white);
+  padding: 0.85rem;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 72%, transparent),
+    0 22px 44px -30px color-mix(in oklab, black 28%, transparent);
+}
+
+.mobileAmount {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mobileAmountLabel {
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mobileAmount strong {
+  color: var(--color-foreground);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
 .dialogPanel {
   border-color: color-mix(in oklab, var(--color-border) 82%, white);
   background:
@@ -339,11 +356,19 @@
 }
 
 @media (max-width: 767px) {
-  .factGrid {
-    grid-template-columns: 1fr;
-  }
-
   .summaryMeta {
     align-items: flex-start;
+  }
+
+  .mobileCheckoutBar {
+    display: block;
+  }
+
+  .mobileCheckoutInner {
+    align-items: stretch;
+  }
+
+  .mobileCheckoutInner :global(.btn) {
+    flex: 0 0 auto;
   }
 }
