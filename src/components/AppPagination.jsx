@@ -74,7 +74,7 @@ function PaginationAnchor({
   }
 
   const linkRender = (
-    <Link href={href} prefetch={false} scroll={false} />
+    <Link href={href} prefetch={false} scroll={false} transitionTypes={['catalog-filter']} />
   );
 
   if (kind === 'previous') {

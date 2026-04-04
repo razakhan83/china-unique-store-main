@@ -16,6 +16,8 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { moveProductImageToFront } from "@/lib/productImages";
@@ -429,14 +431,15 @@ export default function AddProduct() {
               </div>
               <div>
                 <Label className="mb-2">Stock Status</Label>
-                <select
-                  value={stockStatus}
-                  onChange={(e) => setStockStatus(e.target.value)}
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="In Stock">In Stock</option>
-                  <option value="Out of Stock">Out of Stock</option>
-                </select>
+                <Select value={stockStatus} onValueChange={setStockStatus}>
+                  <SelectTrigger className="h-11 w-full px-4">
+                    <SelectValue placeholder="Select stock status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="In Stock">In Stock</SelectItem>
+                    <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -450,21 +453,7 @@ export default function AddProduct() {
                   : "Saved as draft and hidden from the storefront."}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsLive(!isLive)}
-              className={cn(
-                "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                isLive ? "bg-primary" : "bg-border"
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300",
-                  isLive ? "translate-x-5" : "translate-x-0"
-                )}
-              />
-            </button>
+            <Switch checked={isLive} onCheckedChange={setIsLive} />
           </div>
 
           <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
@@ -477,22 +466,7 @@ export default function AddProduct() {
                 >
                   New Arrival
                 </Label>
-                <button
-                  id="toggle-new"
-                  type="button"
-                  onClick={() => setIsNewArrival(!isNewArrival)}
-                  className={cn(
-                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                    isNewArrival ? "bg-primary" : "bg-border"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300",
-                      isNewArrival ? "translate-x-5" : "translate-x-0"
-                    )}
-                  />
-                </button>
+                <Switch id="toggle-new" checked={isNewArrival} onCheckedChange={setIsNewArrival} />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <Label
@@ -501,22 +475,7 @@ export default function AddProduct() {
                 >
                   Best Selling
                 </Label>
-                <button
-                  id="toggle-best"
-                  type="button"
-                  onClick={() => setIsBestSelling(!isBestSelling)}
-                  className={cn(
-                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                    isBestSelling ? "bg-primary" : "bg-border"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300",
-                      isBestSelling ? "translate-x-5" : "translate-x-0"
-                    )}
-                  />
-                </button>
+                <Switch id="toggle-best" checked={isBestSelling} onCheckedChange={setIsBestSelling} />
               </div>
             </div>
           </div>

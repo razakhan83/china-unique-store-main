@@ -232,6 +232,7 @@ export default function ProductsPageHeader({
                   href={buildCategoryHref(category.id, searchTerm, sort)}
                   prefetch={false}
                   scroll={false}
+                  transitionTypes={['catalog-filter']}
                   draggable={false}
                   data-active={isActive}
                   onClick={handleCategoryLinkClick}

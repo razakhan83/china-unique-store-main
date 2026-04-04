@@ -6,8 +6,9 @@ import { BellRing, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, 
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
 function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
@@ -40,6 +41,18 @@ function SettingSection({ icon: Icon, title, description, children }) {
       </div>
       <div className="space-y-4">{children}</div>
     </section>
+  );
+}
+
+function ToggleField({ checked, onCheckedChange, title, description }) {
+  return (
+    <Field orientation="horizontal" className="items-start justify-between rounded-lg border border-border bg-muted/35 px-4 py-3">
+      <FieldContent>
+        <FieldLabel>{title}</FieldLabel>
+        <FieldDescription>{description}</FieldDescription>
+      </FieldContent>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </Field>
   );
 }
 
@@ -325,32 +338,34 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
 
       <div className="space-y-6">
         <SettingSection icon={Store} title="General Information">
-          <div>
-            <Label className="mb-1.5">Store Name</Label>
-            <Input
-              value={form.storeName}
-              onChange={(event) => handleChange('storeName', event.target.value)}
-              placeholder="China Unique Store"
-            />
-          </div>
-          <div>
-            <Label className="mb-1.5">Support Email</Label>
-            <Input
-              type="email"
-              value={form.supportEmail}
-              onChange={(event) => handleChange('supportEmail', event.target.value)}
-              placeholder="support@chinauniquestore.com"
-            />
-          </div>
-          <div>
-            <Label className="mb-1.5">Business Address</Label>
-            <Textarea
-              value={form.businessAddress}
-              onChange={(event) => handleChange('businessAddress', event.target.value)}
-              placeholder="Shop #12, Block A, Gulshan..."
-              rows={3}
-            />
-          </div>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Store Name</FieldLabel>
+              <Input
+                value={form.storeName}
+                onChange={(event) => handleChange('storeName', event.target.value)}
+                placeholder="China Unique Store"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Support Email</FieldLabel>
+              <Input
+                type="email"
+                value={form.supportEmail}
+                onChange={(event) => handleChange('supportEmail', event.target.value)}
+                placeholder="support@chinauniquestore.com"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Business Address</FieldLabel>
+              <Textarea
+                value={form.businessAddress}
+                onChange={(event) => handleChange('businessAddress', event.target.value)}
+                placeholder="Shop #12, Block A, Gulshan..."
+                rows={3}
+              />
+            </Field>
+          </FieldGroup>
         </SettingSection>
 
         <SettingSection
@@ -358,131 +373,107 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
           title="Social & Tracking"
           description="Manage customer contact links, social destinations, and tracking credentials in one place."
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Label className="mb-1.5">WhatsApp Number</Label>
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            <Field className="md:col-span-2">
+              <FieldLabel>WhatsApp Number</FieldLabel>
+              <FieldContent>
               <Input
                 value={form.whatsappNumber}
                 onChange={(event) => handleChange('whatsappNumber', event.target.value)}
                 placeholder="923001234567"
               />
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <FieldDescription className="mt-1.5">
                 Used by the floating contact button, footer CTA, and checkout handoff. Format: country code + number without spaces.
-              </p>
-            </div>
+              </FieldDescription>
+              </FieldContent>
+            </Field>
 
-            <div>
-              <Label className="mb-1.5">Facebook Page URL</Label>
+            <Field>
+              <FieldLabel>Facebook Page URL</FieldLabel>
               <Input
                 value={form.facebookPageUrl}
                 onChange={(event) => handleChange('facebookPageUrl', event.target.value)}
                 placeholder="https://facebook.com/your-page"
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className="mb-1.5">Instagram URL</Label>
+            <Field>
+              <FieldLabel>Instagram URL</FieldLabel>
               <Input
                 value={form.instagramUrl}
                 onChange={(event) => handleChange('instagramUrl', event.target.value)}
                 placeholder="https://instagram.com/your-handle"
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
 
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/35 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Enable tracking</p>
-              <p className="text-xs text-muted-foreground">
-                Loads browser pixels and sends purchase events when credentials are configured.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleChange('trackingEnabled', !form.trackingEnabled)}
-              className={`inline-flex min-w-24 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                form.trackingEnabled
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground'
-              }`}
-            >
-              {form.trackingEnabled ? 'Enabled' : 'Disabled'}
-            </button>
-          </div>
+          <ToggleField
+            checked={!!form.trackingEnabled}
+            onCheckedChange={(value) => handleChange('trackingEnabled', value)}
+            title="Enable tracking"
+            description="Loads browser pixels and sends purchase events when credentials are configured."
+          />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label className="mb-1.5">Facebook Pixel ID</Label>
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            <Field>
+              <FieldLabel>Facebook Pixel ID</FieldLabel>
               <Input
                 value={form.facebookPixelId}
                 onChange={(event) => handleChange('facebookPixelId', event.target.value)}
                 placeholder="123456789012345"
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className="mb-1.5">TikTok Pixel ID</Label>
+            <Field>
+              <FieldLabel>TikTok Pixel ID</FieldLabel>
               <Input
                 value={form.tiktokPixelId}
                 onChange={(event) => handleChange('tiktokPixelId', event.target.value)}
                 placeholder="C123ABC456DEF"
               />
-            </div>
+            </Field>
 
-            <div className="md:col-span-2">
-              <Label className="mb-1.5">Facebook Conversions API Token</Label>
+            <Field className="md:col-span-2">
+              <FieldLabel>Facebook Conversions API Token</FieldLabel>
               <Input
                 value={form.facebookConversionsApiToken}
                 onChange={(event) => handleChange('facebookConversionsApiToken', event.target.value)}
                 placeholder="EAAG..."
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className="mb-1.5">Facebook Test Event Code</Label>
+            <Field>
+              <FieldLabel>Facebook Test Event Code</FieldLabel>
               <Input
                 value={form.facebookTestEventCode}
                 onChange={(event) => handleChange('facebookTestEventCode', event.target.value)}
                 placeholder="TEST12345"
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className="mb-1.5">TikTok Access Token</Label>
+            <Field>
+              <FieldLabel>TikTok Access Token</FieldLabel>
               <Input
                 value={form.tiktokAccessToken}
                 onChange={(event) => handleChange('tiktokAccessToken', event.target.value)}
                 placeholder="ttk_..."
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
         </SettingSection>
 
         <SettingSection icon={BellRing} title="Announcement Bar">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/35 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Show top banner</p>
-              <p className="text-xs text-muted-foreground">
-                Display a promotional banner across the storefront.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleChange('announcementBarEnabled', !form.announcementBarEnabled)}
-              className={`inline-flex min-w-24 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                form.announcementBarEnabled
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-background text-muted-foreground'
-              }`}
-            >
-              {form.announcementBarEnabled ? 'Enabled' : 'Disabled'}
-            </button>
-          </div>
+          <ToggleField
+            checked={!!form.announcementBarEnabled}
+            onCheckedChange={(value) => handleChange('announcementBarEnabled', value)}
+            title="Show top banner"
+            description="Display a promotional banner across the storefront."
+          />
 
           <div className="space-y-3">
             <div className="flex items-end gap-2">
               <div className="flex-1">
-                <Label className="mb-1.5">Add Announcement Message</Label>
+                <FieldLabel>Add Announcement Message</FieldLabel>
                 <Input
                   value={newAnnouncementMessage}
                   onChange={(event) => setNewAnnouncementMessage(event.target.value)}
@@ -502,7 +493,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             </div>
 
             <div className="space-y-2">
-              <Label className="mb-1.5">Message List</Label>
+              <FieldLabel>Message List</FieldLabel>
               {form.announcementBarMessages.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
                   No announcement messages yet. Add one above.
@@ -594,4 +585,3 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
     </div>
   );
 }
-

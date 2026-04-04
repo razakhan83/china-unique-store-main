@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { ViewTransition, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
@@ -7,7 +7,7 @@ import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinar
 import { normalizeProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
-export default function ProductGallery({ images }) {
+export default function ProductGallery({ images, transitionName = null }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mainApi, setMainApi] = useState();
   const [thumbsApi, setThumbsApi] = useState();
@@ -91,14 +91,27 @@ export default function ProductGallery({ images }) {
             {normalizedImages.map((image, index) => (
               <CarouselItem key={index} className="h-full basis-full pl-0">
                 <div className="relative h-full min-h-0 w-full">
-                  <Image
-                    src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
-                    alt={`Product Image ${index + 1}`}
-                    fill
-                    className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
-                    {...getBlurPlaceholderProps(image.blurDataURL)}
-                    preload={index === 0}
-                  />
+                  {index === 0 && transitionName ? (
+                    <ViewTransition name={transitionName} share="product-image-share">
+                      <Image
+                        src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
+                        alt={`Product Image ${index + 1}`}
+                        fill
+                        className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                        {...getBlurPlaceholderProps(image.blurDataURL)}
+                        preload={index === 0}
+                      />
+                    </ViewTransition>
+                  ) : (
+                    <Image
+                      src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
+                      alt={`Product Image ${index + 1}`}
+                      fill
+                      className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                      {...getBlurPlaceholderProps(image.blurDataURL)}
+                      preload={index === 0}
+                    />
+                  )}
                 </div>
               </CarouselItem>
             ))}

@@ -1,6 +1,6 @@
 import { getAdminOrdersPage } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
-import AdminOrdersWrapper from './AdminOrdersWrapper';
+import AdminOrdersClient from './AdminOrdersClient';
 
 export default async function AdminOrdersPage({ searchParams }) {
   await requireAdmin();
@@ -14,7 +14,7 @@ export default async function AdminOrdersPage({ searchParams }) {
   const orders = await getAdminOrdersPage({ search, status, startDate, endDate, page, limit: 12 });
 
   return (
-    <AdminOrdersWrapper
+    <AdminOrdersClient
       initialOrders={orders.items}
       total={orders.total}
       totalPages={orders.totalPages}

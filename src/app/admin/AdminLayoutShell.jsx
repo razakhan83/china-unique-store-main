@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
-import NextTopLoader from 'nextjs-toploader';
 import {
   Box,
   ChartColumn,
@@ -210,17 +209,6 @@ export default function AdminLayoutShell({ children, sessionUser }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <NextTopLoader
-        color="var(--color-primary)"
-        initialPosition={0.08}
-        crawlSpeed={200}
-        height={3}
-        crawl
-        showSpinner={false}
-        easing="ease"
-        speed={200}
-      />
-
       <div className="flex min-h-screen">
         <aside className="hidden w-72 shrink-0 border-r border-border bg-primary md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto">
           {sidebar}

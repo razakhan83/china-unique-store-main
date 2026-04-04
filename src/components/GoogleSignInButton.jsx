@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
-export default function GoogleSignInButton({ className }) {
+export default function GoogleSignInButton({ className, callbackUrl: callbackUrlOverride }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const callbackUrl = `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
+  const callbackUrl = callbackUrlOverride || `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
 
   return (
     <Button

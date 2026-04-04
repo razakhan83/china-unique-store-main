@@ -32,7 +32,10 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
         <main className="flex-grow">{children}</main>
 
-        <footer className="mt-auto border-t border-border bg-primary pb-6 pt-12 text-primary-foreground">
+        <footer
+          className="mt-auto border-t border-border bg-primary pb-6 pt-12 text-primary-foreground"
+          style={{ viewTransitionName: 'store-footer' }}
+        >
           <div className="container mx-auto max-w-7xl px-4">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div>

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { getProductCategories } from '@/lib/productCategories';
@@ -376,16 +377,7 @@ export default function EditProduct({ id }) {
                 {isLive ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsLive(!isLive)}
-              className={cn(
-                "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                isLive ? "bg-primary" : "bg-border",
-              )}
-            >
-              <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isLive ? "translate-x-5" : "translate-x-0")} />
-            </button>
+            <Switch checked={isLive} onCheckedChange={setIsLive} />
           </div>
 
           {/* Marketing Flags */}
@@ -394,31 +386,11 @@ export default function EditProduct({ id }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-new">New Arrival</Label>
-                <button
-                  id="toggle-new"
-                  type="button"
-                  onClick={() => setIsNewArrival(!isNewArrival)}
-                  className={cn(
-                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                    isNewArrival ? "bg-primary" : "bg-border",
-                  )}
-                >
-                  <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isNewArrival ? "translate-x-5" : "translate-x-0")} />
-                </button>
+                <Switch id="toggle-new" checked={isNewArrival} onCheckedChange={setIsNewArrival} />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-best">Best Selling</Label>
-                <button
-                  id="toggle-best"
-                  type="button"
-                  onClick={() => setIsBestSelling(!isBestSelling)}
-                  className={cn(
-                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
-                    isBestSelling ? "bg-primary" : "bg-border",
-                  )}
-                >
-                  <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isBestSelling ? "translate-x-5" : "translate-x-0")} />
-                </button>
+                <Switch id="toggle-best" checked={isBestSelling} onCheckedChange={setIsBestSelling} />
               </div>
             </div>
           </div>

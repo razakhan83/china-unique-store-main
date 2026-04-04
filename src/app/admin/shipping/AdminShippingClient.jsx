@@ -5,9 +5,10 @@ import { Loader2, Save, Truck, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export default function AdminShippingClient({ initialSettings }) {
   const [saving, setSaving] = useState(false);
@@ -68,9 +69,10 @@ export default function AdminShippingClient({ initialSettings }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="karachiFee" className="text-sm font-semibold">Karachi Delivery Fee</Label>
+          <FieldGroup className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="karachiFee">Karachi Delivery Fee</FieldLabel>
+              <FieldContent>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rs.</span>
                 <Input
@@ -82,9 +84,11 @@ export default function AdminShippingClient({ initialSettings }) {
                   onChange={(e) => handleChange('karachiDeliveryFee', Number(e.target.value))}
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="outsideKarachiFee" className="text-sm font-semibold">Outside Karachi Fee</Label>
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="outsideKarachiFee">Outside Karachi Fee</FieldLabel>
+              <FieldContent>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rs.</span>
                 <Input
@@ -96,13 +100,15 @@ export default function AdminShippingClient({ initialSettings }) {
                   onChange={(e) => handleChange('outsideKarachiDeliveryFee', Number(e.target.value))}
                 />
               </div>
-            </div>
-          </div>
+              </FieldContent>
+            </Field>
+          </FieldGroup>
 
-          <Separator className="bg-border/50" />
+          <Separator />
 
-          <div className="space-y-2">
-            <Label htmlFor="freeThreshold" className="text-sm font-semibold">Free Shipping Threshold</Label>
+          <Field>
+            <FieldLabel htmlFor="freeThreshold">Free Shipping Threshold</FieldLabel>
+            <FieldContent>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rs.</span>
               <Input
@@ -114,11 +120,12 @@ export default function AdminShippingClient({ initialSettings }) {
                 onChange={(e) => handleChange('freeShippingThreshold', Number(e.target.value))}
               />
             </div>
-            <p className="text-xs text-muted-foreground pt-1 flex items-center gap-1.5">
+            <FieldDescription className="pt-1 flex items-center gap-1.5">
               <Info className="size-3" />
               Orders exceeding this amount will have zero shipping charges.
-            </p>
-          </div>
+            </FieldDescription>
+            </FieldContent>
+          </Field>
 
           <div className="pt-4">
             <Button 
@@ -139,8 +146,4 @@ export default function AdminShippingClient({ initialSettings }) {
       </Card>
     </div>
   );
-}
-
-function Separator({ className }) {
-  return <div className={`h-px w-full ${className}`} />;
 }

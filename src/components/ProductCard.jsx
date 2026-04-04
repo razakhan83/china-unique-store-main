@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,7 @@ function getDiscountBadge(product) {
   return null;
 }
 
-export default function ProductCard({ product, className = "" }) {
+export default function ProductCard({ product, className = "", transitionName = null }) {
   const productName = product.Name || product.name || "Unknown";
   const primaryImage = getPrimaryProductImage(product);
   const primaryImageSrc = primaryImage?.url
@@ -80,10 +81,33 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
+          transitionTypes={['nav-forward']}
           className="relative block aspect-square w-full overflow-hidden bg-muted/30"
           draggable={false}
         >
-          {primaryImageSrc ? (
+          {transitionName ? (
+            <ViewTransition name={transitionName} share="product-image-share" default="none">
+              {primaryImageSrc ? (
+                <Image
+                  src={primaryImageSrc}
+                  alt={productName}
+                  fill
+                  draggable={false}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  loading="lazy"
+                  className={cn(
+                    "object-cover outline outline-1 outline-black/5 transition-transform duration-500 ease-out md:group-hover:scale-105",
+                    isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75"
+                  )}
+                  {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center bg-muted/50">
+                  <ShoppingCart className="size-10 text-muted-foreground/30" />
+                </div>
+              )}
+            </ViewTransition>
+          ) : primaryImageSrc ? (
             <Image
               src={primaryImageSrc}
               alt={productName}
@@ -102,7 +126,6 @@ export default function ProductCard({ product, className = "" }) {
               <ShoppingCart className="size-10 text-muted-foreground/30" />
             </div>
           )}
-
         </Link>
       </div>
 
@@ -110,6 +133,7 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
+          transitionTypes={['nav-forward']}
           className="block text-left"
           draggable={false}
         >
@@ -154,4 +178,3 @@ export default function ProductCard({ product, className = "" }) {
     </Card>
   );
 }
-
