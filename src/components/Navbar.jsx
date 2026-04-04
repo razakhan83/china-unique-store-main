@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -216,17 +216,14 @@ function NavbarContent({
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
   return (
-    <div className="navbar-shell sticky top-0 z-40 border-b border-border/60 bg-card/95 backdrop-blur">
+    <div className="navbar-shell sticky top-0 z-40 overflow-hidden bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
       {showAnnouncementBar ? (
-        <div className="relative flex min-h-9 items-center border-b border-border/60 bg-primary py-2 text-primary-foreground">
+        <div className="relative flex min-h-9 items-center bg-primary py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
           <AnnouncementMarquee items={announcementItems} />
         </div>
       ) : null}
 
-      <header
-        className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4"
-        style={{ viewTransitionName: 'store-navbar' }}
-      >
+      <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
         <Button variant="ghost" size="icon" onClick={openSidebar} aria-label="Open menu" className="md:hidden">
           <Menu />
         </Button>
@@ -601,13 +598,11 @@ export default function Navbar({
   announcementBarMessages = [],
 }) {
   return (
-    <Suspense fallback={<div className="h-16 border-b border-border bg-card" />}>
-      <NavbarContent
-        categories={categories}
-        announcementBarEnabled={announcementBarEnabled}
-        announcementBarText={announcementBarText}
-        announcementBarMessages={announcementBarMessages}
-      />
-    </Suspense>
+    <NavbarContent
+      categories={categories}
+      announcementBarEnabled={announcementBarEnabled}
+      announcementBarText={announcementBarText}
+      announcementBarMessages={announcementBarMessages}
+    />
   );
 }

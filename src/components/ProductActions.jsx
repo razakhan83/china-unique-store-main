@@ -13,6 +13,49 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 
+export function ProductSocialActions({ product, className = '' }) {
+    const handleShare = async () => {
+        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const title = product.Name || product.name || 'Check out this product!';
+
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, url });
+            } catch (err) {
+                // User cancelled
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(url);
+                toast.success('Link copied to clipboard!');
+            } catch {
+                toast.error('Failed to copy link.');
+            }
+        }
+    };
+
+    const secondaryActionClass =
+        "h-11 shrink-0 rounded-xl border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] transition-[border-color,background-color,box-shadow,color,transform] duration-200 hover:bg-[color:color-mix(in_oklab,var(--color-muted)_74%,white)] hover:text-foreground active:scale-[0.96]";
+
+    return (
+        <div className={cn('flex gap-3', className)}>
+            <Button
+                onClick={handleShare}
+                variant="outline"
+                className={cn(secondaryActionClass, "h-10 px-3")}
+            >
+                <Share2 className="size-4.5" />
+                <span className="hidden sm:inline">Share</span>
+            </Button>
+            <ProductWishlistButton
+                product={product}
+                mode="detail"
+                className="h-10 shrink-0 px-3"
+            />
+        </div>
+    );
+}
+
 export default function ProductActions({ product, whatsappNumber = '', storeName = 'China Unique Store' }) {
     const { addToCart } = useCartActions();
     const [isAdding, setIsAdding] = useState(false);
@@ -59,26 +102,6 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             return;
         }
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    };
-
-    const handleShare = async () => {
-        const url = typeof window !== 'undefined' ? window.location.href : '';
-        const title = product.Name || product.name || 'Check out this product!';
-        
-        if (navigator.share) {
-            try {
-                await navigator.share({ title, url });
-            } catch (err) {
-                // User cancelled
-            }
-        } else {
-            try {
-                await navigator.clipboard.writeText(url);
-                toast.success('Link copied to clipboard!');
-            } catch {
-                toast.error('Failed to copy link.');
-            }
-        }
     };
 
     const isOutOfStock = product.StockStatus === "Out of Stock" || product.isLive === false;
@@ -128,7 +151,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         <>
         <div className="flex flex-col gap-4">
             {!isOutOfStock ? (
-                <div className="flex items-center gap-3">
+                <div className="hidden items-center gap-3 md:flex">
                     <span className="text-sm font-semibold text-foreground">Quantity</span>
                     <div className="inline-flex items-center overflow-hidden rounded-lg border border-border bg-background">
                         <button
@@ -150,7 +173,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 </div>
             ) : null}
 
-            <div className="flex gap-3">
+            <div className="hidden gap-3 md:flex">
                 {isOutOfStock ? (
                     <Button
                         onClick={() => setNotifyModalOpen(true)}
@@ -196,18 +219,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         </Button>
                     </>
                 )}
-                <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    className={cn(secondaryActionClass, "size-11 px-0")}
-                >
-                    <Share2 />
-                </Button>
-                <ProductWishlistButton
-                    product={product}
-                    mode="detail"
-                    className="shrink-0 px-3"
-                />
+                <ProductSocialActions product={product} />
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-border bg-card/95 p-3 shadow-[0_-10px_40px_rgba(10,61,46,0.1)] md:hidden">
@@ -261,11 +273,6 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         Notify Me
                     </Button>
                 )}
-                <ProductWishlistButton
-                    product={product}
-                    mode="detail"
-                    className="h-11 shrink-0 px-3"
-                />
             </div>
         </div>
         <Dialog open={notifyModalOpen} onOpenChange={setNotifyModalOpen}>

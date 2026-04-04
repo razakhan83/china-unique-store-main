@@ -1,10 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@view-transition {
-  navigation: auto;
-}
-
 :root {
   --vt-duration-enter: 300ms;
   --vt-duration-shared: 380ms;
@@ -386,18 +382,6 @@
 ::view-transition-old(product-image-share),
 ::view-transition-new(product-image-share) {
   animation-duration: var(--vt-duration-shared);
-}
-
-::view-transition-group(store-navbar),
-::view-transition-group(store-footer) {
-  animation-duration: 1ms;
-}
-
-::view-transition-old(store-navbar),
-::view-transition-new(store-navbar),
-::view-transition-old(store-footer),
-::view-transition-new(store-footer) {
-  animation: none;
 }
 
 .announcement-marquee__track {

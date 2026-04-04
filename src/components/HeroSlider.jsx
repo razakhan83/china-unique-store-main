@@ -120,11 +120,11 @@ export default function HeroSlider({ slides = [] }) {
   return (
     <section
       data-testid="hero-main-slider"
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden bg-primary/10"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden md:h-[460px] lg:h-[560px]">
+      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-primary/10 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => (
           <div
             key={

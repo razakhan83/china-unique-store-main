@@ -1,10 +1,10 @@
-import { Suspense, ViewTransition } from 'react';
+import { Suspense } from 'react';
 import { BadgeCheck, PackageCheck, Truck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductCard from '@/components/ProductCard';
-import ProductActions from '@/components/ProductActions';
+import ProductActions, { ProductSocialActions } from '@/components/ProductActions';
 import ProductGallery from '@/components/ProductGallery';
 import ProductViewTracking from '@/components/ProductViewTracking';
 import ProductMetaTags from './ProductMetaTags';
@@ -196,41 +196,29 @@ export default function ProductPage({ params }) {
   const slugPromise = params.then(({ id }) => id);
 
   return (
-    <ViewTransition
-      enter={{
-        'nav-forward': 'nav-forward-enter',
-        default: 'none',
-      }}
-      exit={{
-        'nav-back': 'nav-back-exit',
-        default: 'none',
-      }}
-      default="none"
-    >
-      <div className="product-detail-shell min-h-screen bg-background">
-        <div className="container mx-auto max-w-7xl px-4 pb-2 pt-4">
-          <Suspense fallback={<ProductBreadcrumbSkeleton />}>
-            <ProductBreadcrumb slugPromise={slugPromise} />
-          </Suspense>
-        </div>
-
-        <div className="container mx-auto max-w-7xl px-4 pb-20 pt-4 md:py-8">
-          <Suspense fallback={<ProductHeroSkeleton />}>
-            <ProductHeroSection slugPromise={slugPromise} />
-          </Suspense>
-
-          <div className="mb-4 mt-12">
-            <Suspense fallback={<ProductReviewsSkeleton />}>
-              <ProductReviewsSection slugPromise={slugPromise} />
-            </Suspense>
-          </div>
-        </div>
-
-        <Suspense fallback={<RelatedProductsSkeleton />}>
-          <RelatedProductsSection slugPromise={slugPromise} />
+    <div className="product-detail-shell min-h-screen bg-background">
+      <div className="container mx-auto max-w-7xl px-4 pb-2 pt-8 md:pt-10">
+        <Suspense fallback={<ProductBreadcrumbSkeleton />}>
+          <ProductBreadcrumb slugPromise={slugPromise} />
         </Suspense>
       </div>
-    </ViewTransition>
+
+      <div className="container mx-auto max-w-7xl px-4 pb-20 pt-3 md:pb-8 md:pt-5">
+        <Suspense fallback={<ProductHeroSkeleton />}>
+          <ProductHeroSection slugPromise={slugPromise} />
+        </Suspense>
+
+        <div className="mb-4 mt-12">
+          <Suspense fallback={<ProductReviewsSkeleton />}>
+            <ProductReviewsSection slugPromise={slugPromise} />
+          </Suspense>
+        </div>
+      </div>
+
+      <Suspense fallback={<RelatedProductsSkeleton />}>
+        <RelatedProductsSection slugPromise={slugPromise} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -306,10 +294,7 @@ async function ProductHeroSection({ slugPromise }) {
 
       <div className="flex flex-col gap-6 md:flex-row md:gap-10 lg:gap-14">
         <div className="w-full md:w-[55%] lg:w-[58%]">
-          <ProductGallery
-            images={product.Images}
-            transitionName={`product-shared-image-${product._id || product.slug}`}
-          />
+          <ProductGallery images={product.Images} />
         </div>
 
         <div className="w-full md:w-[45%] lg:w-[42%]">
@@ -320,15 +305,18 @@ async function ProductHeroSection({ slugPromise }) {
               </Badge>
             </div>
 
-            <div className="flex flex-wrap items-start gap-3">
-              <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl lg:text-4xl">
-                {product.Name}
-              </h1>
-              {isOutOfStock ? (
-                <Badge variant="destructive" className="rounded-full px-3 py-1.5 text-xs uppercase tracking-[0.14em]">
-                  Out of Stock
-                </Badge>
-              ) : null}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-start gap-3">
+                <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl lg:text-4xl">
+                  {product.Name}
+                </h1>
+                {isOutOfStock ? (
+                  <Badge variant="destructive" className="rounded-full px-3 py-1.5 text-xs uppercase tracking-[0.14em]">
+                    Out of Stock
+                  </Badge>
+                ) : null}
+              </div>
+              <ProductSocialActions product={product} className="md:hidden shrink-0" />
             </div>
 
             <div className="flex flex-wrap items-baseline gap-3">

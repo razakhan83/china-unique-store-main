@@ -9,6 +9,7 @@ import {
   Check,
   Clock3,
   Copy,
+  CreditCard,
   Loader2,
   Lock,
   MapPin,
@@ -532,11 +533,29 @@ export default function CheckoutClient({ settings }) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Alert className="rounded-[1.15rem] border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_92%,white)] shadow-[0_18px_28px_-30px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
-                  <Wallet className="text-primary" />
-                  <AlertTitle>Cash on Delivery</AlertTitle>
-                  <AlertDescription className="[text-wrap:pretty]">Pay when your order arrives.</AlertDescription>
-                </Alert>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Alert className="rounded-[1.15rem] border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_92%,white)] shadow-[0_18px_28px_-30px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
+                    <Wallet className="text-primary" />
+                    <AlertTitle>Cash on Delivery</AlertTitle>
+                    <AlertDescription className="[text-wrap:pretty]">Pay when your order arrives.</AlertDescription>
+                  </Alert>
+
+                  <Alert
+                    aria-disabled="true"
+                    className="cursor-not-allowed rounded-[1.15rem] border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_92%,white)] opacity-50 shadow-none"
+                  >
+                    <CreditCard className="text-primary" />
+                    <div className="flex items-center gap-2">
+                      <AlertTitle>Online Payment (Card/Wallet)</AlertTitle>
+                      <span className="inline-flex rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                        Coming Soon
+                      </span>
+                    </div>
+                    <AlertDescription className="[text-wrap:pretty]">
+                      Secure online checkout will be available in a future update.
+                    </AlertDescription>
+                  </Alert>
+                </div>
               </CardContent>
           </Card>
         </div>
