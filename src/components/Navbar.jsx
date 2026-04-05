@@ -51,11 +51,21 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
 function normalizeAnnouncementItems(messages = [], announcementText = '') {
@@ -173,19 +183,19 @@ function NavbarContent({
 
   function navLinkClass(path) {
     return cn(
-      'inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
+      'inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm transition-[color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
       pathname === path
-        ? 'bg-primary text-primary-foreground'
-        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        ? 'font-bold text-primary'
+        : 'font-medium text-muted-foreground hover:text-foreground'
     );
   }
 
   function desktopNavButtonClass(isActive = false) {
     return cn(
-      'inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
+      'inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm transition-[color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
       isActive
-        ? 'bg-primary text-primary-foreground'
-        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        ? 'font-bold text-primary'
+        : 'font-medium text-muted-foreground hover:text-foreground'
     );
   }
 
@@ -208,8 +218,6 @@ function NavbarContent({
     { href: '/', label: 'Home', icon: Store },
     { href: '/products', label: 'All Products', icon: LayoutGrid },
   ];
-  const mobileSidebarButtonClass =
-    'flex w-full min-h-10 items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-[background-color,transform,color] duration-200 active:scale-[0.96]';
   const navActionButtonClass =
     'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-[transform,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:border-primary/18 hover:bg-background hover:text-foreground active:scale-[0.96]';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
@@ -253,7 +261,7 @@ function NavbarContent({
                 <Button
                   variant="ghost"
                   className={cn(
-                    desktopNavButtonClass(isCategoriesOpen || (pathname === '/products' && activeCategory !== 'all')),
+                    desktopNavButtonClass(isCategoriesOpen),
                     'gap-2'
                   )}
                 >
@@ -427,164 +435,173 @@ function NavbarContent({
       </div>
 
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent side="left" className="w-screen min-w-0 max-w-none px-4 pb-4 pt-5 sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]">
-          <SheetHeader className="sheet-stagger-item px-1">
-            <SheetTitle>Browse the store</SheetTitle>
-            <SheetDescription>Navigation and category shortcuts in one place.</SheetDescription>
-          </SheetHeader>
+        <SheetContent
+          side="left"
+          showCloseButton={false}
+          className="w-screen min-w-0 max-w-none overflow-hidden border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]"
+        >
+          <Sidebar className="h-full bg-transparent text-inherit">
+            <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
+              <Link href="/" onClick={() => setIsSidebarOpen(false)} className="flex min-w-0 items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Store className="size-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-primary">China Unique</p>
+                  <p className="truncate text-xs text-sidebar-foreground/65">Home and lifestyle store</p>
+                </div>
+              </Link>
+            </SidebarHeader>
 
-          <ScrollArea className="sheet-stagger min-h-0 flex-1 pr-2">
-            <div className="flex min-h-full flex-col gap-2.5 pt-3">
-              <div className="flex flex-col gap-1.5">
-                {mobileItems.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setIsSidebarOpen(false)}
-                    className={cn(
-                      mobileSidebarButtonClass,
-                      pathname === href
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted/55 text-foreground hover:bg-muted'
-                    )}
-                  >
-                    <Icon className="size-4" />
-                    {label}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Accordion className="w-full">
-                  <AccordionItem value="categories" className="border-none">
-                    <AccordionTrigger className="rounded-xl bg-muted/55 px-3.5 py-2.5 hover:bg-muted hover:no-underline [&[data-state=open]]:bg-muted/80">
-                      <div className="flex items-center gap-3">
-                        <LayoutGrid className="size-4" />
-                        <span className="text-sm font-medium">Shop by Category</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-0 pt-1.5 pb-0">
-                      <div className="flex flex-col gap-1.5">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => handleCategoryClick('new-arrivals')}
-                          className={cn(
-                            mobileSidebarButtonClass,
-                            activeCategory === 'new-arrivals'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted/55 text-foreground hover:bg-muted'
-                          )}
-                        >
-                          <Sparkles />
-                          New Arrivals
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => handleCategoryClick('special-offers')}
-                          className={cn(
-                            mobileSidebarButtonClass,
-                            activeCategory === 'special-offers'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted/55 text-foreground hover:bg-muted'
-                          )}
-                        >
-                          <Tag />
-                          Special Offers
-                        </Button>
-                        {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                          <Button
-                            key={category.id}
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleCategoryClick(category.id)}
-                            className={cn(
-                              mobileSidebarButtonClass,
-                              activeCategory === category.id
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted/55 text-foreground hover:bg-muted'
-                            )}
-                          >
-                            <Tag />
-                            {category.label}
-                          </Button>
+            <SidebarContent>
+              <ScrollArea className="min-h-0 flex-1 px-3 py-3">
+                <div className="flex min-h-full flex-col gap-3">
+                  <SidebarGroup className="gap-2 p-0">
+                    <SidebarGroupLabel>Main</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {mobileItems.map(({ href, label, icon: Icon }) => (
+                          <SidebarMenuItem key={href}>
+                            <SidebarMenuButton
+                              isActive={pathname === href}
+                              render={<Link href={href} onClick={() => setIsSidebarOpen(false)} />}
+                            >
+                              <Icon />
+                              <span>{label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
                         ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
 
-              <MyOrdersButton
-                isMobile
-                className="min-h-10 rounded-xl bg-muted/55 px-3.5 py-2.5 hover:bg-muted"
-              />
-              <MyWishlistButton
-                isMobile
-                className="min-h-10 rounded-xl bg-muted/55 px-3.5 py-2.5 hover:bg-muted"
-              />
+                  <SidebarGroup className="gap-2 p-0">
+                    <SidebarGroupLabel>Categories</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <Accordion className="w-full">
+                        <AccordionItem value="categories" className="border-none">
+                          <AccordionTrigger className="rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:no-underline [&[data-state=open]]:bg-sidebar-accent">
+                            <div className="flex items-center gap-3">
+                              <LayoutGrid className="size-4" />
+                              <span>Shop by Category</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-0 pt-1.5 pb-0">
+                            <SidebarMenu>
+                              <SidebarMenuItem>
+                                <SidebarMenuButton
+                                  isActive={activeCategory === 'new-arrivals'}
+                                  onClick={() => handleCategoryClick('new-arrivals')}
+                                >
+                                  <Sparkles />
+                                  <span>New Arrivals</span>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                              <SidebarMenuItem>
+                                <SidebarMenuButton
+                                  isActive={activeCategory === 'special-offers'}
+                                  onClick={() => handleCategoryClick('special-offers')}
+                                >
+                                  <Tag />
+                                  <span>Special Offers</span>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                              {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                                <SidebarMenuItem key={category.id}>
+                                  <SidebarMenuButton
+                                    isActive={activeCategory === category.id}
+                                    onClick={() => handleCategoryClick(category.id)}
+                                  >
+                                    <Tag />
+                                    <span>{category.label}</span>
+                                  </SidebarMenuButton>
+                                </SidebarMenuItem>
+                              ))}
+                            </SidebarMenu>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
 
-              {session && (
-                <div className="flex flex-col gap-1.5 pt-2">
-                  <div className="flex items-center gap-3 rounded-xl bg-muted/40 px-3.5 py-3">
-                    <Avatar className="h-9 w-9">
+                  <SidebarSeparator />
+
+                  <SidebarGroup className="gap-2 p-0">
+                    <SidebarGroupLabel>Account</SidebarGroupLabel>
+                    <SidebarGroupContent className="space-y-1.5">
+                      <MyOrdersButton
+                        isMobile
+                        className="min-h-10 rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      />
+                      <MyWishlistButton
+                        isMobile
+                        className="min-h-10 rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      />
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </div>
+              </ScrollArea>
+            </SidebarContent>
+
+            <SidebarFooter className="border-t border-sidebar-border px-3 pb-3 pt-3">
+              {session ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 rounded-2xl bg-sidebar-accent/55 px-3.5 py-3">
+                    <Avatar className="size-9">
                       <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
                       <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex min-w-0 flex-col">
-                      <p className="truncate text-sm font-semibold">{session.user?.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{session.user?.email}</p>
+                      <p className="truncate text-sm font-semibold text-sidebar-foreground">{session.user?.name}</p>
+                      <p className="truncate text-xs text-sidebar-foreground/65">{session.user?.email}</p>
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setIsSidebarOpen(false);
-                      router.push('/settings');
-                    }}
-                    className="h-auto justify-start rounded-xl bg-muted/55 px-3.5 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
-                  >
-                    <Settings />
-                    Account Settings
-                  </Button>
-                  {session.user?.isAdmin ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setIsSidebarOpen(false);
-                        router.push('/admin');
-                      }}
-                      className="h-auto justify-start rounded-xl bg-muted/55 px-3.5 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      <LayoutGrid />
-                      Admin Panel
-                    </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => {
-                      setIsSidebarOpen(false);
-                      signOut();
-                    }}
-                    className="h-auto justify-start rounded-xl px-3.5 py-2.5 text-sm font-medium"
-                  >
-                    <LogOut />
-                    Logout
-                  </Button>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => {
+                          setIsSidebarOpen(false);
+                          router.push('/settings');
+                        }}
+                      >
+                        <Settings />
+                        <span>Account Settings</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    {session.user?.isAdmin ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          onClick={() => {
+                            setIsSidebarOpen(false);
+                            router.push('/admin');
+                          }}
+                        >
+                          <LayoutGrid />
+                          <span>Admin Panel</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ) : null}
+                    <SidebarMenuItem>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => {
+                          setIsSidebarOpen(false);
+                          signOut();
+                        }}
+                        className="min-h-10 w-full justify-start rounded-xl px-3.5 py-2.5 text-sm font-medium active:scale-[0.96]"
+                      >
+                        <LogOut />
+                        Logout
+                      </Button>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
                 </div>
+              ) : (
+                <GoogleSignInButton className="min-h-10 rounded-xl py-2.5 shadow-none" />
               )}
-
-              <div className="mt-auto pt-2">
-                {!session ? (
-                  <GoogleSignInButton className="min-h-10 rounded-xl py-2.5 shadow-none" />
-                ) : null}
-              </div>
-            </div>
-          </ScrollArea>
+            </SidebarFooter>
+          </Sidebar>
         </SheetContent>
       </Sheet>
     </div>

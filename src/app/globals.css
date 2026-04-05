@@ -26,6 +26,14 @@
   --color-destructive-foreground: oklch(0.985 0.004 95);
   --color-success: oklch(0.72 0.13 155);
   --color-success-foreground: oklch(0.985 0.004 95);
+  --color-sidebar: color-mix(in oklab, var(--color-card) 95%, white);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-primary-foreground: var(--color-primary-foreground);
+  --color-sidebar-accent: color-mix(in oklab, var(--color-muted) 82%, white);
+  --color-sidebar-accent-foreground: var(--color-foreground);
+  --color-sidebar-border: color-mix(in oklab, var(--color-border) 90%, white);
+  --color-sidebar-ring: var(--color-ring);
 
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
