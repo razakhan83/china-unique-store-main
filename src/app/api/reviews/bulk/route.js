@@ -29,13 +29,13 @@ export async function POST(req) {
 
     // Look up the DB user so we have a real ObjectId for userId
     const email = normalizeEmail(session.user.email);
-    const dbUser = await User.findOne({ email }).lean();
+    const dbUser = await User.findOne({ email }).select('_id name').lean();
     if (!dbUser) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
     // Check if order exists and belongs to user
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).select('_id customerEmail items').lean();
     if (!order) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
@@ -54,11 +54,11 @@ export async function POST(req) {
       // 1. Resolve product — productId in Order.items is stored as a string (may be slug or ObjectId)
       let product = null;
       if (mongoose.Types.ObjectId.isValid(productId)) {
-        product = await Product.findById(productId);
+        product = await Product.findById(productId).select('_id slug Name').lean();
       }
       // Fall back to slug lookup if not a valid ObjectId or findById returned nothing
       if (!product) {
-        product = await Product.findOne({ slug: productId });
+        product = await Product.findOne({ slug: productId }).select('_id slug Name').lean();
       }
 
       if (!product) {

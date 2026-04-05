@@ -119,4 +119,11 @@ const ProductSchema = new mongoose.Schema(
     }
 );
 
+ProductSchema.index({ isLive: 1, createdAt: -1 });
+ProductSchema.index({ isLive: 1, Category: 1, createdAt: -1 });
+ProductSchema.index({ isLive: 1, slug: 1 });
+ProductSchema.index({ isLive: 1, isDiscounted: 1, createdAt: -1 });
+ProductSchema.index({ isLive: 1, isNewArrival: 1, createdAt: -1 });
+ProductSchema.index({ isLive: 1, isBestSelling: 1, createdAt: -1 });
+
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

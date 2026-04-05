@@ -127,11 +127,14 @@ export function WishlistProvider({ children }) {
     async function loadWishlist() {
       if (status === 'loading') return;
 
+      const guestIds = readGuestWishlistIds();
+      const guestItems = readGuestWishlistItems();
+
       if (!session) {
         if (!ignore) {
           setState({
-            items: readGuestWishlistItems(),
-            ids: readGuestWishlistIds(),
+            items: guestItems,
+            ids: guestIds,
             isLoading: false,
           });
         }
@@ -143,23 +146,42 @@ export function WishlistProvider({ children }) {
       }
 
       try {
-        const guestIds = readGuestWishlistIds();
         if (guestIds.length > 0) {
-          await fetch('/api/wishlist', {
+          const syncResponse = await fetch('/api/wishlist', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productIds: guestIds }),
           });
+          const syncData = await syncResponse.json();
+
+          if (!syncResponse.ok || !syncData?.success) {
+            throw new Error(syncData?.error || 'Failed to sync wishlist');
+          }
+
+          const nextItems = Array.isArray(syncData?.data?.items) ? syncData.data.items : [];
+          const nextIds = Array.isArray(syncData?.data?.ids) ? syncData.data.ids : [];
+
+          if (!ignore) {
+            setState({
+              items: nextItems,
+              ids: nextIds,
+              isLoading: false,
+            });
+          }
+
           clearGuestWishlistSnapshot();
+          return;
         }
 
         const response = await fetch('/api/wishlist', { cache: 'no-store' });
         const data = await response.json();
+        if (!response.ok || !data?.success) {
+          throw new Error(data?.error || 'Failed to load wishlist');
+        }
 
         if (!ignore) {
           const nextItems = Array.isArray(data?.data?.items) ? data.data.items : [];
           const nextIds = Array.isArray(data?.data?.ids) ? data.data.ids : [];
-          writeGuestWishlistSnapshot(nextIds, nextItems);
           setState({
             items: nextItems,
             ids: nextIds,
@@ -169,7 +191,11 @@ export function WishlistProvider({ children }) {
       } catch (error) {
         console.error('Failed to load wishlist', error);
         if (!ignore) {
-          setState({ items: [], ids: [], isLoading: false });
+          setState({
+            items: guestItems,
+            ids: guestIds,
+            isLoading: false,
+          });
         }
       }
     }
@@ -222,10 +248,6 @@ export function WishlistProvider({ children }) {
         ids: Array.isArray(data?.data?.ids) ? data.data.ids : current.ids,
         items: Array.isArray(data?.data?.items) ? data.data.items : current.items,
       }));
-      writeGuestWishlistSnapshot(
-        Array.isArray(data?.data?.ids) ? data.data.ids : optimisticState?.ids || state.ids,
-        Array.isArray(data?.data?.items) ? data.data.items : optimisticState?.items || state.items,
-      );
 
       if (!isWishlisted) {
         fireAddToWishlist(product, eventId);

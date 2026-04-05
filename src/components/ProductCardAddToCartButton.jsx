@@ -33,8 +33,7 @@ export default function ProductCardAddToCartButton({ product, isOutOfStock = fal
     setAnimationState('loading');
     try {
       const startedAt = performance.now();
-
-      await Promise.all([
+      const [result] = await Promise.all([
         addToCart(product),
         new Promise((resolve) => {
           window.requestAnimationFrame(() => {
@@ -44,6 +43,11 @@ export default function ProductCardAddToCartButton({ product, isOutOfStock = fal
           });
         }),
       ]);
+
+      if (!result?.success) {
+        setAnimationState('idle');
+        return;
+      }
 
       setAnimationState('settling');
       settleTimeoutRef.current = window.setTimeout(() => {

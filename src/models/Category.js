@@ -46,5 +46,8 @@ const CategorySchema = new mongoose.Schema(
   },
 );
 
+CategorySchema.index({ sortOrder: 1, name: 1 });
+CategorySchema.index({ isEnabled: 1, showOnHome: 1, sortOrder: 1, name: 1 });
+
 export default mongoose.models.Category ||
   mongoose.model("Category", CategorySchema);

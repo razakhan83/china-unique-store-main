@@ -69,7 +69,7 @@ const OrderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['Confirmed', 'In Process', 'Delivered', 'Returned'],
+            enum: ['Pending', 'Confirmed', 'In Process', 'Delivery Address Issue', 'Delivered', 'Returned'],
             default: 'Confirmed',
         },
         courierName: {
@@ -94,18 +94,26 @@ const OrderSchema = new mongoose.Schema(
     }
 );
 
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+OrderSchema.index({ customerEmail: 1, createdAt: -1 });
+OrderSchema.index({ secureToken: 1 });
+OrderSchema.index({ status: 1, customerEmail: 1, 'items.productId': 1, createdAt: -1 });
+
 // Next.js hot reloading can keep old models in memory. 
 // If the cached Order model doesn't have the updated status enum or missing fields, we must delete it to force re-registration.
 const cachedOrder = mongoose.models.Order;
 if (cachedOrder) {
     const hasStatusInProcess = cachedOrder.schema.path('status').options.enum.includes('In Process');
+    const hasPendingStatus = cachedOrder.schema.path('status').options.enum.includes('Pending');
+    const hasDeliveryAddressIssueStatus = cachedOrder.schema.path('status').options.enum.includes('Delivery Address Issue');
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
     const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
     const hasWeight = !!cachedOrder.schema.paths.weight;
     const hasItemType = !!cachedOrder.schema.paths.itemType;
     const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
     
-    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType || !hasSecureToken) {
+    if (!hasStatusInProcess || !hasPendingStatus || !hasDeliveryAddressIssueStatus || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType || !hasSecureToken) {
         delete mongoose.models.Order;
     }
 }

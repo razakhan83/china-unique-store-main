@@ -29,6 +29,36 @@ const HOME_MARKETING_SECTIONS = [
   { id: 'new-arrivals', label: 'New Arrivals', iconName: 'Sparkles' },
   { id: 'best-selling', label: 'Best Selling', iconName: 'Trophy' },
 ];
+const PRODUCT_CATEGORY_POPULATE = { path: 'Category', select: 'name slug' };
+const PRODUCT_CARD_PROJECTION = [
+  'Name',
+  'Description',
+  'Price',
+  'Images',
+  'Category',
+  'StockStatus',
+  'slug',
+  'isLive',
+  'createdAt',
+  'updatedAt',
+  'discountPercentage',
+  'isDiscounted',
+  'discountedPrice',
+  'isNewArrival',
+  'isBestSelling',
+].join(' ');
+const PRODUCT_DETAIL_PROJECTION = [
+  PRODUCT_CARD_PROJECTION,
+  'stockQuantity',
+  'seoTitle',
+  'seoDescription',
+  'seoKeywords',
+  'seoCanonicalUrl',
+].join(' ');
+const PRODUCT_ADMIN_PROJECTION = [
+  PRODUCT_CARD_PROJECTION,
+  'stockQuantity',
+].join(' ');
 
 function sanitizeSectionOrder(order, fallbackOrder = []) {
   return Array.from(new Set([...(Array.isArray(order) ? order : []), ...fallbackOrder].filter(Boolean)));
@@ -273,7 +303,8 @@ async function getLiveProductsRaw() {
   await mongooseConnect();
 
   const products = await Product.find({ isLive: true })
-    .populate('Category')
+    .select(PRODUCT_CARD_PROJECTION)
+    .populate(PRODUCT_CATEGORY_POPULATE)
     .sort({ createdAt: -1 })
     .lean();
   return products.map(serializeProduct);
@@ -283,7 +314,8 @@ async function getAllProductsRaw() {
   await mongooseConnect();
 
   const products = await Product.find({})
-    .populate('Category')
+    .select(PRODUCT_ADMIN_PROJECTION)
+    .populate(PRODUCT_CATEGORY_POPULATE)
     .sort({ createdAt: -1 })
     .lean();
   return products.map(serializeProduct);
@@ -648,7 +680,8 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
 
   const [items, total] = await Promise.all([
     Product.find(query)
-      .populate('Category')
+      .select(PRODUCT_CARD_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
       .sort(sortQuery)
       .skip(skip)
       .limit(safeLimit)
@@ -793,11 +826,17 @@ export async function getProductBySlug(slug) {
       await mongooseConnect();
       
       // 1. Try finding by slug first (vanity URL)
-      let product = await Product.findOne({ slug: productSlug, isLive: true }).populate('Category').lean();
+      let product = await Product.findOne({ slug: productSlug, isLive: true })
+        .select(PRODUCT_DETAIL_PROJECTION)
+        .populate(PRODUCT_CATEGORY_POPULATE)
+        .lean();
       
       // 2. If not found, and it looks like a Mongo ID, try finding by ID
       if (!product && mongoose.Types.ObjectId.isValid(productSlug)) {
-        product = await Product.findOne({ _id: productSlug, isLive: true }).populate('Category').lean();
+        product = await Product.findOne({ _id: productSlug, isLive: true })
+          .select(PRODUCT_DETAIL_PROJECTION)
+          .populate(PRODUCT_CATEGORY_POPULATE)
+          .lean();
       }
       
       return product ? serializeProduct(product) : null;
@@ -825,9 +864,9 @@ export async function getProductPrerenderParams(limit = 1) {
 
   try {
     await mongooseConnect();
-    const products = await Product.find({ isLive: true })
-      .sort({ createdAt: -1 })
-      .select('slug')
+  const products = await Product.find({ isLive: true })
+    .sort({ createdAt: -1 })
+    .select('slug')
       .limit(safeLimit)
       .lean();
 
@@ -882,7 +921,11 @@ export async function getCatalogFeed() {
 
 export async function getAdminProducts() {
   await mongooseConnect();
-  const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
+  const products = await Product.find({})
+    .select(PRODUCT_ADMIN_PROJECTION)
+    .populate(PRODUCT_CATEGORY_POPULATE)
+    .sort({ createdAt: -1 })
+    .lean();
   const serializedProducts = products.map(serializeProduct);
   return serializedProducts.map(toAdminProductRow);
 }
@@ -952,7 +995,8 @@ export async function getAdminProductsPage({
 
   const [items, total, totalProducts, liveProducts] = await Promise.all([
     Product.find(query)
-      .populate('Category')
+      .select(PRODUCT_ADMIN_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
       .sort(sortQuery)
       .skip(skip)
       .limit(safeLimit)
@@ -1274,7 +1318,11 @@ export async function getOrderById(id) {
 
 export async function getOrderLogs(orderId) {
   await mongooseConnect();
-  const logs = await OrderLog.find({ orderId: String(orderId || '') })
+  const normalizedOrderId = mongoose.Types.ObjectId.isValid(String(orderId || ''))
+    ? new mongoose.Types.ObjectId(String(orderId))
+    : String(orderId || '');
+
+  const logs = await OrderLog.find({ orderId: normalizedOrderId })
     .sort({ createdAt: -1 })
     .lean();
   

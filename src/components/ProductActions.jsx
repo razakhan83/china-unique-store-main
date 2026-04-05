@@ -75,8 +75,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         setIsAdding(true);
         const startedAt = performance.now();
         try {
-            await addToCart(product, quantity);
-            setDidJustAdd(true);
+            const result = await addToCart(product, quantity);
+            if (result?.success) {
+                setDidJustAdd(true);
+            }
             const elapsed = performance.now() - startedAt;
             const remaining = Math.max(140 - elapsed, 0);
             if (remaining > 0) {

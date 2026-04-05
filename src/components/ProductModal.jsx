@@ -98,9 +98,11 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
 
                             <div className="flex flex-col sm:flex-row gap-3 mt-auto pt-4">
                                 <Button
-                                    onClick={() => {
-                                        addToCart(product);
-                                        onClose();
+                                    onClick={async () => {
+                                        const result = await addToCart(product);
+                                        if (result?.success) {
+                                            onClose();
+                                        }
                                     }}
                                     className="flex-1 w-full"
                                 >

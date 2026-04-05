@@ -46,4 +46,8 @@ const StockRequestSchema = new mongoose.Schema(
   }
 );
 
+StockRequestSchema.index({ productId: 1, status: 1, email: 1 });
+StockRequestSchema.index({ productId: 1, status: 1, whatsappNumber: 1 });
+StockRequestSchema.index({ status: 1, createdAt: -1 });
+
 export default mongoose.models.StockRequest || mongoose.model('StockRequest', StockRequestSchema);

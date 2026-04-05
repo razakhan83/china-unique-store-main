@@ -44,4 +44,7 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
+UserSchema.index({ disabled: 1, createdAt: -1 });
+UserSchema.index({ createdAt: -1 });
+
 export default mongoose.models.User || mongoose.model('User', UserSchema);

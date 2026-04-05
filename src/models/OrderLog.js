@@ -26,4 +26,6 @@ const OrderLogSchema = new mongoose.Schema(
   }
 );
 
+OrderLogSchema.index({ orderId: 1, createdAt: -1 });
+
 export default mongoose.models.OrderLog || mongoose.model('OrderLog', OrderLogSchema);

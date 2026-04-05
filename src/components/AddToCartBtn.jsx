@@ -17,8 +17,10 @@ export default function AddToCartBtn({ product, className }) {
                 setIsAdding(true);
                 const startedAt = performance.now();
                 try {
-                    await addToCart(product);
-                    setDidJustAdd(true);
+                    const result = await addToCart(product);
+                    if (result?.success) {
+                        setDidJustAdd(true);
+                    }
                     const elapsed = performance.now() - startedAt;
                     const remaining = Math.max(140 - elapsed, 0);
                     if (remaining > 0) {

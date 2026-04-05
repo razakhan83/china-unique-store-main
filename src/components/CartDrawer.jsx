@@ -75,6 +75,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
     const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
     return total + itemPrice * item.quantity;
   }, 0);
+  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   function continueShopping() {
     setIsCartOpen(false);
@@ -118,13 +119,10 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetContent side="right" className="w-screen min-w-0 max-w-none gap-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-card)_97%,white),color-mix(in_oklab,var(--color-muted)_38%,white))] p-0 sm:max-w-none md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
+      <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-card)_97%,white),color-mix(in_oklab,var(--color-muted)_38%,white))] p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
         <Sidebar className="h-full bg-transparent text-inherit">
-          <SidebarHeader className="gap-1 border-b border-sidebar-border px-5 pb-4 pt-5">
+          <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-lg font-semibold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
-            <p className="text-sm text-sidebar-foreground/70 [text-wrap:pretty]">
-              {cart.length ? `${cart.length} item${cart.length > 1 ? 's' : ''} ready for checkout.` : 'Add products to start your order.'}
-            </p>
           </SidebarHeader>
 
           <SidebarContent>
@@ -132,7 +130,9 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
               {cart.length ? (
                 <SidebarGroup className="gap-3 p-0">
                   <div className="flex items-center justify-between gap-3 px-1 py-0.5">
-                    <SidebarGroupLabel className="px-0 text-sidebar-foreground/65">Cart Items</SidebarGroupLabel>
+                    <SidebarGroupLabel className="px-0 text-sidebar-foreground/65">
+                      Cart Items ({cartCount})
+                    </SidebarGroupLabel>
                     <Button
                       type="button"
                       variant="ghost"

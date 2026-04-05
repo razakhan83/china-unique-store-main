@@ -24,7 +24,11 @@ const slugify = (text) => {
 export async function GET() {
     try {
         await mongooseConnect();
-        const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
+        const products = await Product.find({})
+            .select('Name Description Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .populate({ path: 'Category', select: 'name slug' })
+            .sort({ createdAt: -1 })
+            .lean();
 
         // Format objectId to string securely
         const safeProducts = products.map((p) => {
@@ -141,7 +145,7 @@ export async function POST(req) {
             isBestSelling: isBestSelling === true || isBestSelling === 'true',
         });
 
-        await product.populate('Category');
+        await product.populate({ path: 'Category', select: 'name slug' });
 
         revalidateTag('products');
         revalidateTag(`product-${uniqueSlug}`);

@@ -40,7 +40,7 @@ export async function GET(req) {
             },
             'Name Category Images slug _id'
         )
-        .populate('Category')
+        .populate({ path: 'Category', select: 'name slug' })
         .sort({ createdAt: -1 })
         .limit(limit)
         .lean();

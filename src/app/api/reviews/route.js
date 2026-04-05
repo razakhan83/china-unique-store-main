@@ -22,7 +22,11 @@ export async function GET(req) {
     }
 
     await mongooseConnect();
-    const reviews = await Review.find({ productId, isApproved: true })
+    const resolvedProductId = mongoose.Types.ObjectId.isValid(productId)
+      ? new mongoose.Types.ObjectId(productId)
+      : productId;
+
+    const reviews = await Review.find({ productId: resolvedProductId, isApproved: true })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -50,7 +54,7 @@ export async function POST(req) {
 
     // Find user in DB
     const email = normalizeEmail(session.user.email);
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('_id name phone').lean();
     if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
@@ -58,11 +62,11 @@ export async function POST(req) {
     // Resolve product — productId may be a real ObjectId string or a slug
     let product = null;
     if (mongoose.Types.ObjectId.isValid(productId)) {
-      product = await Product.findById(productId);
+      product = await Product.findById(productId).select('_id slug Name').lean();
     }
     // If it wasn't a valid ObjectId, or the findById returned nothing, try slug fallback
     if (!product) {
-      product = await Product.findOne({ slug: productId });
+      product = await Product.findOne({ slug: productId }).select('_id slug Name').lean();
     }
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });

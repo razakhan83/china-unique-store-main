@@ -38,7 +38,9 @@ async function getWishlistPayload(email) {
   const products = await Product.find({
     _id: { $in: wishlistIds },
     isLive: true,
-  }).lean();
+  })
+    .select('Name Price Images slug StockStatus discountPercentage isDiscounted discountedPrice')
+    .lean();
 
   const productMap = new Map(products.map((product) => [product._id.toString(), serializeWishlistProduct(product)]));
   const items = wishlistIds.map((id) => productMap.get(id)).filter(Boolean);

@@ -1,3 +1,4 @@
+import 'server-only';
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -6,11 +7,11 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
-let cached = global.mongoose;
+let cached = global.__mongooseConnection;
 const isDev = process.env.NODE_ENV !== 'production';
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.__mongooseConnection = { conn: null, promise: null };
 }
 
 async function mongooseConnect() {
@@ -28,7 +29,12 @@ async function mongooseConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 30000,
+      maxPoolSize: 10,
+      minPoolSize: 0,
+      maxIdleTimeMS: 10000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 20000,
       family: 4,
     };
 

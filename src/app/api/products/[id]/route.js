@@ -15,7 +15,10 @@ export async function GET(_request, { params }) {
         await mongooseConnect();
 
         const { id } = await params;
-        const product = await Product.findById(id).populate('Category').lean();
+        const product = await Product.findById(id)
+            .select('Name Description Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .populate({ path: 'Category', select: 'name slug' })
+            .lean();
 
         if (!product) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
@@ -102,7 +105,7 @@ export async function PUT(request, { params }) {
         existingProduct.isDiscounted = discountPct > 0;
 
         await existingProduct.save();
-        await existingProduct.populate('Category');
+        await existingProduct.populate({ path: 'Category', select: 'name slug' });
         revalidateTag('products', 'max');
         if (previousSlug) {
             revalidateTag(`product-${previousSlug}`, { expire: 0 });

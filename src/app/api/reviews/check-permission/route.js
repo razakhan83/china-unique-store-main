@@ -27,7 +27,7 @@ export async function GET(req) {
     const email = normalizeEmail(session.user.email);
 
     // 1. Find user in DB to get their phone if any
-    const user = await User.findOne({ email }).lean();
+    const user = await User.findOne({ email }).select('phone').lean();
     if (!user) {
        return NextResponse.json({ success: true, canReview: false });
     }

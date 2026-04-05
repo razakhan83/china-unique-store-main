@@ -1,5 +1,13 @@
 {
     "mcpServers": {
+        "mongodb": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mongodb-mcp-server@latest",
+                "--readOnly"
+            ]
+        },
         "next-devtools": {
             "command": "npx",
             "args": [
