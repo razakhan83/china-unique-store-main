@@ -17,7 +17,6 @@ const nextConfig = {
     turbopackFileSystemCacheForBuild: true,
     cachedNavigations: true,
     appNewScrollHandler: true,
-    viewTransition: true,
   },
   images: {
     unoptimized: true,

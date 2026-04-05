@@ -1,12 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-:root {
-  --vt-duration-enter: 300ms;
-  --vt-duration-shared: 380ms;
-  --vt-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 @theme inline {
   --font-sans: var(--font-geist-sans), "Geist", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
@@ -277,62 +271,6 @@
   }
 }
 
-@keyframes nav-forward-old {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate3d(-28px, 0, 0);
-    filter: blur(2px);
-  }
-}
-
-@keyframes nav-forward-new {
-  from {
-    opacity: 0;
-    transform: translate3d(28px, 0, 0);
-    filter: blur(2px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
-}
-
-@keyframes nav-back-old {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate3d(28px, 0, 0);
-    filter: blur(2px);
-  }
-}
-
-@keyframes nav-back-new {
-  from {
-    opacity: 0;
-    transform: translate3d(-28px, 0, 0);
-    filter: blur(2px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
-}
-
 .announcement-marquee {
   --announcement-marquee-gap: clamp(6.25rem, 10vw, 9.375rem);
   --announcement-marquee-duration: 56s;
@@ -348,40 +286,6 @@
   letter-spacing: 0.16em;
   line-height: 1;
   text-transform: uppercase;
-}
-
-::view-transition-old(nav-forward-exit),
-::view-transition-old(nav-back-exit),
-::view-transition-new(nav-forward-enter),
-::view-transition-new(nav-back-enter),
-::view-transition-old(product-image-share),
-::view-transition-new(product-image-share) {
-  animation-timing-function: var(--vt-ease-standard);
-}
-
-::view-transition-old(nav-forward-exit) {
-  animation-name: nav-forward-old;
-  animation-duration: var(--vt-duration-enter);
-}
-
-::view-transition-new(nav-forward-enter) {
-  animation-name: nav-forward-new;
-  animation-duration: var(--vt-duration-enter);
-}
-
-::view-transition-old(nav-back-exit) {
-  animation-name: nav-back-old;
-  animation-duration: var(--vt-duration-enter);
-}
-
-::view-transition-new(nav-back-enter) {
-  animation-name: nav-back-new;
-  animation-duration: var(--vt-duration-enter);
-}
-
-::view-transition-old(product-image-share),
-::view-transition-new(product-image-share) {
-  animation-duration: var(--vt-duration-shared);
 }
 
 .announcement-marquee__track {
@@ -426,11 +330,6 @@
 @media (prefers-reduced-motion: reduce) {
   .announcement-marquee__track {
     animation: none;
-  }
-
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
   }
 }
 

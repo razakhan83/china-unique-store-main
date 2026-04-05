@@ -228,7 +228,7 @@ function NavbarContent({
           <Menu />
         </Button>
 
-        <Link href="/" transitionTypes={['nav-back']} className="flex min-w-0 items-center gap-3">
+        <Link href="/" className="flex min-w-0 items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Store className="size-5" />
           </div>
@@ -239,8 +239,8 @@ function NavbarContent({
         </Link>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
-          <Link href="/" transitionTypes={['nav-back']} className={navLinkClass('/')}>Home</Link>
-          <Link href="/products" scroll={true} transitionTypes={['nav-back']} className={navLinkClass('/products')}>All Products</Link>
+          <Link href="/" className={navLinkClass('/')}>Home</Link>
+          <Link href="/products" scroll={true} className={navLinkClass('/products')}>All Products</Link>
           <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
             <div
               onPointerEnter={() => {
