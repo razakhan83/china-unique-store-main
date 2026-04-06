@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 import mongooseConnect from '@/lib/mongooseConnect';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import Settings from '@/models/Settings';
 
 const SINGLETON_KEY = 'site-settings';
@@ -26,6 +27,43 @@ function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
         .filter((entry) => entry.text);
 }
 
+function normalizeLogoUrl(value = '') {
+    return optimizeCloudinaryUrl(String(value || '').trim(), {
+        format: 'auto',
+        quality: 'auto',
+    });
+}
+
+function serializeSettings(settings) {
+    return {
+        _id: settings._id.toString(),
+        storeName: settings.storeName || 'China Unique Store',
+        supportEmail: settings.supportEmail || '',
+        businessAddress: settings.businessAddress || '',
+        lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+        darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+        whatsappNumber: settings.whatsappNumber || '',
+        facebookPageUrl: settings.facebookPageUrl || '',
+        instagramUrl: settings.instagramUrl || '',
+        trackingEnabled: settings.trackingEnabled === true,
+        facebookPixelId: settings.facebookPixelId || '',
+        facebookConversionsApiToken: settings.facebookConversionsApiToken || '',
+        facebookTestEventCode: settings.facebookTestEventCode || '',
+        tiktokPixelId: settings.tiktokPixelId || '',
+        tiktokAccessToken: settings.tiktokAccessToken || '',
+        karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
+        outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+        freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
+        announcementBarEnabled: settings.announcementBarEnabled ?? true,
+        announcementBarText: settings.announcementBarText || '',
+        announcementBarMessages: normalizeAnnouncementMessages(
+            settings.announcementBarMessages,
+            settings.announcementBarText
+        ),
+        homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+    };
+}
+
 // GET settings — Public (used across the site)
 export async function GET() {
     try {
@@ -39,33 +77,9 @@ export async function GET() {
             settings = settings.toObject();
         }
 
-        // Clean up internal fields
-        settings._id = settings._id.toString();
-
         return NextResponse.json({
             success: true,
-            data: {
-                _id: settings._id,
-                storeName: settings.storeName || 'China Unique Store',
-                supportEmail: settings.supportEmail || '',
-                businessAddress: settings.businessAddress || '',
-                whatsappNumber: settings.whatsappNumber || '',
-                facebookPageUrl: settings.facebookPageUrl || '',
-                instagramUrl: settings.instagramUrl || '',
-                trackingEnabled: settings.trackingEnabled === true,
-                facebookPixelId: settings.facebookPixelId || '',
-                tiktokPixelId: settings.tiktokPixelId || '',
-                karachiDeliveryFee: Number(settings.karachiDeliveryFee || 0),
-                outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 0),
-                freeShippingThreshold: Number(settings.freeShippingThreshold || 5000),
-                announcementBarEnabled: settings.announcementBarEnabled ?? true,
-                announcementBarText: settings.announcementBarText || '',
-                announcementBarMessages: normalizeAnnouncementMessages(
-                    settings.announcementBarMessages,
-                    settings.announcementBarText
-                ),
-                homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
-            },
+            data: serializeSettings(settings),
         });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -89,6 +103,8 @@ export async function PUT(req) {
             'storeName',
             'supportEmail',
             'businessAddress',
+            'lightLogoUrl',
+            'darkLogoUrl',
             'whatsappNumber',
             'facebookPageUrl',
             'instagramUrl',
@@ -113,6 +129,8 @@ export async function PUT(req) {
                 updates[key] =
                     key === 'announcementBarMessages'
                         ? normalizeAnnouncementMessages(body[key], body.announcementBarText)
+                        : key === 'lightLogoUrl' || key === 'darkLogoUrl'
+                            ? normalizeLogoUrl(body[key])
                         : body[key];
             }
         }
@@ -123,14 +141,12 @@ export async function PUT(req) {
             { new: true, upsert: true, runValidators: true }
         ).lean();
 
-        settings._id = settings._id.toString();
         revalidateTag('settings', 'max');
         revalidateTag('home-sections');
         revalidatePath('/');
 
-        return NextResponse.json({ success: true, data: settings });
+        return NextResponse.json({ success: true, data: serializeSettings(settings) });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-

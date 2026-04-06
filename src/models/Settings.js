@@ -44,6 +44,14 @@ const SettingsSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        lightLogoUrl: {
+            type: String,
+            default: '',
+        },
+        darkLogoUrl: {
+            type: String,
+            default: '',
+        },
 
         // WhatsApp
         whatsappNumber: {
@@ -133,7 +141,9 @@ if (
     cachedSettings &&
     (
         !cachedSettings.schema.path('homepageSectionOrder') ||
-        !cachedSettings.schema.path('announcementBarMessages')
+        !cachedSettings.schema.path('announcementBarMessages') ||
+        !cachedSettings.schema.path('lightLogoUrl') ||
+        !cachedSettings.schema.path('darkLogoUrl')
     )
 ) {
     delete mongoose.models.Settings;

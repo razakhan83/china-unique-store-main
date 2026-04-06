@@ -81,6 +81,13 @@ function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
     .filter((entry) => entry.text);
 }
 
+function normalizeLogoUrl(value = '') {
+  return optimizeCloudinaryUrl(String(value || '').trim(), {
+    format: 'auto',
+    quality: 'auto',
+  });
+}
+
 function escapeRegex(value) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -335,6 +342,8 @@ async function getSettingsRaw() {
     storeName: settings.storeName || 'China Unique Store',
     supportEmail: settings.supportEmail || '',
     businessAddress: settings.businessAddress || '',
+    lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+    darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
     whatsappNumber: settings.whatsappNumber || '',
     facebookPageUrl: settings.facebookPageUrl || '',
     instagramUrl: settings.instagramUrl || '',
@@ -1412,6 +1421,8 @@ export async function getAdminSettings() {
     storeName: settings.storeName || 'China Unique Store',
     supportEmail: settings.supportEmail || '',
     businessAddress: settings.businessAddress || '',
+    lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+    darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
     whatsappNumber: settings.whatsappNumber || '',
     facebookPageUrl: settings.facebookPageUrl || '',
     instagramUrl: settings.instagramUrl || '',

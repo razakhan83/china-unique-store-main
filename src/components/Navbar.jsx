@@ -66,6 +66,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
+import StoreLogo from '@/components/StoreLogo';
 import { cn } from '@/lib/utils';
 
 function normalizeAnnouncementItems(messages = [], announcementText = '') {
@@ -125,6 +126,9 @@ function AnnouncementMarquee({ items = [] }) {
 
 function NavbarContent({
   categories,
+  storeName = 'China Unique Store',
+  lightLogoUrl = '',
+  darkLogoUrl = '',
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
@@ -236,15 +240,14 @@ function NavbarContent({
           <Menu />
         </Button>
 
-        <Link href="/" className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Store className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-primary">China Unique</p>
-            <p className="truncate text-xs text-muted-foreground">Home and lifestyle store</p>
-          </div>
-        </Link>
+        <StoreLogo
+          storeName={storeName}
+          lightLogoUrl={lightLogoUrl}
+          darkLogoUrl={darkLogoUrl}
+          variant="light-surface"
+          priority
+          className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
+        />
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
           <Link href="/" className={navLinkClass('/')}>Home</Link>
@@ -442,15 +445,16 @@ function NavbarContent({
         >
           <Sidebar className="h-full bg-transparent text-inherit">
             <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
-              <Link href="/" onClick={() => setIsSidebarOpen(false)} className="flex min-w-0 items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Store className="size-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-primary">China Unique</p>
-                  <p className="truncate text-xs text-sidebar-foreground/65">Home and lifestyle store</p>
-                </div>
-              </Link>
+              <StoreLogo
+                href="/"
+                storeName={storeName}
+                lightLogoUrl={lightLogoUrl}
+                darkLogoUrl={darkLogoUrl}
+                variant="light-surface"
+                compact
+                onClick={() => setIsSidebarOpen(false)}
+                className="max-w-full"
+              />
             </SidebarHeader>
 
             <SidebarContent>
@@ -610,6 +614,9 @@ function NavbarContent({
 
 export default function Navbar({
   categories = [],
+  storeName = 'China Unique Store',
+  lightLogoUrl = '',
+  darkLogoUrl = '',
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
@@ -617,6 +624,9 @@ export default function Navbar({
   return (
     <NavbarContent
       categories={categories}
+      storeName={storeName}
+      lightLogoUrl={lightLogoUrl}
+      darkLogoUrl={darkLogoUrl}
       announcementBarEnabled={announcementBarEnabled}
       announcementBarText={announcementBarText}
       announcementBarMessages={announcementBarMessages}

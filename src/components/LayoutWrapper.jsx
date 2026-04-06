@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { ChevronRight, CreditCard, MapPin, Store, Truck } from 'lucide-react';
+import { ChevronRight, CreditCard, MapPin, Truck } from 'lucide-react';
 
 import CartDrawer from '@/components/CartDrawer';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import Navbar from '@/components/Navbar';
+import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
@@ -25,6 +26,9 @@ export default function LayoutWrapper({ children, categories, settings }) {
       <div className="flex min-h-screen flex-col bg-background">
         <Navbar
           categories={categories}
+          storeName={settings.storeName}
+          lightLogoUrl={settings.lightLogoUrl}
+          darkLogoUrl={settings.darkLogoUrl}
           announcementBarEnabled={settings.announcementBarEnabled}
           announcementBarText={settings.announcementBarText}
           announcementBarMessages={settings.announcementBarMessages}
@@ -36,15 +40,14 @@ export default function LayoutWrapper({ children, categories, settings }) {
           <div className="container mx-auto max-w-7xl px-4">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div>
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-xl bg-white/10">
-                    <Store className="size-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">{settings.storeName}</h3>
-                    <p className="text-sm text-primary-foreground/70">Curated kitchenware and home details</p>
-                  </div>
-                </div>
+                <StoreLogo
+                  storeName={settings.storeName}
+                  lightLogoUrl={settings.lightLogoUrl}
+                  darkLogoUrl={settings.darkLogoUrl}
+                  variant="dark-surface"
+                  compact
+                  className="mb-4"
+                />
                 <p className="max-w-sm leading-relaxed text-primary-foreground/76">
                   A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.
                 </p>

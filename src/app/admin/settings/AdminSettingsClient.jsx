@@ -1,8 +1,9 @@
 // @ts-nocheck
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { BellRing, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, UserPlus } from 'lucide-react';
+import { BellRing, ImagePlus, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 
 function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
   const rawMessages = Array.isArray(messages) && messages.length > 0
@@ -39,7 +41,7 @@ function SettingSection({ icon: Icon, title, description, children }) {
           {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
         </div>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
 }
@@ -52,6 +54,66 @@ function ToggleField({ checked, onCheckedChange, title, description }) {
         <FieldDescription>{description}</FieldDescription>
       </FieldContent>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </Field>
+  );
+}
+
+function LogoUploadCard({
+  field,
+  label,
+  hint,
+  surfaceClassName,
+  imageClassName,
+  value,
+  onChange,
+  uploading,
+  onUpload,
+}) {
+  return (
+    <Field className="rounded-2xl border border-border bg-background/75 p-4">
+      <FieldContent className="gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <FieldLabel>{label}</FieldLabel>
+            <FieldDescription>{hint}</FieldDescription>
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
+            {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+            {uploading ? 'Uploading' : 'Upload'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploading}
+              onChange={(event) => onUpload(field, event)}
+            />
+          </label>
+        </div>
+
+        <div className={`relative flex min-h-36 items-center justify-center overflow-hidden rounded-2xl border border-border ${surfaceClassName}`}>
+          {value ? (
+            <Image
+              src={value}
+              alt={`${label} preview`}
+              width={280}
+              height={88}
+              sizes="(max-width: 768px) 100vw, 320px"
+              className={imageClassName}
+            />
+          ) : (
+            <div className="flex max-w-56 flex-col items-center gap-2 px-5 py-8 text-center text-sm text-muted-foreground">
+              <ImagePlus className="size-5" />
+              <span>Upload a transparent PNG, SVG, or WebP logo.</span>
+            </div>
+          )}
+        </div>
+
+        <Input
+          value={value || ''}
+          onChange={(event) => onChange(field, event.target.value)}
+          placeholder="https://res.cloudinary.com/..."
+        />
+      </FieldContent>
     </Field>
   );
 }
@@ -230,6 +292,7 @@ function AdminAccessSection() {
 export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingField, setUploadingField] = useState('');
   const [form, setForm] = useState({
     ...initialSettings,
     announcementBarMessages: normalizeAnnouncementMessages(
@@ -244,6 +307,38 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
   function handleChange(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
     setSaved(false);
+  }
+
+  async function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result || '');
+      reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleLogoUpload(field, event) {
+    const file = Array.from(event.target.files || []).find((entry) => entry.type.startsWith('image/'));
+    event.target.value = '';
+    if (!file) return;
+
+    setUploadingField(field);
+    setSaved(false);
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      if (!dataUrl) return;
+
+      const image = await uploadImageDataUrl(dataUrl, 'kifayatly_branding');
+      handleChange(field, image.url);
+      toast.success(`${field === 'lightLogoUrl' ? 'Light' : 'Dark'} logo uploaded.`);
+    } catch (error) {
+      console.error(`Failed to upload ${field}`, error);
+      toast.error(error.message || 'Failed to upload logo.');
+    } finally {
+      setUploadingField('');
+    }
   }
 
   function handleAddAnnouncementMessage() {
@@ -366,6 +461,40 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
               />
             </Field>
           </FieldGroup>
+        </SettingSection>
+
+        <SettingSection
+          icon={ImagePlus}
+          title="Logo Configuration"
+          description="Upload both storefront logo variants. Saved Cloudinary URLs are optimized and reused across light and dark surfaces."
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <LogoUploadCard
+              field="lightLogoUrl"
+              label="Light Mode Logo"
+              hint="Used on dark backgrounds like the footer and dark brand surfaces."
+              surfaceClassName="bg-[#082118]"
+              imageClassName="h-auto max-h-16 w-auto object-contain"
+              value={form.lightLogoUrl}
+              onChange={handleChange}
+              uploading={uploadingField === 'lightLogoUrl'}
+              onUpload={handleLogoUpload}
+            />
+            <LogoUploadCard
+              field="darkLogoUrl"
+              label="Dark Mode Logo"
+              hint="Used on light backgrounds like the navbar and admin previews."
+              surfaceClassName="bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(242,246,244,0.98))]"
+              imageClassName="h-auto max-h-16 w-auto object-contain"
+              value={form.darkLogoUrl}
+              onChange={handleChange}
+              uploading={uploadingField === 'darkLogoUrl'}
+              onUpload={handleLogoUpload}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The storefront automatically switches between these two logos based on the background.
+          </p>
         </SettingSection>
 
         <SettingSection
@@ -566,7 +695,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
         </SettingSection>
 
         <div className="flex items-center gap-4 pb-4">
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || Boolean(uploadingField)}>
             {saving ? (
               <Loader2 className="animate-spin" data-icon="inline-start" />
             ) : (
