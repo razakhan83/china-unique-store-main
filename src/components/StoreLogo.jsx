@@ -38,7 +38,9 @@ export default function StoreLogo({
   onClick,
 }) {
   const prefersLightLogo = variant === 'dark-surface';
-  const logoUrl = prefersLightLogo ? lightLogoUrl : darkLogoUrl;
+  const preferredLogoUrl = prefersLightLogo ? lightLogoUrl : darkLogoUrl;
+  const fallbackLogoUrl = prefersLightLogo ? darkLogoUrl : lightLogoUrl;
+  const logoUrl = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
   const hasLogo = Boolean(String(logoUrl || '').trim());
   const logoHeightClass = compact ? 'h-13' : 'h-12';
 

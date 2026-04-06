@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { BellRing, ImagePlus, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus } from 'lucide-react';
+import { BellRing, ImagePlus, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -77,17 +77,32 @@ function LogoUploadCard({
             <FieldLabel>{label}</FieldLabel>
             <FieldDescription>{hint}</FieldDescription>
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
-            {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
-            {uploading ? 'Uploading' : 'Upload'}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              disabled={uploading}
-              onChange={(event) => onUpload(field, event)}
-            />
-          </label>
+          <div className="flex items-center gap-2">
+            {value ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => onChange(field, '')}
+                disabled={uploading}
+              >
+                <X data-icon="inline-start" />
+                Remove
+              </Button>
+            ) : null}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
+              {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+              {uploading ? 'Uploading' : 'Upload'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading}
+                onChange={(event) => onUpload(field, event)}
+              />
+            </label>
+          </div>
         </div>
 
         <div className={`relative flex min-h-36 items-center justify-center overflow-hidden rounded-2xl border border-border ${surfaceClassName}`}>
