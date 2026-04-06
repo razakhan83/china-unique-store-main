@@ -2,8 +2,9 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BellRing, ImagePlus, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus, X } from 'lucide-react';
+import { BellRing, ExternalLink, ImagePlus, LayoutGrid, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -706,6 +707,27 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             <p className="text-xs text-muted-foreground">
               Active messages are joined into one slow-moving marquee with large spacing between each item.
             </p>
+          </div>
+        </SettingSection>
+
+        <SettingSection
+          icon={LayoutGrid}
+          title="Home Page Settings"
+          description="Manage the storefront section order, hero slides, banners, and category product blocks from the dedicated home page builder."
+        >
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Open Home Page Builder</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Add, reorder, and save homepage sections without touching storefront code.
+              </p>
+            </div>
+            <Link href="/admin/home-page" className="shrink-0">
+              <Button type="button" variant="outline" className="w-full rounded-xl md:w-auto">
+                <ExternalLink data-icon="inline-start" />
+                Home Page Builder
+              </Button>
+            </Link>
           </div>
         </SettingSection>
 

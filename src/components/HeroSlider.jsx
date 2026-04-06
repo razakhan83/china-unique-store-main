@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
@@ -34,6 +35,18 @@ function getSlideAssets(slide) {
       blurDataURL: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
     },
   };
+}
+
+function SlideFrame({ href, children }) {
+  if (!href) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Link href={href} className="block h-full w-full">
+      {children}
+    </Link>
+  );
 }
 
 export default function HeroSlider({ slides = [] }) {
@@ -134,44 +147,46 @@ export default function HeroSlider({ slides = [] }) {
             className={`hero-fade-slide ${safeActiveIndex === index ? 'is-active' : ''}`}
             aria-hidden={safeActiveIndex !== index}
           >
-            <div className="block h-full w-full md:hidden">
-              <Image
-                src={slide.assets.mobile.src}
-                alt={slide.alt}
-                fill
-                sizes="100vw"
-                priority={index === 0}
-                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
-                className="object-cover"
-                {...getBlurPlaceholderProps(slide.assets.mobile.blurDataURL)}
-              />
-            </div>
+            <SlideFrame href={slide.link}>
+              <div className="block h-full w-full md:hidden">
+                <Image
+                  src={slide.assets.mobile.src}
+                  alt={slide.alt}
+                  fill
+                  sizes="100vw"
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  className="object-cover"
+                  {...getBlurPlaceholderProps(slide.assets.mobile.blurDataURL)}
+                />
+              </div>
 
-            <div className="hidden h-full w-full md:block lg:hidden">
-              <Image
-                src={slide.assets.tablet.src}
-                alt={slide.alt}
-                fill
-                sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
-                priority={index === 0}
-                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
-                className="object-cover"
-                {...getBlurPlaceholderProps(slide.assets.tablet.blurDataURL)}
-              />
-            </div>
+              <div className="hidden h-full w-full md:block lg:hidden">
+                <Image
+                  src={slide.assets.tablet.src}
+                  alt={slide.alt}
+                  fill
+                  sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  className="object-cover"
+                  {...getBlurPlaceholderProps(slide.assets.tablet.blurDataURL)}
+                />
+              </div>
 
-            <div className="hidden h-full w-full lg:block">
-              <Image
-                src={slide.assets.desktop.src}
-                alt={slide.alt}
-                fill
-                sizes="(min-width: 1024px) 100vw, 100vw"
-                priority={index === 0}
-                loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
-                className="object-cover"
-                {...getBlurPlaceholderProps(slide.assets.desktop.blurDataURL)}
-              />
-            </div>
+              <div className="hidden h-full w-full lg:block">
+                <Image
+                  src={slide.assets.desktop.src}
+                  alt={slide.alt}
+                  fill
+                  sizes="(min-width: 1024px) 100vw, 100vw"
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  className="object-cover"
+                  {...getBlurPlaceholderProps(slide.assets.desktop.blurDataURL)}
+                />
+              </div>
+            </SlideFrame>
 
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.16))]" />
           </div>

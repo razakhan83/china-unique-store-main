@@ -23,6 +23,18 @@ function getDiscountBadge(product) {
   return null;
 }
 
+function getFeatureBadge(product) {
+  if (product.isBestSelling) {
+    return {
+      label: "Best Seller",
+      className:
+        "pointer-events-auto rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 uppercase tracking-[0.08em]",
+    };
+  }
+
+  return null;
+}
+
 export default function ProductCard({ product, className = "" }) {
   const productName = product.Name || product.name || "Unknown";
   const primaryImage = getPrimaryProductImage(product);
@@ -34,7 +46,10 @@ export default function ProductCard({ product, className = "" }) {
   const productHref = `/products/${productSlug}`;
 
   const discountLabel = getDiscountBadge(product);
-  const dummyReviewLabel = product.averageRating || product.rating || "4.2";
+  const featureBadge = getFeatureBadge(product);
+  const reviewCount = Number(product.reviewCount || 0);
+  const averageRating = Number(product.averageRating || 0);
+  const ratingLabel = reviewCount > 0 && averageRating > 0 ? averageRating.toFixed(1) : "";
   const isUnavailable = product.StockStatus === "Out of Stock" || product.isLive === false;
 
   const hasRealDiscount = Boolean(product.isDiscounted && product.discountPercentage > 0);
@@ -55,14 +70,22 @@ export default function ProductCard({ product, className = "" }) {
     >
       <div className="relative">
         <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1.5">
-          <Badge
-            className={cn(
-              "pointer-events-auto rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-700 tabular-nums"
-            )}
-          >
-            <Star className="mr-1 size-3.5 fill-current" />
-            {dummyReviewLabel}
-          </Badge>
+          {ratingLabel ? (
+            <Badge
+              className={cn(
+                "pointer-events-auto rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-700 tabular-nums"
+              )}
+            >
+              <Star className="mr-1 size-3.5 fill-current" />
+              {ratingLabel}
+            </Badge>
+          ) : null}
+
+          {featureBadge && (
+            <Badge className={cn(featureBadge.className)}>
+              {featureBadge.label}
+            </Badge>
+          )}
 
           {discountLabel && (
             <Badge

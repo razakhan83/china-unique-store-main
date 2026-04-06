@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 
 import mongooseConnect from '@/lib/mongooseConnect';
 import Category from '@/models/Category';
+import Product from '@/models/Product';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import {
   generateBlurDataURLFromDataUrl,
@@ -81,6 +82,8 @@ export async function PATCH(req, { params }) {
     await existingCategory.save();
     revalidateTag('categories', 'max');
 
+    const productCount = await Product.countDocuments({ Category: existingCategory._id });
+
     return NextResponse.json(
       {
         success: true,
@@ -89,6 +92,7 @@ export async function PATCH(req, { params }) {
           _id: existingCategory._id.toString(),
           image: optimizeCloudinaryUrl(existingCategory.image || ""),
           blurDataURL: existingCategory.blurDataURL || "",
+          productCount,
           showOnHome: existingCategory.showOnHome !== false,
         },
       },

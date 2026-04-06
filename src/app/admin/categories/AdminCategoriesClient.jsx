@@ -24,13 +24,11 @@ import {
   ImageIcon,
   Loader2,
   MoreVertical,
+  Package2,
   Pencil,
   Plus,
   Save,
-  Sparkles,
-  Tag,
   Trash2,
-  Trophy,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -44,6 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -53,22 +52,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { cn } from "@/lib/utils";
 
-const MARKETING_SECTION_ITEMS = [
-  { _id: "special-offers", name: "Special Offer", slug: "special-offers", icon: Tag },
-  { _id: "new-arrivals", name: "New Arrivals", slug: "new-arrivals", icon: Sparkles },
-  { _id: "best-selling", name: "Best Selling", slug: "best-selling", icon: Trophy },
-];
-
-function sanitizeSectionOrder(order, fallbackOrder = []) {
-  return Array.from(new Set([...(Array.isArray(order) ? order : []), ...fallbackOrder].filter(Boolean)));
+function mapCategory(category, index = 0) {
+  return {
+    _id: category._id,
+    name: category.name,
+    slug: category.slug,
+    image: category.image || "",
+    imagePublicId: category.imagePublicId || "",
+    blurDataURL: category.blurDataURL || "",
+    sortOrder: Number(category.sortOrder ?? index) || 0,
+    isEnabled: category.isEnabled !== false,
+    productCount: Number(category.productCount || 0),
+  };
 }
 
-function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabled, onToggleHome }) {
+function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabled }) {
   const {
     attributes,
     listeners,
@@ -76,9 +80,7 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: category.sectionKey });
-  const Icon = category.icon || ImageIcon;
-  const isVirtualSection = category.sectionType === "marketing";
+  } = useSortable({ id: category._id });
 
   return (
     <div
@@ -89,20 +91,25 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
       }}
       className={cn(
         "surface-card flex items-center gap-4 rounded-2xl p-4 shadow-[0_18px_40px_rgba(10,61,46,0.07)] transition-shadow",
-        isDragging && "z-10 shadow-[0_22px_60px_rgba(10,61,46,0.18)]",
+        isDragging && "z-10 border-primary/35 shadow-[0_22px_60px_rgba(10,61,46,0.18)]",
       )}
     >
       <button
         type="button"
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/35 text-muted-foreground transition-colors hover:text-foreground"
+        className={cn(
+          "flex size-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
+          isDragging
+            ? "border-primary/45 bg-primary text-primary-foreground"
+            : "border-border bg-muted/35 text-muted-foreground hover:text-foreground",
+        )}
         aria-label={`Reorder ${category.name}`}
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="size-4" />
+        <GripVertical className="size-4.5" />
       </button>
 
-      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/35">
+      <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/35">
         {category.image ? (
           <Image
             src={optimizeCloudinaryUrl(category.image, CLOUDINARY_IMAGE_PRESETS.adminThumb)}
@@ -113,80 +120,58 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
             {...getBlurPlaceholderProps(category.blurDataURL)}
           />
         ) : (
-          <Icon className="size-5 text-muted-foreground" />
+          <ImageIcon className="size-5 text-muted-foreground" />
         )}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground">{category.name}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-sm font-semibold text-foreground">{category.name}</p>
+          <Badge variant="secondary" className="rounded-full">
+            {category.productCount} products
+          </Badge>
+        </div>
         <p className="mt-1 text-xs text-muted-foreground">{category.slug}</p>
       </div>
 
-      <div className="text-right">
+      <div className="hidden text-right md:block">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Position
         </p>
         <p className="mt-1 text-sm font-semibold text-primary">{index + 1}</p>
       </div>
 
-      {/* Home On/Off toggle */}
-      {!isVirtualSection && category.slug !== "special-offers" ? (
-        <div className="flex flex-col items-end gap-1 pr-1">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col items-end gap-1">
           <span className={cn(
-            "text-[9px] font-black uppercase tracking-widest",
-            category.showOnHome !== false ? "text-primary" : "text-muted-foreground/60"
+            "text-[10px] font-semibold uppercase tracking-[0.16em]",
+            category.isEnabled ? "text-primary" : "text-muted-foreground",
           )}>
-            {category.showOnHome !== false ? "Home On" : "Home Off"}
+            {category.isEnabled ? "Live" : "Hidden"}
           </span>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggleHome?.(category._id, category.showOnHome !== false);
-            }}
-            className={cn(
-              "relative h-5 w-9 rounded-full transition-colors duration-300",
-              category.showOnHome !== false ? "bg-primary" : "bg-muted-foreground/30"
-            )}
-          >
-            <span className={cn(
-              "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform duration-300 shadow-sm",
-              category.showOnHome !== false ? "translate-x-4" : "translate-x-0"
-            )} />
-          </button>
+          <Switch
+            checked={category.isEnabled !== false}
+            onCheckedChange={() => onToggleEnabled(category._id, category.isEnabled !== false)}
+          />
         </div>
-      ) : (
-        <div className="flex w-20 flex-col items-end gap-1 pr-1">
-          <span className="text-[9px] font-black uppercase tracking-widest text-primary">
-            Fixed On
-          </span>
-          <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-            Home
-          </span>
-        </div>
-      )}
 
-      {/* Three-dot actions dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-xl shrink-0"
-            aria-label="Category actions"
-          >
-            <MoreVertical className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {!isVirtualSection ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-xl"
+              aria-label="Category actions"
+            >
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit?.(category)}>
               <Pencil className="mr-2 size-4" />
               Edit
             </DropdownMenuItem>
-          ) : null}
-          {!isVirtualSection && category.slug !== "special-offers" && (
             <DropdownMenuItem
               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
               onClick={() => onDelete(category)}
@@ -194,16 +179,15 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
               <Trash2 className="mr-2 size-4" />
               Delete
             </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
 
 export default function AdminCategoriesClient() {
   const [categories, setCategories] = useState([]);
-  const [sectionOrder, setSectionOrder] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -211,8 +195,6 @@ export default function AdminCategoriesClient() {
   const [newImage, setNewImage] = useState("");
   const [deleteModal, setDeleteModal] = useState({ open: false, category: null });
   const [deleting, setDeleting] = useState(false);
-
-  // Edit State
   const [editModal, setEditModal] = useState({ open: false, category: null });
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -236,30 +218,12 @@ export default function AdminCategoriesClient() {
     }),
   );
 
-const orderedSections = useMemo(() => {
-    const marketingIds = new Set(MARKETING_SECTION_ITEMS.map((item) => item.slug));
-    const categoryItems = categories
-      .filter((category) => !marketingIds.has(category.slug))
-      .map((category) => ({
-        ...category,
-        sectionType: "category",
-        icon: null,
-        sectionKey: category.slug,
-      }));
-    const sectionMap = new Map([
-      ...MARKETING_SECTION_ITEMS.map((item) => [item.slug, { ...item, sectionType: "marketing", image: "", sectionKey: item.slug }]),
-      ...categoryItems.map((item) => [item.sectionKey, item]),
-    ]);
-    const fallbackOrder = [
-      ...MARKETING_SECTION_ITEMS.map((item) => item.slug),
-      ...categoryItems.map((item) => item.sectionKey),
-    ];
-    const finalOrder = sanitizeSectionOrder(sectionOrder, fallbackOrder);
+  const orderedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
+    [categories],
+  );
 
-    return finalOrder.map((id) => sectionMap.get(id)).filter(Boolean);
-  }, [categories, sectionOrder]);
-
-  const categoryIds = useMemo(() => orderedSections.map((category) => category.sectionKey), [orderedSections]);
+  const categoryIds = useMemo(() => orderedCategories.map((category) => category._id), [orderedCategories]);
 
   useEffect(() => {
     fetchCategories();
@@ -268,34 +232,17 @@ const orderedSections = useMemo(() => {
   async function fetchCategories() {
     try {
       setLoading(true);
-      const [response, settingsResponse] = await Promise.all([
-        fetch("/api/categories", { cache: "no-store" }),
-        fetch("/api/settings", { cache: "no-store" }),
-      ]);
+      const response = await fetch("/api/categories", { cache: "no-store" });
       const data = await response.json();
-      const settingsData = await settingsResponse.json();
 
       if (!data.success) {
         throw new Error(data.error || "Failed to fetch categories");
       }
 
       setCategories(
-        data.data.map((category, index) => ({
-          _id: category._id,
-          name: category.name,
-          slug: category.slug,
-          image: category.image || "",
-          imagePublicId: category.imagePublicId || "",
-          blurDataURL: category.blurDataURL || "",
-          sortOrder: Number(category.sortOrder ?? index) || 0,
-          isEnabled: category.isEnabled !== false,
-          showOnHome: category.showOnHome !== false,
-        })),
-      );
-      setSectionOrder(
-        settingsData.success
-          ? sanitizeSectionOrder(settingsData.data?.homepageSectionOrder)
-          : []
+        (data.data || [])
+          .filter((category) => category.slug !== "special-offers")
+          .map((category, index) => mapCategory(category, index)),
       );
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -309,13 +256,15 @@ const orderedSections = useMemo(() => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setSectionOrder((current) => {
-      const baseOrder = sanitizeSectionOrder(
-        current.length > 0 ? current : orderedSections.map((item) => item.sectionKey)
-      );
-      const oldIndex = baseOrder.findIndex((item) => item === active.id);
-      const newIndex = baseOrder.findIndex((item) => item === over.id);
-      return arrayMove(baseOrder, oldIndex, newIndex);
+    setCategories((current) => {
+      const ordered = [...current].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+      const oldIndex = ordered.findIndex((item) => item._id === active.id);
+      const newIndex = ordered.findIndex((item) => item._id === over.id);
+
+      return arrayMove(ordered, oldIndex, newIndex).map((category, index) => ({
+        ...category,
+        sortOrder: index,
+      }));
     });
   }
 
@@ -366,19 +315,10 @@ const orderedSections = useMemo(() => {
       toast.success(`Category "${newName.trim()}" created`);
       setNewName("");
       setNewImage("");
-      setCategories((current) =>
-        [...current, {
-          _id: data.data._id,
-          name: data.data.name,
-          slug: data.data.slug,
-          image: data.data.image || "",
-          imagePublicId: data.data.imagePublicId || "",
-          blurDataURL: data.data.blurDataURL || "",
-          sortOrder: Number(data.data.sortOrder ?? current.length) || current.length,
-          isEnabled: data.data.isEnabled !== false,
-          showOnHome: data.data.showOnHome !== false,
-        }].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
-      );
+      setCategories((current) => [
+        ...current,
+        mapCategory({ ...data.data, productCount: 0 }, current.length),
+      ]);
     } catch (error) {
       toast.error(error.message || "Failed to create category");
     } finally {
@@ -395,6 +335,7 @@ const orderedSections = useMemo(() => {
     reader.readAsDataURL(file);
     event.target.value = "";
   }
+
   function openEditModal(category) {
     setEditName(category.name);
     setEditImage(category.image || "");
@@ -411,7 +352,7 @@ const orderedSections = useMemo(() => {
       let uploadedImage = editModal.category.image || "";
       let uploadedPublicId = editModal.category.imagePublicId || "";
       let uploadedBlurDataURL = editModal.category.blurDataURL || "";
-      let isNewImage = editImage && editImage !== editModal.category.image;
+      const isNewImage = editImage && editImage !== editModal.category.image;
 
       if (isNewImage) {
         const upload = await uploadImageDataUrl(editImage, "kifayatly_categories");
@@ -428,7 +369,7 @@ const orderedSections = useMemo(() => {
           image: uploadedImage,
           imagePublicId: uploadedPublicId,
           blurDataURL: uploadedBlurDataURL,
-          isEnabled: editIsEnabled, // Include isEnabled in the update
+          isEnabled: editIsEnabled,
           ...(isNewImage && { imageDataUrl: editImage }),
         }),
       });
@@ -439,24 +380,20 @@ const orderedSections = useMemo(() => {
       }
 
       toast.success(`Category "${editName.trim()}" updated`);
-      
       setCategories((current) =>
-        current.map((cat) => (cat._id === editModal.category._id ? {
-          ...cat,
-          name: data.data.name,
-          slug: data.data.slug,
-          image: data.data.image,
-          imagePublicId: data.data.imagePublicId,
-          blurDataURL: data.data.blurDataURL,
-          isEnabled: data.data.isEnabled,
-          showOnHome: data.data.showOnHome !== false,
-        } : cat))
+        current.map((category) => (
+          category._id === editModal.category._id
+            ? {
+                ...category,
+                ...mapCategory({ ...data.data, productCount: category.productCount }, category.sortOrder),
+              }
+            : category
+        )),
       );
-      
       setEditModal({ open: false, category: null });
       setEditName("");
       setEditImage("");
-      setEditIsEnabled(true); // Reset isEnabled state
+      setEditIsEnabled(true);
     } catch (error) {
       toast.error(error.message || "Failed to update category");
     } finally {
@@ -471,48 +408,23 @@ const orderedSections = useMemo(() => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          categories: orderedSections
-            .filter((category) => category.sectionType === "category")
-            .map((category, index) => ({
+          categories: orderedCategories.map((category, index) => ({
             _id: category._id,
             sortOrder: index,
           })),
         }),
       });
-      const settingsResponse = await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          homepageSectionOrder: sanitizeSectionOrder(orderedSections.map((item) => item.sectionKey)),
-        }),
-      });
 
       const data = await response.json();
-      const settingsData = await settingsResponse.json();
-      if (!data.success || !settingsData.success) {
+      if (!data.success) {
         throw new Error(data.error || "Failed to save category order");
       }
 
-      toast.success("Homepage section order saved.");
+      toast.success("Category order saved.");
       setCategories(
-        (data.data || []).map((category, index) => ({
-          _id: category._id,
-          name: category.name,
-          slug: category.slug,
-          image: category.image || "",
-          imagePublicId: category.imagePublicId || "",
-          blurDataURL: category.blurDataURL || "",
-          sortOrder: Number(category.sortOrder ?? index) || 0,
-          isEnabled: category.isEnabled ?? true,
-          showOnHome: category.showOnHome !== false,
-        })),
-      );
-      setSectionOrder(
-        sanitizeSectionOrder(
-          Array.isArray(settingsData.data?.homepageSectionOrder)
-            ? settingsData.data.homepageSectionOrder
-            : orderedSections.map((item) => item.sectionKey)
-        )
+        (data.data || [])
+          .filter((category) => category.slug !== "special-offers")
+          .map((category, index) => mapCategory(category, index)),
       );
     } catch (error) {
       toast.error(error.message || "Failed to save category order");
@@ -549,70 +461,46 @@ const orderedSections = useMemo(() => {
     }
   }
 
-  const toggleCategoryEnabled = async (categoryId, currentStatus) => {
+  async function toggleCategoryEnabled(categoryId, currentStatus) {
     const originalCategories = [...categories];
     const newStatus = !currentStatus;
-    try {
-      setCategories(prev => prev.map(c => c._id === categoryId ? { ...c, isEnabled: newStatus } : c));
-      
-      const res = await fetch(`/api/categories/${categoryId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isEnabled: newStatus }),
-      });
-      if (!res.ok) throw new Error('Failed to update status');
-      toast.success(newStatus ? 'Category enabled' : 'Category disabled');
-    } catch (err) {
-      setCategories(originalCategories);
-      toast.error('Failed to update category visibility');
-    }
-  };
-
-  const toggleCategoryHome = async (categoryId, currentStatus) => {
-    const originalCategories = [...categories];
-    const nextStatus = !currentStatus;
 
     try {
       setCategories((prev) =>
         prev.map((category) => (
-          category._id === categoryId ? { ...category, showOnHome: nextStatus } : category
-        ))
+          category._id === categoryId ? { ...category, isEnabled: newStatus } : category
+        )),
       );
 
       const response = await fetch(`/api/categories/${categoryId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ showOnHome: nextStatus, ...(nextStatus ? { isEnabled: true } : {}) }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isEnabled: newStatus }),
       });
 
-      if (!response.ok) throw new Error('Failed to update home visibility');
-      if (nextStatus) {
-        setCategories((prev) =>
-          prev.map((category) => (
-            category._id === categoryId ? { ...category, isEnabled: true, showOnHome: nextStatus } : category
-          ))
-        );
+      if (!response.ok) {
+        throw new Error("Failed to update status");
       }
-      toast.success(nextStatus ? 'Category shown on home' : 'Category hidden from home');
+
+      toast.success(newStatus ? "Category enabled" : "Category hidden");
     } catch (error) {
       setCategories(originalCategories);
-      toast.error('Failed to update home visibility');
+      toast.error("Failed to update category visibility");
     }
-  };
+  }
 
   return (
     <div className="max-w-4xl pb-24 md:pb-0">
       <div className="mb-6">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Categories</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add a category image, then drag homepage sections into the order you want them to appear.
-          Special Offer, New Arrivals, Best Selling, and your category sections all use this same sequence.
+          Manage your real storefront categories here. Homepage section order now lives only in Home Page Settings.
         </p>
       </div>
 
       <form onSubmit={handleAddCategory} className="surface-card mb-6 rounded-2xl p-5 md:p-6">
         <div className="grid gap-5 md:grid-cols-[1fr_auto]">
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <div>
               <Label className="mb-2">Category Name</Label>
               <Input
@@ -631,7 +519,7 @@ const orderedSections = useMemo(() => {
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                 </label>
                 {newImage ? (
-                  <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border">
+                  <div className="relative size-16 overflow-hidden rounded-2xl border border-border">
                     <Image
                       src={newImage}
                       alt="New category preview"
@@ -642,7 +530,7 @@ const orderedSections = useMemo(() => {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/25 text-muted-foreground">
+                  <div className="flex size-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/25 text-muted-foreground">
                     <ImageIcon className="size-5" />
                   </div>
                 )}
@@ -659,13 +547,23 @@ const orderedSections = useMemo(() => {
         </div>
       </form>
 
+      <div className="surface-card mb-6 rounded-2xl border border-border/70 p-4">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <Badge variant="secondary" className="rounded-full px-3 py-1">
+            <Package2 className="mr-1 size-3.5" />
+            Product counts included
+          </Badge>
+          <span>Drag to reorder category navigation. Homepage marketing sections are no longer managed here.</span>
+        </div>
+      </div>
+
       {loading ? (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="surface-card h-24 animate-pulse rounded-2xl" />
           ))}
         </div>
-      ) : orderedSections.length === 0 ? (
+      ) : orderedCategories.length === 0 ? (
         <div className="surface-card rounded-2xl p-12 text-center">
           <p className="font-medium text-muted-foreground">No categories yet. Add your first category above.</p>
         </div>
@@ -673,18 +571,15 @@ const orderedSections = useMemo(() => {
         <>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
-              <div className="space-y-3">
-                {orderedSections.map((category, index) => (
+              <div className="flex flex-col gap-3">
+                {orderedCategories.map((category, index) => (
                   <SortableCategoryCard
-                    key={category.sectionKey}
+                    key={category._id}
                     category={category}
                     index={index}
                     onEdit={openEditModal}
-                    onDelete={(selectedCategory) =>
-                      setDeleteModal({ open: true, category: selectedCategory })
-                    }
+                    onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
                     onToggleEnabled={toggleCategoryEnabled}
-                    onToggleHome={toggleCategoryHome}
                   />
                 ))}
               </div>
@@ -697,7 +592,7 @@ const orderedSections = useMemo(() => {
               {saving ? "Saving..." : "Save Category Order"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              This order controls all homepage product sections, including Special Offer, New Arrivals, and Best Selling.
+              This saves only category order and category visibility.
             </p>
           </div>
         </>
@@ -717,7 +612,10 @@ const orderedSections = useMemo(() => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} onClick={() => setDeleteModal({ open: false, category: null })}>
+            <AlertDialogCancel
+              className={cn(buttonVariants({ variant: "outline" }))}
+              onClick={() => setDeleteModal({ open: false, category: null })}
+            >
               Cancel
             </AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
@@ -727,7 +625,6 @@ const orderedSections = useMemo(() => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Category Modal */}
       <AlertDialog
         open={editModal.open}
         onOpenChange={(open) => {
@@ -735,6 +632,7 @@ const orderedSections = useMemo(() => {
           if (!open) {
             setEditName("");
             setEditImage("");
+            setEditIsEnabled(true);
           }
         }}
       >
@@ -742,10 +640,10 @@ const orderedSections = useMemo(() => {
           <AlertDialogHeader>
             <AlertDialogTitle>Edit Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Update the name or image for this category.
+              Update the name, image, or visibility for this category.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
+
           <div className="flex flex-col gap-4 py-4">
             <div>
               <Label className="mb-2">Category Name</Label>
@@ -764,7 +662,7 @@ const orderedSections = useMemo(() => {
                   <input type="file" accept="image/*" className="hidden" onChange={handleEditImageSelect} />
                 </label>
                 {editImage ? (
-                  <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border">
+                  <div className="relative size-16 overflow-hidden rounded-2xl border border-border">
                     <Image
                       src={editImage}
                       alt="Category preview"
@@ -775,11 +673,18 @@ const orderedSections = useMemo(() => {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/25 text-muted-foreground">
+                  <div className="flex size-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/25 text-muted-foreground">
                     <ImageIcon className="size-5" />
                   </div>
                 )}
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/20 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Category visible</p>
+                <p className="text-xs text-muted-foreground">Hidden categories stay out of storefront lists.</p>
+              </div>
+              <Switch checked={editIsEnabled} onCheckedChange={setEditIsEnabled} />
             </div>
           </div>
 

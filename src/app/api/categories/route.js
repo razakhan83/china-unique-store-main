@@ -12,6 +12,21 @@ import {
 } from "@/lib/imagePlaceholders";
 import Category from "@/models/Category";
 import mongoose from "mongoose";
+import Product from "@/models/Product";
+
+async function getCategoryProductCountMap() {
+  const counts = await Product.aggregate([
+    { $unwind: "$Category" },
+    {
+      $group: {
+        _id: "$Category",
+        productCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  return new Map(counts.map((entry) => [String(entry._id), Number(entry.productCount || 0)]));
+}
 
 function slugifyCategory(name = "") {
   return String(name)
@@ -35,6 +50,7 @@ export async function GET() {
     );
 
     const categories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
+    const productCountMap = await getCategoryProductCountMap();
     return NextResponse.json({
       success: true,
       count: categories.length,
@@ -42,6 +58,7 @@ export async function GET() {
         ...category,
         _id: category._id.toString(),
         image: optimizeCloudinaryUrl(category.image || ''),
+        productCount: productCountMap.get(String(category._id)) || 0,
         showOnHome: category.showOnHome !== false,
       })),
     });
@@ -106,6 +123,7 @@ export async function POST(req) {
           _id: category._id.toString(),
           image: optimizeCloudinaryUrl(category.image || ""),
           blurDataURL: category.blurDataURL || "",
+          productCount: 0,
           showOnHome: category.showOnHome !== false,
         },
       },
@@ -160,10 +178,21 @@ export async function PUT(req) {
 
     // Return the freshly-sorted list so the frontend can use it directly
     const updated = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
+    const productCountMap = await getCategoryProductCountMap();
     revalidateTag('categories', 'max');
     revalidateTag('home-sections');
     revalidatePath('/');
-    return NextResponse.json({ success: true, message: "Sort order updated", data: updated });
+    return NextResponse.json({
+      success: true,
+      message: "Sort order updated",
+      data: updated.map((category) => ({
+        ...category,
+        _id: category._id.toString(),
+        image: optimizeCloudinaryUrl(category.image || ""),
+        productCount: productCountMap.get(String(category._id)) || 0,
+        showOnHome: category.showOnHome !== false,
+      })),
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
@@ -219,4 +248,3 @@ export async function DELETE(req) {
     );
   }
 }
-

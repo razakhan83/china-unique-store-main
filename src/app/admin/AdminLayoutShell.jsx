@@ -64,6 +64,7 @@ const salesNavItems = [
 const secondaryNavItems = [
   { href: '/admin/users', label: 'Users / Customers', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
+  { href: '/admin/home-page', label: 'Home Page', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
   { href: '/admin/cover-photos', label: 'Cover Photos', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
   { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
 ];
