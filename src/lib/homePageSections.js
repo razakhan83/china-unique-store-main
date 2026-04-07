@@ -10,6 +10,7 @@ export const HOME_PAGE_SECTION_TYPES = [
   'HeroSlider',
   'CategoriesGrid',
   'ProductBanner',
+  'ScrollableBannerCarousel',
   'ProductGridByCategory',
   'ProductCollection',
 ];
@@ -116,6 +117,15 @@ export function normalizeHomePageSection(section, index = 0) {
         normalizeBannerImage(section?.desktopImages?.[1]),
       ].filter(Boolean),
       mobileImage: normalizeBannerImage(section?.mobileImage) || (legacyMobileImage ? { image: legacyMobileImage, link: cleanText(section?.link), alt: cleanText(section?.alt) } : null),
+    };
+  }
+
+  if (type === 'ScrollableBannerCarousel') {
+    return {
+      ...baseSection,
+      carouselBanners: Array.isArray(section?.carouselBanners)
+        ? section.carouselBanners.map(normalizeBannerImage).filter(Boolean)
+        : [],
     };
   }
 

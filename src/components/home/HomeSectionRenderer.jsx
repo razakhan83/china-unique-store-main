@@ -3,6 +3,7 @@ import HeroSlider from '@/components/HeroSlider';
 import HomeCategoriesGrid from '@/components/home/HomeCategoriesGrid';
 import HomeProductBanner from '@/components/home/HomeProductBanner';
 import HomeProductGridSection from '@/components/home/HomeProductGridSection';
+import HomeScrollableBannerCarousel from '@/components/home/HomeScrollableBannerCarousel';
 
 export default function HomeSectionRenderer({ sections = [] }) {
   if (!sections.length) return null;
@@ -32,6 +33,17 @@ export default function HomeSectionRenderer({ sections = [] }) {
               description={section.description}
               desktopImages={section.desktopImages}
               mobileImage={section.mobileImage}
+            />
+          );
+        }
+
+        if (section.type === 'ScrollableBannerCarousel') {
+          return (
+            <HomeScrollableBannerCarousel
+              key={section.id}
+              title={section.title}
+              description={section.description}
+              banners={section.carouselBanners}
             />
           );
         }

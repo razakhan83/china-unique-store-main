@@ -74,6 +74,28 @@ async function normalizeHeroSlides(slides = []) {
   return normalized.filter(Boolean);
 }
 
+async function normalizeBannerImages(images = []) {
+  if (!Array.isArray(images)) return [];
+
+  const normalized = await Promise.all(
+    images.map(async (entry) => {
+      const image = await ensureAssetBlurData(
+        toAssetInput(entry?.image, entry?.imageDataUrl),
+      );
+
+      if (!image) return null;
+
+      return {
+        image,
+        link: cleanText(entry?.link),
+        alt: cleanText(entry?.alt),
+      };
+    }),
+  );
+
+  return normalized.filter(Boolean);
+}
+
 async function normalizeSectionForSave(section, index) {
   const type = HOME_PAGE_SECTION_TYPES.includes(section?.type) ? section.type : 'CategoriesGrid';
   const baseSection = {
@@ -95,21 +117,10 @@ async function normalizeSectionForSave(section, index) {
   }
 
   if (type === 'ProductBanner') {
-    const desktopImages = await Promise.all(
-      [section?.desktopImages?.[0], section?.desktopImages?.[1]].map(async (entry) => {
-        const image = await ensureAssetBlurData(
-          toAssetInput(entry?.image, entry?.imageDataUrl),
-        );
-
-        if (!image) return null;
-
-        return {
-          image,
-          link: cleanText(entry?.link),
-          alt: cleanText(entry?.alt),
-        };
-      }),
-    );
+    const desktopImages = await normalizeBannerImages([
+      section?.desktopImages?.[0],
+      section?.desktopImages?.[1],
+    ]);
     const mobileImageAsset = await ensureAssetBlurData(
       toAssetInput(section?.mobileImage?.image, section?.mobileImage?.imageDataUrl || section?.mobileImageDataUrl),
     );
@@ -126,6 +137,13 @@ async function normalizeSectionForSave(section, index) {
             },
           }
         : {}),
+    };
+  }
+
+  if (type === 'ScrollableBannerCarousel') {
+    return {
+      ...baseSection,
+      carouselBanners: await normalizeBannerImages(section?.carouselBanners),
     };
   }
 

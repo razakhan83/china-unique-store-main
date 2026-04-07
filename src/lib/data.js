@@ -920,6 +920,19 @@ export async function getStorefrontHomePage() {
           : null;
       }
 
+      if (section.type === 'ScrollableBannerCarousel') {
+        const carouselBanners = Array.isArray(section.carouselBanners)
+          ? section.carouselBanners.filter((item) => item?.image?.url)
+          : [];
+
+        return carouselBanners.length > 0
+          ? {
+              ...section,
+              carouselBanners,
+            }
+          : null;
+      }
+
       if (section.type === 'ProductGridByCategory') {
         const category = categoryMap.get(section.categoryId);
         if (!category || category.isEnabled === false) return null;

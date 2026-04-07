@@ -148,6 +148,10 @@ const HomePageSectionSchema = new mongoose.Schema(
       type: [HomePageBannerImageSchema],
       default: [],
     },
+    carouselBanners: {
+      type: [HomePageBannerImageSchema],
+      default: [],
+    },
     mobileImage: {
       type: HomePageBannerImageSchema,
       default: undefined,

@@ -105,6 +105,11 @@ const SECTION_TEMPLATES = [
     icon: Monitor,
   },
   {
+    type: 'ScrollableBannerCarousel',
+    label: 'Scrollable Banner Carousel',
+    icon: Images,
+  },
+  {
     type: 'ProductGridByCategory',
     label: 'Category Products',
     icon: SquareStack,
@@ -147,6 +152,15 @@ function createHeroSlide(index = 0) {
   };
 }
 
+function createCarouselBanner(index = 0) {
+  return {
+    id: `carousel-banner-${Date.now()}-${index}`,
+    image: null,
+    link: '',
+    alt: '',
+  };
+}
+
 function createSection(template, index = 0) {
   const type = template?.type || 'CategoriesGrid';
 
@@ -186,6 +200,17 @@ function createSection(template, index = 0) {
     };
   }
 
+  if (type === 'ScrollableBannerCarousel') {
+    return {
+      id: createSectionId(type, index),
+      type,
+      title: 'Featured Banners',
+      description: '',
+      isEnabled: true,
+      carouselBanners: [createCarouselBanner(0)],
+    };
+  }
+
   return {
     id: createSectionId(type, index),
     type,
@@ -221,6 +246,14 @@ function normalizeSections(input = []) {
       link: section.mobileImage?.link || '',
       alt: section.mobileImage?.alt || '',
     },
+    carouselBanners: Array.isArray(section.carouselBanners)
+      ? section.carouselBanners.map((item, bannerIndex) => ({
+          id: item?.id || `carousel-banner-${index}-${bannerIndex}`,
+          image: item?.image || null,
+          link: item?.link || '',
+          alt: item?.alt || '',
+        }))
+      : [],
     collectionKey: section.collectionKey || '',
     categoryId: section.categoryId || '',
     productLimit: Number(section.productLimit || 8),
@@ -298,6 +331,10 @@ function SortableSectionCard({
   onHeroSlideImageUpload,
   onRemoveHeroSlide,
   onMoveHeroSlide,
+  onAddCarouselBanner,
+  onCarouselBannerChange,
+  onRemoveCarouselBanner,
+  onMoveCarouselBanner,
 }) {
   const template = SECTION_TEMPLATES.find(
     (item) => item.type === section.type && (!item.collectionKey || item.collectionKey === section.collectionKey),
@@ -366,7 +403,7 @@ function SortableSectionCard({
       <Separator className="my-5" />
 
       <FieldGroup>
-        {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ProductCollection') && (
+        {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ScrollableBannerCarousel' || section.type === 'ProductCollection') && (
           <Field>
             <FieldLabel>Section Title</FieldLabel>
             <Input
@@ -474,6 +511,110 @@ function SortableSectionCard({
                     </Field>
                   </div>
                 </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {section.type === 'ScrollableBannerCarousel' && (
+          <>
+            <Field>
+              <FieldLabel>Supporting Copy</FieldLabel>
+              <Textarea
+                value={section.description || ''}
+                onChange={(event) => onSectionChange(section.id, { description: event.target.value })}
+                placeholder="Optional short supporting copy"
+                rows={3}
+              />
+            </Field>
+
+            <div className="rounded-3xl border border-border bg-muted/20 p-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Landscape Banners</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add multiple landscape banners. They render as a horizontal scroll row on the storefront.
+                  </p>
+                </div>
+                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddCarouselBanner(section.id)}>
+                  <Plus data-icon="inline-start" />
+                  Add Banner
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {(section.carouselBanners || []).map((banner, bannerIndex) => (
+                  <div key={banner.id || `carousel-banner-${bannerIndex}`} className="rounded-3xl border border-border bg-background/80 p-4">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">Banner {bannerIndex + 1}</Badge>
+                        <span className="text-xs text-muted-foreground">Landscape carousel item</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-2xl"
+                          onClick={() => onMoveCarouselBanner(section.id, banner.id, -1)}
+                          disabled={bannerIndex === 0}
+                          aria-label={`Move banner ${bannerIndex + 1} up`}
+                        >
+                          <ArrowUp />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-2xl"
+                          onClick={() => onMoveCarouselBanner(section.id, banner.id, 1)}
+                          disabled={bannerIndex === (section.carouselBanners?.length || 1) - 1}
+                          aria-label={`Move banner ${bannerIndex + 1} down`}
+                        >
+                          <ArrowDown />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-2xl"
+                          onClick={() => onRemoveCarouselBanner(section.id, banner.id)}
+                          disabled={(section.carouselBanners?.length || 0) <= 1}
+                          aria-label={`Remove banner ${bannerIndex + 1}`}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <PreviewUploadTile
+                      label="Landscape Banner"
+                      description="Wide banner image for the horizontal carousel."
+                      asset={banner.image}
+                      disabled={uploadingKey === `${section.id}:carouselBanners:${bannerIndex}`}
+                      onChange={(event) => onSectionImageUpload(section.id, 'carouselBanners', event, bannerIndex)}
+                    />
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <Field>
+                        <FieldLabel>Target Link</FieldLabel>
+                        <Input
+                          value={banner.link || ''}
+                          onChange={(event) => onCarouselBannerChange(section.id, banner.id, { link: event.target.value })}
+                          placeholder="/products/example"
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Alt Text</FieldLabel>
+                        <Input
+                          value={banner.alt || ''}
+                          onChange={(event) => onCarouselBannerChange(section.id, banner.id, { alt: event.target.value })}
+                          placeholder="Describe this banner"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </>
@@ -700,11 +841,12 @@ function HomePageSettingsHeader({ saving, saved, uploadingKey, onSave }) {
   );
 }
 
-function HomePageStats({ enabledSections, hiddenSections, heroSlideCount }) {
+function HomePageStats({ enabledSections, hiddenSections, heroSlideCount, carouselBannerCount }) {
   const stats = [
     ['Visible sections', enabledSections],
     ['Hidden sections', hiddenSections],
     ['Hero slides', heroSlideCount],
+    ['Carousel banners', carouselBannerCount],
   ];
 
   return (
@@ -798,6 +940,10 @@ function HomePageSectionsWorkspace({
   onHeroSlideImageUpload,
   onRemoveHeroSlide,
   onMoveHeroSlide,
+  onAddCarouselBanner,
+  onCarouselBannerChange,
+  onRemoveCarouselBanner,
+  onMoveCarouselBanner,
 }) {
   if (sections.length === 0) {
     return (
@@ -848,6 +994,10 @@ function HomePageSectionsWorkspace({
                 onHeroSlideImageUpload={onHeroSlideImageUpload}
                 onRemoveHeroSlide={onRemoveHeroSlide}
                 onMoveHeroSlide={onMoveHeroSlide}
+                onAddCarouselBanner={onAddCarouselBanner}
+                onCarouselBannerChange={onCarouselBannerChange}
+                onRemoveCarouselBanner={onRemoveCarouselBanner}
+                onMoveCarouselBanner={onMoveCarouselBanner}
               />
             ))}
           </div>
@@ -871,6 +1021,10 @@ function HomePageSectionsWorkspace({
               onHeroSlideImageUpload={() => {}}
               onRemoveHeroSlide={() => {}}
               onMoveHeroSlide={() => {}}
+              onAddCarouselBanner={() => {}}
+              onCarouselBannerChange={() => {}}
+              onRemoveCarouselBanner={() => {}}
+              onMoveCarouselBanner={() => {}}
             />
           </div>
         ) : null}
@@ -923,6 +1077,14 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
       ),
     [sections],
   );
+  const carouselBannerCount = useMemo(
+    () =>
+      sections.reduce(
+        (total, section) => total + (section.type === 'ScrollableBannerCarousel' ? section.carouselBanners?.length || 0 : 0),
+        0,
+      ),
+    [sections],
+  );
   function isTemplateAlreadyUsed(template) {
     if (template.type !== 'ProductCollection') return false;
     return uniqueCollectionKeys.has(template.collectionKey);
@@ -944,6 +1106,20 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
         return {
           ...section,
           slides: updater(Array.isArray(section.slides) ? section.slides : []),
+        };
+      }),
+    );
+  }
+
+  function updateCarouselBanners(sectionId, updater) {
+    setSaved(false);
+    setSections((current) =>
+      current.map((section) => {
+        if (section.id !== sectionId) return section;
+
+        return {
+          ...section,
+          carouselBanners: updater(Array.isArray(section.carouselBanners) ? section.carouselBanners : []),
         };
       }),
     );
@@ -1024,6 +1200,32 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
     });
   }
 
+  function handleAddCarouselBanner(sectionId) {
+    updateCarouselBanners(sectionId, (banners) => [...banners, createCarouselBanner(banners.length)]);
+  }
+
+  function handleCarouselBannerChange(sectionId, bannerId, patch) {
+    updateCarouselBanners(sectionId, (banners) =>
+      banners.map((banner) => (banner.id === bannerId ? { ...banner, ...patch } : banner)),
+    );
+  }
+
+  function handleRemoveCarouselBanner(sectionId, bannerId) {
+    updateCarouselBanners(sectionId, (banners) => {
+      const nextBanners = banners.filter((banner) => banner.id !== bannerId);
+      return nextBanners.length > 0 ? nextBanners : [createCarouselBanner(0)];
+    });
+  }
+
+  function handleMoveCarouselBanner(sectionId, bannerId, direction) {
+    updateCarouselBanners(sectionId, (banners) => {
+      const currentIndex = banners.findIndex((banner) => banner.id === bannerId);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex === -1 || nextIndex < 0 || nextIndex >= banners.length) return banners;
+      return arrayMove(banners, currentIndex, nextIndex);
+    });
+  }
+
   async function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1057,6 +1259,19 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
             return {
               ...section,
               desktopImages: (section.desktopImages || []).map((item, idx) =>
+                idx === imageIndex ? { ...item, image: asset } : item,
+              ),
+            };
+          }),
+        );
+      } else if (fieldName === 'carouselBanners') {
+        setSections((current) =>
+          current.map((section) => {
+            if (section.id !== sectionId) return section;
+
+            return {
+              ...section,
+              carouselBanners: (section.carouselBanners || []).map((item, idx) =>
                 idx === imageIndex ? { ...item, image: asset } : item,
               ),
             };
@@ -1127,6 +1342,13 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
                   alt: item?.alt || '',
                 }))
               : [],
+            carouselBanners: Array.isArray(section.carouselBanners)
+              ? section.carouselBanners.map((item) => ({
+                  image: item?.image || null,
+                  link: item?.link || '',
+                  alt: item?.alt || '',
+                }))
+              : [],
             mobileImage: section.mobileImage
               ? {
                   image: section.mobileImage.image || null,
@@ -1174,6 +1396,7 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
         enabledSections={enabledSections}
         hiddenSections={hiddenSections}
         heroSlideCount={heroSlideCount}
+        carouselBannerCount={carouselBannerCount}
       />
 
       <SectionLibrary
@@ -1202,6 +1425,10 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
           onHeroSlideImageUpload={handleHeroSlideImageUpload}
           onRemoveHeroSlide={handleRemoveHeroSlide}
           onMoveHeroSlide={handleMoveHeroSlide}
+          onAddCarouselBanner={handleAddCarouselBanner}
+          onCarouselBannerChange={handleCarouselBannerChange}
+          onRemoveCarouselBanner={handleRemoveCarouselBanner}
+          onMoveCarouselBanner={handleMoveCarouselBanner}
         />
       </div>
 
