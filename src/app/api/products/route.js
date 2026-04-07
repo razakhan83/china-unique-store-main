@@ -20,7 +20,7 @@ const slugify = (text) => {
         .replace(/-+$/, '');
 };
 
-// GET all products - used by both Public Store and Admin
+// GET all products - used by both Public Store and Admin 
 export async function GET() {
     try {
         await mongooseConnect();

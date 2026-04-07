@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
   GripVertical,
   Images,
   LayoutGrid,
@@ -42,6 +43,29 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import {
   Field,
   FieldDescription,
@@ -326,7 +350,14 @@ function SortableSectionCard({
             <span className="text-xs font-semibold text-muted-foreground">Visible</span>
             <Switch checked={section.isEnabled !== false} onCheckedChange={() => onToggleEnabled(section.id)} />
           </div>
-          <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={() => onDelete(section.id)}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="rounded-2xl"
+            onClick={() => onDelete(section.id)}
+            aria-label={`Delete ${template?.label || section.type}`}
+          >
             <Trash2 />
           </Button>
         </div>
@@ -530,7 +561,7 @@ function SortableSectionCard({
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {section.slides?.map((slide, slideIndex) => (
                 <div key={slide.id} className="rounded-3xl border border-border bg-background/80 p-4">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -546,6 +577,7 @@ function SortableSectionCard({
                         className="rounded-2xl"
                         onClick={() => onMoveHeroSlide(section.id, slide.id, -1)}
                         disabled={slideIndex === 0}
+                        aria-label={`Move slide ${slideIndex + 1} up`}
                       >
                         <ArrowUp />
                       </Button>
@@ -556,6 +588,7 @@ function SortableSectionCard({
                         className="rounded-2xl"
                         onClick={() => onMoveHeroSlide(section.id, slide.id, 1)}
                         disabled={slideIndex === (section.slides?.length || 1) - 1}
+                        aria-label={`Move slide ${slideIndex + 1} down`}
                       >
                         <ArrowDown />
                       </Button>
@@ -566,6 +599,7 @@ function SortableSectionCard({
                         className="rounded-2xl"
                         onClick={() => onRemoveHeroSlide(section.id, slide.id)}
                         disabled={(section.slides?.length || 0) <= 1}
+                        aria-label={`Remove slide ${slideIndex + 1}`}
                       >
                         <Trash2 />
                       </Button>
@@ -618,6 +652,235 @@ function SortableSectionCard({
   );
 }
 
+function SaveHomePageButton({ saving, saved, uploadingKey, onSave, className }) {
+  return (
+    <Button
+      onClick={onSave}
+      disabled={saving || Boolean(uploadingKey)}
+      className={cn('rounded-2xl', className)}
+    >
+      {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+      {saving ? 'Saving...' : saved ? 'Saved' : 'Save Home Page'}
+    </Button>
+  );
+}
+
+function HomePageSettingsHeader({ saving, saved, uploadingKey, onSave }) {
+  const statusLabel = saving
+    ? 'Saving'
+    : uploadingKey
+      ? 'Uploading asset'
+      : saved
+        ? 'Saved'
+        : 'Ready';
+
+  return (
+    <div className="sticky top-0 z-20 -mx-2 mb-5 border-b border-border/70 bg-background/92 px-2 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:mx-0 sm:px-0">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">Home Page Settings</h1>
+            <Badge variant={saved ? 'default' : 'secondary'} className="rounded-full">
+              {statusLabel}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Arrange storefront sections, upload responsive artwork, and publish changes to the live home page.
+          </p>
+        </div>
+        <SaveHomePageButton
+          saving={saving}
+          saved={saved}
+          uploadingKey={uploadingKey}
+          onSave={onSave}
+          className="h-10 sm:min-w-[10rem]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function HomePageStats({ enabledSections, hiddenSections, heroSlideCount }) {
+  const stats = [
+    ['Visible sections', enabledSections],
+    ['Hidden sections', hiddenSections],
+    ['Hero slides', heroSlideCount],
+  ];
+
+  return (
+    <div className="mb-5 grid gap-3 sm:grid-cols-3">
+      {stats.map(([label, value]) => (
+        <Card key={label} size="sm" className="border border-border/70 bg-card/80">
+          <CardHeader>
+            <CardDescription>{label}</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums">{value}</CardTitle>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function SectionLibrary({ isTemplateAlreadyUsed, onAddSection }) {
+  return (
+    <Card size="sm" className="border border-border/70">
+      <CardHeader className="items-center gap-3 sm:grid-cols-[1fr_auto]">
+        <div>
+          <CardTitle>Sections</CardTitle>
+          <CardDescription>Keep the builder focused. Add blocks from the menu.</CardDescription>
+        </div>
+        <CardAction>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" size="sm" className="rounded-full">
+                <Plus data-icon="inline-start" />
+                Add Section
+                <ChevronDown data-icon="inline-end" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Choose a home page block</DropdownMenuLabel>
+                {SECTION_TEMPLATES.map((template) => {
+                  const Icon = template.icon;
+                  const isUsed = isTemplateAlreadyUsed(template);
+
+                  return (
+                    <DropdownMenuItem
+                      key={`${template.type}-${template.collectionKey || 'base'}`}
+                      disabled={isUsed}
+                      onClick={() => {
+                        if (!isUsed) onAddSection(template);
+                      }}
+                      className="min-h-11"
+                    >
+                      <Icon />
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="truncate font-medium">{template.label}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {template.type === 'ProductCollection'
+                            ? 'Curated product row'
+                            : template.type.replace(/([a-z])([A-Z])/g, '$1 $2')}
+                        </span>
+                      </span>
+                      {isUsed ? (
+                        <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
+                          Added
+                        </Badge>
+                      ) : null}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardAction>
+      </CardHeader>
+    </Card>
+  );
+}
+
+function HomePageSectionsWorkspace({
+  sections,
+  sectionIds,
+  activeSection,
+  sensors,
+  availableCategories,
+  uploadingKey,
+  onAddSection,
+  onDragStart,
+  onDragEnd,
+  onDragCancel,
+  onDeleteSection,
+  onToggleEnabled,
+  onSectionChange,
+  onSectionImageUpload,
+  onAddHeroSlide,
+  onHeroSlideChange,
+  onHeroSlideImageUpload,
+  onRemoveHeroSlide,
+  onMoveHeroSlide,
+}) {
+  if (sections.length === 0) {
+    return (
+      <Empty className="surface-card rounded-3xl border border-border/70 px-6 py-14">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <LayoutGrid />
+          </EmptyMedia>
+          <EmptyTitle>No sections added yet</EmptyTitle>
+          <EmptyDescription>
+            Start with a hero slider, category grid, or product collection to build the home page.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button type="button" className="rounded-2xl" onClick={() => onAddSection(SECTION_TEMPLATES[0])}>
+            <Plus data-icon="inline-start" />
+            Add Hero Slider
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragCancel={onDragCancel}
+    >
+      <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+        <div className="max-h-[72vh] overflow-y-auto pr-1 sm:pr-3">
+          <div className="flex flex-col gap-4">
+            {sections.map((section, index) => (
+              <SortableSectionCard
+                key={section.id}
+                section={section}
+                index={index}
+                categories={availableCategories}
+                uploadingKey={uploadingKey}
+                onDelete={onDeleteSection}
+                onToggleEnabled={onToggleEnabled}
+                onSectionChange={onSectionChange}
+                onSectionImageUpload={onSectionImageUpload}
+                onAddHeroSlide={onAddHeroSlide}
+                onHeroSlideChange={onHeroSlideChange}
+                onHeroSlideImageUpload={onHeroSlideImageUpload}
+                onRemoveHeroSlide={onRemoveHeroSlide}
+                onMoveHeroSlide={onMoveHeroSlide}
+              />
+            ))}
+          </div>
+        </div>
+      </SortableContext>
+      <DragOverlay dropAnimation={null}>
+        {activeSection ? (
+          <div className="w-[min(100%,72rem)] px-1">
+            <SortableSectionCard
+              section={activeSection}
+              index={sections.findIndex((section) => section.id === activeSection.id)}
+              categories={availableCategories}
+              uploadingKey={uploadingKey}
+              isDragPreview
+              onDelete={() => {}}
+              onToggleEnabled={() => {}}
+              onSectionChange={() => {}}
+              onSectionImageUpload={() => {}}
+              onAddHeroSlide={() => {}}
+              onHeroSlideChange={() => {}}
+              onHeroSlideImageUpload={() => {}}
+              onRemoveHeroSlide={() => {}}
+              onMoveHeroSlide={() => {}}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
+
 export default function HomePageBuilderClient({ initialSections, availableCategories }) {
   const [sections, setSections] = useState(normalizeSections(initialSections));
   const [saving, setSaving] = useState(false);
@@ -649,7 +912,19 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
       ),
     [sections],
   );
-
+  const enabledSections = useMemo(
+    () => sections.filter((section) => section.isEnabled !== false).length,
+    [sections],
+  );
+  const hiddenSections = sections.length - enabledSections;
+  const heroSlideCount = useMemo(
+    () =>
+      sections.reduce(
+        (total, section) => total + (section.type === 'HeroSlider' ? section.slides?.length || 0 : 0),
+        0,
+      ),
+    [sections],
+  );
   function isTemplateAlreadyUsed(template) {
     if (template.type !== 'ProductCollection') return false;
     return uniqueCollectionKeys.has(template.collectionKey);
@@ -890,145 +1165,56 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
 
   return (
     <div className="max-w-6xl pb-24 md:pb-0">
-      <div className="sticky top-0 z-20 -mx-2 mb-5 border-b border-border/70 bg-background/92 px-2 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:mx-0 sm:px-0">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-base font-medium tracking-tight text-foreground sm:text-lg">Home Page Section Manager</h1>
-          <Button
-            onClick={handleSave}
-            disabled={saving || Boolean(uploadingKey)}
-            className="h-10 rounded-2xl sm:min-w-[10rem]"
-          >
-            {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Save data-icon="inline-start" />}
-            {saving ? 'Saving...' : saved ? 'Saved' : 'Save Home Page'}
-          </Button>
-        </div>
-      </div>
+      <HomePageSettingsHeader
+        saving={saving}
+        saved={saved}
+        uploadingKey={uploadingKey}
+        onSave={handleSave}
+      />
 
-      <div className="surface-card rounded-3xl border border-border/70 p-5 md:p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-foreground">Section Library</p>
-        </div>
+      <HomePageStats
+        enabledSections={enabledSections}
+        hiddenSections={hiddenSections}
+        heroSlideCount={heroSlideCount}
+      />
 
-        <div className="mb-4 rounded-[1.4rem] border border-border bg-[linear-gradient(135deg,color-mix(in_oklab,var(--color-primary)_8%,white),color-mix(in_oklab,var(--color-primary)_2%,white))] px-3 py-3 sm:px-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">Quick Add</p>
-        </div>
-
-        <div className="-mx-5 overflow-x-auto px-5 pb-1 md:mx-0 md:px-0">
-          <div className="flex min-w-max gap-2 md:min-w-0 md:flex-wrap md:gap-2.5">
-          {SECTION_TEMPLATES.map((template) => {
-            const Icon = template.icon;
-            const isUsed = isTemplateAlreadyUsed(template);
-
-            return (
-              <Button
-                key={`${template.type}-${template.collectionKey || 'base'}`}
-                type="button"
-                onClick={() => handleAddSection(template)}
-                disabled={isUsed}
-                className={cn(
-                  'group h-auto min-h-0 shrink-0 justify-start gap-2 rounded-full border border-border bg-background/90 px-3.5 py-2.5 text-left text-foreground shadow-[0_10px_24px_rgba(10,61,46,0.06)] transition-[transform,box-shadow,border-color,background-color,opacity] duration-300 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-white hover:shadow-[0_16px_36px_rgba(10,61,46,0.1)] md:max-w-[15.5rem]',
-                  isUsed && 'cursor-not-allowed border-border/80 bg-muted/35 text-muted-foreground opacity-70 hover:translate-y-0 hover:border-border/80 hover:bg-muted/35 hover:shadow-none',
-                )}
-              >
-                <span
-                  className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors duration-300',
-                    isUsed && 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  <Icon className="size-4.5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{template.label}</span>
-                </span>
-                <div className="shrink-0">
-                  {isUsed ? (
-                    <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
-                      Added
-                    </Badge>
-                  ) : (
-                    <Plus className="size-4 text-primary/70 transition-transform duration-300 group-hover:scale-110" />
-                  )}
-                </div>
-              </Button>
-            );
-          })}
-          </div>
-        </div>
-      </div>
+      <SectionLibrary
+        isTemplateAlreadyUsed={isTemplateAlreadyUsed}
+        onAddSection={handleAddSection}
+      />
 
       <div className="mt-6">
-        {sections.length === 0 ? (
-          <div className="surface-card rounded-3xl border border-dashed border-border/70 px-6 py-14 text-center">
-            <p className="text-sm font-medium text-muted-foreground">No sections added yet. Start with a hero slider or category grid.</p>
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-              <div className="max-h-[72vh] overflow-y-auto pr-1 sm:pr-3">
-                <div className="space-y-4">
-                  {sections.map((section, index) => (
-                    <SortableSectionCard
-                      key={section.id}
-                      section={section}
-                      index={index}
-                      categories={availableCategories}
-                      uploadingKey={uploadingKey}
-                      onDelete={handleDeleteSection}
-                      onToggleEnabled={handleToggleEnabled}
-                      onSectionChange={updateSection}
-                      onSectionImageUpload={handleSectionImageUpload}
-                      onAddHeroSlide={handleAddHeroSlide}
-                      onHeroSlideChange={handleHeroSlideChange}
-                      onHeroSlideImageUpload={handleHeroSlideImageUpload}
-                      onRemoveHeroSlide={handleRemoveHeroSlide}
-                      onMoveHeroSlide={handleMoveHeroSlide}
-                    />
-                  ))}
-                </div>
-              </div>
-            </SortableContext>
-            <DragOverlay dropAnimation={null}>
-              {activeSection ? (
-                <div className="w-[min(100%,72rem)] px-1">
-                  <SortableSectionCard
-                    section={activeSection}
-                    index={sections.findIndex((section) => section.id === activeSection.id)}
-                    categories={availableCategories}
-                    uploadingKey={uploadingKey}
-                    isDragPreview
-                    onDelete={() => {}}
-                    onToggleEnabled={() => {}}
-                    onSectionChange={() => {}}
-                    onSectionImageUpload={() => {}}
-                    onAddHeroSlide={() => {}}
-                    onHeroSlideChange={() => {}}
-                    onHeroSlideImageUpload={() => {}}
-                    onRemoveHeroSlide={() => {}}
-                    onMoveHeroSlide={() => {}}
-                  />
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        )}
+        <HomePageSectionsWorkspace
+          sections={sections}
+          sectionIds={sectionIds}
+          activeSection={activeSection}
+          sensors={sensors}
+          availableCategories={availableCategories}
+          uploadingKey={uploadingKey}
+          onAddSection={handleAddSection}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+          onDeleteSection={handleDeleteSection}
+          onToggleEnabled={handleToggleEnabled}
+          onSectionChange={updateSection}
+          onSectionImageUpload={handleSectionImageUpload}
+          onAddHeroSlide={handleAddHeroSlide}
+          onHeroSlideChange={handleHeroSlideChange}
+          onHeroSlideImageUpload={handleHeroSlideImageUpload}
+          onRemoveHeroSlide={handleRemoveHeroSlide}
+          onMoveHeroSlide={handleMoveHeroSlide}
+        />
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Button
-          onClick={handleSave}
-          disabled={saving || Boolean(uploadingKey)}
+        <SaveHomePageButton
+          saving={saving}
+          saved={saved}
+          uploadingKey={uploadingKey}
+          onSave={handleSave}
           className="h-11 rounded-2xl sm:h-10"
-        >
-          {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Save data-icon="inline-start" />}
-          {saving ? 'Saving...' : saved ? 'Saved' : 'Save Home Page'}
-        </Button>
+        />
         {saved ? <span className="text-sm font-medium text-primary">Homepage layout saved successfully.</span> : null}
       </div>
     </div>
