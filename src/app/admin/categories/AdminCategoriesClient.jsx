@@ -3,31 +3,12 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  GripVertical,
   ImageIcon,
   Loader2,
   MoreVertical,
   Package2,
   Pencil,
   Plus,
-  Save,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -47,6 +28,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -72,43 +54,11 @@ function mapCategory(category, index = 0) {
   };
 }
 
-function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabled }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: category._id });
-
+function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
   return (
     <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-      className={cn(
-        "surface-card flex items-center gap-4 rounded-2xl p-4 shadow-[0_18px_40px_rgba(10,61,46,0.07)] transition-shadow",
-        isDragging && "z-10 border-primary/35 shadow-[0_22px_60px_rgba(10,61,46,0.18)]",
-      )}
+      className="surface-card flex items-center gap-4 rounded-2xl p-4 shadow-[0_18px_40px_rgba(10,61,46,0.07)]"
     >
-      <button
-        type="button"
-        className={cn(
-          "flex size-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
-          isDragging
-            ? "border-primary/45 bg-primary text-primary-foreground"
-            : "border-border bg-muted/35 text-muted-foreground hover:text-foreground",
-        )}
-        aria-label={`Reorder ${category.name}`}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="size-4.5" />
-      </button>
-
       <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/35">
         {category.image ? (
           <Image
@@ -128,7 +78,7 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-semibold text-foreground">{category.name}</p>
           <Badge variant="secondary" className="rounded-full">
-            {category.productCount} products
+            {category.productCount} {category.productCount === 1 ? "product" : "products"}
           </Badge>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{category.slug}</p>
@@ -136,9 +86,9 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
 
       <div className="hidden text-right md:block">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Position
+          Products
         </p>
-        <p className="mt-1 text-sm font-semibold text-primary">{index + 1}</p>
+        <p className="mt-1 text-sm font-semibold text-primary">{category.productCount}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -168,17 +118,19 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit?.(category)}>
-              <Pencil className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-              onClick={() => onDelete(category)}
-            >
-              <Trash2 className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => onEdit?.(category)}>
+                <Pencil />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                onClick={() => onDelete(category)}
+              >
+                <Trash2 />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -189,7 +141,6 @@ function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabl
 export default function AdminCategoriesClient() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newImage, setNewImage] = useState("");
@@ -201,29 +152,19 @@ export default function AdminCategoriesClient() {
   const [editImage, setEditImage] = useState("");
   const [editIsEnabled, setEditIsEnabled] = useState(true);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
   const orderedCategories = useMemo(
-    () => [...categories].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
+    () => [...categories].sort((a, b) => a.name.localeCompare(b.name)),
     [categories],
   );
 
-  const categoryIds = useMemo(() => orderedCategories.map((category) => category._id), [orderedCategories]);
+  const liveCategoryCount = useMemo(
+    () => categories.filter((category) => category.isEnabled !== false).length,
+    [categories],
+  );
+  const totalProductCount = useMemo(
+    () => categories.reduce((total, category) => total + Number(category.productCount || 0), 0),
+    [categories],
+  );
 
   useEffect(() => {
     fetchCategories();
@@ -250,22 +191,6 @@ export default function AdminCategoriesClient() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleDragEnd(event) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setCategories((current) => {
-      const ordered = [...current].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-      const oldIndex = ordered.findIndex((item) => item._id === active.id);
-      const newIndex = ordered.findIndex((item) => item._id === over.id);
-
-      return arrayMove(ordered, oldIndex, newIndex).map((category, index) => ({
-        ...category,
-        sortOrder: index,
-      }));
-    });
   }
 
   function handleImageSelect(event) {
@@ -401,38 +326,6 @@ export default function AdminCategoriesClient() {
     }
   }
 
-  async function handleSaveOrder() {
-    setSaving(true);
-    try {
-      const response = await fetch("/api/categories", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          categories: orderedCategories.map((category, index) => ({
-            _id: category._id,
-            sortOrder: index,
-          })),
-        }),
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || "Failed to save category order");
-      }
-
-      toast.success("Category order saved.");
-      setCategories(
-        (data.data || [])
-          .filter((category) => category.slug !== "special-offers")
-          .map((category, index) => mapCategory(category, index)),
-      );
-    } catch (error) {
-      toast.error(error.message || "Failed to save category order");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function handleDelete() {
     if (!deleteModal.category) return;
 
@@ -491,11 +384,21 @@ export default function AdminCategoriesClient() {
 
   return (
     <div className="max-w-4xl pb-24 md:pb-0">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Categories</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your real storefront categories here. Homepage section order now lives only in Home Page Settings.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Categories</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add categories, update images, and see how many products are assigned to each one.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="rounded-full px-3 py-1">
+            {liveCategoryCount} live
+          </Badge>
+          <Badge variant="secondary" className="rounded-full px-3 py-1">
+            {totalProductCount} products listed
+          </Badge>
+        </div>
       </div>
 
       <form onSubmit={handleAddCategory} className="surface-card mb-6 rounded-2xl p-5 md:p-6">
@@ -550,10 +453,10 @@ export default function AdminCategoriesClient() {
       <div className="surface-card mb-6 rounded-2xl border border-border/70 p-4">
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <Badge variant="secondary" className="rounded-full px-3 py-1">
-            <Package2 className="mr-1 size-3.5" />
-            Product counts included
+            <Package2 />
+            Product counts
           </Badge>
-          <span>Drag to reorder category navigation. Homepage marketing sections are no longer managed here.</span>
+          <span>Category order is automatic. Use Home Page Settings for storefront section layout.</span>
         </div>
       </div>
 
@@ -568,34 +471,17 @@ export default function AdminCategoriesClient() {
           <p className="font-medium text-muted-foreground">No categories yet. Add your first category above.</p>
         </div>
       ) : (
-        <>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-3">
-                {orderedCategories.map((category, index) => (
-                  <SortableCategoryCard
-                    key={category._id}
-                    category={category}
-                    index={index}
-                    onEdit={openEditModal}
-                    onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
-                    onToggleEnabled={toggleCategoryEnabled}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button onClick={handleSaveOrder} disabled={saving} className="rounded-xl">
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              {saving ? "Saving..." : "Save Category Order"}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              This saves only category order and category visibility.
-            </p>
-          </div>
-        </>
+        <div className="flex flex-col gap-3">
+          {orderedCategories.map((category) => (
+            <CategoryCard
+              key={category._id}
+              category={category}
+              onEdit={openEditModal}
+              onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
+              onToggleEnabled={toggleCategoryEnabled}
+            />
+          ))}
+        </div>
       )}
 
       <AlertDialog

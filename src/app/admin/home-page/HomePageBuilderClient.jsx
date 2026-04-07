@@ -708,14 +708,12 @@ function HomePageStats({ enabledSections, hiddenSections, heroSlideCount }) {
   ];
 
   return (
-    <div className="mb-5 grid gap-3 sm:grid-cols-3">
+    <div className="mb-4 flex flex-wrap gap-2">
       {stats.map(([label, value]) => (
-        <Card key={label} size="sm" className="border border-border/70 bg-card/80">
-          <CardHeader>
-            <CardDescription>{label}</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums">{value}</CardTitle>
-          </CardHeader>
-        </Card>
+        <Badge key={label} variant="secondary" className="rounded-full px-3 py-1">
+          <span className="tabular-nums text-foreground">{value}</span>
+          {label}
+        </Badge>
       ))}
     </div>
   );
