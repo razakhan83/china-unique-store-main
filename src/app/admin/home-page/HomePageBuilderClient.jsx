@@ -26,7 +26,6 @@ import {
   GripVertical,
   Images,
   LayoutGrid,
-  Link2,
   Loader2,
   Monitor,
   Plus,
@@ -43,13 +42,6 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -273,15 +265,15 @@ function normalizeSections(input = []) {
 
 function PreviewUploadTile({ label, description, asset, onChange, disabled, ratio = 'landscape' }) {
   return (
-    <div className="rounded-2xl border border-border bg-background/75 p-3">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-border bg-background/75 p-2.5">
+      <div className="mb-2 flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-foreground">{label}</p>
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-xs font-semibold text-foreground">{label}</p>
+          <p className="text-[11px] text-muted-foreground">{description}</p>
         </div>
         <label
           className={cn(
-            'inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted',
+            'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted',
             disabled && 'cursor-not-allowed opacity-60',
           )}
         >
@@ -349,19 +341,19 @@ function SortableSectionCard({
       ref={setNodeRef}
       style={isDragPreview ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'surface-card rounded-3xl border border-border/70 p-5 shadow-[0_18px_40px_rgba(10,61,46,0.08)] transition-[box-shadow,border-color,transform] duration-300',
-        (isDragging || isDragPreview) && 'border-primary/45 bg-primary/5 shadow-[0_28px_64px_rgba(10,61,46,0.18)]',
+        'surface-card rounded-2xl border border-border/70 p-3.5 shadow-[0_12px_28px_rgba(10,61,46,0.07)] transition-[box-shadow,border-color,transform] duration-300',
+        (isDragging || isDragPreview) && 'border-primary/45 bg-primary/5 shadow-[0_20px_44px_rgba(10,61,46,0.16)]',
         isDragging && !isDragPreview && 'opacity-60',
       )}
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             className={cn(
-              'flex size-12 items-center justify-center rounded-2xl border bg-background transition-[border-color,background-color,color,box-shadow] duration-300',
+              'flex size-10 items-center justify-center rounded-xl border bg-background transition-[border-color,background-color,color,box-shadow] duration-300',
               (isDragging || isDragPreview)
-                ? 'border-primary/50 bg-primary text-primary-foreground shadow-[0_14px_30px_rgba(10,61,46,0.18)]'
+                ? 'border-primary/50 bg-primary text-primary-foreground shadow-[0_10px_22px_rgba(10,61,46,0.18)]'
                 : 'border-border text-primary hover:border-primary/30 hover:bg-primary/8',
             )}
             aria-label={`Reorder ${template?.label || section.type}`}
@@ -369,29 +361,31 @@ function SortableSectionCard({
             {...attributes}
             {...listeners}
           >
-            <GripVertical className="size-5" />
+            <GripVertical className="size-4" />
           </button>
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Icon className="size-5" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="size-4" />
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-semibold text-foreground">{template?.label || section.type}</h3>
-              <Badge variant="secondary">Position {index + 1}</Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">{template?.label || section.type}</h3>
+              <Badge variant="secondary" className="rounded-full px-2 py-0 text-[10px]">
+                Position {index + 1}
+              </Badge>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1">
             <span className="text-xs font-semibold text-muted-foreground">Visible</span>
             <Switch checked={section.isEnabled !== false} onCheckedChange={() => onToggleEnabled(section.id)} />
           </div>
           <Button
             type="button"
             variant="outline"
-            size="icon"
-            className="rounded-2xl"
+            size="icon-sm"
+            className="rounded-xl"
             onClick={() => onDelete(section.id)}
             aria-label={`Delete ${template?.label || section.type}`}
           >
@@ -400,7 +394,7 @@ function SortableSectionCard({
         </div>
       </div>
 
-      <Separator className="my-5" />
+      <Separator className="my-3" />
 
       <FieldGroup>
         {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ScrollableBannerCarousel' || section.type === 'ProductCollection') && (
@@ -426,15 +420,15 @@ function SortableSectionCard({
               />
             </Field>
 
-            <div className="rounded-[1.75rem] border border-border bg-muted/20 p-4">
-              <div className="mb-4">
+            <div className="rounded-2xl border border-border bg-muted/20 p-3">
+              <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">Product Banner Group</p>
                 <p className="text-xs text-muted-foreground">
                   Two low-profile desktop banners sit side-by-side on large screens. Smaller screens use one dedicated mobile landscape banner.
                 </p>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-3">
+              <div className="grid gap-3 xl:grid-cols-3">
                 {[0, 1].map((imageIndex) => (
                   <div key={`desktop-banner-${imageIndex}`} className="rounded-2xl border border-border bg-background/80 p-3">
                     <PreviewUploadTile
@@ -528,24 +522,24 @@ function SortableSectionCard({
               />
             </Field>
 
-            <div className="rounded-3xl border border-border bg-muted/20 p-4">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="rounded-2xl border border-border bg-muted/20 p-3">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Landscape Banners</p>
                   <p className="text-xs text-muted-foreground">
                     Add multiple landscape banners. They render as a horizontal scroll row on the storefront.
                   </p>
                 </div>
-                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddCarouselBanner(section.id)}>
+                <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => onAddCarouselBanner(section.id)}>
                   <Plus data-icon="inline-start" />
                   Add Banner
                 </Button>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {(section.carouselBanners || []).map((banner, bannerIndex) => (
-                  <div key={banner.id || `carousel-banner-${bannerIndex}`} className="rounded-3xl border border-border bg-background/80 p-4">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div key={banner.id || `carousel-banner-${bannerIndex}`} className="rounded-2xl border border-border bg-background/80 p-3">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">Banner {bannerIndex + 1}</Badge>
                         <span className="text-xs text-muted-foreground">Landscape carousel item</span>
@@ -554,8 +548,8 @@ function SortableSectionCard({
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
-                          className="rounded-2xl"
+                          size="icon-sm"
+                          className="rounded-xl"
                           onClick={() => onMoveCarouselBanner(section.id, banner.id, -1)}
                           disabled={bannerIndex === 0}
                           aria-label={`Move banner ${bannerIndex + 1} up`}
@@ -565,8 +559,8 @@ function SortableSectionCard({
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
-                          className="rounded-2xl"
+                          size="icon-sm"
+                          className="rounded-xl"
                           onClick={() => onMoveCarouselBanner(section.id, banner.id, 1)}
                           disabled={bannerIndex === (section.carouselBanners?.length || 1) - 1}
                           aria-label={`Move banner ${bannerIndex + 1} down`}
@@ -576,8 +570,8 @@ function SortableSectionCard({
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
-                          className="rounded-2xl"
+                          size="icon-sm"
+                          className="rounded-xl"
                           onClick={() => onRemoveCarouselBanner(section.id, banner.id)}
                           disabled={(section.carouselBanners?.length || 0) <= 1}
                           aria-label={`Remove banner ${bannerIndex + 1}`}
@@ -595,7 +589,7 @@ function SortableSectionCard({
                       onChange={(event) => onSectionImageUpload(section.id, 'carouselBanners', event, bannerIndex)}
                     />
 
-                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
                       <Field>
                         <FieldLabel>Target Link</FieldLabel>
                         <Input
@@ -621,7 +615,7 @@ function SortableSectionCard({
         )}
 
         {section.type === 'ProductGridByCategory' && (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <Field>
               <FieldLabel>Category</FieldLabel>
               <Select
@@ -657,7 +651,7 @@ function SortableSectionCard({
         )}
 
         {section.type === 'ProductCollection' && (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <Field>
               <FieldLabel>Collection Type</FieldLabel>
               <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm font-semibold text-foreground">
@@ -690,22 +684,22 @@ function SortableSectionCard({
         )}
 
         {section.type === 'HeroSlider' && (
-          <div className="rounded-3xl border border-border bg-muted/20 p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="rounded-2xl border border-border bg-muted/20 p-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-foreground">Slides</p>
                 <p className="text-xs text-muted-foreground">Upload desktop and mobile artwork for each hero frame.</p>
               </div>
-              <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddHeroSlide(section.id)}>
+              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => onAddHeroSlide(section.id)}>
                 <Plus data-icon="inline-start" />
                 Add Slide
               </Button>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {section.slides?.map((slide, slideIndex) => (
-                <div key={slide.id} className="rounded-3xl border border-border bg-background/80 p-4">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div key={slide.id} className="rounded-2xl border border-border bg-background/80 p-3">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">Slide {slideIndex + 1}</Badge>
                       <span className="text-xs text-muted-foreground">Hero image pair</span>
@@ -714,8 +708,8 @@ function SortableSectionCard({
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
-                        className="rounded-2xl"
+                        size="icon-sm"
+                        className="rounded-xl"
                         onClick={() => onMoveHeroSlide(section.id, slide.id, -1)}
                         disabled={slideIndex === 0}
                         aria-label={`Move slide ${slideIndex + 1} up`}
@@ -725,8 +719,8 @@ function SortableSectionCard({
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
-                        className="rounded-2xl"
+                        size="icon-sm"
+                        className="rounded-xl"
                         onClick={() => onMoveHeroSlide(section.id, slide.id, 1)}
                         disabled={slideIndex === (section.slides?.length || 1) - 1}
                         aria-label={`Move slide ${slideIndex + 1} down`}
@@ -736,8 +730,8 @@ function SortableSectionCard({
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
-                        className="rounded-2xl"
+                        size="icon-sm"
+                        className="rounded-xl"
                         onClick={() => onRemoveHeroSlide(section.id, slide.id)}
                         disabled={(section.slides?.length || 0) <= 1}
                         aria-label={`Remove slide ${slideIndex + 1}`}
@@ -747,7 +741,7 @@ function SortableSectionCard({
                     </div>
                   </div>
 
-                  <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-3 lg:grid-cols-2">
                     <PreviewUploadTile
                       label="Desktop Slide"
                       description="Large landscape image for desktop and wide screens."
@@ -765,7 +759,7 @@ function SortableSectionCard({
                     />
                   </div>
 
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
                     <Field>
                       <FieldLabel>Alt Text</FieldLabel>
                       <Input
@@ -798,7 +792,8 @@ function SaveHomePageButton({ saving, saved, uploadingKey, onSave, className }) 
     <Button
       onClick={onSave}
       disabled={saving || Boolean(uploadingKey)}
-      className={cn('rounded-2xl', className)}
+      size="sm"
+      className={cn('rounded-full', className)}
     >
       {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Save data-icon="inline-start" />}
       {saving ? 'Saving...' : saved ? 'Saved' : 'Save Home Page'}
@@ -806,7 +801,63 @@ function SaveHomePageButton({ saving, saved, uploadingKey, onSave, className }) 
   );
 }
 
-function HomePageSettingsHeader({ saving, saved, uploadingKey, onSave }) {
+function AddSectionDropdown({ isTemplateAlreadyUsed, onAddSection }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="rounded-full">
+          <Plus data-icon="inline-start" />
+          Add Section
+          <ChevronDown data-icon="inline-end" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Choose a home page block</DropdownMenuLabel>
+          {SECTION_TEMPLATES.map((template) => {
+            const Icon = template.icon;
+            const isUsed = isTemplateAlreadyUsed(template);
+
+            return (
+              <DropdownMenuItem
+                key={`${template.type}-${template.collectionKey || 'base'}`}
+                disabled={isUsed}
+                onClick={() => {
+                  if (!isUsed) onAddSection(template);
+                }}
+                className="min-h-10"
+              >
+                <Icon />
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate font-medium">{template.label}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {template.type === 'ProductCollection'
+                      ? 'Curated product row'
+                      : template.type.replace(/([a-z])([A-Z])/g, '$1 $2')}
+                  </span>
+                </span>
+                {isUsed ? (
+                  <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
+                    Added
+                  </Badge>
+                ) : null}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function HomePageSettingsHeader({
+  saving,
+  saved,
+  uploadingKey,
+  onSave,
+  isTemplateAlreadyUsed,
+  onAddSection,
+}) {
   const statusLabel = saving
     ? 'Saving'
     : uploadingKey
@@ -816,107 +867,31 @@ function HomePageSettingsHeader({ saving, saved, uploadingKey, onSave }) {
         : 'Ready';
 
   return (
-    <div className="sticky top-0 z-20 -mx-2 mb-5 border-b border-border/70 bg-background/92 px-2 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:mx-0 sm:px-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">Home Page Settings</h1>
-            <Badge variant={saved ? 'default' : 'secondary'} className="rounded-full">
-              {statusLabel}
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Arrange storefront sections, upload responsive artwork, and publish changes to the live home page.
-          </p>
+    <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-border/80 bg-background/95 px-3 py-2.5 shadow-[0_8px_24px_rgba(10,61,46,0.06)] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
+            Home Page Settings
+          </h1>
+          <Badge variant={saved ? 'default' : 'secondary'} className="rounded-full px-2 py-0 text-[10px]">
+            {statusLabel}
+          </Badge>
         </div>
-        <SaveHomePageButton
-          saving={saving}
-          saved={saved}
-          uploadingKey={uploadingKey}
-          onSave={onSave}
-          className="h-10 sm:min-w-[10rem]"
-        />
+        <div className="flex items-center gap-2">
+          <AddSectionDropdown
+            isTemplateAlreadyUsed={isTemplateAlreadyUsed}
+            onAddSection={onAddSection}
+          />
+          <SaveHomePageButton
+            saving={saving}
+            saved={saved}
+            uploadingKey={uploadingKey}
+            onSave={onSave}
+            className="h-7 sm:min-w-[9rem]"
+          />
+        </div>
       </div>
     </div>
-  );
-}
-
-function HomePageStats({ enabledSections, hiddenSections, heroSlideCount, carouselBannerCount }) {
-  const stats = [
-    ['Visible sections', enabledSections],
-    ['Hidden sections', hiddenSections],
-    ['Hero slides', heroSlideCount],
-    ['Carousel banners', carouselBannerCount],
-  ];
-
-  return (
-    <div className="mb-4 flex flex-wrap gap-2">
-      {stats.map(([label, value]) => (
-        <Badge key={label} variant="secondary" className="rounded-full px-3 py-1">
-          <span className="tabular-nums text-foreground">{value}</span>
-          {label}
-        </Badge>
-      ))}
-    </div>
-  );
-}
-
-function SectionLibrary({ isTemplateAlreadyUsed, onAddSection }) {
-  return (
-    <Card size="sm" className="border border-border/70">
-      <CardHeader className="items-center gap-3 sm:grid-cols-[1fr_auto]">
-        <div>
-          <CardTitle>Sections</CardTitle>
-          <CardDescription>Keep the builder focused. Add blocks from the menu.</CardDescription>
-        </div>
-        <CardAction>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" size="sm" className="rounded-full">
-                <Plus data-icon="inline-start" />
-                Add Section
-                <ChevronDown data-icon="inline-end" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Choose a home page block</DropdownMenuLabel>
-                {SECTION_TEMPLATES.map((template) => {
-                  const Icon = template.icon;
-                  const isUsed = isTemplateAlreadyUsed(template);
-
-                  return (
-                    <DropdownMenuItem
-                      key={`${template.type}-${template.collectionKey || 'base'}`}
-                      disabled={isUsed}
-                      onClick={() => {
-                        if (!isUsed) onAddSection(template);
-                      }}
-                      className="min-h-11"
-                    >
-                      <Icon />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="truncate font-medium">{template.label}</span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {template.type === 'ProductCollection'
-                            ? 'Curated product row'
-                            : template.type.replace(/([a-z])([A-Z])/g, '$1 $2')}
-                        </span>
-                      </span>
-                      {isUsed ? (
-                        <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
-                          Added
-                        </Badge>
-                      ) : null}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardAction>
-      </CardHeader>
-    </Card>
   );
 }
 
@@ -947,7 +922,7 @@ function HomePageSectionsWorkspace({
 }) {
   if (sections.length === 0) {
     return (
-      <Empty className="surface-card rounded-3xl border border-border/70 px-6 py-14">
+      <Empty className="surface-card rounded-2xl border border-border/70 px-6 py-10">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <LayoutGrid />
@@ -976,8 +951,8 @@ function HomePageSectionsWorkspace({
       onDragCancel={onDragCancel}
     >
       <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-        <div className="max-h-[72vh] overflow-y-auto pr-1 sm:pr-3">
-          <div className="flex flex-col gap-4">
+        <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 sm:pr-2">
+          <div className="flex flex-col gap-3">
             {sections.map((section, index) => (
               <SortableSectionCard
                 key={section.id}
@@ -1064,27 +1039,7 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
       ),
     [sections],
   );
-  const enabledSections = useMemo(
-    () => sections.filter((section) => section.isEnabled !== false).length,
-    [sections],
-  );
-  const hiddenSections = sections.length - enabledSections;
-  const heroSlideCount = useMemo(
-    () =>
-      sections.reduce(
-        (total, section) => total + (section.type === 'HeroSlider' ? section.slides?.length || 0 : 0),
-        0,
-      ),
-    [sections],
-  );
-  const carouselBannerCount = useMemo(
-    () =>
-      sections.reduce(
-        (total, section) => total + (section.type === 'ScrollableBannerCarousel' ? section.carouselBanners?.length || 0 : 0),
-        0,
-      ),
-    [sections],
-  );
+
   function isTemplateAlreadyUsed(template) {
     if (template.type !== 'ProductCollection') return false;
     return uniqueCollectionKeys.has(template.collectionKey);
@@ -1384,27 +1339,17 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
   }
 
   return (
-    <div className="max-w-6xl pb-24 md:pb-0">
+    <div className="max-w-6xl pb-12 md:pb-0">
       <HomePageSettingsHeader
         saving={saving}
         saved={saved}
         uploadingKey={uploadingKey}
         onSave={handleSave}
-      />
-
-      <HomePageStats
-        enabledSections={enabledSections}
-        hiddenSections={hiddenSections}
-        heroSlideCount={heroSlideCount}
-        carouselBannerCount={carouselBannerCount}
-      />
-
-      <SectionLibrary
         isTemplateAlreadyUsed={isTemplateAlreadyUsed}
         onAddSection={handleAddSection}
       />
 
-      <div className="mt-6">
+      <div className="mt-3">
         <HomePageSectionsWorkspace
           sections={sections}
           sectionIds={sectionIds}
@@ -1430,17 +1375,6 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
           onRemoveCarouselBanner={handleRemoveCarouselBanner}
           onMoveCarouselBanner={handleMoveCarouselBanner}
         />
-      </div>
-
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <SaveHomePageButton
-          saving={saving}
-          saved={saved}
-          uploadingKey={uploadingKey}
-          onSave={handleSave}
-          className="h-11 rounded-2xl sm:h-10"
-        />
-        {saved ? <span className="text-sm font-medium text-primary">Homepage layout saved successfully.</span> : null}
       </div>
     </div>
   );
