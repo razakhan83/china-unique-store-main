@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { Receipt } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -78,7 +79,31 @@ async function OrderDetailContent({ id }) {
               <tbody className="divide-y divide-border">
                 {order.items.map((item, index) => (
                   <tr key={`${item.productId}-${index}`}>
-                    <td className="px-4 py-4 text-sm font-medium text-foreground">{item.name}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-border bg-muted">
+                          {item.image ? (
+                            <Image
+                              src={item.image}
+                              alt={item.name || 'Product image'}
+                              fill
+                              sizes="56px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              N/A
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">{item.name || 'Unnamed product'}</p>
+                          {item.productId ? (
+                            <p className="text-xs text-muted-foreground">Product ID: {item.productId}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">{item.quantity}</td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">Rs. {Number(item.price || 0).toLocaleString('en-PK')}</td>
                     <td className="px-4 py-4 text-sm font-semibold text-primary">

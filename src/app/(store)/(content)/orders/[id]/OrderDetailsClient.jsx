@@ -17,7 +17,7 @@ const STATUS_COLORS = {
   Returned: 'bg-muted text-muted-foreground border-border',
 };
 
-export default function OrderDetailsClient({ order }) {
+export default function OrderDetailsClient({ order, invoiceBranding }) {
   if (!order) return null;
 
   return (
@@ -47,7 +47,7 @@ export default function OrderDetailsClient({ order }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <InvoiceButton order={order} />
+          <InvoiceButton order={order} branding={invoiceBranding} />
           <Badge 
             variant="outline" 
             className={cn("px-4 py-1.5 text-sm rounded-full border shadow-sm font-semibold", STATUS_COLORS[order.status] || 'bg-muted')}

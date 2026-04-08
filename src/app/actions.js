@@ -15,7 +15,7 @@ import Settings from '@/models/Settings';
 import User from '@/models/User';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
-import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml } from '@/lib/emailTemplates';
+import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml, getEmailBranding } from '@/lib/emailTemplates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -82,12 +82,13 @@ async function assertAdmin() {
 
 async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
+    const emailBranding = await getEmailBranding();
     const adminRecipients = getConfiguredAdminEmails();
     const adminEmailResult = await resend.emails.send({
       from: 'China Unique <onboarding@resend.dev>',
       to: adminRecipients.length > 0 ? adminRecipients : ['123raza83@gmail.com'],
       subject: `New Order Received - ${customerName}`,
-      html: generateOrderEmailHtml(order),
+      html: generateOrderEmailHtml(order, emailBranding),
       headers: {
         'X-Click-Tracking': 'off',
       },
@@ -99,7 +100,7 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
         from: 'China Unique <onboarding@resend.dev>',
         to: userEmail,
         subject: `Thank You for Your Order! - ${order.orderId}`,
-        html: generateCustomerOrderConfirmationHtml(order),
+        html: generateCustomerOrderConfirmationHtml(order, emailBranding),
         headers: {
           'X-Click-Tracking': 'off',
         },

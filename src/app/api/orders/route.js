@@ -8,17 +8,18 @@ import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { Resend } from 'resend';
-import { generateOrderEmailHtml } from '@/lib/emailTemplates';
+import { generateOrderEmailHtml, getEmailBranding } from '@/lib/emailTemplates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendOrderNotificationEmail({ order, customerName }) {
     try {
+        const emailBranding = await getEmailBranding();
         const data = await resend.emails.send({
             from: 'China Unique <onboarding@resend.dev>',
             to: '123raza83@gmail.com',
             subject: `New Order Received - ${customerName}`,
-            html: generateOrderEmailHtml(order),
+            html: generateOrderEmailHtml(order, emailBranding),
         });
         console.log(`Resend response for ${order.orderId}:`, data);
     } catch (emailError) {
@@ -87,4 +88,3 @@ export async function POST(req) {
         return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 }
-

@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { generateInvoice } from '@/lib/invoice-generator';
 import { toast } from 'sonner';
 
-export default function InvoiceButton({ order }) {
+export default function InvoiceButton({ order, branding }) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
     try {
       setLoading(true);
-      await generateInvoice(order);
+      await generateInvoice(order, branding);
       toast.success('Invoice downloaded successfully');
     } catch (error) {
       console.error('Invoice generation failed:', error);

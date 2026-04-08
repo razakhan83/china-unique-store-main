@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 
 import { authOptions } from '@/lib/auth';
-import { getUserOrders } from '@/lib/data';
+import { getStoreSettings, getUserOrders } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -32,6 +32,14 @@ export default async function OrdersPage() {
 
   const rawOrders = await getUserOrders(session.user.email);
   const orders = rawOrders;
+  const settings = await getStoreSettings();
+  const invoiceBranding = {
+    storeName: settings.storeName,
+    supportEmail: settings.supportEmail,
+    businessAddress: settings.businessAddress,
+    baseUrl: process.env.NEXTAUTH_URL || 'https://chinaunique.pk',
+    returnPolicyUrl: `${process.env.NEXTAUTH_URL || 'https://chinaunique.pk'}/refund-policy`,
+  };
 
   return (
     <main className="min-h-screen bg-background pb-16 pt-8">
@@ -63,7 +71,7 @@ export default async function OrdersPage() {
             </div>
           </div>
         ) : (
-          <OrdersClient initialOrders={orders} />
+          <OrdersClient initialOrders={orders} invoiceBranding={invoiceBranding} />
         )}
       </div>
     </main>

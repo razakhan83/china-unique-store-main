@@ -36,7 +36,7 @@ const STATUS_COLORS = {
   Returned: 'bg-muted text-muted-foreground border-border',
 };
 
-export default function OrdersClient({ initialOrders }) {
+export default function OrdersClient({ initialOrders, invoiceBranding }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -173,7 +173,7 @@ export default function OrdersClient({ initialOrders }) {
             >
               {order.status}
             </Badge>
-            <InvoiceButton order={order} />
+            <InvoiceButton order={order} branding={invoiceBranding} />
             {hasUnreviewedItems && (
               <Button 
                 size="sm" 

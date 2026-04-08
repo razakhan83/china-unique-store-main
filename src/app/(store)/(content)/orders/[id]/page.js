@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
+import { getStoreSettings } from '@/lib/data';
 import Order from '@/models/Order';
 import OrderDetailsClient from './OrderDetailsClient';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,15 @@ export default async function SingleOrderPage({ params, searchParams }) {
     redirect('/api/auth/signin?callbackUrl=/orders/' + id);
   }
 
+  const settings = await getStoreSettings();
+  const invoiceBranding = {
+    storeName: settings.storeName,
+    supportEmail: settings.supportEmail,
+    businessAddress: settings.businessAddress,
+    baseUrl: process.env.NEXTAUTH_URL || 'https://chinaunique.pk',
+    returnPolicyUrl: `${process.env.NEXTAUTH_URL || 'https://chinaunique.pk'}/refund-policy`,
+  };
+
   return (
     <main className="min-h-screen bg-background pb-20 pt-12">
       <div className="container mx-auto max-w-5xl px-4">
@@ -67,7 +77,7 @@ export default async function SingleOrderPage({ params, searchParams }) {
           </div>
         </div>
 
-        <OrderDetailsClient order={order} />
+        <OrderDetailsClient order={order} invoiceBranding={invoiceBranding} />
         
         {!session && (
           <div className="mt-8 rounded-xl border border-accent/25 bg-accent/12 p-6 text-center">
