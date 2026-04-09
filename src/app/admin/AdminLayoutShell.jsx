@@ -76,10 +76,46 @@ function getOpenSections(pathname) {
   ].filter(Boolean);
 }
 
+function getPageMeta(pathname) {
+  if (pathname.startsWith('/admin/orders')) {
+    return {
+      eyebrow: 'Sales',
+      title: 'Orders',
+    };
+  }
+
+  if (pathname.startsWith('/admin/products')) {
+    return {
+      eyebrow: 'Catalog',
+      title: 'Products',
+    };
+  }
+
+  if (pathname.startsWith('/admin/settings')) {
+    return {
+      eyebrow: 'Store',
+      title: 'Settings',
+    };
+  }
+
+  if (pathname.startsWith('/admin/users')) {
+    return {
+      eyebrow: 'Customers',
+      title: 'Users',
+    };
+  }
+
+  return {
+    eyebrow: 'Admin',
+    title: 'Dashboard',
+  };
+}
+
 export default function AdminLayoutShell({ children, sessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pageMeta = getPageMeta(pathname);
 
   if (pathname === '/admin/login') return <>{children}</>;
 
@@ -92,9 +128,9 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'flex min-h-10 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors active:scale-[0.96]',
+          'flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.96]',
           active
-            ? 'bg-white text-primary'
+            ? 'bg-white text-primary shadow-[0_12px_30px_-24px_rgba(0,0,0,0.45)]'
             : 'text-primary-foreground/76 hover:bg-white/8 hover:text-primary-foreground'
         )}
       >
@@ -113,7 +149,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'group flex min-h-9 items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors active:scale-[0.98]',
+          'group flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
           active
             ? 'bg-white/14 text-primary-foreground'
             : 'text-primary-foreground/66 hover:bg-white/7 hover:text-primary-foreground/88'
@@ -128,7 +164,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   function renderSectionTrigger({ icon: Icon, label, value }) {
     return (
       <AccordionTrigger
-        className="rounded-lg bg-white/4 px-3 py-2.5 text-primary-foreground hover:bg-white/8 hover:no-underline"
+        className="rounded-xl bg-white/4 px-3 py-2.5 text-primary-foreground hover:bg-white/8 hover:no-underline"
       >
         <div className="flex items-center gap-3">
           <Icon className="size-4 shrink-0" />
@@ -139,54 +175,74 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-6 bg-primary px-4 py-5 text-primary-foreground">
-      <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-        <div className="flex size-11 items-center justify-center rounded-xl bg-white/10">
-          <Store className="size-5" />
+    <div className="flex h-full flex-col gap-6 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-primary)_92%,black),color-mix(in_oklab,var(--color-primary)_82%,black))] px-4 py-5 text-primary-foreground">
+      <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.55)]">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <Store className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold uppercase tracking-[0.16em]">China Unique</p>
+            <p className="text-xs text-primary-foreground/70">Admin</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em]">China Unique</p>
-          <p className="text-xs text-primary-foreground/70">Admin workspace</p>
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-black/12 px-3 py-2.5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/60">Workspace</p>
+            <p className="text-sm font-medium text-primary-foreground">Operations</p>
+          </div>
+          <span className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-foreground/78">
+            Live
+          </span>
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-2.5">
-        <div className="flex flex-col gap-2">
-          {primaryNavItems.map((item) => renderPrimaryNavLink(item))}
+      <div className="flex flex-col gap-6">
+        <div className="space-y-2">
+          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/50">Overview</p>
+          <div className="flex flex-col gap-2">
+            {primaryNavItems.map((item) => renderPrimaryNavLink(item))}
+          </div>
         </div>
 
-        <Accordion
-          key={pathname}
-          type="multiple"
-          defaultValue={getOpenSections(pathname)}
-          className="w-full gap-2"
-        >
-          <AccordionItem value="products" className="border-none">
-            {renderSectionTrigger({ icon: Box, label: 'Products', value: 'products' })}
-            <AccordionContent className="px-0 pt-2 pb-0 [&_a]:no-underline [&_a:hover]:no-underline">
-              <div className="ml-6 flex flex-col gap-1">
-                {productNavItems.map((item) => renderNestedNavLink(item))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+        <div className="space-y-2.5">
+          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/50">Commerce</p>
+          <Accordion
+            key={pathname}
+            type="multiple"
+            defaultValue={getOpenSections(pathname)}
+            className="w-full gap-2"
+          >
+            <AccordionItem value="products" className="border-none">
+              {renderSectionTrigger({ icon: Box, label: 'Products', value: 'products' })}
+              <AccordionContent className="px-0 pt-2 pb-0 [&_a]:no-underline [&_a:hover]:no-underline">
+                <div className="ml-6 flex flex-col gap-1">
+                  {productNavItems.map((item) => renderNestedNavLink(item))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value="sales" className="border-none">
-            {renderSectionTrigger({ icon: ShoppingCart, label: 'Sales', value: 'sales' })}
-            <AccordionContent className="px-0 pt-2 pb-0 [&_a]:no-underline [&_a:hover]:no-underline">
-              <div className="ml-6 flex flex-col gap-1">
-                {salesNavItems.map((item) => renderNestedNavLink(item))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        <div className="flex flex-col gap-2">
-          {secondaryNavItems.map((item) => renderPrimaryNavLink(item))}
+            <AccordionItem value="sales" className="border-none">
+              {renderSectionTrigger({ icon: ShoppingCart, label: 'Sales', value: 'sales' })}
+              <AccordionContent className="px-0 pt-2 pb-0 [&_a]:no-underline [&_a:hover]:no-underline">
+                <div className="ml-6 flex flex-col gap-1">
+                  {salesNavItems.map((item) => renderNestedNavLink(item))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
-      </nav>
 
-      <div className="flex flex-col gap-2 border-t border-white/10 pt-6">
-        <div className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-3">
+        <div className="space-y-2">
+          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/50">Operations</p>
+          <div className="flex flex-col gap-2">
+            {secondaryNavItems.map((item) => renderPrimaryNavLink(item))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-auto flex flex-col gap-2 border-t border-white/10 pt-6">
+        <div className="flex items-center gap-3 rounded-[1.1rem] bg-white/10 px-3 py-3">
           <Avatar className="h-10 w-10 border border-white/20">
             <AvatarImage src={sessionUser?.image} alt={sessionUser?.name || 'Admin'} />
             <AvatarFallback className="bg-white/20 text-white">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
@@ -199,7 +255,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: '/admin/login' })}
-          className="flex min-h-10 items-center gap-3 rounded-lg bg-white/10 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/16"
+          className="flex min-h-11 items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-white transition-[background-color,transform] duration-200 hover:bg-white/16 active:scale-[0.98]"
         >
           <LogOut className="size-4" />
           Logout
@@ -209,22 +265,22 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-background)_72%,white),var(--color-background))]">
       <div className="flex min-h-screen">
         <aside className="hidden w-72 shrink-0 border-r border-border bg-primary md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto">
           {sidebar}
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-            <div className="flex h-16 items-center justify-between px-4 md:px-8">
+          <header className="sticky top-0 z-30 border-b border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_92%,white)]/95 backdrop-blur">
+            <div className="flex min-h-18 items-center justify-between gap-4 px-4 py-3 md:px-8">
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
                   <Menu />
                 </Button>
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Dashboard</p>
-                  <p className="text-xs text-muted-foreground">Welcome back, {sessionUser?.name || 'Admin'}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/70">{pageMeta.eyebrow}</p>
+                  <p className="text-base font-semibold leading-tight text-foreground md:text-lg">{pageMeta.title}</p>
                 </div>
               </div>
 
@@ -235,7 +291,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                   type="button"
                   variant="secondary"
                   size="lg"
-                  className="inline-flex border border-border/60 shadow-none hover:border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
+                  className="inline-flex border border-border/60 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)] shadow-none hover:border-primary/25 hover:bg-primary hover:text-primary-foreground"
                   onClick={() => router.push('/')}
                 >
                   <ExternalLink data-icon="inline-start" />
@@ -276,7 +332,9 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-8">{children}</main>
+          <main className="flex-1 px-4 py-6 md:px-8">
+            <div className="mx-auto w-full max-w-[1480px]">{children}</div>
+          </main>
         </div>
       </div>
 
