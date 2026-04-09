@@ -8,9 +8,9 @@ import { requireAdmin } from '@/lib/requireAdmin';
 
 const statsConfig = [
   { title: 'Total Orders', icon: ShoppingBag, tone: 'bg-primary/10 text-primary', key: 'totalOrders' },
-  { title: 'Revenue', icon: CircleDollarSign, tone: 'bg-accent/18 text-accent-foreground', key: 'totalRevenue' },
-  { title: 'Total Products', icon: Box, tone: 'bg-secondary text-secondary-foreground', key: 'totalProducts' },
-  { title: 'Customers', icon: Users, tone: 'bg-muted text-foreground', key: 'totalCustomers' },
+  { title: 'Revenue', icon: CircleDollarSign, tone: 'bg-primary/10 text-primary', key: 'totalRevenue' },
+  { title: 'Total Products', icon: Box, tone: 'bg-primary/10 text-primary', key: 'totalProducts' },
+  { title: 'Customers', icon: Users, tone: 'bg-primary/10 text-primary', key: 'totalCustomers' },
 ];
 
 const quickActions = [

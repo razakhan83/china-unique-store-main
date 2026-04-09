@@ -177,7 +177,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   const sidebar = (
     <div className="flex h-full flex-col gap-6 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-primary)_92%,black),color-mix(in_oklab,var(--color-primary)_82%,black))] px-4 py-5 text-primary-foreground">
       <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.55)]">
-        <div className="mb-4 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-xl bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             <Store className="size-5" />
           </div>
@@ -185,15 +185,6 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             <p className="truncate text-sm font-semibold uppercase tracking-[0.16em]">China Unique</p>
             <p className="text-xs text-primary-foreground/70">Admin</p>
           </div>
-        </div>
-        <div className="flex items-center justify-between gap-3 rounded-xl bg-black/12 px-3 py-2.5">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/60">Workspace</p>
-            <p className="text-sm font-medium text-primary-foreground">Operations</p>
-          </div>
-          <span className="rounded-full border border-white/14 bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-foreground/78">
-            Live
-          </span>
         </div>
       </div>
 
