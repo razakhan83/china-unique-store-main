@@ -20,6 +20,21 @@ const DEFAULT_BRANDING = {
   whatsappNumber: '',
 };
 
+const EMAIL_COLORS = {
+  page: '#f5f3ef',
+  card: '#fffdf9',
+  panel: '#f3f6f4',
+  panelStrong: '#edf4f1',
+  border: '#dbe5df',
+  text: '#1d2b27',
+  muted: '#60706a',
+  primary: '#21584e',
+  primaryStrong: '#173f38',
+  primaryTint: '#e7f0ec',
+  accent: '#b98d46',
+  white: '#ffffff',
+};
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -144,13 +159,13 @@ function renderSocialLinks(branding) {
 
   return `
     <tr>
-      <td align="center" style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: #6b7280;">
+      <td align="center" style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: ${EMAIL_COLORS.muted};">
         ${socialLinks
           .map(
             (item) =>
-              `<a href="${escapeHtml(item.href)}" style="color: #0f766e; text-decoration: none; font-weight: 600;">${escapeHtml(item.label)}</a>`,
+              `<a href="${escapeHtml(item.href)}" style="color: ${EMAIL_COLORS.primary}; text-decoration: none; font-weight: 600;">${escapeHtml(item.label)}</a>`,
           )
-          .join('<span style="color: #d1d5db; padding: 0 8px;">|</span>')}
+          .join(`<span style="color: ${EMAIL_COLORS.border}; padding: 0 8px;">|</span>`)}
       </td>
     </tr>
   `;
@@ -192,13 +207,21 @@ function renderLineItems(items) {
 
       return `
         <tr>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">${imageCell}</td>
-          <td style="padding: 14px 16px 14px 0; border-bottom: 1px solid #e5e7eb; vertical-align: top;">
-            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; font-weight: 600; color: #111827;">${escapeHtml(item.name)}</div>
-            ${item.variant ? `<div style="padding-top: 4px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #6b7280;">${escapeHtml(item.variant)}</div>` : ''}
+          <td width="50%" style="width: 50%; min-width: 250px; padding: 14px 16px; border-bottom: 1px solid ${EMAIL_COLORS.border}; vertical-align: top;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td width="64" style="width: 64px; padding: 0 16px 0 0; vertical-align: top;">
+                  ${imageCell}
+                </td>
+                <td style="vertical-align: top; word-break: break-word;">
+                  <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; font-weight: 600; color: ${EMAIL_COLORS.text}; word-break: break-word;">${escapeHtml(item.name)}</div>
+                  ${item.variant ? `<div style="padding-top: 4px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: ${EMAIL_COLORS.muted}; word-break: break-word;">${escapeHtml(item.variant)}</div>` : ''}
+                </td>
+              </tr>
+            </table>
           </td>
-          <td align="center" style="padding: 14px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; color: #111827;">${item.quantity}</td>
-          <td align="right" style="padding: 14px 16px; border-bottom: 1px solid #e5e7eb; vertical-align: top; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; color: #111827;">${escapeHtml(formatCurrency(item.lineTotal))}</td>
+          <td width="15%" align="right" style="width: 15%; padding: 14px 12px; border-bottom: 1px solid ${EMAIL_COLORS.border}; vertical-align: top; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; color: ${EMAIL_COLORS.text}; text-align: right;">${item.quantity}</td>
+          <td width="35%" align="right" style="width: 35%; padding: 14px 16px; border-bottom: 1px solid ${EMAIL_COLORS.border}; vertical-align: top; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; color: ${EMAIL_COLORS.text}; text-align: right;">${escapeHtml(formatCurrency(item.lineTotal))}</td>
         </tr>
       `;
     })
@@ -212,10 +235,10 @@ function renderSupportBlock(branding) {
 
   const supportLines = [
     supportEmail
-      ? `Email us at <a href="mailto:${escapeHtml(supportEmail)}" style="color: #0f766e; text-decoration: none; font-weight: 600;">${escapeHtml(supportEmail)}</a>`
+      ? `Email us at <a href="mailto:${escapeHtml(supportEmail)}" style="color: ${EMAIL_COLORS.primary}; text-decoration: none; font-weight: 600;">${escapeHtml(supportEmail)}</a>`
       : '',
     whatsappUrl
-      ? `Chat on <a href="${escapeHtml(whatsappUrl)}" style="color: #0f766e; text-decoration: none; font-weight: 600;">WhatsApp</a>`
+      ? `Chat on <a href="${escapeHtml(whatsappUrl)}" style="color: ${EMAIL_COLORS.primary}; text-decoration: none; font-weight: 600;">WhatsApp</a>`
       : '',
     businessAddress ? escapeHtml(businessAddress) : '',
   ].filter(Boolean);
@@ -223,7 +246,7 @@ function renderSupportBlock(branding) {
   if (supportLines.length === 0) {
     return `
       <tr>
-        <td style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: #6b7280;">
+        <td style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: ${EMAIL_COLORS.muted};">
           Need help with your order? Reply to this email and our team will assist you.
         </td>
       </tr>
@@ -232,7 +255,7 @@ function renderSupportBlock(branding) {
 
   return `
     <tr>
-      <td style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: #6b7280;">
+      <td style="padding: 0 32px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: ${EMAIL_COLORS.muted};">
         ${supportLines.join('<br>')}
       </td>
     </tr>
@@ -249,14 +272,14 @@ function renderEmailShell({ previewText, content }) {
         <meta name="x-apple-disable-message-reformatting">
         <title>${escapeHtml(previewText)}</title>
       </head>
-      <body style="margin: 0; padding: 0; background-color: #f3f4f6;">
+      <body style="margin: 0; padding: 0; background-color: ${EMAIL_COLORS.page};">
         <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">${escapeHtml(previewText)}</div>
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f3f4f6; margin: 0; padding: 24px 12px; width: 100%;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.page}; margin: 0; padding: 24px 12px; width: 100%;">
           <tr>
             <td align="center">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 640px; width: 100%;">
                 <tr>
-                  <td style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 24px; overflow: hidden;">
+                  <td style="background-color: ${EMAIL_COLORS.card}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 24px; overflow: hidden;">
                     ${content}
                   </td>
                 </tr>
@@ -414,39 +437,111 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
   const orderId = getText(order?.orderId, 'Pending');
   const orderDate = formatDate(order?.createdAt);
   const shippingAddress = getText(order?.customerAddress, 'Shipping address will be confirmed by our team.');
+  const customerCity = getText(order?.customerCity);
+  const customerPhone = getText(order?.customerPhone);
+  const landmark = getText(order?.landmark);
+  const notes = getText(order?.notes);
   const orderUrl = buildOrderUrl(order, branding.baseUrl);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemSummary = itemCount === 1 ? '1 item' : `${itemCount} items`;
+  const shippingLines = [shippingAddress, customerCity, landmark ? `Landmark: ${landmark}` : ''].filter(Boolean);
 
   const content = `
     ${renderLogo(branding)}
     <tr>
-      <td style="padding: 8px 32px 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0f766e; text-align: center;">
-        Order confirmation
+      <td style="padding: 8px 32px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.primaryTint}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 24px;">
+          <tr>
+            <td style="padding: 28px 24px 10px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${EMAIL_COLORS.primary}; text-align: center;">
+              Order confirmed
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 24px; font-family: Arial, Helvetica, sans-serif; font-size: 32px; line-height: 38px; font-weight: 700; color: ${EMAIL_COLORS.text}; text-align: center;">
+              Thank you, ${escapeHtml(customerName)}.
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 24px 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 24px; color: ${EMAIL_COLORS.muted}; text-align: center;">
+              Hi ${escapeHtml(firstName)}, your order is in. We&apos;re reviewing your items now and will keep you posted as soon as it moves to dispatch.
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 22px 24px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td width="33.33%" style="padding-right: 6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.white}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 16px;">
+                      <tr>
+                        <td style="padding: 14px 12px; text-align: center; font-family: Arial, Helvetica, sans-serif;">
+                          <div style="font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.primary};">Step 1</div>
+                          <div style="padding-top: 6px; font-size: 14px; line-height: 20px; font-weight: 700; color: ${EMAIL_COLORS.text};">Confirmed</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33.33%" style="padding: 0 3px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.white}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 16px;">
+                      <tr>
+                        <td style="padding: 14px 12px; text-align: center; font-family: Arial, Helvetica, sans-serif;">
+                          <div style="font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Step 2</div>
+                          <div style="padding-top: 6px; font-size: 14px; line-height: 20px; font-weight: 700; color: ${EMAIL_COLORS.text};">Preparing</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33.33%" style="padding-left: 6px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.white}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 16px;">
+                      <tr>
+                        <td style="padding: 14px 12px; text-align: center; font-family: Arial, Helvetica, sans-serif;">
+                          <div style="font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Step 3</div>
+                          <div style="padding-top: 6px; font-size: 14px; line-height: 20px; font-weight: 700; color: ${EMAIL_COLORS.text};">Dispatch</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
     <tr>
-      <td style="padding: 10px 32px 0; font-family: Arial, Helvetica, sans-serif; font-size: 30px; line-height: 36px; font-weight: 700; color: #111827; text-align: center;">
-        Thank you for your order, ${escapeHtml(customerName)}!
-      </td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 32px 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 24px; color: #4b5563; text-align: center;">
-        Hi ${escapeHtml(firstName)}, we have received your order and our team is preparing it now.
+      <td style="padding: 20px 32px 0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 22px; color: ${EMAIL_COLORS.muted}; text-align: center;">
+        Keep this email for your records. Your confirmation number is <strong style="color: ${EMAIL_COLORS.text};">${escapeHtml(orderId)}</strong>.
       </td>
     </tr>
     <tr>
       <td style="padding: 24px 32px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           <tr>
-            <td style="padding: 18px 20px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <td width="33.33%" style="padding-right: 8px; vertical-align: top;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.panel}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 18px;">
                 <tr>
-                  <td style="padding-right: 12px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #6b7280;">
-                    <strong style="display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af;">Order ID</strong>
-                    <span style="display: block; padding-top: 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: #111827;">${escapeHtml(orderId)}</span>
+                  <td style="padding: 18px 18px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: ${EMAIL_COLORS.muted};">
+                    <strong style="display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Order ID</strong>
+                    <span style="display: block; padding-top: 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: ${EMAIL_COLORS.text};">${escapeHtml(orderId)}</span>
                   </td>
-                  <td align="right" style="padding-left: 12px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #6b7280;">
-                    <strong style="display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af;">Order Date</strong>
-                    <span style="display: block; padding-top: 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: #111827;">${escapeHtml(orderDate)}</span>
+                </tr>
+              </table>
+            </td>
+            <td width="33.33%" style="padding: 0 4px; vertical-align: top;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.panel}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 18px;">
+                <tr>
+                  <td style="padding: 18px 18px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: ${EMAIL_COLORS.muted};">
+                    <strong style="display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Order Date</strong>
+                    <span style="display: block; padding-top: 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: ${EMAIL_COLORS.text};">${escapeHtml(orderDate)}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td width="33.33%" style="padding-left: 8px; vertical-align: top;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.panel}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 18px;">
+                <tr>
+                  <td style="padding: 18px 18px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: ${EMAIL_COLORS.muted};">
+                    <strong style="display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Items</strong>
+                    <span style="display: block; padding-top: 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: ${EMAIL_COLORS.text};">${escapeHtml(itemSummary)}</span>
                   </td>
                 </tr>
               </table>
@@ -457,11 +552,18 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
     </tr>
     <tr>
       <td style="padding: 24px 32px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
-          <tr style="background-color: #f9fafb;">
-            <th align="left" style="padding: 12px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: #6b7280;">Product</th>
-            <th align="center" style="padding: 12px 8px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: #6b7280;">Qty</th>
-            <th align="right" style="padding: 12px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: #6b7280;">Price</th>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td style="padding: 0 0 12px; font-family: Arial, Helvetica, sans-serif; font-size: 20px; line-height: 28px; font-weight: 700; color: ${EMAIL_COLORS.text};">
+              Your order summary
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 16px; overflow: hidden; table-layout: fixed;">
+          <tr style="background-color: ${EMAIL_COLORS.panelStrong};">
+            <th width="50%" align="left" style="width: 50%; min-width: 250px; padding: 12px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: ${EMAIL_COLORS.muted}; text-align: left;">Product</th>
+            <th width="15%" align="right" style="width: 15%; padding: 12px 12px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: ${EMAIL_COLORS.muted}; text-align: right;">Qty</th>
+            <th width="35%" align="right" style="width: 35%; padding: 12px 16px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; font-weight: 700; color: ${EMAIL_COLORS.muted}; text-align: right;">Price</th>
           </tr>
           ${renderLineItems(items)}
         </table>
@@ -469,7 +571,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
     </tr>
     <tr>
       <td style="padding: 20px 32px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border: 1px solid #e5e7eb; border-radius: 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border: 1px solid ${EMAIL_COLORS.border}; border-radius: 16px; background-color: ${EMAIL_COLORS.card};">
           <tr>
             <td style="padding: 18px 20px;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -482,11 +584,48 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
     </tr>
     <tr>
       <td style="padding: 20px 32px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.panel}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 18px;">
           <tr>
-            <td style="padding: 18px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 20px; color: #4b5563;">
-              <strong style="display: block; padding-bottom: 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af;">Shipping address</strong>
-              ${escapeHtml(shippingAddress)}
+            <td style="padding: 18px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 21px; color: ${EMAIL_COLORS.muted};">
+              <strong style="display: block; padding-bottom: 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: ${EMAIL_COLORS.muted};">Delivery details</strong>
+              ${shippingLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')}
+              ${customerPhone ? `<div style="padding-top: 6px;">Phone: ${escapeHtml(customerPhone)}</div>` : ''}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    ${
+      notes
+        ? `
+          <tr>
+            <td style="padding: 20px 32px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #faf6ec; border: 1px solid #ead8b4; border-radius: 18px;">
+                <tr>
+                  <td style="padding: 18px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 21px; color: #725426;">
+                    <strong style="display: block; padding-bottom: 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9a6b11;">Order notes</strong>
+                    ${escapeHtml(notes)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        `
+        : ''
+    }
+    <tr>
+      <td style="padding: 20px 32px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${EMAIL_COLORS.panel}; border: 1px solid ${EMAIL_COLORS.border}; border-radius: 18px;">
+          <tr>
+            <td style="padding: 20px 20px 8px; font-family: Arial, Helvetica, sans-serif; font-size: 17px; line-height: 24px; font-weight: 700; color: ${EMAIL_COLORS.text};">
+              What happens next
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 20px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 21px; color: ${EMAIL_COLORS.muted};">
+              <div style="padding-bottom: 8px;"><strong style="color: ${EMAIL_COLORS.primaryStrong};">1.</strong> Our team reviews your order and confirms stock.</div>
+              <div style="padding-bottom: 8px;"><strong style="color: ${EMAIL_COLORS.primaryStrong};">2.</strong> We prepare your package and update tracking when it is ready.</div>
+              <div><strong style="color: ${EMAIL_COLORS.primaryStrong};">3.</strong> You can use the button below any time to check your order details.</div>
             </td>
           </tr>
         </table>
@@ -494,14 +633,14 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
     </tr>
     <tr>
       <td align="center" style="padding: 28px 32px 20px;">
-        <a href="${escapeHtml(orderUrl)}" style="display: inline-block; padding: 14px 28px; border-radius: 999px; background-color: #0f766e; color: #ffffff; text-decoration: none; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; font-weight: 700;">Track Order</a>
+        <a href="${escapeHtml(orderUrl)}" style="display: inline-block; padding: 14px 28px; border-radius: 999px; background-color: ${EMAIL_COLORS.primary}; color: ${EMAIL_COLORS.white}; text-decoration: none; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 20px; font-weight: 700;">View Order Details</a>
       </td>
     </tr>
     ${renderSupportBlock(branding)}
     ${renderSocialLinks(branding)}
     <tr>
-      <td style="padding: 0 32px 32px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: #9ca3af; text-align: center;">
-        You received this email because you placed an order with ${escapeHtml(branding.storeName)}.
+      <td style="padding: 0 32px 32px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; color: ${EMAIL_COLORS.muted}; text-align: center;">
+        You received this email because you placed an order with ${escapeHtml(branding.storeName)}. We appreciate your trust.
       </td>
     </tr>
   `;
