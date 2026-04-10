@@ -363,13 +363,13 @@ export default function AdminProductsClient({
     <div className="pb-24 md:pb-0">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Products</h2>
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Products</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage inventory ({summary.totalProducts} total, {summary.liveProducts} live)
           </p>
         </div>
-        <Link href="/admin/products/add">
-          <Button>
+        <Link href="/admin/products/add" className="w-full md:w-auto">
+          <Button className="w-full md:w-auto">
             <Plus data-icon="inline-start" />
             Add New Product
           </Button>
@@ -378,7 +378,7 @@ export default function AdminProductsClient({
 
       <div className="mb-5 flex flex-col gap-3">
         <form
-          className="flex flex-col gap-3 sm:flex-row"
+          className="flex flex-col gap-3 lg:flex-row"
           onSubmit={(event) => {
             event.preventDefault();
             navigate({ search: searchQuery.trim() || null, page: null });
@@ -394,7 +394,7 @@ export default function AdminProductsClient({
               className="pl-10 h-10"
             />
           </div>
-          <div className="w-full sm:w-[200px]">
+          <div className="w-full lg:w-[220px]">
             <Select
               value={sortOption}
               onValueChange={(value) => {
@@ -419,7 +419,7 @@ export default function AdminProductsClient({
             </Select>
           </div>
         </form>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
           <Select
             value={statusFilter}
             onValueChange={(value) => {
@@ -427,7 +427,7 @@ export default function AdminProductsClient({
               navigate({ status: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-[130px] text-xs">
+            <SelectTrigger className="h-9 w-full text-xs lg:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -443,7 +443,7 @@ export default function AdminProductsClient({
               navigate({ stock: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-[130px] text-xs">
+            <SelectTrigger className="h-9 w-full text-xs lg:w-[140px]">
               <SelectValue placeholder="Stock" />
             </SelectTrigger>
             <SelectContent>
@@ -453,7 +453,12 @@ export default function AdminProductsClient({
             </SelectContent>
           </Select>
           {(searchQuery || statusFilter !== "all" || stockFilter !== "all" || sortOption !== "newest") && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 gap-2 text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-9 w-full gap-2 justify-center text-muted-foreground hover:text-foreground sm:col-span-2 lg:w-auto"
+            >
               <X className="size-4" />
               Clear Filters
             </Button>
@@ -631,9 +636,180 @@ export default function AdminProductsClient({
         </div>
       </div>
 
+      <div className={cn("space-y-3 md:hidden transition-opacity", isPending && "opacity-70")}>
+        {products.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card px-4 py-10 text-center">
+            <p className="font-medium text-muted-foreground">No products found for the selected criteria.</p>
+          </div>
+        ) : (
+          products.map((product) => (
+            <div key={product._id} className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-16">
+                  {getPrimaryProductImage(product)?.url ? (
+                    <Image
+                      src={getPrimaryProductImage(product).url}
+                      alt={product.Name}
+                      fill
+                      className="object-cover"
+                      {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-muted-foreground">
+                      <ImageIcon className="size-4" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.Name}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {getProductCategoryNames(product).map((category) => (
+                          <Badge key={category} variant="secondary" className="text-[10px]">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        className={cn(
+                          "inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-foreground size-8",
+                        )}
+                        title="Actions"
+                      >
+                        <MoreVertical className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[170px]">
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
+                              <Pencil className="mr-2 size-4" />
+                              Edit
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => setDiscountModal({ open: true, product })}
+                          >
+                            <Tag className="mr-2 size-4" />
+                            {product.isDiscounted ? "Edit Discount" : "Set Discount"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => setReviewsModal({ open: true, product })}
+                          >
+                            <MessageSquare className="mr-2 size-4" />
+                            Reviews
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
+                            onClick={() => setDeleteModal({ open: true, product })}
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="mt-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      {product.isDiscounted && product.discountPercentage > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold text-primary">
+                            PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
+                          </span>
+                          <span className="text-xs text-muted-foreground line-through">{formatPrice(product.Price)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-semibold text-primary">{formatPrice(product.Price)}</span>
+                      )}
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="text-[10px] uppercase">
+                        {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
+                      </Badge>
+                      <Badge variant={product.isLive ? "default" : "secondary"} className="text-[10px] uppercase">
+                        {product.isLive ? "Live" : "Draft"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs font-medium text-muted-foreground">Visibility</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold uppercase text-muted-foreground">
+                      {product.isLive ? "Live" : "Draft"}
+                    </span>
+                    <Switch
+                      checked={product.isLive}
+                      disabled={togglingId === product._id}
+                      onCheckedChange={() => handleToggleLive(product)}
+                      aria-label={`Toggle ${product.Name} live status`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs font-medium text-muted-foreground">Stock</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold uppercase text-muted-foreground">
+                      {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
+                    </span>
+                    <Switch
+                      checked={product.StockStatus === "In Stock"}
+                      disabled={togglingStockId === product._id}
+                      onCheckedChange={() => handleToggleStock(product)}
+                      aria-label={`Toggle ${product.Name} stock status`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs font-medium text-muted-foreground">Flags</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
+                      className={cn(
+                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        product.isNewArrival ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                      )}
+                      title="New Arrival"
+                    >
+                      NEW
+                    </button>
+                    <button
+                      onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
+                      className={cn(
+                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        product.isBestSelling ? "bg-rose-500/10 border-rose-500/20 text-rose-600" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                      )}
+                      title="Best Selling"
+                    >
+                      TOP
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {totalPages > 1 && (
-        <div className="mt-6 flex flex-col gap-3 px-2">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-6 flex flex-col gap-3 px-1 sm:px-2">
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
             Showing <span className="font-medium text-foreground">{((currentPage - 1) * 12) + 1}</span> to{" "}
             <span className="font-medium text-foreground">{Math.min(currentPage * 12, total)}</span> of{" "}
             <span className="font-medium text-foreground">{total}</span> products

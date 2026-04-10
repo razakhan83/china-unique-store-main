@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check, CloudUpload, Loader2, Plus, PlusCircle, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { getProductCategories } from '@/lib/productCategories';
 import { moveProductImageToFront, normalizeProductImages } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { cn } from '@/lib/utils';
 
 const selectionChipClass = (selected) =>
@@ -51,6 +52,9 @@ export default function EditProduct({ id }) {
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+  const [seoCooldownRemaining, setSeoCooldownRemaining] = useState(0);
+  const seoGenerationLockRef = useRef(false);
 
 
   const showToast = (message, type = 'success') => {
@@ -106,6 +110,25 @@ export default function EditProduct({ id }) {
     fetchProduct();
     fetchCategories();
   }, [id, fetchCategories]);
+
+  useEffect(() => {
+    if (seoCooldownRemaining <= 0) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      setSeoCooldownRemaining((current) => {
+        if (current <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [seoCooldownRemaining]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -196,6 +219,12 @@ export default function EditProduct({ id }) {
       setImages(prev => moveProductImageToFront(prev, indexToMove));
   };
 
+  const selectedCategoryNames = allCategories
+    .filter((category) => Categories.includes(category._id))
+    .map((category) => category.name)
+    .filter(Boolean);
+  const seoCategoryLabel = selectedCategoryNames.join(', ');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!Name || !Price || Categories.length === 0) {
@@ -259,6 +288,63 @@ export default function EditProduct({ id }) {
     }
   };
 
+  const handleGenerateSeo = async () => {
+    if (seoGenerationLockRef.current || seoCooldownRemaining > 0) {
+      return;
+    }
+
+    const title = Name.trim();
+    const description = Description.trim();
+
+    if (!title || !description) {
+      showToast('Add the product name and description before generating SEO.', 'error');
+      return;
+    }
+
+    seoGenerationLockRef.current = true;
+    setIsGeneratingSeo(true);
+
+    try {
+      const res = await fetch('/api/admin/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          category: seoCategoryLabel,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (res.status === 429) {
+          setSeoCooldownRemaining(60);
+        }
+        if (
+          res.status === 502 ||
+          String(data.message || '').toLowerCase().includes('interrupted') ||
+          String(data.error || '').toLowerCase().includes('json')
+        ) {
+          throw new Error('AI was interrupted. Please try again in 5 seconds.');
+        }
+        throw new Error(data.message || data.error || 'Failed to generate SEO content.');
+      }
+
+      setSeoTitle(data.data.seoTitle || '');
+      setSeoDescription(data.data.seoDescription || '');
+      setSeoKeywords(formatSeoKeywords(data.data.seoKeywords || data.data.keywords));
+      if (!data.data.seoTitle || !data.data.seoDescription || !data.data.seoKeywords) {
+        throw new Error('AI was interrupted. Please try again in 5 seconds.');
+      }
+      showToast('SEO fields populated with AI suggestions.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Failed to generate SEO content.', 'error');
+    } finally {
+      seoGenerationLockRef.current = false;
+      setIsGeneratingSeo(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full pb-10 flex items-center justify-center min-h-[60vh]">
@@ -287,6 +373,12 @@ export default function EditProduct({ id }) {
   ];
   const seoCompleteCount = seoChecks.filter((item) => item.complete).length;
   const seoReady = seoCompleteCount === seoChecks.length;
+  const seoButtonDisabled = isGeneratingSeo || seoCooldownRemaining > 0;
+  const seoButtonLabel = isGeneratingSeo
+    ? 'Generating...'
+    : seoCooldownRemaining > 0
+      ? `Cooling down... ${seoCooldownRemaining}s`
+      : '✨ AI Auto-SEO';
 
   return (
     <div className="w-full pb-10">
@@ -483,16 +575,40 @@ export default function EditProduct({ id }) {
                   These fields power the product page title, description, canonical URL, and schema markup.
                 </p>
               </div>
-              <div
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold',
-                  seoReady
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700',
-                )}
-              >
-                <Check className={cn('size-3.5', seoReady ? 'text-emerald-600' : 'text-amber-600')} />
-                {seoReady ? 'SEO basics complete' : `${seoCompleteCount}/${seoChecks.length} SEO basics complete`}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={seoButtonDisabled}
+                  onClick={handleGenerateSeo}
+                  className="rounded-full"
+                >
+                  {isGeneratingSeo ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      {seoButtonLabel}
+                    </>
+                  ) : (
+                    seoButtonLabel
+                  )}
+                </Button>
+                {seoCooldownRemaining > 0 ? (
+                  <p className="text-xs text-amber-700">
+                    Cooling down after Google AI rate limiting. Try again in {seoCooldownRemaining}s.
+                  </p>
+                ) : null}
+                <div
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold',
+                    seoReady
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700',
+                  )}
+                >
+                  <Check className={cn('size-3.5', seoReady ? 'text-emerald-600' : 'text-amber-600')} />
+                  {seoReady ? 'SEO basics complete' : `${seoCompleteCount}/${seoChecks.length} SEO basics complete`}
+                </div>
               </div>
             </div>
 
@@ -528,7 +644,7 @@ export default function EditProduct({ id }) {
                 <Input
                   type="text"
                   value={seoKeywords}
-                  onChange={(e) => setSeoKeywords(e.target.value)}
+                  onChange={(e) => setSeoKeywords(formatSeoKeywords(e.target.value))}
                   className="h-11 px-4"
                   placeholder="e.g., tea set, chinese tea cups, luxury gift"
                 />

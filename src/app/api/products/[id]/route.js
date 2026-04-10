@@ -9,6 +9,7 @@ import Product from '@/models/Product';
 import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
+import { formatSeoKeywords } from '@/lib/seoKeywords';
 
 export async function GET(_request, { params }) {
     try {
@@ -87,7 +88,7 @@ export async function PUT(request, { params }) {
         existingProduct.Description = body.Description;
         existingProduct.seoTitle = typeof body.seoTitle === 'string' ? body.seoTitle.trim() : '';
         existingProduct.seoDescription = typeof body.seoDescription === 'string' ? body.seoDescription.trim() : '';
-        existingProduct.seoKeywords = typeof body.seoKeywords === 'string' ? body.seoKeywords.trim() : '';
+        existingProduct.seoKeywords = formatSeoKeywords(body.seoKeywords);
         existingProduct.seoCanonicalUrl = typeof body.seoCanonicalUrl === 'string' ? body.seoCanonicalUrl.trim() : '';
         existingProduct.Price = Number(body.Price);
         existingProduct.Images = normalizedImages;

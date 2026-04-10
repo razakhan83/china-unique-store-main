@@ -275,18 +275,18 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <AdminNotificationCenter />
 
                 <Button
                   type="button"
                   variant="secondary"
                   size="lg"
-                  className="inline-flex border border-border/60 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)] shadow-none hover:border-primary/25 hover:bg-primary hover:text-primary-foreground"
+                  className="inline-flex border border-border/60 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)] px-3 shadow-none hover:border-primary/25 hover:bg-primary hover:text-primary-foreground sm:px-4"
                   onClick={() => router.push('/')}
                 >
                   <ExternalLink data-icon="inline-start" />
-                  Back to Store
+                  <span className="hidden sm:inline">Back to Store</span>
                 </Button>
 
                 <div className="hidden md:block">

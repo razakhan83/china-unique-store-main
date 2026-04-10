@@ -9,6 +9,7 @@ import Product from '@/models/Product';
 import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
+import { formatSeoKeywords } from '@/lib/seoKeywords';
 
 // Utility for formatting a string to a unique URL-friendly slug
 const slugify = (text) => {
@@ -128,7 +129,7 @@ export async function POST(req) {
             Description,
             seoTitle: typeof seoTitle === 'string' ? seoTitle.trim() : '',
             seoDescription: typeof seoDescription === 'string' ? seoDescription.trim() : '',
-            seoKeywords: typeof seoKeywords === 'string' ? seoKeywords.trim() : '',
+            seoKeywords: formatSeoKeywords(seoKeywords),
             seoCanonicalUrl: typeof seoCanonicalUrl === 'string' ? seoCanonicalUrl.trim() : '',
             Price: normalizedPrice,
             Images: normalizedImages,
