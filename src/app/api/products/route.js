@@ -26,7 +26,7 @@ export async function GET() {
     try {
         await mongooseConnect();
         const products = await Product.find({})
-            .select('Name Description Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
             .populate({ path: 'Category', select: 'name slug' })
             .sort({ createdAt: -1 })
             .lean();
