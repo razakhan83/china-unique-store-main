@@ -206,26 +206,26 @@ export default function AdminUsersClient({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="surface-card border-none bg-primary/5">
+        <Card className="admin-surface border-none">
           <CardHeader className="pb-2">
-            <CardDescription className="text-primary/70">{isCustomersView ? 'Verified Buyers' : 'Total Users'}</CardDescription>
-            <CardTitle className="text-3xl font-bold text-primary">{summary.totalUsers}</CardTitle>
+            <CardDescription className="text-muted-foreground">{isCustomersView ? 'Verified Buyers' : 'Total Users'}</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{summary.totalUsers}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-xs text-primary/60">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <UsersIcon className="size-3" />
               <span>{isCustomersView ? 'Unique customers with orders' : 'All registered accounts'}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="surface-card border-none bg-success/8">
+        <Card className="admin-surface border-none">
           <CardHeader className="pb-2">
-            <CardDescription className="text-success/70">{isCustomersView ? 'Profiles With Email' : 'Active Users'}</CardDescription>
-            <CardTitle className="text-3xl font-bold text-success">{isCustomersView ? summary.withEmail : summary.activeUsers}</CardTitle>
+            <CardDescription className="text-muted-foreground">{isCustomersView ? 'Profiles With Email' : 'Active Users'}</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{isCustomersView ? summary.withEmail : summary.activeUsers}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-xs text-success/60">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <UserCheck className="size-3" />
               <span>{isCustomersView ? 'Customers with email captured' : 'Allowed to login'}</span>
             </div>
@@ -315,14 +315,14 @@ export default function AdminUsersClient({
                   id={`user-${user._id}`}
                   className={cn(
                     'transition-all duration-700',
-                    highlightedId === user._id ? 'bg-primary/10 ring-1 ring-primary/20' : 'hover:bg-muted/30',
+                    highlightedId === user._id ? 'bg-muted ring-1 ring-border' : 'hover:bg-muted/30',
                   )}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="size-9 border border-border">
                         <AvatarImage src={user.image} alt={user.name} />
-                        <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                        <AvatarFallback className="bg-muted text-xs font-bold text-foreground">
                           {user.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -330,7 +330,7 @@ export default function AdminUsersClient({
                         <span className="font-semibold text-foreground flex items-center gap-2">
                           {user.name}
                           {highlightedId === user._id && (
-                            <Badge className="h-4 px-1 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground animate-pulse">
+                            <Badge className="h-4 animate-pulse bg-foreground px-1 text-[10px] uppercase tracking-wider text-background">
                               New
                             </Badge>
                           )}
@@ -379,7 +379,7 @@ export default function AdminUsersClient({
                           Disabled
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="flex w-fit items-center gap-1 bg-success/10 font-bold text-success">
+                        <Badge variant="secondary" className="flex w-fit items-center gap-1 bg-muted font-bold text-foreground">
                           <UserCheck className="size-3" />
                           Active
                         </Badge>
@@ -404,7 +404,7 @@ export default function AdminUsersClient({
                             <DropdownMenuLabel>User Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              className={user.disabled ? 'text-success focus:text-success' : 'text-destructive focus:text-destructive'}
+                              className={user.disabled ? 'text-foreground focus:text-foreground' : 'text-destructive focus:text-destructive'}
                               onClick={() => handleUserAction(user, { disabled: !user.disabled })}
                               disabled={loadingId === user._id}
                             >
@@ -460,13 +460,13 @@ export default function AdminUsersClient({
       )}
 
       {!isCustomersView ? (
-        <div className="flex items-start gap-4 rounded-xl border border-accent/25 bg-accent/12 p-4">
-          <div className="shrink-0 rounded-lg bg-accent/18 p-2 text-accent-foreground">
+        <div className="flex items-start gap-4 rounded-xl border border-border bg-muted/40 p-4">
+          <div className="shrink-0 rounded-lg bg-muted p-2 text-foreground">
             <ShieldAlert className="size-5" />
           </div>
           <div>
-            <h4 className="font-bold text-accent-foreground">Security Note</h4>
-            <p className="mt-1 text-sm leading-relaxed text-accent-foreground/80">
+            <h4 className="font-bold text-foreground">Security Note</h4>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               Disabling a user will prevent them from signing in to their account. If the user is currently logged in, they will be blocked upon their next authentication request. This action is manually reversible at any time by an administrator.
             </p>
           </div>

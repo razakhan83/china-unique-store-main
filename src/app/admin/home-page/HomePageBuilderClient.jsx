@@ -341,8 +341,8 @@ function SortableSectionCard({
       ref={setNodeRef}
       style={isDragPreview ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'surface-card rounded-2xl border border-border/70 p-3.5 shadow-[0_12px_28px_rgba(10,61,46,0.07)] transition-[box-shadow,border-color,transform] duration-300',
-        (isDragging || isDragPreview) && 'border-primary/45 bg-primary/5 shadow-[0_20px_44px_rgba(10,61,46,0.16)]',
+        'surface-card rounded-2xl border border-border/70 p-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-[box-shadow,border-color,transform] duration-300',
+        (isDragging || isDragPreview) && 'border-border bg-muted/60 shadow-[0_20px_44px_rgba(0,0,0,0.12)]',
         isDragging && !isDragPreview && 'opacity-60',
       )}
     >
@@ -353,8 +353,8 @@ function SortableSectionCard({
             className={cn(
               'flex size-10 items-center justify-center rounded-xl border bg-background transition-[border-color,background-color,color,box-shadow] duration-300',
               (isDragging || isDragPreview)
-                ? 'border-primary/50 bg-primary text-primary-foreground shadow-[0_10px_22px_rgba(10,61,46,0.18)]'
-                : 'border-border text-primary hover:border-primary/30 hover:bg-primary/8',
+                ? 'border-border bg-foreground text-background shadow-[0_10px_22px_rgba(0,0,0,0.16)]'
+                : 'border-border text-foreground hover:border-border hover:bg-muted/70',
             )}
             aria-label={`Reorder ${template?.label || section.type}`}
             style={{ touchAction: 'none', cursor: isDragPreview ? 'grabbing' : 'grab' }}
@@ -363,7 +363,7 @@ function SortableSectionCard({
           >
             <GripVertical className="size-4" />
           </button>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex size-9 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
             <Icon className="size-4" />
           </div>
           <div>
@@ -867,7 +867,7 @@ function HomePageSettingsHeader({
         : 'Ready';
 
   return (
-    <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-border/80 bg-background/95 px-3 py-2.5 shadow-[0_8px_24px_rgba(10,61,46,0.06)] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0">
+    <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-border/80 bg-background/95 px-3 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">

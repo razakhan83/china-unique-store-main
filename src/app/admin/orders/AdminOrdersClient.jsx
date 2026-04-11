@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 const statusVariant = {
   Confirmed: 'primary',
   'In Process': 'secondary',
-  Delivered: 'emerald',
+  Delivered: 'secondary',
   Returned: 'outline',
 };
 
@@ -514,8 +514,8 @@ export default function AdminOrdersClient({
 
         <div className="flex items-center gap-2">
           {selectedOrders.length > 0 && (
-            <div className="flex items-center gap-1.5 p-1 bg-primary/5 border border-primary/20 rounded-lg">
-              <Button onClick={handleDownloadExcel} size="sm" className="h-8 gap-1.5 bg-success px-2.5 text-xs font-bold text-success-foreground hover:bg-success/90">
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 p-1">
+              <Button onClick={handleDownloadExcel} size="sm" className="h-8 gap-1.5 border border-foreground bg-foreground px-2.5 text-xs font-bold text-background hover:bg-foreground/88">
                 <Download className="size-3.5" />
                 XLSX ({selectedOrders.length})
               </Button>
@@ -529,7 +529,7 @@ export default function AdminOrdersClient({
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10 gap-2 font-bold text-xs uppercase tracking-wider">
-                <Zap className="size-4 text-accent" />
+                <Zap className="size-4 text-foreground" />
                 Reports
               </Button>
             </PopoverTrigger>
@@ -540,7 +540,7 @@ export default function AdminOrdersClient({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-9 justify-start gap-2 border-success/20 text-xs font-medium text-success hover:bg-success/10"
+                    className="h-9 justify-start gap-2 border-border text-xs font-medium text-foreground hover:bg-muted/60"
                     onClick={() => handleExportMonthlySales('excel')}
                   >
                     <Download className="size-3.5" />
@@ -640,7 +640,7 @@ export default function AdminOrdersClient({
                         <span className="text-xs text-muted-foreground">{formatTime(order.createdAt)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-primary">{formatPrice(order.totalAmount)}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-foreground">{formatPrice(order.totalAmount)}</td>
                     <td className="px-6 py-4">
                       <Badge variant={statusVariant[order.status] || 'secondary'} className="rounded-full px-3">
                         {order.status}
@@ -662,7 +662,7 @@ export default function AdminOrdersClient({
                           }}
                         >
                           <PopoverTrigger asChild>
-                            <Button variant="outline" className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-accent hover:text-accent-foreground">
+                            <Button variant="outline" className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground">
                               <Zap className="size-5 mr-2" />
                               <span className="text-sm font-semibold">Quick Update</span>
                             </Button>
@@ -713,7 +713,7 @@ export default function AdminOrdersClient({
                         {/* Edit Modal Trigger */}
                         <Button 
                           variant="outline" 
-                          className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-primary hover:text-primary-foreground"
+                          className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
                           onClick={() => {
                             setEditingOrder(order);
                             setIsEditModalOpen(true);
@@ -726,7 +726,7 @@ export default function AdminOrdersClient({
                         <Link
                           href={`/admin/orders/${order._id}`}
                           className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-muted-foreground hover:bg-primary hover:text-white hover:border-primary shadow-sm transition-all"
+                            "flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground hover:border-border"
                           )}
                         >
                           <Eye className="size-5 mr-2" />
@@ -755,7 +755,7 @@ export default function AdminOrdersClient({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Consignee Info */}
                 <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase text-primary tracking-widest">Consignee Details</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Consignee Details</h3>
                   <div className="space-y-2">
                     <Label htmlFor="customerName">Full Name</Label>
                     <Input id="customerName" name="customerName" defaultValue={editingOrder.customerName} required />
@@ -772,7 +772,7 @@ export default function AdminOrdersClient({
 
                 {/* Address Info */}
                 <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase text-primary tracking-widest">Shipping Address</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Shipping Address</h3>
                   <div className="space-y-2">
                     <Label>City</Label>
                     <Popover open={cityOpen} onOpenChange={setCityOpen}>

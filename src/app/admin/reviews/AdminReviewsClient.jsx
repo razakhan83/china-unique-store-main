@@ -126,39 +126,39 @@ export default function AdminReviewsClient({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="surface-card border-none bg-primary/5">
+        <Card className="admin-surface border-none">
           <CardHeader className="pb-2">
-            <CardDescription className="text-primary/70">Total Reviews</CardDescription>
-            <CardTitle className="text-3xl font-bold text-primary">{summary.totalReviews}</CardTitle>
+            <CardDescription className="text-muted-foreground">Total Reviews</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{summary.totalReviews}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-xs text-primary/60">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <MessageSquare className="size-3" />
               <span>Customer feedback collected</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="surface-card border-none bg-accent/10">
+        <Card className="admin-surface border-none">
           <CardHeader className="pb-2">
-            <CardDescription className="text-accent-foreground/70">Average Rating</CardDescription>
-            <CardTitle className="text-3xl font-bold text-accent-foreground">{summary.averageRating.toFixed(1)}</CardTitle>
+            <CardDescription className="text-muted-foreground">Average Rating</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{summary.averageRating.toFixed(1)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-xs text-accent-foreground/60">
-              <Star className="size-3 fill-accent text-accent" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Star className="size-3 fill-foreground text-foreground" />
               <span>Overall store satisfaction</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="surface-card border-none bg-success/8">
+        <Card className="admin-surface border-none">
           <CardHeader className="pb-2">
-            <CardDescription className="text-success/70">Recent (7 Days)</CardDescription>
-            <CardTitle className="text-3xl font-bold text-success">{summary.recentReviews}</CardTitle>
+            <CardDescription className="text-muted-foreground">Recent (7 Days)</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{summary.recentReviews}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-xs text-success/60">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="size-3" />
               <span>New reviews this week</span>
             </div>
@@ -204,19 +204,19 @@ export default function AdminReviewsClient({
                   id={`review-${review._id}`}
                   className={cn(
                     'transition-all duration-700',
-                    highlightedId === review._id ? 'bg-primary/10 ring-1 ring-primary/20' : 'hover:bg-muted/30',
+                    highlightedId === review._id ? 'bg-muted ring-1 ring-border' : 'hover:bg-muted/30',
                   )}
                 >
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="flex size-7 items-center justify-center rounded-full bg-primary/5 text-primary text-[10px] font-bold">
+                      <div className="flex size-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
                         {review.userName?.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold text-foreground flex items-center gap-2">
                           {review.userName}
                           {highlightedId === review._id && (
-                            <Badge className="h-4 px-1 text-[10px] uppercase tracking-wider bg-primary text-primary-foreground animate-pulse">
+                            <Badge className="h-4 animate-pulse bg-foreground px-1 text-[10px] uppercase tracking-wider text-background">
                               New
                             </Badge>
                           )}
@@ -229,7 +229,7 @@ export default function AdminReviewsClient({
                       {Array.from({ length: 5 }, (_, index) => (
                         <Star
                           key={index}
-                          className={cn('size-3', index < review.rating ? 'fill-accent text-accent' : 'text-muted/40')}
+                          className={cn('size-3', index < review.rating ? 'fill-foreground text-foreground' : 'text-muted/40')}
                         />
                       ))}
                     </div>

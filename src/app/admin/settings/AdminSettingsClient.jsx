@@ -34,7 +34,7 @@ function SettingSection({ icon: Icon, title, description, children }) {
   return (
     <section className="surface-card rounded-xl p-5 md:p-6">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
           <Icon className="size-4" />
         </div>
         <div>
@@ -250,10 +250,10 @@ function AdminAccessSection() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/35 px-4 py-2.5"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                      <ShieldCheck className="size-4 shrink-0 text-primary" />
+                  <ShieldCheck className="size-4 shrink-0 text-foreground" />
                       <span className="truncate text-sm font-medium text-foreground">{email}</span>
                     </div>
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                       Protected
                     </span>
                   </li>
@@ -276,7 +276,7 @@ function AdminAccessSection() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/35 px-4 py-2.5"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                      <ShieldCheck className="size-4 shrink-0 text-primary" />
+                  <ShieldCheck className="size-4 shrink-0 text-foreground" />
                       <span className="truncate text-sm font-medium text-foreground">{email}</span>
                     </div>
                     <Button
@@ -741,7 +741,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </Button>
           {saved ? (
-            <span className="text-sm font-medium text-primary">Settings updated successfully.</span>
+              <span className="text-sm font-medium text-foreground">Settings updated successfully.</span>
           ) : null}
         </div>
 

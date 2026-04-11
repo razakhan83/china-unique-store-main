@@ -136,7 +136,7 @@ function DiscountDialog({ open, product, onOpenChange, onSuccess }) {
       <AlertDialogContent className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <Tag className="size-4 text-primary" />
+            <Tag className="size-4 text-foreground" />
             Set Discount
           </AlertDialogTitle>
           <AlertDialogDescription>
@@ -364,19 +364,17 @@ export default function AdminProductsClient({
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Products</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage inventory ({summary.totalProducts} total, {summary.liveProducts} live)
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{summary.totalProducts} total • {summary.liveProducts} live</p>
         </div>
         <Link href="/admin/products/add" className="w-full md:w-auto">
-          <Button className="w-full md:w-auto">
+          <Button className="w-full border border-foreground bg-foreground text-background hover:bg-foreground/88 md:w-auto">
             <Plus data-icon="inline-start" />
-            Add New Product
+            Add product
           </Button>
         </Link>
       </div>
 
-      <div className="mb-5 flex flex-col gap-3">
+      <div className="admin-surface mb-5 flex flex-col gap-3 rounded-[1.35rem] p-4">
         <form
           className="flex flex-col gap-3 lg:flex-row"
           onSubmit={(event) => {
@@ -388,7 +386,7 @@ export default function AdminProductsClient({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search products or categories"
+              placeholder="Search products"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="pl-10 h-10"
@@ -402,10 +400,10 @@ export default function AdminProductsClient({
                 navigate({ sort: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="h-10 w-full bg-background">
                 <div className="flex items-center gap-2">
                   <ArrowDownWideNarrow className="size-4 text-muted-foreground" />
-                  <SelectValue placeholder="Sort By" />
+                  <SelectValue placeholder="Sort" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -427,7 +425,7 @@ export default function AdminProductsClient({
               navigate({ status: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-full text-xs lg:w-[140px]">
+            <SelectTrigger className="h-9 w-full bg-background text-xs lg:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -443,7 +441,7 @@ export default function AdminProductsClient({
               navigate({ stock: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-full text-xs lg:w-[140px]">
+            <SelectTrigger className="h-9 w-full bg-background text-xs lg:w-[140px]">
               <SelectValue placeholder="Stock" />
             </SelectTrigger>
             <SelectContent>
@@ -466,7 +464,7 @@ export default function AdminProductsClient({
         </div>
       </div>
 
-      <div className={cn("hidden overflow-hidden rounded-xl border border-border bg-card md:block transition-opacity", isPending && "opacity-70")}>
+      <div className={cn("admin-surface hidden overflow-hidden rounded-[1.35rem] md:block transition-opacity", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
           <table className="min-w-[1000px] w-full">
             <thead>
@@ -513,13 +511,13 @@ export default function AdminProductsClient({
                     <td className="px-6 py-4">
                       {product.isDiscounted && product.discountPercentage > 0 ? (
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold text-primary">
+                          <span className="text-sm font-bold text-foreground">
                             PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
                           </span>
                           <span className="text-xs text-muted-foreground line-through">{formatPrice(product.Price)}</span>
                         </div>
                       ) : (
-                        <span className="text-sm font-semibold text-primary">{formatPrice(product.Price)}</span>
+                        <span className="text-sm font-semibold text-foreground">{formatPrice(product.Price)}</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -539,7 +537,7 @@ export default function AdminProductsClient({
                           onCheckedChange={() => handleToggleStock(product)}
                           aria-label={`Toggle ${product.Name} stock status`}
                         />
-                        <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
+                        <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
                           {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                         </Badge>
                       </div>
@@ -550,7 +548,7 @@ export default function AdminProductsClient({
                           onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                           className={cn(
                             "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
-                            product.isNewArrival ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                            product.isNewArrival ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                           )}
                           title="New Arrival"
                         >
@@ -560,7 +558,7 @@ export default function AdminProductsClient({
                           onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                           className={cn(
                             "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
-                            product.isBestSelling ? "bg-rose-500/10 border-rose-500/20 text-rose-600" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                            product.isBestSelling ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                           )}
                           title="Best Selling"
                         >
@@ -586,7 +584,10 @@ export default function AdminProductsClient({
                         <Button
                           variant={product.isDiscounted ? "default" : "outline"}
                           size="sm"
-                          className="h-8 px-3"
+                          className={cn(
+                            "h-8 px-3",
+                            product.isDiscounted && "border border-foreground bg-foreground text-background hover:bg-foreground/88"
+                          )}
                           onClick={() => setDiscountModal({ open: true, product })}
                           title="Set Discount"
                         >
@@ -638,12 +639,12 @@ export default function AdminProductsClient({
 
       <div className={cn("space-y-3 md:hidden transition-opacity", isPending && "opacity-70")}>
         {products.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card px-4 py-10 text-center">
+          <div className="admin-surface rounded-[1.25rem] px-4 py-10 text-center">
             <p className="font-medium text-muted-foreground">No products found for the selected criteria.</p>
           </div>
         ) : (
           products.map((product) => (
-            <div key={product._id} className="rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+            <div key={product._id} className="admin-surface rounded-[1.25rem] p-3 sm:p-4">
               <div className="flex items-start gap-3">
                 <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-16">
                   {getPrimaryProductImage(product)?.url ? (
@@ -723,18 +724,18 @@ export default function AdminProductsClient({
                     <div className="min-w-0">
                       {product.isDiscounted && product.discountPercentage > 0 ? (
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold text-primary">
+                          <span className="text-sm font-bold text-foreground">
                             PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
                           </span>
                           <span className="text-xs text-muted-foreground line-through">{formatPrice(product.Price)}</span>
                         </div>
                       ) : (
-                        <span className="text-sm font-semibold text-primary">{formatPrice(product.Price)}</span>
+                        <span className="text-sm font-semibold text-foreground">{formatPrice(product.Price)}</span>
                       )}
                     </div>
 
                     <div className="flex shrink-0 flex-col items-end gap-1">
-                      <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="text-[10px] uppercase">
+                      <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="text-[10px] uppercase">
                         {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                       </Badge>
                       <Badge variant={product.isLive ? "default" : "secondary"} className="text-[10px] uppercase">
@@ -745,7 +746,7 @@ export default function AdminProductsClient({
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="mt-4 grid gap-3 rounded-lg border border-border bg-muted/20 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-xs font-medium text-muted-foreground">Visibility</span>
                   <div className="flex items-center gap-2">
@@ -783,7 +784,7 @@ export default function AdminProductsClient({
                       onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                       className={cn(
                         "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
-                        product.isNewArrival ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                        product.isNewArrival ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                       )}
                       title="New Arrival"
                     >
@@ -793,7 +794,7 @@ export default function AdminProductsClient({
                       onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                       className={cn(
                         "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
-                        product.isBestSelling ? "bg-rose-500/10 border-rose-500/20 text-rose-600" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                        product.isBestSelling ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                       )}
                       title="Best Selling"
                     >

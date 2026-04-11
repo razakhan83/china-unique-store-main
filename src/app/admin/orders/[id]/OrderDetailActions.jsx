@@ -73,7 +73,7 @@ export default function OrderDetailActions({ order }) {
   return (
     <section className="surface-card rounded-xl p-5 shadow-sm border border-border">
       <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border/50">
-        <Truck className="size-5 text-primary" />
+          <Truck className="size-5 text-foreground" />
         <h2 className="font-semibold text-foreground">Order Fulfillment</h2>
       </div>
 

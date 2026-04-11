@@ -15,7 +15,7 @@ export default function AdminLoginClient() {
       </Link>
 
       <div className="surface-card w-full max-w-[400px] rounded-xl p-8 text-center">
-        <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
           <ShieldCheck className="size-8" />
         </div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Admin Login</h2>

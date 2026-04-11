@@ -59,7 +59,7 @@ export default function AdminShippingClient({ initialSettings }) {
       <Card className="rounded-2xl shadow-sm border-border">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
               <Truck className="size-5" />
             </div>
             <div>

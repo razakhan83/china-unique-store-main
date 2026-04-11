@@ -71,7 +71,7 @@ export default function AdminReviewsDialog({ open, onOpenChange, product }) {
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
               <MessageSquare className="size-5" />
             </div>
             <div>
@@ -88,7 +88,7 @@ export default function AdminReviewsDialog({ open, onOpenChange, product }) {
         <ScrollArea className="max-h-[60vh] px-1">
           {loading ? (
             <div className="flex h-40 flex-col items-center justify-center gap-3">
-              <Loader2 className="size-6 animate-spin text-primary" />
+              <Loader2 className="size-6 animate-spin text-foreground" />
               <p className="text-xs font-medium text-muted-foreground">Loading reviews...</p>
             </div>
           ) : reviews.length > 0 ? (
@@ -96,7 +96,7 @@ export default function AdminReviewsDialog({ open, onOpenChange, product }) {
               {reviews.map((review) => (
                 <div 
                   key={review._id} 
-                  className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-sm"
+                  className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-border hover:bg-muted/25 hover:shadow-sm"
                 >
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default function AdminReviewsDialog({ open, onOpenChange, product }) {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <div className="flex gap-0.5 text-accent">
+                      <div className="flex gap-0.5 text-foreground">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star key={i} className={cn("size-3.5", i < review.rating ? "fill-current" : "text-muted/30")} />
                         ))}

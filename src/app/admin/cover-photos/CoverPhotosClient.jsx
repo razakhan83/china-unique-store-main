@@ -96,7 +96,7 @@ function VariantUpload({ slideId, variantKey, title, description, icon: Icon, as
     <div className="rounded-2xl border border-border bg-background/70 p-3">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
             <Icon className="size-4" />
           </div>
           <div>
@@ -152,8 +152,8 @@ function SortableSlideCard({ slide, index, onRemove, onAltChange, onUpload, uplo
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-border bg-background shadow-[0_16px_40px_rgba(10,61,46,0.08)]',
-        isDragging && 'z-10 shadow-[0_24px_60px_rgba(10,61,46,0.18)]',
+                'group relative overflow-hidden rounded-2xl border border-border bg-background shadow-[0_16px_40px_rgba(0,0,0,0.08)]',
+                isDragging && 'z-10 shadow-[0_24px_60px_rgba(0,0,0,0.18)]',
       )}
     >
       <div className="border-b border-border bg-muted/25 px-4 py-3">
@@ -396,7 +396,7 @@ export default function CoverPhotosClient({ initialSlides }) {
       <div className="surface-card rounded-xl p-5 md:p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
               <Images className="size-4" />
             </div>
             <div>
@@ -447,7 +447,7 @@ export default function CoverPhotosClient({ initialSlides }) {
             )}
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </Button>
-          {saved ? <span className="text-sm font-medium text-primary">Cover photos updated successfully.</span> : null}
+              {saved ? <span className="text-sm font-medium text-foreground">Cover photos updated successfully.</span> : null}
         </div>
       </div>
     </div>

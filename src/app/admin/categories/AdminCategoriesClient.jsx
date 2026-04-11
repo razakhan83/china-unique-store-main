@@ -57,7 +57,7 @@ function mapCategory(category, index = 0) {
 function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
   return (
     <div
-      className="surface-card flex items-center gap-4 rounded-2xl p-4 shadow-[0_18px_40px_rgba(10,61,46,0.07)]"
+      className="surface-card flex items-center gap-4 rounded-2xl p-4 shadow-[0_18px_40px_rgba(0,0,0,0.07)]"
     >
       <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/35">
         {category.image ? (
@@ -88,14 +88,14 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Products
         </p>
-        <p className="mt-1 text-sm font-semibold text-primary">{category.productCount}</p>
+                          <p className="mt-1 text-sm font-semibold text-foreground">{category.productCount}</p>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="flex flex-col items-end gap-1">
           <span className={cn(
             "text-[10px] font-semibold uppercase tracking-[0.16em]",
-            category.isEnabled ? "text-primary" : "text-muted-foreground",
+                            category.isEnabled ? "text-foreground" : "text-muted-foreground",
           )}>
             {category.isEnabled ? "Live" : "Hidden"}
           </span>

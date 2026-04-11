@@ -14,7 +14,7 @@ const statusVariant = {
   Pending: 'accent',
   Confirmed: 'primary',
   'In Process': 'secondary',
-  Delivered: 'emerald',
+  Delivered: 'secondary',
   'Delivery Address Issue': 'destructive',
   Returned: 'outline',
 };
@@ -106,7 +106,7 @@ async function OrderDetailContent({ id }) {
                     </td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">{item.quantity}</td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">Rs. {Number(item.price || 0).toLocaleString('en-PK')}</td>
-                    <td className="px-4 py-4 text-sm font-semibold text-primary">
+                    <td className="px-4 py-4 text-sm font-semibold text-foreground">
                       Rs. {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString('en-PK')}
                     </td>
                   </tr>
@@ -120,7 +120,7 @@ async function OrderDetailContent({ id }) {
       {/* Order History Log */}
       <section className="surface-card rounded-xl p-6 border border-border shadow-sm">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/50">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+          <div className="rounded-lg border border-border bg-muted p-2 text-foreground">
             <Receipt className="size-5" />
           </div>
           <div>
@@ -137,12 +137,12 @@ async function OrderDetailContent({ id }) {
           ) : (
             logs.map((log, index) => (
               <div key={log._id} className="relative flex items-start group">
-                <div className="absolute left-0 flex items-center justify-center w-10 h-10 rounded-full bg-background border-2 border-primary shadow-sm z-10 transition-transform group-hover:scale-110">
-                  <div className="size-2 rounded-full bg-primary" />
+                <div className="absolute left-0 z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-border bg-background shadow-sm transition-transform group-hover:scale-110">
+                  <div className="size-2 rounded-full bg-foreground" />
                 </div>
                 <div className="flex-1 ml-14 p-4 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary">
+                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-foreground">
                       {log.action.replace('_', ' ')}
                     </span>
                     <time className="text-xs font-medium text-muted-foreground">
@@ -155,7 +155,7 @@ async function OrderDetailContent({ id }) {
                   <p className="text-sm text-foreground leading-relaxed font-medium">{log.details}</p>
                   {(log.adminName || log.adminEmail) && (
                     <div className="mt-3 pt-3 flex items-center gap-2 border-t border-border/30">
-                      <div className="size-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
                         {(log.adminName || 'A').charAt(0).toUpperCase()}
                       </div>
                       <span className="text-xs text-muted-foreground italic">

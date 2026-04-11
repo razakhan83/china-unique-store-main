@@ -23,9 +23,9 @@ const ICON_MAP = {
 };
 
 const COLOR_MAP = {
-  order: 'bg-primary/10 text-primary',
-  review: 'bg-accent/15 text-accent-foreground',
-  user: 'bg-success/12 text-success',
+  order: 'border border-border bg-muted text-foreground',
+  review: 'border border-border bg-muted text-foreground',
+  user: 'border border-border bg-muted text-foreground',
 };
 
 export default function AdminNotificationCenter() {
@@ -97,10 +97,10 @@ export default function AdminNotificationCenter() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative group">
-          <Bell className={cn("size-5 transition-transform group-hover:rotate-12", unreadCount > 0 ? "text-primary" : "text-muted-foreground")} />
+        <Button variant="ghost" size="icon" className="relative group rounded-full border border-border/70 bg-background hover:bg-muted/50">
+          <Bell className={cn("size-5 transition-transform group-hover:rotate-12", unreadCount > 0 ? "text-foreground" : "text-muted-foreground")} />
           {unreadCount > 0 && (
-            <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-xl bg-destructive text-[10px] font-bold text-destructive-foreground shadow-sm ring-2 ring-background">
+            <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background shadow-sm ring-2 ring-background">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -111,8 +111,8 @@ export default function AdminNotificationCenter() {
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-foreground">Notifications</h3>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="bg-destructive/10 text-destructive">
-                {unreadCount} New
+              <Badge variant="secondary" className="bg-muted text-foreground">
+                {unreadCount} new
               </Badge>
             )}
           </div>
@@ -132,7 +132,7 @@ export default function AdminNotificationCenter() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 text-xs font-semibold text-primary hover:bg-primary/5"
+                className="h-8 text-xs font-semibold text-foreground hover:bg-muted"
                 onClick={markAllRead}
               >
                 Mark all as read
@@ -157,12 +157,12 @@ export default function AdminNotificationCenter() {
                     key={notification._id}
                     className={cn(
                       "group relative flex items-start gap-3 border-b border-border/40 p-4 transition-colors hover:bg-muted/50",
-                      !notification.isRead && "bg-primary/5"
+                      !notification.isRead && "bg-muted/35"
                     )}
                   >
                     {!notification.isRead && (
                       <div className="absolute left-1 top-1/2 -translate-y-1/2">
-                        <Circle className="size-1.5 fill-destructive text-destructive" />
+                        <Circle className="size-1.5 fill-foreground text-foreground" />
                       </div>
                     )}
                     <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", colorClass)}>
@@ -186,7 +186,7 @@ export default function AdminNotificationCenter() {
                     {!notification.isRead && (
                        <button 
                         onClick={() => markAsRead(notification._id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
                         title="Mark as read"
                        >
                          <CheckCircle2 className="size-4" />
@@ -202,7 +202,6 @@ export default function AdminNotificationCenter() {
                 <Bell className="size-6 text-muted-foreground/60" />
               </div>
               <p className="text-sm font-medium text-foreground">No notifications yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">We&apos;ll alert you when there&apos;s a new review, order, or user signup.</p>
             </div>
           )}
         </ScrollArea>

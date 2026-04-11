@@ -29,8 +29,8 @@ const selectionChipClass = (selected) =>
   cn(
     "inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
     selected
-      ? "border-primary bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(10,61,46,0.14)]"
-      : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground"
+      ? "border-border bg-foreground text-background shadow-[0_12px_30px_rgba(0,0,0,0.14)]"
+      : "border-border bg-background text-muted-foreground hover:border-border hover:text-foreground"
   );
 
 const uploadActionClass =
@@ -418,7 +418,7 @@ export default function AddProduct() {
               </p>
               <p className="text-sm text-muted-foreground">
                 Customer pays
-                <span className="mt-1 block text-base font-semibold text-primary">
+                <span className="mt-1 block text-base font-semibold text-foreground">
                   Rs {discountedPreview || 0}
                 </span>
               </p>
@@ -430,7 +430,7 @@ export default function AddProduct() {
               <Label>Categories</Label>
               <Link
                 href="/admin/categories"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground transition-colors hover:text-foreground/80"
               >
                 <PlusCircle className="size-3.5" /> Manage Categories
               </Link>
@@ -575,7 +575,7 @@ export default function AddProduct() {
                     <button
                       type="button"
                       onClick={() => makeImagePrimary(idx)}
-                      className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-primary hover:text-primary group-hover:opacity-100"
+                      className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-border hover:bg-muted group-hover:opacity-100"
                     >
                       Set Main
                     </button>
@@ -595,8 +595,8 @@ export default function AddProduct() {
               className={cn(
                 "relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200",
                 isDragOver
-                  ? "border-primary bg-primary/8"
-                  : "border-border bg-muted/20 hover:border-primary/35 hover:bg-muted/35"
+                  ? "border-border bg-muted/60"
+                  : "border-border bg-muted/20 hover:border-border hover:bg-muted/35"
               )}
             >
               <input
@@ -607,7 +607,7 @@ export default function AddProduct() {
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               />
               <div className="space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
                   <CloudUpload className="size-6" />
                 </div>
                 <div>
@@ -666,14 +666,14 @@ export default function AddProduct() {
                   className={cn(
                     "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
                     seoReady
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : "border-amber-200 bg-amber-50 text-amber-700"
+                      ? "border-border bg-muted text-foreground"
+                      : "border-border bg-muted/60 text-foreground"
                   )}
                 >
                   <Check
                     className={cn(
                       "size-3.5",
-                      seoReady ? "text-emerald-600" : "text-amber-600"
+                      "text-foreground"
                     )}
                   />
                   {seoReady
@@ -743,10 +743,10 @@ export default function AddProduct() {
                   Search Preview
                 </p>
                 <div className="mt-3 space-y-1.5">
-                  <p className="line-clamp-2 text-base font-semibold text-primary">
+                  <p className="line-clamp-2 text-base font-semibold text-foreground">
                     {seoPreviewTitle}
                   </p>
-                  <p className="truncate text-xs text-emerald-700">
+                  <p className="truncate text-xs text-muted-foreground">
                     {seoPreviewUrl}
                   </p>
                   <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
@@ -766,7 +766,7 @@ export default function AddProduct() {
                       className={cn(
                         "flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-medium",
                         item.complete
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          ? "border-border bg-muted text-foreground"
                           : "border-border bg-muted/40 text-muted-foreground"
                       )}
                     >
