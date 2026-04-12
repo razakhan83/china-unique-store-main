@@ -1,5 +1,5 @@
-import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
+import { AdminCoverPhotosSkeleton } from '@/components/AdminDashboardSkeleton';
 
 export default function Loading() {
-  return <AdminTableSkeleton rows={4} />;
+  return <AdminCoverPhotosSkeleton />;
 }

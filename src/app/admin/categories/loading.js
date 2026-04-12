@@ -1,5 +1,5 @@
-import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
+import { AdminCategoriesSkeleton } from '@/components/AdminDashboardSkeleton';
 
 export default function Loading() {
-  return <AdminTableSkeleton rows={8} />;
+  return <AdminCategoriesSkeleton />;
 }

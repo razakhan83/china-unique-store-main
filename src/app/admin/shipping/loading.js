@@ -1,5 +1,5 @@
-import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
+import { AdminShippingSkeleton } from '@/components/AdminDashboardSkeleton';
 
 export default function Loading() {
-  return <AdminTableSkeleton rows={6} />;
+  return <AdminShippingSkeleton />;
 }
