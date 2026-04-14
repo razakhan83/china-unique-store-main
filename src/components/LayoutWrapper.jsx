@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ChevronRight, CreditCard, MapPin, Truck } from 'lucide-react';
 
@@ -11,6 +12,10 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
+function NavbarFallback() {
+  return <div className="sticky top-0 z-40 h-[100px] bg-card" aria-hidden="true" />;
+}
+
 export default function LayoutWrapper({ children, categories, settings }) {
   const whatsappLink = createWhatsAppUrl(settings.whatsappNumber);
   const facebookUrl = normalizeSocialUrl(settings.facebookPageUrl);
@@ -23,16 +28,18 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-background">
-        <Navbar
-          categories={categories}
-          storeName={settings.storeName}
-          lightLogoUrl={settings.lightLogoUrl}
-          darkLogoUrl={settings.darkLogoUrl}
-          announcementBarEnabled={settings.announcementBarEnabled}
-          announcementBarText={settings.announcementBarText}
-          announcementBarMessages={settings.announcementBarMessages}
-        />
+      <div className="flex min-h-screen flex-col bg-background pb-24 md:pb-0">
+        <Suspense fallback={<NavbarFallback />}>
+          <Navbar
+            categories={categories}
+            storeName={settings.storeName}
+            lightLogoUrl={settings.lightLogoUrl}
+            darkLogoUrl={settings.darkLogoUrl}
+            announcementBarEnabled={settings.announcementBarEnabled}
+            announcementBarText={settings.announcementBarText}
+            announcementBarMessages={settings.announcementBarMessages}
+          />
+        </Suspense>
 
         <main className="flex-grow">{children}</main>
 
@@ -128,7 +135,9 @@ export default function LayoutWrapper({ children, categories, settings }) {
           </div>
         </footer>
       </div>
-      <FloatingWhatsApp whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
+      <Suspense fallback={null}>
+        <FloatingWhatsApp whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
+      </Suspense>
       <CartDrawer whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
     </>
   );

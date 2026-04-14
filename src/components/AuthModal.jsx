@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { LogIn, Sparkles } from 'lucide-react';
@@ -12,12 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-export default function AuthModal({ open, onOpenChange, callbackUrl }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const resolvedCallbackUrl =
-    callbackUrl || `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
-
+function AuthModalContent({ open, onOpenChange, resolvedCallbackUrl }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md text-center p-8">
@@ -50,5 +46,24 @@ export default function AuthModal({ open, onOpenChange, callbackUrl }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AuthModalCurrentUrl(props) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const resolvedCallbackUrl = `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
+  return <AuthModalContent {...props} resolvedCallbackUrl={resolvedCallbackUrl} />;
+}
+
+export default function AuthModal({ open, onOpenChange, callbackUrl }) {
+  if (callbackUrl) {
+    return <AuthModalContent open={open} onOpenChange={onOpenChange} resolvedCallbackUrl={callbackUrl} />;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <AuthModalCurrentUrl open={open} onOpenChange={onOpenChange} />
+    </Suspense>
   );
 }

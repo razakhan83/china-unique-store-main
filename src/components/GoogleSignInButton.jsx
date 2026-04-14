@@ -1,14 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
-export default function GoogleSignInButton({ className, callbackUrl: callbackUrlOverride }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const callbackUrl = callbackUrlOverride || `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
-
+function GoogleSignInButtonContent({ className, callbackUrl }) {
   return (
     <Button
       variant="outline"
@@ -42,5 +39,24 @@ export default function GoogleSignInButton({ className, callbackUrl: callbackUrl
       <span>Sign in with Google</span>
       
     </Button>
+  );
+}
+
+function GoogleSignInButtonCurrentUrl({ className }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const callbackUrl = `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
+  return <GoogleSignInButtonContent className={className} callbackUrl={callbackUrl} />;
+}
+
+export default function GoogleSignInButton({ className, callbackUrl: callbackUrlOverride }) {
+  if (callbackUrlOverride) {
+    return <GoogleSignInButtonContent className={className} callbackUrl={callbackUrlOverride} />;
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <GoogleSignInButtonCurrentUrl className={className} />
+    </Suspense>
   );
 }

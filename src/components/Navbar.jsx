@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -24,6 +24,7 @@ import SearchField from '@/components/SearchField';
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import MyOrdersButton from '@/components/MyOrdersButton';
 import MyWishlistButton from '@/components/MyWishlistButton';
 import AuthModal from '@/components/AuthModal';
@@ -148,15 +149,19 @@ function NavbarContent({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const closeCategoriesTimeoutRef = useRef(null);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 250);
+    const timer = setTimeout(() => setDebouncedSearch(deferredSearchTerm), 250);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [deferredSearchTerm]);
 
   useEffect(() => {
     return () => {
@@ -166,7 +171,59 @@ function NavbarContent({
     };
   }, []);
 
-  const suggestions = useMemo(() => [], []);
+  useEffect(() => {
+    let isActive = true;
+    const controller = new AbortController();
+
+    async function loadSuggestions() {
+      if (!debouncedSearch.trim()) {
+        if (isActive) {
+          setSuggestions([]);
+          setIsLoadingSuggestions(false);
+        }
+        return;
+      }
+
+      setIsLoadingSuggestions(true);
+
+      try {
+        const response = await fetch(`/api/search-products?q=${encodeURIComponent(debouncedSearch.trim())}&limit=5`, {
+          signal: controller.signal,
+        });
+        const result = await response.json();
+
+        if (!isActive) return;
+
+        setSuggestions(
+          Array.isArray(result?.data)
+            ? result.data.map((product) => ({
+                ...product,
+                onSelect: () => {
+                  setIsSearchOpen(false);
+                  setIsFocused(false);
+                  router.push(`/products/${product.slug || product._id || product.id}`);
+                },
+              }))
+            : [],
+        );
+      } catch (error) {
+        if (error?.name !== 'AbortError' && isActive) {
+          setSuggestions([]);
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingSuggestions(false);
+        }
+      }
+    }
+
+    loadSuggestions();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [debouncedSearch, router]);
 
   function handleCategoryClick(categoryId) {
     setActiveCategory(categoryId);
@@ -182,7 +239,51 @@ function NavbarContent({
     trackSearchEvent({ searchString: searchTerm.trim() });
     setIsSearchOpen(false);
     setIsFocused(false);
+    setSuggestions([]);
     router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
+  }
+
+  function handleSearchToggle() {
+    setIsSidebarOpen(false);
+    setIsAccountDrawerOpen(false);
+    setIsSearchOpen((value) => {
+      const nextValue = !value;
+      if (!nextValue) {
+        setIsFocused(false);
+        setSuggestions([]);
+      }
+      return nextValue;
+    });
+  }
+
+  function handleWishlistClick() {
+    setIsSearchOpen(false);
+    setIsFocused(false);
+    setSuggestions([]);
+    setIsAccountDrawerOpen(false);
+    if (session) {
+      router.push('/wishlist');
+      return;
+    }
+    setIsAuthModalOpen(true);
+  }
+
+  function handleMobileNavigate(href) {
+    setIsSearchOpen(false);
+    setIsFocused(false);
+    setSuggestions([]);
+    setIsAccountDrawerOpen(false);
+    router.push(href);
+  }
+
+  function handleAccountDrawerChange(open) {
+    if (open) {
+      setIsSearchOpen(false);
+      setIsFocused(false);
+      setSuggestions([]);
+      setIsSidebarOpen(false);
+    }
+    setIsAccountDrawerOpen(open);
   }
 
   function navLinkClass(path) {
@@ -228,7 +329,7 @@ function NavbarContent({
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
   return (
-    <div className="navbar-shell sticky top-0 z-40 overflow-hidden bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
+    <div className="navbar-shell sticky top-0 z-40 overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
       {showAnnouncementBar ? (
         <div className="relative flex min-h-9 items-center bg-primary py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
           <AnnouncementMarquee items={announcementItems} />
@@ -306,11 +407,11 @@ function NavbarContent({
           <Button
             variant="ghost"
             size="icon-lg"
-            onClick={() => setIsSearchOpen((value) => !value)}
+            onClick={handleSearchToggle}
             aria-label="Toggle search"
             aria-expanded={isSearchOpen}
             className={cn(
-              `nav-search-toggle overflow-hidden ${navActionButtonClass}`,
+              `nav-search-toggle hidden overflow-hidden md:inline-flex ${navActionButtonClass}`,
               isSearchOpen
                 ? 'is-open border-primary/18 bg-background text-primary'
                 : ''
@@ -413,11 +514,14 @@ function NavbarContent({
         data-state={isSearchOpen ? 'open' : 'closed'}
         aria-hidden={!isSearchOpen}
         className={cn(
-          'navbar-search-shell relative z-10 grid overflow-hidden border-t bg-background/80 backdrop-blur transition-[grid-template-rows,opacity,border-color] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
-          isSearchOpen ? 'grid-rows-[1fr] border-border/70 opacity-100' : 'pointer-events-none grid-rows-[0fr] border-transparent opacity-0'
+          'navbar-search-shell absolute inset-x-0 top-full z-10 grid border-t bg-background/96 backdrop-blur transition-[grid-template-rows,opacity,border-color] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:bg-background/80',
+          isSearchOpen
+            ? 'md:relative md:inset-auto md:top-auto md:z-auto'
+            : 'md:absolute md:inset-x-0 md:top-full md:z-10',
+          isSearchOpen ? 'grid-rows-[1fr] overflow-visible border-border/70 opacity-100' : 'pointer-events-none grid-rows-[0fr] overflow-hidden border-transparent opacity-0'
         )}
       >
-        <div className="overflow-hidden">
+        <div className="overflow-visible">
           <div className="navbar-search-inner mx-auto max-w-4xl px-4 py-4">
             <SearchField
               value={searchTerm}
@@ -425,13 +529,15 @@ function NavbarContent({
               onSubmit={handleSearchSubmit}
               onClear={() => {
                 setSearchTerm('');
+                setDebouncedSearch('');
+                setSuggestions([]);
                 setIsFocused(false);
               }}
               onFocus={() => setIsFocused(true)}
               isFocused={isFocused}
               suggestions={suggestions}
-              showSuggestions={false}
-              emptyLabel={`No products found for "${debouncedSearch}"`}
+              showSuggestions
+              emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}
             />
           </div>
         </div>
@@ -484,13 +590,13 @@ function NavbarContent({
                     <SidebarGroupContent>
                       <Accordion className="w-full">
                         <AccordionItem value="categories" className="border-none">
-                          <AccordionTrigger className="rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:no-underline [&[data-state=open]]:bg-sidebar-accent">
+                          <AccordionTrigger className="rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent">
                             <div className="flex items-center gap-3">
                               <LayoutGrid className="size-4" />
                               <span>Shop by Category</span>
                             </div>
                           </AccordionTrigger>
-                          <AccordionContent className="px-0 pt-1.5 pb-0">
+                          <AccordionContent className="px-0 pt-2 pb-0">
                             <SidebarMenu>
                               <SidebarMenuItem>
                                 <SidebarMenuButton
@@ -608,6 +714,17 @@ function NavbarContent({
           </Sidebar>
         </SheetContent>
       </Sheet>
+
+      <MobileBottomNav
+        pathname={pathname}
+        isSearchOpen={isSearchOpen}
+        onSearchToggle={handleSearchToggle}
+        onWishlistClick={handleWishlistClick}
+        accountOpen={isAccountDrawerOpen}
+        onAccountOpenChange={handleAccountDrawerChange}
+        onAuthOpen={() => setIsAuthModalOpen(true)}
+        onNavigate={handleMobileNavigate}
+      />
     </div>
   );
 }
