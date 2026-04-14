@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+import { useState } from 'react';
 import { Heart, Home, LogOut, Search, Settings, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,11 +25,14 @@ function MobileNavButton({
   href,
   iconSwap,
 }) {
+  const [isPressed, setIsPressed] = useState(false);
+
   const content = (
     <>
       <span
         className={cn(
-          'flex items-center justify-center text-[color:inherit] transition-[color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:group-active:-translate-y-0.5 motion-safe:group-active:scale-[0.88]'
+          'flex items-center justify-center text-[color:inherit] transition-[color,transform] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          isPressed && 'scale-[1.12]'
         )}
       >
         {iconSwap ? iconSwap : <Icon className="size-[1.2rem]" strokeWidth={3} />}
@@ -48,6 +52,9 @@ function MobileNavButton({
       <Link
         href={href}
         aria-current={active ? 'page' : undefined}
+        onPointerDown={() => setIsPressed(true)}
+        onPointerUp={() => setIsPressed(false)}
+        onPointerLeave={() => setIsPressed(false)}
         className={cn(
           'group flex min-w-0 flex-1 flex-col items-center gap-1 text-muted-foreground transition-colors duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:text-foreground active:text-primary',
           active && 'text-primary'
@@ -63,6 +70,9 @@ function MobileNavButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      onPointerDown={() => setIsPressed(true)}
+      onPointerUp={() => setIsPressed(false)}
+      onPointerLeave={() => setIsPressed(false)}
       className={cn(
         'group flex min-w-0 flex-1 flex-col items-center gap-1 text-muted-foreground transition-colors duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:text-foreground active:text-primary',
         active && 'text-primary'
