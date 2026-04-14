@@ -129,7 +129,13 @@ export default function MobileBottomNav({
             <MobileNavButton
               icon={User}
               label="Account"
-              onClick={() => onAccountOpenChange(true)}
+              onClick={() => {
+                if (session) {
+                  onAccountOpenChange(true);
+                  return;
+                }
+                onAuthOpen();
+              }}
               active={accountOpen || pathname.startsWith('/settings') || pathname.startsWith('/orders')}
             />
           </nav>

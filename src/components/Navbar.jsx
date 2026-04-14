@@ -261,11 +261,7 @@ function NavbarContent({
     setIsFocused(false);
     setSuggestions([]);
     setIsAccountDrawerOpen(false);
-    if (session) {
-      router.push('/wishlist');
-      return;
-    }
-    setIsAuthModalOpen(true);
+    router.push('/wishlist');
   }
 
   function handleMobileNavigate(href) {
@@ -708,7 +704,16 @@ function NavbarContent({
                   </SidebarMenu>
                 </div>
               ) : (
-                <GoogleSignInButton className="min-h-10 rounded-xl py-2.5 shadow-none" />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="min-h-10 w-full rounded-xl py-2.5"
+                >
+                  Sign in with Google
+                </Button>
               )}
             </SidebarFooter>
           </Sidebar>

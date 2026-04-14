@@ -842,7 +842,7 @@
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    bottom: 24px !important;
+    bottom: calc(env(safe-area-inset-bottom) + 88px) !important;
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;

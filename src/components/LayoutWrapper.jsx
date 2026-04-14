@@ -28,7 +28,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-background pb-24 md:pb-0">
+      <div className="flex min-h-screen flex-col bg-background">
         <Suspense fallback={<NavbarFallback />}>
           <Navbar
             categories={categories}
@@ -41,7 +41,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           />
         </Suspense>
 
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow pb-24 md:pb-0">{children}</main>
 
         <footer className="mt-auto border-t border-border bg-primary pb-6 pt-12 text-primary-foreground">
           <div className="container mx-auto max-w-7xl px-4">
