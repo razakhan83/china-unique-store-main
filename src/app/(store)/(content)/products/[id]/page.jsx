@@ -7,6 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import ProductActions, { ProductSocialActions } from '@/components/ProductActions';
 import ProductGallery from '@/components/ProductGallery';
 import ProductViewTracking from '@/components/ProductViewTracking';
+import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 import ProductMetaTags from './ProductMetaTags';
 import ProductReviews from '@/components/ProductReviews';
 import { Badge } from '@/components/ui/badge';
@@ -197,6 +198,8 @@ export default function ProductPage({ params }) {
 
   return (
     <div className="product-detail-shell min-h-screen bg-background">
+      <ProductPageScrollReset />
+
       <div className="container mx-auto max-w-7xl px-4 pb-2 pt-8 md:pt-10">
         <Suspense fallback={<ProductBreadcrumbSkeleton />}>
           <ProductBreadcrumb slugPromise={slugPromise} />
@@ -231,7 +234,7 @@ async function ProductBreadcrumb({ slugPromise }) {
   }
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="overflow-x-auto">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href="/">Home</BreadcrumbLink>
