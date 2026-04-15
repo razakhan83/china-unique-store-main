@@ -145,25 +145,25 @@ export default function ProductCard({ product, className = "" }) {
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
-          <div className="flex min-w-0 flex-col justify-end gap-0.5">
+          <div className="flex min-w-0 min-h-[2.4rem] flex-col justify-end gap-0.5 sm:min-h-[2.75rem]">
             {hasRealDiscount ? (
-              <div className="flex min-h-[2.4rem] flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:min-h-[2.75rem]">
-                <p
-                  className="text-lg font-semibold leading-none text-foreground tabular-nums sm:text-xl"
-                  draggable={false}
-                >
-                  {formatPrice(discountedPrice)}
-                </p>
+              <div className="flex flex-col items-start justify-end gap-1">
                 <p
                   className="text-xs font-medium leading-none text-muted-foreground/75 line-through sm:text-sm"
                   draggable={false}
                 >
                   {formatPrice(productPrice)}
                 </p>
+                <p
+                  className="text-lg font-semibold leading-none text-foreground tabular-nums sm:text-xl"
+                  draggable={false}
+                >
+                  {formatPrice(discountedPrice)}
+                </p>
               </div>
             ) : (
               <p
-                className="min-h-[2.4rem] text-lg font-semibold leading-none text-foreground tabular-nums sm:min-h-[2.75rem] sm:text-xl"
+                className="pb-0.5 text-lg font-semibold leading-none text-foreground tabular-nums sm:pb-0 sm:text-xl"
                 draggable={false}
               >
                 {formatPrice(productPrice)}

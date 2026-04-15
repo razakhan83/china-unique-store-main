@@ -78,23 +78,23 @@ export default function ProductCardAddToCartButton({ product, isOutOfStock = fal
       onClick={handleAddToCart}
       data-state={animationState}
       aria-busy={isBusy}
-      className="add-to-cart-button product-card-add-to-cart-button relative size-8 cursor-pointer touch-manipulation rounded-md bg-transparent p-0 text-primary shadow-none transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:bg-primary/10 hover:text-primary active:scale-[0.96] active:bg-primary/10 active:text-primary disabled:pointer-events-none after:absolute after:-inset-2 after:content-['']"
+      className="add-to-cart-button product-card-add-to-cart-button relative translate-y-0.5 size-9 cursor-pointer touch-manipulation rounded-md bg-transparent p-0 text-primary shadow-none transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:bg-primary/10 hover:text-primary active:scale-[0.96] active:bg-primary/10 active:text-primary disabled:pointer-events-none after:absolute after:-inset-2 after:content-[''] sm:size-8 sm:translate-y-0"
       aria-label="Add to cart"
     >
-      <span className="relative inline-flex size-[1.125rem] items-center justify-center">
+      <span className="relative inline-flex size-[1.25rem] items-center justify-center sm:size-[1.125rem]">
         <span
           className={cn(
-            "add-to-cart-icon absolute inline-flex size-[1.125rem] items-center justify-center text-primary",
+            "add-to-cart-icon absolute inline-flex size-[1.25rem] items-center justify-center text-primary sm:size-[1.125rem]",
             isLoading ? "is-visible" : ""
           )}
           aria-hidden="true"
           data-cart-icon="loader"
         >
-          <Spinner className="size-[1.125rem] [animation-duration:520ms]" />
+          <Spinner className="size-[1.25rem] [animation-duration:520ms] sm:size-[1.125rem]" />
         </span>
         <ShoppingCart
           className={cn(
-            "add-to-cart-icon absolute size-[1.125rem] text-primary",
+            "add-to-cart-icon absolute size-[1.25rem] text-primary sm:size-[1.125rem]",
             !isLoading ? "is-visible" : ""
           )}
           aria-hidden="true"
