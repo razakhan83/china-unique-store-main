@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import VendorAssignmentsEditor from "@/components/admin/VendorAssignmentsEditor";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { moveProductImageToFront } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -50,6 +51,7 @@ export default function AddProduct() {
   const [stockQuantity, setStockQuantity] = useState("1");
   const [stockStatus, setStockStatus] = useState("In Stock");
   const [Categories, setCategories] = useState([]);
+  const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]);
   const [isLive, setIsLive] = useState(true);
   const [isNewArrival, setIsNewArrival] = useState(true);
@@ -57,6 +59,7 @@ export default function AddProduct() {
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
+  const [allVendors, setAllVendors] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatImage, setNewCatImage] = useState("");
@@ -66,17 +69,25 @@ export default function AddProduct() {
   const seoGenerationLockRef = useRef(false);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchDependencies = async () => {
       try {
-        const res = await fetch("/api/categories");
-        const data = await res.json();
-        if (data.success) setAllCategories(data.data);
+        const [categoriesRes, vendorsRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/admin/vendors"),
+        ]);
+        const [categoriesData, vendorsData] = await Promise.all([
+          categoriesRes.json(),
+          vendorsRes.json(),
+        ]);
+
+        if (categoriesData.success) setAllCategories(categoriesData.data);
+        if (vendorsData.success) setAllVendors(vendorsData.data);
       } catch (err) {
-        console.error("Failed to fetch categories:", err);
+        console.error("Failed to fetch admin form dependencies:", err);
       }
     };
 
-    fetchCategories();
+    fetchDependencies();
   }, []);
 
   const handleAddCategory = async (e) => {
@@ -235,6 +246,7 @@ export default function AddProduct() {
           StockStatus: stockStatus,
           Images: finalImages,
           Category: Categories,
+          vendors: vendorAssignments,
           isLive,
           isNewArrival,
           isBestSelling,
@@ -462,6 +474,14 @@ export default function AddProduct() {
                 Please select at least one category.
               </p>
             )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/35 p-4">
+            <VendorAssignmentsEditor
+              vendors={allVendors}
+              value={vendorAssignments}
+              onChange={setVendorAssignments}
+            />
           </div>
 
           <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">

@@ -10,6 +10,7 @@ import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
+import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
 
 export async function GET(_request, { params }) {
     try {
@@ -17,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
             .populate({ path: 'Category', select: 'name slug' })
             .lean();
 
@@ -35,6 +36,7 @@ export async function GET(_request, { params }) {
                 id: safeProduct.slug || safeProduct._id.toString(),
                 Category: getProductCategories(safeProduct),
                 Images: normalizeProductImages(safeProduct.Images),
+                vendors: Array.isArray(safeProduct.vendors) ? safeProduct.vendors.map(normalizeVendorSnapshot).filter(Boolean) : [],
             },
         });
     } catch (error) {
@@ -82,6 +84,7 @@ export async function PUT(request, { params }) {
         }
 
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(body.Images));
+        const normalizedVendors = await buildProductVendorSnapshots(body.vendors);
         const previousSlug = existingProduct.slug;
 
         existingProduct.Name = body.Name;
@@ -93,6 +96,7 @@ export async function PUT(request, { params }) {
         existingProduct.Price = Number(body.Price);
         existingProduct.Images = normalizedImages;
         existingProduct.Category = categoryArray;
+        existingProduct.vendors = normalizedVendors;
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.isLive = body.isLive === true || body.isLive === 'true';
         
@@ -129,6 +133,9 @@ export async function PUT(request, { params }) {
                 id: existingProduct.slug || existingProduct._id.toString(),
                 Category: getProductCategories(existingProduct.toObject()),
                 Images: normalizeProductImages(existingProduct.Images),
+                vendors: Array.isArray(existingProduct.vendors)
+                    ? existingProduct.vendors.map(normalizeVendorSnapshot).filter(Boolean)
+                    : [],
             },
         });
     } catch (error) {

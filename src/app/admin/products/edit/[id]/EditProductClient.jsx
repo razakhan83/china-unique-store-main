@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import VendorAssignmentsEditor from '@/components/admin/VendorAssignmentsEditor';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { getProductCategories } from '@/lib/productCategories';
 import { moveProductImageToFront, normalizeProductImages } from '@/lib/productImages';
@@ -39,6 +40,7 @@ export default function EditProduct({ id }) {
   const [seoCanonicalUrl, setSeoCanonicalUrl] = useState('');
   const [Price, setPrice] = useState('');
   const [Categories, setCategories] = useState([]); // array of selected category ids
+  const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [isLive, setIsLive] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(false);
@@ -46,6 +48,7 @@ export default function EditProduct({ id }) {
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
+  const [allVendors, setAllVendors] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatImage, setNewCatImage] = useState('');
@@ -64,11 +67,19 @@ export default function EditProduct({ id }) {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch('/api/categories');
-      const data = await res.json();
-      if (data.success) setAllCategories(data.data);
+      const [categoriesRes, vendorsRes] = await Promise.all([
+        fetch('/api/categories'),
+        fetch('/api/admin/vendors'),
+      ]);
+      const [categoriesData, vendorsData] = await Promise.all([
+        categoriesRes.json(),
+        vendorsRes.json(),
+      ]);
+
+      if (categoriesData.success) setAllCategories(categoriesData.data);
+      if (vendorsData.success) setAllVendors(vendorsData.data);
     } catch (err) {
-      console.error('Failed to fetch categories:', err);
+      console.error('Failed to fetch categories and vendors:', err);
     }
   }, []);
 
@@ -89,6 +100,15 @@ export default function EditProduct({ id }) {
           setSeoCanonicalUrl(p.seoCanonicalUrl || '');
           setPrice(p.Price || '');
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
+          setVendorAssignments(
+            Array.isArray(p.vendors)
+              ? p.vendors.map((vendor) => ({
+                  vendorId: vendor.vendorId || vendor._id || vendor.id,
+                  vendorProductName: vendor.vendorProductName || '',
+                  vendorPrice: vendor.vendorPrice ?? '',
+                })).filter((vendor) => vendor.vendorId)
+              : []
+          );
           
           const existingImages = normalizeProductImages(
             p.Images,
@@ -269,6 +289,7 @@ export default function EditProduct({ id }) {
           Price: Number(Price),
           Images: finalImages,
           Category: Categories,
+          vendors: vendorAssignments,
           isLive,
           isNewArrival,
           isBestSelling,
@@ -459,6 +480,14 @@ export default function EditProduct({ id }) {
             {Categories.length === 0 && (
               <p className="mt-1 text-xs text-destructive/80">Please select at least one category.</p>
             )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/35 p-4">
+            <VendorAssignmentsEditor
+              vendors={allVendors}
+              value={vendorAssignments}
+              onChange={setVendorAssignments}
+            />
           </div>
 
           {/* isLive Toggle */}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
+import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Store, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ export default async function AdminDashboardPage() {
 }
 
 async function DashboardContent() {
-  const { summary, recentOrders } = await getAdminDashboardData();
+  const { summary, recentOrders, topVendors } = await getAdminDashboardData();
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} pending` },
@@ -112,6 +112,38 @@ async function DashboardContent() {
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="grid gap-5">
+          <div className="admin-surface rounded-[1.5rem] p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
+                <Store className="size-4" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-foreground">Top Vendors</h2>
+              </div>
+            </div>
+            {topVendors.length > 0 ? (
+              <div className="space-y-3">
+                {topVendors.map((vendor) => (
+                  <div
+                    key={`${vendor.vendorId || vendor.name}-${vendor.shopNumber || ''}`}
+                    className="rounded-[1.15rem] border border-border/80 bg-background px-4 py-3"
+                  >
+                    <p className="text-sm font-medium text-foreground">{vendor.name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">{vendor.totalLiveItems}</span>{' '}
+                      {vendor.totalLiveItems === 1 ? 'Item' : 'Items'}
+                      {vendor.shopNumber ? ` • Shop ${vendor.shopNumber}` : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[1.15rem] border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+                No live vendor-linked products yet.
+              </div>
+            )}
+          </div>
+
           <div className="admin-surface rounded-[1.5rem] p-5">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-muted text-foreground">

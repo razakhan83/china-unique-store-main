@@ -22,6 +22,39 @@ const ProductImageSchema = new mongoose.Schema(
     }
 );
 
+const ProductVendorSchema = new mongoose.Schema(
+    {
+        vendorId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Vendor',
+            required: false,
+        },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        shopNumber: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        vendorProductName: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        vendorPrice: {
+            type: Number,
+            default: null,
+            min: 0,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
 const ProductSchema = new mongoose.Schema(
     {
         Name: {
@@ -70,6 +103,10 @@ const ProductSchema = new mongoose.Schema(
                 ref: 'Category',
             }],
             required: [true, 'Please provide at least one category.'],
+            default: [],
+        },
+        vendors: {
+            type: [ProductVendorSchema],
             default: [],
         },
         stockQuantity: {
@@ -125,5 +162,19 @@ ProductSchema.index({ isLive: 1, slug: 1 });
 ProductSchema.index({ isLive: 1, isDiscounted: 1, createdAt: -1 });
 ProductSchema.index({ isLive: 1, isNewArrival: 1, createdAt: -1 });
 ProductSchema.index({ isLive: 1, isBestSelling: 1, createdAt: -1 });
+ProductSchema.index({ 'vendors.name': 1 });
+ProductSchema.index({ 'vendors.vendorId': 1 });
+
+const cachedProduct = mongoose.models.Product;
+if (
+    cachedProduct &&
+    (
+        !cachedProduct.schema.path('vendors') ||
+        !cachedProduct.schema.path('vendors').schema?.path('vendorProductName') ||
+        !cachedProduct.schema.path('vendors').schema?.path('vendorPrice')
+    )
+) {
+    delete mongoose.models.Product;
+}
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

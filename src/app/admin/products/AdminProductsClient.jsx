@@ -6,12 +6,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useEffect, useState, useTransition } from "react";
 import {
   ArrowDownWideNarrow,
+  Copy,
   ImageIcon,
   MessageSquare,
   MoreVertical,
   Pencil,
   Plus,
   Search,
+  Store,
   Tag,
   Trash2,
   X,
@@ -41,6 +43,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -224,6 +234,7 @@ export default function AdminProductsClient({
   const [togglingStockId, setTogglingStockId] = useState(null);
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
   const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
+  const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -359,6 +370,22 @@ export default function AdminProductsClient({
 
   const formatPrice = (price) => `PKR ${Number(price).toLocaleString("en-PK")}`;
 
+  async function handleCopy(value, label) {
+    const text = typeof value === "string" ? value.trim() : String(value ?? "").trim();
+
+    if (!text) {
+      toast.error(`${label} not added yet.`);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+  }
+
   return (
     <div className="pb-24 md:pb-0">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -386,7 +413,7 @@ export default function AdminProductsClient({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search products"
+              placeholder="Search products, categories, or vendors"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="pl-10 h-10"
@@ -617,6 +644,10 @@ export default function AdminProductsClient({
                                 <MessageSquare className="mr-2 size-4" />
                                 Reviews
                               </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" onClick={() => setVendorsModal({ open: true, product })}>
+                                <Store className="mr-2 size-4" />
+                                View Vendors
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
                                 onClick={() => setDeleteModal({ open: true, product })}
@@ -707,6 +738,13 @@ export default function AdminProductsClient({
                           >
                             <MessageSquare className="mr-2 size-4" />
                             Reviews
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => setVendorsModal({ open: true, product })}
+                          >
+                            <Store className="mr-2 size-4" />
+                            View Vendors
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
@@ -854,6 +892,96 @@ export default function AdminProductsClient({
         product={reviewsModal.product}
         onOpenChange={(open) => setReviewsModal((previous) => ({ ...previous, open }))}
       />
+
+      <Dialog
+        open={vendorsModal.open}
+        onOpenChange={(open) => setVendorsModal((previous) => ({ ...previous, open }))}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Assigned Vendors</DialogTitle>
+            <DialogDescription>
+              {vendorsModal.product?.Name || 'This product'} is linked to the following vendors.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl border border-border bg-muted/20 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Product Name
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground sm:text-base">
+                {vendorsModal.product?.Name || "Product name not available"}
+              </p>
+            </div>
+
+            {Array.isArray(vendorsModal.product?.vendors) && vendorsModal.product.vendors.length > 0 ? (
+              vendorsModal.product.vendors.map((vendor, index) => (
+                <div
+                  key={`${vendor.vendorId || vendor.name}-${vendor.shopNumber || ''}`}
+                  className="rounded-2xl border border-border bg-background p-4 shadow-sm"
+                >
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          Vendor {index + 1}
+                        </p>
+                        <p className="mt-1 text-base font-semibold text-foreground">
+                          {vendor.name || "Vendor not added"}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {vendor.shopNumber ? `Shop ${vendor.shopNumber}` : "Shop number not added"}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:w-auto">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:min-w-[170px]"
+                          onClick={() => handleCopy(vendor.vendorProductName, "Vendor product name")}
+                        >
+                          <Copy className="mr-2 size-3.5" />
+                          Copy Vendor Name
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)]">
+                      <div className="rounded-xl bg-muted/20 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          Vendor Product Name
+                        </p>
+                        <p className="mt-2 text-sm font-medium leading-6 text-foreground">
+                          {vendor.vendorProductName || "Not added"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-muted/20 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          Price
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-foreground tabular-nums">
+                          {typeof vendor.vendorPrice === "number" && Number.isFinite(vendor.vendorPrice)
+                            ? formatPrice(vendor.vendorPrice)
+                            : "Not added"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                No vendors assigned yet.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter showCloseButton />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

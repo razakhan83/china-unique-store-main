@@ -17,6 +17,7 @@ import {
   PanelsTopLeft,
   Settings,
   ShoppingCart,
+  Store,
   Truck,
   Users,
 } from 'lucide-react';
@@ -53,6 +54,7 @@ const productNavItems = [
     match: (pathname) => pathname.startsWith('/admin/products') && !pathname.startsWith('/admin/products/add'),
   },
   { href: '/admin/products/add', label: 'Add Product', icon: CirclePlus, match: (pathname) => pathname.startsWith('/admin/products/add') },
+  { href: '/admin/vendors', label: 'Vendors', icon: Store, match: (pathname) => pathname.startsWith('/admin/vendors') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/reviews') },
 ];
@@ -86,6 +88,12 @@ function getPageMeta(pathname) {
   if (pathname.startsWith('/admin/products')) {
     return {
       title: 'Products',
+    };
+  }
+
+  if (pathname.startsWith('/admin/vendors')) {
+    return {
+      title: 'Vendors',
     };
   }
 

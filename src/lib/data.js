@@ -20,6 +20,7 @@ import {
   normalizeHomePageSections,
 } from '@/lib/homePageSections';
 import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
+import { normalizeVendorSnapshot } from '@/lib/vendors';
 import {
   getProductCategories,
   getProductCategoryNames,
@@ -74,10 +75,12 @@ const PRODUCT_DETAIL_PROJECTION = [
   'seoDescription',
   'seoKeywords',
   'seoCanonicalUrl',
+  'vendors',
 ].join(' ');
 const PRODUCT_ADMIN_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
   'stockQuantity',
+  'vendors',
 ].join(' ');
 
 function sanitizeSectionOrder(order, fallbackOrder = []) {
@@ -138,6 +141,9 @@ function serializeProduct(product) {
     slug: safeProduct.slug || safeProduct._id.toString(),
     Category: getProductCategories(safeProduct),
     Images: normalizeProductImages(safeProduct.Images),
+    vendors: Array.isArray(safeProduct.vendors)
+      ? safeProduct.vendors.map(normalizeVendorSnapshot).filter(Boolean)
+      : [],
     createdAt: safeProduct.createdAt ? new Date(safeProduct.createdAt).toISOString() : null,
     updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
     isNewArrival: safeProduct.isNewArrival === true,
@@ -182,6 +188,7 @@ function toProductDetailView(product) {
     isLive: product.isLive !== false,
     stockQuantity: Number(product.stockQuantity || 0),
     createdAt: product.createdAt,
+    vendors: Array.isArray(product.vendors) ? product.vendors : [],
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
@@ -204,6 +211,7 @@ function toAdminProductRow(product) {
     updatedAt: product.updatedAt,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
+    vendors: Array.isArray(product.vendors) ? product.vendors : [],
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
@@ -1336,7 +1344,11 @@ export async function getAdminProductsPage({
     ).lean();
 
     const matchingCategoryIds = matchingCategories.map((entry) => entry._id);
-    query.$or = [{ Name: searchRegex }];
+    query.$or = [
+      { Name: searchRegex },
+      { 'vendors.name': searchRegex },
+      { 'vendors.shopNumber': searchRegex },
+    ];
 
     if (matchingCategoryIds.length > 0) {
       query.$or.push({ Category: { $in: matchingCategoryIds } });
@@ -1678,7 +1690,48 @@ export async function getUserOrders(email) {
 export async function getOrderById(id) {
   await mongooseConnect();
   const order = await Order.findById(String(id || '')).lean();
-  return order ? toOrderSummaryRow(order) : null;
+  if (!order) return null;
+
+  const productIdentifiers = Array.from(
+    new Set(
+      (Array.isArray(order.items) ? order.items : [])
+        .map((item) => String(item?.productId || '').trim())
+        .filter(Boolean)
+    )
+  );
+
+  let productLookup = new Map();
+  if (productIdentifiers.length > 0) {
+    const objectIds = productIdentifiers.filter((value) => mongoose.Types.ObjectId.isValid(value));
+    const products = await Product.find({
+      $or: [
+        { slug: { $in: productIdentifiers } },
+        ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
+      ],
+    })
+      .select('slug vendors')
+      .lean();
+
+    productLookup = new Map();
+    products.forEach((product) => {
+      const normalizedVendors = Array.isArray(product.vendors)
+        ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
+        : [];
+
+      productLookup.set(product._id.toString(), normalizedVendors);
+      if (product.slug) {
+        productLookup.set(String(product.slug), normalizedVendors);
+      }
+    });
+  }
+
+  const normalizedOrder = toOrderSummaryRow(order);
+  normalizedOrder.items = normalizedOrder.items.map((item) => ({
+    ...item,
+    sourcingVendors: productLookup.get(String(item.productId || '').trim()) || [],
+  }));
+
+  return normalizedOrder;
 }
 
 export async function getOrderLogs(orderId) {
@@ -1716,6 +1769,7 @@ export async function getAdminDashboardData() {
     customersAgg,
     recentOrders,
     dailyConfirmedOrders,
+    topVendorsAgg,
   ] = await Promise.all([
     Order.countDocuments(),
     Order.countDocuments({ status: 'Pending' }),
@@ -1747,6 +1801,22 @@ export async function getAdminDashboardData() {
       status: { $in: ['Confirmed', 'Pending'] },
       createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
     }),
+    Product.aggregate([
+      { $match: { isLive: true, vendors: { $exists: true, $ne: [] } } },
+      { $unwind: '$vendors' },
+      {
+        $group: {
+          _id: {
+            vendorId: '$vendors.vendorId',
+            name: '$vendors.name',
+            shopNumber: '$vendors.shopNumber',
+          },
+          totalLiveItems: { $sum: 1 },
+        },
+      },
+      { $sort: { totalLiveItems: -1, '_id.name': 1 } },
+      { $limit: 5 },
+    ]),
   ]);
 
   return {
@@ -1760,6 +1830,12 @@ export async function getAdminDashboardData() {
       dailyConfirmedOrders: Number(dailyConfirmedOrders || 0),
     },
     recentOrders: recentOrders.map(toOrderSummaryRow),
+    topVendors: topVendorsAgg.map((entry) => ({
+      vendorId: entry?._id?.vendorId?.toString?.() || '',
+      name: String(entry?._id?.name || '').trim(),
+      shopNumber: String(entry?._id?.shopNumber || '').trim(),
+      totalLiveItems: Number(entry?.totalLiveItems || 0),
+    })).filter((entry) => entry.name),
   };
 }
 

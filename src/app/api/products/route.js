@@ -10,6 +10,7 @@ import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
+import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
 
 // Utility for formatting a string to a unique URL-friendly slug
 const slugify = (text) => {
@@ -82,6 +83,7 @@ export async function POST(req) {
             isLive,
             isNewArrival,
             isBestSelling,
+            vendors,
         } = body;
 
         if (!Name || !Price || !categoryInput) {
@@ -123,6 +125,7 @@ export async function POST(req) {
             : null;
 
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(Images));
+        const normalizedVendors = await buildProductVendorSnapshots(vendors);
 
         const product = await Product.create({
             Name,
@@ -138,6 +141,7 @@ export async function POST(req) {
             stockQuantity: normalizedStockQuantity,
             StockStatus: stockStatus,
             slug: uniqueSlug, // Ensure slug is saved
+            vendors: normalizedVendors,
             isLive: isLive === true || isLive === 'true' ? true : false,
             discountPercentage: normalizedDiscountPercentage,
             isDiscounted: normalizedDiscountPercentage > 0,
@@ -162,6 +166,7 @@ export async function POST(req) {
                 id: product.slug || product._id.toString(),
                 Category: getProductCategories(product.toObject()),
                 Images: normalizeProductImages(product.Images),
+                vendors: Array.isArray(product.vendors) ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean) : [],
             },
         }, { status: 201 });
     } catch (error) {
