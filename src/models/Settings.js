@@ -56,7 +56,7 @@ const SettingsSchema = new mongoose.Schema(
             type: Number,
             default: 100,
             min: 60,
-            max: 180,
+            max: 200,
         },
 
         // WhatsApp

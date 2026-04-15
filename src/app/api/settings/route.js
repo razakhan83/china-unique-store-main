@@ -42,7 +42,7 @@ function serializeSettings(settings) {
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
         darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
-        logoScalePercent: Math.min(180, Math.max(60, Number(settings.logoScalePercent || 100))),
+        logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
         whatsappNumber: settings.whatsappNumber || '',
         facebookPageUrl: settings.facebookPageUrl || '',
         instagramUrl: settings.instagramUrl || '',
@@ -134,7 +134,7 @@ export async function PUT(req) {
                         : key === 'lightLogoUrl' || key === 'darkLogoUrl'
                             ? normalizeLogoUrl(body[key])
                         : key === 'logoScalePercent'
-                            ? Math.min(180, Math.max(60, Number(body[key]) || 100))
+                            ? Math.min(200, Math.max(60, Number(body[key]) || 100))
                         : body[key];
             }
         }

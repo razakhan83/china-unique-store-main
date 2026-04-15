@@ -44,22 +44,27 @@ export default function StoreLogo({
   const logoUrl = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
   const hasLogo = Boolean(String(logoUrl || '').trim());
   const baseHeight = compact ? 52 : 48;
-  const safeScalePercent = Math.min(180, Math.max(60, Number(logoScalePercent) || 100));
-  const logoHeight = Math.round((baseHeight * safeScalePercent) / 100);
+  const safeScalePercent = Math.min(200, Math.max(60, Number(logoScalePercent) || 100));
+  const logoScale = 1 + ((safeScalePercent - 100) / 100) * 1.9;
 
   return (
     <Link href={href} onClick={onClick} className={cn('flex min-w-0 items-center gap-3', className)}>
       {hasLogo ? (
-        <Image
-          src={logoUrl}
-          alt={storeName || 'Store logo'}
-          width={264}
-          height={80}
-          priority={priority}
-          sizes={compact ? '208px' : '192px'}
-          className="h-auto w-auto shrink-0 object-contain"
-          style={{ height: `${logoHeight}px` }}
-        />
+        <div
+          className="flex shrink-0 items-center overflow-visible"
+          style={{ height: `${baseHeight}px` }}
+        >
+          <Image
+            src={logoUrl}
+            alt={storeName || 'Store logo'}
+            width={264}
+            height={80}
+            priority={priority}
+            sizes={compact ? '208px' : '192px'}
+            className="h-auto w-auto object-contain origin-left-center"
+            style={{ height: `${baseHeight}px`, transform: `translateY(3px) scale(${logoScale})` }}
+          />
+        </div>
       ) : (
         <BrandFallback storeName={storeName} invert={prefersLightLogo} compact={compact} />
       )}

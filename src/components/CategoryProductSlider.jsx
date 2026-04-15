@@ -60,6 +60,20 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
           .category-product-carousel[data-interactive="false"]::scroll-button(*) {
             content: none;
           }
+
+          @media (max-width: 767px) {
+            .category-product-carousel[data-interactive="true"]::scroll-button(*) {
+              content: none;
+              width: 0;
+              height: 0;
+              border: 0;
+              padding: 0;
+              opacity: 0;
+              pointer-events: none;
+              background: none;
+              box-shadow: none;
+            }
+          }
         }
       `}</style>
 
@@ -69,6 +83,17 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
             {categoryLabel}
           </h2>
         </div>
+        {viewAllHref ? (
+          <Link
+            href={viewAllHref}
+            className={cn(
+              'inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-4 text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:backdrop-blur-sm hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]'
+            )}
+          >
+            View All
+            <ArrowRight className="ml-1 size-4" />
+          </Link>
+        ) : null}
       </div>
 
       <div className="category-product-carousel-shell">
@@ -90,20 +115,6 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
           ))}
         </div>
       </div>
-
-      {viewAllHref ? (
-        <div className="mt-6 flex justify-center">
-          <Link
-            href={viewAllHref}
-            className={cn(
-              'inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-5 text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:backdrop-blur-sm hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]'
-            )}
-          >
-            View All
-            <ArrowRight className="ml-1 size-4" />
-          </Link>
-        </div>
-      ) : null}
     </div>
   );
 }

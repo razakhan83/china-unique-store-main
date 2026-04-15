@@ -558,7 +558,7 @@ function NavbarContent({
                 variant="light-surface"
                 compact
                 onClick={() => setIsSidebarOpen(false)}
-                className="max-w-full"
+                className="max-w-full pl-3"
               />
             </SidebarHeader>
 

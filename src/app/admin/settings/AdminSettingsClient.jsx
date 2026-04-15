@@ -482,7 +482,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
                 <Input
                   type="number"
                   min="60"
-                  max="180"
+                  max="200"
                   step="5"
                   value={form.logoScalePercent ?? 100}
                   onChange={(event) => handleChange('logoScalePercent', event.target.value)}
