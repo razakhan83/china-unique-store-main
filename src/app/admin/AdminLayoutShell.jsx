@@ -109,6 +109,12 @@ function getPageMeta(pathname) {
     };
   }
 
+  if (pathname.startsWith('/admin/reviews')) {
+    return {
+      title: 'Reviews',
+    };
+  }
+
   return {
     title: 'Dashboard',
   };
@@ -195,12 +201,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-5 bg-white px-3.5 py-4 text-foreground">
-      <div className="flex items-center gap-2.5 px-1 pt-1.5 pb-2">
+    <div className="flex h-full flex-col gap-4 bg-white px-3 py-3 text-foreground md:px-3.5 md:py-4">
+      <div className="flex items-center gap-2.5 px-1 py-1">
         <div className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/45">
           <PanelsTopLeft className="size-4 text-foreground" />
         </div>
-        <p className="truncate text-base font-bold tracking-[0.06em] text-foreground">China Unique</p>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold tracking-[0.08em] text-foreground md:text-base">China Unique</p>
+          <p className="truncate text-[11px] text-muted-foreground">Admin</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -234,7 +243,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         {secondaryNavItems.map((item) => renderPrimaryNavLink(item))}
       </div>
 
-      <div className="mt-auto flex flex-col gap-2 border-t border-border pt-5">
+      <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
         <div className="flex items-center gap-3 rounded-[1rem] border border-border bg-white px-3 py-3">
           <Avatar className="size-9 border border-border">
             <AvatarImage src={sessionUser?.image} alt={sessionUser?.name || 'Admin'} />
@@ -260,19 +269,19 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   return (
     <div className="admin-theme min-h-screen">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[16.25rem] shrink-0 border-r border-sidebar-border bg-white md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto">
+        <aside className="hidden w-[15rem] shrink-0 border-r border-sidebar-border bg-white md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto xl:w-[16rem]">
           {sidebar}
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-border/80 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)]/95 backdrop-blur">
-            <div className="flex min-h-18 items-center justify-between gap-4 px-4 py-3 md:px-8">
-              <div className="flex items-center gap-3">
+            <div className="flex min-h-16 items-center justify-between gap-3 px-3 py-3 sm:px-4 md:min-h-18 md:px-6 xl:px-8">
+              <div className="flex items-center gap-2.5 md:gap-3">
                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
                   <Menu />
                 </Button>
                 <div>
-                  <p className="text-base font-semibold leading-tight text-foreground md:text-lg">{pageMeta.title}</p>
+                  <p className="text-sm font-semibold leading-tight text-foreground md:text-lg">{pageMeta.title}</p>
                 </div>
               </div>
 
@@ -283,11 +292,11 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                   type="button"
                   variant="secondary"
                   size="lg"
-                  className="inline-flex border border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_96%,white)] px-3 text-foreground shadow-none hover:border-foreground/16 hover:bg-foreground hover:text-background sm:px-4"
+                  className="hidden border border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_96%,white)] px-3 text-foreground shadow-none hover:border-foreground/16 hover:bg-foreground hover:text-background lg:inline-flex"
                   onClick={() => router.push('/')}
                 >
                   <ExternalLink data-icon="inline-start" />
-                  <span className="hidden sm:inline">Back to Store</span>
+                  <span className="hidden lg:inline">Store</span>
                 </Button>
 
                 <div className="hidden md:block">
@@ -324,14 +333,14 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-8">
-            <div className="mx-auto w-full max-w-[1480px]">{children}</div>
+          <main className="flex-1 px-3 py-4 sm:px-4 md:px-6 md:py-6 xl:px-8">
+            <div className="w-full">{children}</div>
           </main>
         </div>
       </div>
 
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-[min(92vw,20rem)] bg-white p-0">
+        <SheetContent side="left" className="w-[min(88vw,18rem)] bg-white p-0">
           <SheetHeader className="sr-only">
             <SheetTitle>Admin navigation</SheetTitle>
             <SheetDescription>Navigate between admin sections.</SheetDescription>

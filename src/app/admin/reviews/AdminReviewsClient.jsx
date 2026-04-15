@@ -117,16 +117,17 @@ export default function AdminReviewsClient({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="admin-page-stack">
+      <div className="admin-page-header">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">Review Management</h1>
-          <p className="text-muted-foreground">Monitor and manage customer feedback for your products.</p>
+          <p className="admin-page-kicker">Feedback</p>
+          <h1 className="admin-page-title">Reviews</h1>
+          <p className="admin-page-subtitle">Track ratings and remove low-quality feedback fast.</p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="admin-surface border-none">
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">Total Reviews</CardDescription>
             <CardTitle className="text-3xl font-bold text-foreground">{summary.totalReviews}</CardTitle>
@@ -134,12 +135,12 @@ export default function AdminReviewsClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <MessageSquare className="size-3" />
-              <span>Customer feedback collected</span>
+              <span>All feedback</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="admin-surface border-none">
+        <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">Average Rating</CardDescription>
             <CardTitle className="text-3xl font-bold text-foreground">{summary.averageRating.toFixed(1)}</CardTitle>
@@ -147,12 +148,12 @@ export default function AdminReviewsClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Star className="size-3 fill-foreground text-foreground" />
-              <span>Overall store satisfaction</span>
+              <span>Store average</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="admin-surface border-none">
+        <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">Recent (7 Days)</CardDescription>
             <CardTitle className="text-3xl font-bold text-foreground">{summary.recentReviews}</CardTitle>
@@ -160,14 +161,14 @@ export default function AdminReviewsClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="size-3" />
-              <span>New reviews this week</span>
+              <span>Last 7 days</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <form
-        className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm md:flex-row md:items-center"
+        className="admin-filter-shell flex flex-col gap-4 md:flex-row md:items-center"
         onSubmit={(event) => {
           event.preventDefault();
           navigate({ search: searchQuery.trim() || null, page: null });
@@ -184,7 +185,7 @@ export default function AdminReviewsClient({
         </div>
       </form>
 
-      <div className={cn('overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-opacity', isPending && 'opacity-70')}>
+      <div className={cn('admin-surface overflow-hidden rounded-[1.2rem] transition-opacity', isPending && 'opacity-70')}>
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>

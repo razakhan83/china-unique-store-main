@@ -171,13 +171,12 @@ export default function AdminUsersClient({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="admin-page-stack">
+      <div className="admin-page-header">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">User Management</h1>
-          <p className="text-muted-foreground">
-            {isCustomersView ? 'Verified buyers captured from placed orders.' : 'View and manage registered users for your store.'}
-          </p>
+          <p className="admin-page-kicker">Accounts</p>
+          <h1 className="admin-page-title">{isCustomersView ? 'Customers' : 'Users'}</h1>
+          <p className="admin-page-subtitle">{isCustomersView ? 'Verified buyers from placed orders.' : 'Manage account access and activity.'}</p>
         </div>
       </div>
 
@@ -205,8 +204,8 @@ export default function AdminUsersClient({
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="admin-surface border-none">
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">{isCustomersView ? 'Verified Buyers' : 'Total Users'}</CardDescription>
             <CardTitle className="text-3xl font-bold text-foreground">{summary.totalUsers}</CardTitle>
@@ -214,12 +213,12 @@ export default function AdminUsersClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <UsersIcon className="size-3" />
-              <span>{isCustomersView ? 'Unique customers with orders' : 'All registered accounts'}</span>
+              <span>{isCustomersView ? 'Unique buyers' : 'Registered accounts'}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="admin-surface border-none">
+        <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">{isCustomersView ? 'Profiles With Email' : 'Active Users'}</CardDescription>
             <CardTitle className="text-3xl font-bold text-foreground">{isCustomersView ? summary.withEmail : summary.activeUsers}</CardTitle>
@@ -227,12 +226,12 @@ export default function AdminUsersClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <UserCheck className="size-3" />
-              <span>{isCustomersView ? 'Customers with email captured' : 'Allowed to login'}</span>
+              <span>{isCustomersView ? 'Email captured' : 'Can log in'}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="surface-card border-none bg-destructive/6">
+        <Card className="admin-stat-card border-none bg-destructive/6 shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-destructive/70">{isCustomersView ? 'Profiles With Address' : 'Disabled Users'}</CardDescription>
             <CardTitle className="text-3xl font-bold text-destructive">{isCustomersView ? summary.withAddress : summary.disabledUsers}</CardTitle>
@@ -240,13 +239,13 @@ export default function AdminUsersClient({
           <CardContent>
             <div className="flex items-center gap-2 text-xs text-destructive/60">
               {isCustomersView ? <MapPin className="size-3" /> : <UserX className="size-3" />}
-              <span>{isCustomersView ? 'Customers with saved delivery address' : 'Blocked from login'}</span>
+              <span>{isCustomersView ? 'Address saved' : 'Login blocked'}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
+      <div className="admin-filter-shell flex flex-col gap-4 sm:flex-row sm:items-center">
         <form
           className="relative flex-1"
           onSubmit={(event) => {
@@ -296,7 +295,7 @@ export default function AdminUsersClient({
         </div>
       </div>
 
-      <div className={cn('rounded-xl border border-border bg-card shadow-sm transition-opacity', isPending && 'opacity-70')}>
+      <div className={cn('admin-surface overflow-hidden rounded-[1.2rem] transition-opacity', isPending && 'opacity-70')}>
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>

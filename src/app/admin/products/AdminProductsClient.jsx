@@ -387,11 +387,12 @@ export default function AdminProductsClient({
   }
 
   return (
-    <div className="pb-24 md:pb-0">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="admin-page-stack pb-24 md:pb-0">
+      <div className="admin-page-header">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Products</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{summary.totalProducts} total • {summary.liveProducts} live</p>
+          <p className="admin-page-kicker">Catalog</p>
+          <h2 className="admin-page-title">Products</h2>
+          <p className="admin-page-subtitle">{summary.totalProducts} total • {summary.liveProducts} live</p>
         </div>
         <Link href="/admin/products/add" className="w-full md:w-auto">
           <Button className="w-full border border-foreground bg-foreground text-background hover:bg-foreground/88 md:w-auto">
@@ -401,7 +402,7 @@ export default function AdminProductsClient({
         </Link>
       </div>
 
-      <div className="admin-surface mb-5 flex flex-col gap-3 rounded-[1.35rem] p-4">
+      <div className="admin-filter-shell flex flex-col gap-3">
         <form
           className="flex flex-col gap-3 lg:flex-row"
           onSubmit={(event) => {
@@ -491,7 +492,7 @@ export default function AdminProductsClient({
         </div>
       </div>
 
-      <div className={cn("admin-surface hidden overflow-hidden rounded-[1.35rem] md:block transition-opacity", isPending && "opacity-70")}>
+      <div className={cn("admin-surface hidden overflow-hidden rounded-[1.2rem] md:block transition-opacity", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
           <table className="min-w-[1000px] w-full">
             <thead>

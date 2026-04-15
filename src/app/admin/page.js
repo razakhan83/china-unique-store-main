@@ -45,27 +45,27 @@ async function DashboardContent() {
   ];
 
   return (
-    <div className="w-full space-y-6">
-      <section className="admin-panel overflow-hidden rounded-[1.6rem] px-6 py-6 md:px-8 md:py-7">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(17rem,0.8fr)] xl:items-start">
-          <div className="flex min-h-full flex-col justify-between gap-8">
-            <div className="max-w-3xl space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Dashboard</p>
-              <h1 className="text-balance text-3xl font-bold tracking-[-0.05em] text-foreground md:text-[2.35rem]">
-                Operations overview
+    <div className="admin-page-stack w-full">
+      <section className="admin-panel overflow-hidden rounded-[1.4rem] px-4 py-5 sm:px-5 md:px-6 md:py-6">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(16rem,0.8fr)] xl:items-start">
+          <div className="flex min-h-full flex-col justify-between gap-6">
+            <div className="max-w-3xl">
+              <p className="admin-page-kicker">Dashboard</p>
+              <h1 className="mt-2 text-balance text-3xl font-bold tracking-[-0.05em] text-foreground md:text-[2.2rem]">
+                Clean overview of orders, revenue, and catalog health.
               </h1>
             </div>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <div className="rounded-full border border-border/80 bg-background px-4 py-2 text-foreground">
+            <div className="flex flex-wrap gap-2.5 text-sm">
+              <div className="rounded-full border border-border/80 bg-background px-3.5 py-2 text-foreground">
                 <span className="font-semibold tabular-nums">{summary.pendingOrders}</span> pending
               </div>
-              <div className="rounded-full border border-border/80 bg-background px-4 py-2 text-foreground">
+              <div className="rounded-full border border-border/80 bg-background px-3.5 py-2 text-foreground">
                 <span className="font-semibold tabular-nums">{summary.liveProducts}</span> live
               </div>
             </div>
           </div>
 
-          <div className="admin-surface rounded-[1.35rem] p-4">
+          <div className="admin-surface rounded-[1.2rem] p-4">
             <div className="mb-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick actions</p>
             </div>
@@ -74,7 +74,7 @@ async function DashboardContent() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="group flex items-center justify-between gap-3 rounded-[1rem] border border-border/80 bg-white px-4 py-3 transition-[border-color,background-color,transform] duration-200 hover:border-border hover:bg-[oklch(0.972_0.001_260)]"
+                  className="group flex items-center justify-between gap-3 rounded-[0.95rem] border border-border/80 bg-white px-4 py-3 transition-[border-color,background-color,transform] duration-200 hover:border-border hover:bg-[oklch(0.972_0.001_260)]"
                 >
                   <p className="font-semibold text-foreground">{action.title}</p>
                   <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-foreground" />
@@ -85,20 +85,20 @@ async function DashboardContent() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {statsConfig.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.title}
-              className="admin-surface rounded-[1.4rem] p-5"
+              className="admin-stat-card p-4 sm:p-5"
             >
-              <div className="mb-5 flex items-start justify-between gap-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{stat.title}</p>
-                  <h3 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-foreground tabular-nums">{stats[index].value}</h3>
+                  <h3 className="mt-2 text-[1.8rem] font-bold tracking-[-0.04em] text-foreground tabular-nums sm:text-3xl">{stats[index].value}</h3>
                 </div>
-                <div className="flex size-12 items-center justify-center rounded-[1rem] border border-border bg-muted text-foreground">
+                <div className="flex size-11 items-center justify-center rounded-[0.9rem] border border-border bg-muted text-foreground">
                   <Icon className="size-5" />
                 </div>
               </div>
@@ -237,7 +237,7 @@ async function DashboardContent() {
         </div>
       </section>
 
-      <section className="admin-surface flex flex-col gap-4 rounded-[1.5rem] p-5 md:flex-row md:items-center md:justify-between">
+      <section className="admin-surface flex flex-col gap-3 rounded-[1.3rem] p-4 md:flex-row md:items-center md:justify-between md:p-5">
         <div>
           <h2 className="font-semibold text-foreground">Catalog</h2>
         </div>
