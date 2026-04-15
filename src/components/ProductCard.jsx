@@ -128,7 +128,7 @@ export default function ProductCard({ product, className = "" }) {
         </Link>
       </div>
 
-      <CardContent className="flex flex-col gap-2 bg-card p-4 pt-4">
+      <CardContent className="flex min-h-[6.25rem] flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 sm:min-h-0 sm:gap-2 sm:p-4 sm:pt-4">
         <Link
           href={productHref}
           scroll={true}
@@ -136,7 +136,7 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           <h3
-            className="line-clamp-1 text-base font-semibold leading-snug text-primary/80"
+            className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-[1.15rem] text-primary/80 sm:line-clamp-1 sm:min-h-5 sm:text-[15px] sm:leading-5"
             title={productName}
             draggable={false}
           >
@@ -144,18 +144,18 @@ export default function ProductCard({ product, className = "" }) {
           </h3>
         </Link>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-0.5">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
+          <div className="flex min-w-0 flex-col justify-end gap-0.5">
             {hasRealDiscount ? (
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex min-h-[2.4rem] flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:min-h-[2.75rem]">
                 <p
-                  className="text-xl font-semibold text-foreground tabular-nums"
+                  className="text-lg font-semibold leading-none text-foreground tabular-nums sm:text-xl"
                   draggable={false}
                 >
                   {formatPrice(discountedPrice)}
                 </p>
                 <p
-                  className="text-sm font-medium text-muted-foreground/75 line-through"
+                  className="text-xs font-medium leading-none text-muted-foreground/75 line-through sm:text-sm"
                   draggable={false}
                 >
                   {formatPrice(productPrice)}
@@ -163,7 +163,7 @@ export default function ProductCard({ product, className = "" }) {
               </div>
             ) : (
               <p
-                className="text-xl font-semibold text-foreground tabular-nums"
+                className="min-h-[2.4rem] text-lg font-semibold leading-none text-foreground tabular-nums sm:min-h-[2.75rem] sm:text-xl"
                 draggable={false}
               >
                 {formatPrice(productPrice)}

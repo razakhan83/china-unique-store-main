@@ -117,10 +117,10 @@ export default function MobileBottomNav({
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="pointer-events-auto mx-auto w-full max-w-xl pb-[env(safe-area-inset-bottom)]">
+        <div className="pointer-events-auto mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
-            className="grid grid-cols-4 items-center gap-1 border-t border-border/70 bg-background px-1 py-2.5 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
+            className="grid grid-cols-4 items-center gap-1 border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-2.5 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
           >
             <MobileNavButton icon={Home} label="Home" href="/" active={pathname === '/'} />
             <MobileNavButton
