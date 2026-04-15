@@ -203,7 +203,7 @@ export default function ProductPage({ params }) {
         </Suspense>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-20 pt-3 md:pb-8 md:pt-5">
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+9rem)] pt-3 md:pb-8 md:pt-5">
         <Suspense fallback={<ProductHeroSkeleton />}>
           <ProductHeroSection slugPromise={slugPromise} />
         </Suspense>

@@ -130,6 +130,7 @@ function NavbarContent({
   storeName = 'China Unique Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
+  logoScalePercent = 100,
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
@@ -201,7 +202,7 @@ function NavbarContent({
                 onSelect: () => {
                   setIsSearchOpen(false);
                   setIsFocused(false);
-                  router.push(`/products/${product.slug || product._id || product.id}`);
+                  router.push(`/products/${product.slug || product._id || product.id}`, { scroll: true });
                 },
               }))
             : [],
@@ -341,6 +342,7 @@ function NavbarContent({
           storeName={storeName}
           lightLogoUrl={lightLogoUrl}
           darkLogoUrl={darkLogoUrl}
+          logoScalePercent={logoScalePercent}
           variant="light-surface"
           priority
           className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
@@ -552,6 +554,7 @@ function NavbarContent({
                 storeName={storeName}
                 lightLogoUrl={lightLogoUrl}
                 darkLogoUrl={darkLogoUrl}
+                logoScalePercent={logoScalePercent}
                 variant="light-surface"
                 compact
                 onClick={() => setIsSidebarOpen(false)}
@@ -739,6 +742,7 @@ export default function Navbar({
   storeName = 'China Unique Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
+  logoScalePercent = 100,
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
@@ -749,6 +753,7 @@ export default function Navbar({
       storeName={storeName}
       lightLogoUrl={lightLogoUrl}
       darkLogoUrl={darkLogoUrl}
+      logoScalePercent={logoScalePercent}
       announcementBarEnabled={announcementBarEnabled}
       announcementBarText={announcementBarText}
       announcementBarMessages={announcementBarMessages}

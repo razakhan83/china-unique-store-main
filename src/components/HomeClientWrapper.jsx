@@ -50,7 +50,7 @@ export default function HomeClientWrapper({ heroSlides, categories = [] }) {
             ? result.data.map((product) => ({
                 ...product,
                 onSelect: () => {
-                  router.push(`/products/${product.slug || product._id || product.id}`);
+                  router.push(`/products/${product.slug || product._id || product.id}`, { scroll: true });
                   setIsFocused(false);
                 },
               }))

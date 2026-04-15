@@ -476,6 +476,23 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
                 rows={3}
               />
             </Field>
+            <Field>
+              <FieldLabel>Navbar & Footer Logo Size (%)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="60"
+                  max="180"
+                  step="5"
+                  value={form.logoScalePercent ?? 100}
+                  onChange={(event) => handleChange('logoScalePercent', event.target.value)}
+                  placeholder="100"
+                />
+                <FieldDescription className="mt-1.5">
+                  Controls the storefront logo size in both the navbar and footer. Default is 100%.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
           </FieldGroup>
         </SettingSection>
 

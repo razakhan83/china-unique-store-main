@@ -224,7 +224,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 <ProductSocialActions product={product} />
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-border bg-card/95 p-3 shadow-[0_-10px_40px_rgba(10,61,46,0.1)] md:hidden">
+            <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] left-0 right-0 z-30 flex gap-2 border-t border-border bg-background p-3 shadow-[0_-10px_40px_rgba(10,61,46,0.1)] md:hidden">
                 {!isOutOfStock ? (
                     <>
                         <div className="inline-flex shrink-0 items-center overflow-hidden rounded-lg border border-border bg-background">

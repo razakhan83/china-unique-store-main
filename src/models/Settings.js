@@ -52,6 +52,12 @@ const SettingsSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        logoScalePercent: {
+            type: Number,
+            default: 100,
+            min: 60,
+            max: 180,
+        },
 
         // WhatsApp
         whatsappNumber: {
@@ -143,7 +149,8 @@ if (
         !cachedSettings.schema.path('homepageSectionOrder') ||
         !cachedSettings.schema.path('announcementBarMessages') ||
         !cachedSettings.schema.path('lightLogoUrl') ||
-        !cachedSettings.schema.path('darkLogoUrl')
+        !cachedSettings.schema.path('darkLogoUrl') ||
+        !cachedSettings.schema.path('logoScalePercent')
     )
 ) {
     delete mongoose.models.Settings;

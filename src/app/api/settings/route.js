@@ -42,6 +42,7 @@ function serializeSettings(settings) {
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
         darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+        logoScalePercent: Math.min(180, Math.max(60, Number(settings.logoScalePercent || 100))),
         whatsappNumber: settings.whatsappNumber || '',
         facebookPageUrl: settings.facebookPageUrl || '',
         instagramUrl: settings.instagramUrl || '',
@@ -105,6 +106,7 @@ export async function PUT(req) {
             'businessAddress',
             'lightLogoUrl',
             'darkLogoUrl',
+            'logoScalePercent',
             'whatsappNumber',
             'facebookPageUrl',
             'instagramUrl',
@@ -131,6 +133,8 @@ export async function PUT(req) {
                         ? normalizeAnnouncementMessages(body[key], body.announcementBarText)
                         : key === 'lightLogoUrl' || key === 'darkLogoUrl'
                             ? normalizeLogoUrl(body[key])
+                        : key === 'logoScalePercent'
+                            ? Math.min(180, Math.max(60, Number(body[key]) || 100))
                         : body[key];
             }
         }

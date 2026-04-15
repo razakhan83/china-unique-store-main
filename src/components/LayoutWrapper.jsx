@@ -35,6 +35,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
             storeName={settings.storeName}
             lightLogoUrl={settings.lightLogoUrl}
             darkLogoUrl={settings.darkLogoUrl}
+            logoScalePercent={settings.logoScalePercent}
             announcementBarEnabled={settings.announcementBarEnabled}
             announcementBarText={settings.announcementBarText}
             announcementBarMessages={settings.announcementBarMessages}
@@ -51,6 +52,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   storeName={settings.storeName}
                   lightLogoUrl={settings.lightLogoUrl}
                   darkLogoUrl={settings.darkLogoUrl}
+                  logoScalePercent={settings.logoScalePercent}
                   variant="dark-surface"
                   compact
                   className="mb-4"

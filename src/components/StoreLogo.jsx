@@ -31,6 +31,7 @@ export default function StoreLogo({
   storeName = 'China Unique Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
+  logoScalePercent = 100,
   variant = 'dark-surface',
   className,
   priority = false,
@@ -42,7 +43,9 @@ export default function StoreLogo({
   const fallbackLogoUrl = prefersLightLogo ? darkLogoUrl : lightLogoUrl;
   const logoUrl = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
   const hasLogo = Boolean(String(logoUrl || '').trim());
-  const logoHeightClass = compact ? 'h-13' : 'h-12';
+  const baseHeight = compact ? 52 : 48;
+  const safeScalePercent = Math.min(180, Math.max(60, Number(logoScalePercent) || 100));
+  const logoHeight = Math.round((baseHeight * safeScalePercent) / 100);
 
   return (
     <Link href={href} onClick={onClick} className={cn('flex min-w-0 items-center gap-3', className)}>
@@ -54,7 +57,8 @@ export default function StoreLogo({
           height={80}
           priority={priority}
           sizes={compact ? '208px' : '192px'}
-          className={cn('w-auto shrink-0 object-contain', logoHeightClass)}
+          className="h-auto w-auto shrink-0 object-contain"
+          style={{ height: `${logoHeight}px` }}
         />
       ) : (
         <BrandFallback storeName={storeName} invert={prefersLightLogo} compact={compact} />
