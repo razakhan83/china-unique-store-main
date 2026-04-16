@@ -369,6 +369,14 @@ export default function AdminProductsClient({
   }
 
   const formatPrice = (price) => `PKR ${Number(price).toLocaleString("en-PK")}`;
+  const formatDate = (value) =>
+    value
+      ? new Date(value).toLocaleDateString("en-PK", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "N/A";
 
   async function handleCopy(value, label) {
     const text = typeof value === "string" ? value.trim() : String(value ?? "").trim();
@@ -417,7 +425,7 @@ export default function AdminProductsClient({
               placeholder="Search products, categories, or vendors"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="pl-10 h-10"
+              className="h-11 pl-10 md:h-10"
             />
           </div>
           <div className="w-full lg:w-[220px]">
@@ -428,7 +436,7 @@ export default function AdminProductsClient({
                 navigate({ sort: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full bg-background">
+              <SelectTrigger className="h-11 w-full bg-background md:h-10">
                 <div className="flex items-center gap-2">
                   <ArrowDownWideNarrow className="size-4 text-muted-foreground" />
                   <SelectValue placeholder="Sort" />
@@ -453,7 +461,7 @@ export default function AdminProductsClient({
               navigate({ status: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-full bg-background text-xs lg:w-[140px]">
+            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -469,7 +477,7 @@ export default function AdminProductsClient({
               navigate({ stock: value, page: null });
             }}
           >
-            <SelectTrigger className="h-9 w-full bg-background text-xs lg:w-[140px]">
+            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[140px]">
               <SelectValue placeholder="Stock" />
             </SelectTrigger>
             <SelectContent>
@@ -483,7 +491,7 @@ export default function AdminProductsClient({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-9 w-full gap-2 justify-center text-muted-foreground hover:text-foreground sm:col-span-2 lg:w-auto"
+              className="admin-touch-target h-11 w-full justify-center gap-2 text-muted-foreground hover:text-foreground sm:col-span-2 md:h-9 lg:w-auto"
             >
               <X className="size-4" />
               Clear Filters
@@ -494,12 +502,14 @@ export default function AdminProductsClient({
 
       <div className={cn("admin-surface hidden overflow-hidden rounded-[1.2rem] md:block transition-opacity", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
-          <table className="min-w-[1000px] w-full">
+          <table className="min-w-[1180px] w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 <th className="px-6 py-4">Product</th>
                 <th className="px-6 py-4">Price</th>
                 <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Vendors</th>
+                <th className="px-6 py-4">Updated</th>
                 <th className="px-6 py-4">Stock Status</th>
                 <th className="px-6 py-4">Flags</th>
                 <th className="px-6 py-4 text-center">Visibility</th>
@@ -557,6 +567,10 @@ export default function AdminProductsClient({
                         ))}
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">
+                      {Array.isArray(product.vendors) ? product.vendors.length : 0}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatDate(product.updatedAt || product.createdAt)}</td>
                     <td className="px-6 py-4">
                       <div className="inline-flex items-center gap-2">
                         <Switch
@@ -575,7 +589,7 @@ export default function AdminProductsClient({
                         <button
                           onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                           className={cn(
-                            "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                            "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
                             product.isNewArrival ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                           )}
                           title="New Arrival"
@@ -585,7 +599,7 @@ export default function AdminProductsClient({
                         <button
                           onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                           className={cn(
-                            "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                            "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
                             product.isBestSelling ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                           )}
                           title="Best Selling"
@@ -613,7 +627,7 @@ export default function AdminProductsClient({
                           variant={product.isDiscounted ? "default" : "outline"}
                           size="sm"
                           className={cn(
-                            "h-8 px-3",
+                            "admin-touch-target h-11 px-3 md:h-8",
                             product.isDiscounted && "border border-foreground bg-foreground text-background hover:bg-foreground/88"
                           )}
                           onClick={() => setDiscountModal({ open: true, product })}
@@ -631,8 +645,12 @@ export default function AdminProductsClient({
                           >
                             <MoreVertical className="size-4" />
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuContent align="end" className="w-[200px]">
                             <DropdownMenuGroup>
+                              <DropdownMenuLabel>Quick View</DropdownMenuLabel>
+                              <DropdownMenuItem disabled>Vendors: {Array.isArray(product.vendors) ? product.vendors.length : 0}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="cursor-pointer">
@@ -710,16 +728,20 @@ export default function AdminProductsClient({
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         className={cn(
-                          "inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-foreground size-8",
+                          "admin-touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-transparent text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-foreground",
                         )}
                         title="Actions"
                       >
                         <MoreVertical className="size-4" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[170px]">
+                      <DropdownMenuContent align="end" className="w-[220px]">
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>Quick View</DropdownMenuLabel>
+                          <DropdownMenuItem disabled>Vendors: {Array.isArray(product.vendors) ? product.vendors.length : 0}</DropdownMenuItem>
+                          <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
+                          <DropdownMenuItem disabled>Price: {formatPrice(product.Price)}</DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem className="cursor-pointer">
                             <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
                               <Pencil className="mr-2 size-4" />
@@ -822,7 +844,7 @@ export default function AdminProductsClient({
                     <button
                       onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                       className={cn(
-                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
                         product.isNewArrival ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                       )}
                       title="New Arrival"
@@ -832,7 +854,7 @@ export default function AdminProductsClient({
                     <button
                       onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                       className={cn(
-                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
                         product.isBestSelling ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
                       )}
                       title="Best Selling"

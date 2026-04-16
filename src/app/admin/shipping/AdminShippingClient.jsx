@@ -48,7 +48,7 @@ export default function AdminShippingClient({ initialSettings }) {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-4 md:space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Shipping & Delivery</h2>
         <p className="mt-1 text-sm text-muted-foreground">

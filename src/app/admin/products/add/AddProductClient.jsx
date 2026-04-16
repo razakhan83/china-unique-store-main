@@ -347,8 +347,8 @@ export default function AddProduct() {
       : priceValue;
 
   return (
-    <div className="w-full pb-10">
-      <div className="mb-6 flex items-center gap-4 md:mb-8">
+    <div className="w-full pb-6 md:pb-10">
+      <div className="mb-4 flex items-center gap-3 md:mb-8 md:gap-4">
         <Link
           href="/admin/products"
           className={cn(
@@ -368,7 +368,7 @@ export default function AddProduct() {
         </div>
       </div>
 
-      <div className="surface-card max-w-2xl rounded-xl p-4 shadow-lg md:p-8">
+      <div className="surface-card w-full rounded-xl p-3 shadow-lg md:p-8">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           <div>
             <Label className="mb-2">Product Name</Label>

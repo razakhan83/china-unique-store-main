@@ -1339,7 +1339,7 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
   }
 
   return (
-    <div className="max-w-6xl pb-12 md:pb-0">
+      <div className="w-full pb-8 md:pb-0">
       <HomePageSettingsHeader
         saving={saving}
         saved={saved}

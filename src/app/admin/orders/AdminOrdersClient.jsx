@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Receipt, Search, ChevronLeft, ChevronRight, X, Download, Edit, Zap, Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { Eye, Receipt, Search, ChevronLeft, ChevronRight, X, Download, Edit, Zap, Loader2, Check, ChevronsUpDown, MoreVertical } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { updateOrderAction } from '@/app/actions';
@@ -31,6 +41,7 @@ const ITEMS_PER_PAGE = 12;
 const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
 
 function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
@@ -456,7 +467,7 @@ export default function AdminOrdersClient({
               navigate({ status: tab.id, page: null });
             }}
             className={cn(
-              "rounded-full px-5 h-9 font-medium transition-all",
+              "admin-touch-target h-11 rounded-full px-5 font-medium transition-all md:h-9",
               statusFilter === tab.id ? "shadow-md scale-105" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -482,7 +493,7 @@ export default function AdminOrdersClient({
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search by Order ID, Name, or Phone..."
-            className="pl-10 h-10"
+            className="h-11 pl-10 md:h-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -495,7 +506,7 @@ export default function AdminOrdersClient({
             <Input
               id="startDate"
               type="date"
-              className="h-8 min-w-0 flex-1 text-xs bg-background sm:w-[130px]"
+              className="h-10 min-w-0 flex-1 bg-background text-xs md:h-8 sm:w-[130px]"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -505,7 +516,7 @@ export default function AdminOrdersClient({
             <Input
               id="endDate"
               type="date"
-              className="h-8 min-w-0 flex-1 text-xs bg-background sm:w-[130px]"
+              className="h-10 min-w-0 flex-1 bg-background text-xs md:h-8 sm:w-[130px]"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -515,11 +526,11 @@ export default function AdminOrdersClient({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {selectedOrders.length > 0 && (
             <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 p-1 sm:flex-row sm:items-center">
-              <Button onClick={handleDownloadExcel} size="sm" className="h-8 gap-1.5 border border-foreground bg-foreground px-2.5 text-xs font-bold text-background hover:bg-foreground/88">
+              <Button onClick={handleDownloadExcel} size="sm" className="admin-touch-target h-11 gap-1.5 border border-foreground bg-foreground px-2.5 text-xs font-bold text-background hover:bg-foreground/88 md:h-8">
                 <Download className="size-3.5" />
                 XLSX ({selectedOrders.length})
               </Button>
-              <Button onClick={handleDownloadPDF} size="sm" variant="outline" className="h-8 gap-1.5 border-destructive/20 px-2.5 text-xs font-bold text-destructive hover:bg-destructive/10">
+              <Button onClick={handleDownloadPDF} size="sm" variant="outline" className="admin-touch-target h-11 gap-1.5 border-destructive/20 px-2.5 text-xs font-bold text-destructive hover:bg-destructive/10 md:h-8">
                 <Download className="size-3.5" />
                 PDF ({selectedOrders.length})
               </Button>
@@ -528,7 +539,7 @@ export default function AdminOrdersClient({
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-10 gap-2 font-bold text-xs uppercase tracking-wider">
+              <Button variant="outline" className="admin-touch-target h-11 gap-2 text-xs font-bold uppercase tracking-wider md:h-10">
                 <Zap className="size-4 text-foreground" />
                 Reports
               </Button>
@@ -540,7 +551,7 @@ export default function AdminOrdersClient({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-9 justify-start gap-2 border-border text-xs font-medium text-foreground hover:bg-muted/60"
+                    className="admin-touch-target h-11 justify-start gap-2 border-border text-xs font-medium text-foreground hover:bg-muted/60 md:h-9"
                     onClick={() => handleExportMonthlySales('excel')}
                   >
                     <Download className="size-3.5" />
@@ -549,7 +560,7 @@ export default function AdminOrdersClient({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-9 justify-start gap-2 border-destructive/20 text-xs font-medium text-destructive hover:bg-destructive/10"
+                    className="admin-touch-target h-11 justify-start gap-2 border-destructive/20 text-xs font-medium text-destructive hover:bg-destructive/10 md:h-9"
                     onClick={() => handleExportMonthlySales('pdf')}
                   >
                     <Download className="size-3.5" />
@@ -565,7 +576,7 @@ export default function AdminOrdersClient({
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="h-10 px-3 gap-2 text-muted-foreground hover:text-foreground sm:self-auto"
+              className="admin-touch-target h-11 gap-2 px-3 text-muted-foreground hover:text-foreground sm:self-auto md:h-10"
             >
               <X className="size-4" />
               Clear
@@ -577,7 +588,7 @@ export default function AdminOrdersClient({
       {/* Table Section */}
       <div className={cn("hidden overflow-hidden rounded-xl border border-border bg-card transition-opacity md:block", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px]">
+          <table className="w-full min-w-[1080px]">
             <thead>
               <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 <th className="px-6 py-4 w-12">
@@ -591,6 +602,9 @@ export default function AdminOrdersClient({
                 <th className="px-6 py-4">Customer</th>
                 <th className="px-6 py-4">City</th>
                 <th className="px-6 py-4">Date & Time</th>
+                <th className="px-6 py-4">Payment</th>
+                <th className="px-6 py-4">Tracking</th>
+                <th className="px-6 py-4">Weight</th>
                 <th className="px-6 py-4">Total</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-center">Action</th>
@@ -640,6 +654,14 @@ export default function AdminOrdersClient({
                         <span className="text-xs text-muted-foreground">{formatTime(order.createdAt)}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{order.paymentStatus || 'COD'}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex max-w-[180px] flex-col">
+                        <span className="truncate text-sm font-medium text-foreground">{order.trackingNumber || 'Pending'}</span>
+                        <span className="truncate text-xs text-muted-foreground">{order.courierName || 'Courier not set'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatWeight(order.weight)}</td>
                     <td className="px-6 py-4 text-sm font-bold text-foreground">{formatPrice(order.totalAmount)}</td>
                     <td className="px-6 py-4">
                       <Badge variant={statusVariant[order.status] || 'secondary'} className="rounded-full px-3">
@@ -662,7 +684,7 @@ export default function AdminOrdersClient({
                           }}
                         >
                           <PopoverTrigger asChild>
-                            <Button variant="outline" className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground">
+                            <Button variant="outline" className="admin-touch-target flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground">
                               <Zap className="size-5 mr-2" />
                               <span className="text-sm font-semibold">Quick Update</span>
                             </Button>
@@ -700,7 +722,7 @@ export default function AdminOrdersClient({
                                 />
                               </div>
                               <Button 
-                                className="w-full h-8 text-xs" 
+                                className="w-full h-11 text-xs md:h-8" 
                                 disabled={isQuickUpdating} 
                                 onClick={() => handleQuickUpdate(order._id)}
                               >
@@ -713,7 +735,7 @@ export default function AdminOrdersClient({
                         {/* Edit Modal Trigger */}
                         <Button 
                           variant="outline" 
-                          className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
+                          className="admin-touch-target flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
                           onClick={() => {
                             setEditingOrder(order);
                             setIsEditModalOpen(true);
@@ -760,7 +782,7 @@ export default function AdminOrdersClient({
             if (!order) return null;
 
             return (
-              <div key={order._id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div key={order._id} className="rounded-[1.5rem] border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     checked={selectedOrders.includes(order._id)}
@@ -775,10 +797,52 @@ export default function AdminOrdersClient({
                         <p className="text-sm font-mono font-bold text-foreground">{order.orderId}</p>
                         <p className="mt-1 text-sm font-semibold text-foreground">{order.customerName}</p>
                         <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
+                        </p>
                       </div>
-                      <Badge variant={statusVariant[order.status] || 'secondary'} className="shrink-0 rounded-full px-3">
-                        {order.status}
-                      </Badge>
+                      <div className="flex items-start gap-2">
+                        <Badge variant={statusVariant[order.status] || 'secondary'} className="shrink-0 rounded-full px-3">
+                          {order.status}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="admin-touch-target size-11 rounded-full text-muted-foreground">
+                              <MoreVertical className="size-4" />
+                              <span className="sr-only">Open order quick view</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-64">
+                            <DropdownMenuGroup>
+                              <DropdownMenuLabel>Quick View</DropdownMenuLabel>
+                              <DropdownMenuItem disabled>City: {order.customerCity || 'N/A'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Total: {formatPrice(order.totalAmount)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Date: {formatDate(order.createdAt)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Time: {formatTime(order.createdAt)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Payment: {order.paymentStatus || 'COD'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Weight: {formatWeight(order.weight)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Tracking: {order.trackingNumber || 'Pending'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled>Courier: {order.courierName || 'Courier not set'}</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditingOrder(order);
+                                  setIsEditModalOpen(true);
+                                }}
+                              >
+                                <Edit className="mr-2 size-4" />
+                                Edit Order
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/orders/${order._id}`}>
+                                  <Eye className="mr-2 size-4" />
+                                  View Order
+                                </Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3">
@@ -790,103 +854,81 @@ export default function AdminOrdersClient({
                         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Total</p>
                         <p className="mt-1 text-sm font-semibold text-foreground">{formatPrice(order.totalAmount)}</p>
                       </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Date</p>
-                        <p className="mt-1 text-sm font-medium text-foreground">{formatDate(order.createdAt)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Time</p>
-                        <p className="mt-1 text-sm font-medium text-foreground">{formatTime(order.createdAt)}</p>
-                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2">
-                      <Popover
-                        open={quickActionOrder === order._id}
-                        onOpenChange={(open) => {
-                          if (open) {
-                            setQuickActionOrder(order._id);
-                            setQuickStatus(order.status);
-                            setQuickTracking(order.trackingNumber || '');
-                            setEditingOrder(order);
-                          } else {
-                            setQuickActionOrder(null);
-                          }
-                        }}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="h-10 w-full justify-center gap-2">
-                            <Zap className="size-4" />
-                            Quick Update
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4" align="center">
-                          <div className="space-y-4">
-                            <h4 className="font-bold text-sm">Quick Update</h4>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] uppercase font-bold text-muted-foreground">Status</Label>
-                              <Select value={quickStatus} onValueChange={setQuickStatus}>
-                                <SelectTrigger className="h-9 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.keys(statusVariant).map((s) => (
-                                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tracking ID</Label>
-                              <Input
-                                className="h-9 text-xs"
-                                value={quickTracking}
-                                onChange={(e) => setQuickTracking(e.target.value)}
-                                placeholder="Enter Tracking ID"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] uppercase font-bold text-muted-foreground">Courier Name</Label>
-                              <Input
-                                className="h-9 text-xs"
-                                value={editingOrder?.courierName || ''}
-                                onChange={(e) => setEditingOrder({ ...editingOrder, courierName: e.target.value })}
-                                placeholder="e.g. Trax, Leopard, PostEx"
-                              />
-                            </div>
-                            <Button
-                              className="w-full h-9 text-xs"
-                              disabled={isQuickUpdating}
-                              onClick={() => handleQuickUpdate(order._id)}
-                            >
-                              {isQuickUpdating ? <Loader2 className="size-3 animate-spin" /> : 'Update Order'}
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      <Button
-                        variant="outline"
-                        className="h-10 w-full justify-center gap-2"
-                        onClick={() => {
+                    <Popover
+                      open={quickActionOrder === order._id}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          setQuickActionOrder(order._id);
+                          setQuickStatus(order.status);
+                          setQuickTracking(order.trackingNumber || '');
                           setEditingOrder(order);
-                          setIsEditModalOpen(true);
-                        }}
-                      >
-                        <Edit className="size-4" />
-                        Edit Order
-                      </Button>
+                        } else {
+                          setQuickActionOrder(null);
+                        }
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" className="admin-touch-target h-10 w-full justify-center gap-2 rounded-xl border border-border/60 bg-transparent px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-muted/40 hover:text-foreground">
+                          <Zap className="size-3.5" />
+                          Quick Update
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4" align="center">
+                        <div className="space-y-4">
+                          <h4 className="font-bold text-sm">Quick Update</h4>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Status</Label>
+                            <Select value={quickStatus} onValueChange={setQuickStatus}>
+                              <SelectTrigger className="h-11 text-xs md:h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.keys(statusVariant).map((s) => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tracking ID</Label>
+                            <Input
+                              className="h-11 text-xs md:h-9"
+                              value={quickTracking}
+                              onChange={(e) => setQuickTracking(e.target.value)}
+                              placeholder="Enter Tracking ID"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Courier Name</Label>
+                            <Input
+                              className="h-11 text-xs md:h-9"
+                              value={editingOrder?.courierName || ''}
+                              onChange={(e) => setEditingOrder({ ...editingOrder, courierName: e.target.value })}
+                              placeholder="e.g. Trax, Leopard, PostEx"
+                            />
+                          </div>
+                          <Button
+                            className="w-full h-11 text-xs md:h-9"
+                            disabled={isQuickUpdating}
+                            onClick={() => handleQuickUpdate(order._id)}
+                          >
+                            {isQuickUpdating ? <Loader2 className="size-3 animate-spin" /> : 'Update Order'}
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
 
-                      <Button
-                        variant="outline"
-                        render={<Link href={`/admin/orders/${order._id}`} />}
-                        nativeButton={false}
-                        className="h-10 w-full justify-center gap-2"
-                      >
-                        <Eye className="size-4" />
-                        View Order
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      render={<Link href={`/admin/orders/${order._id}`} />}
+                      nativeButton={false}
+                      className="admin-touch-target h-10 w-full justify-center gap-2 rounded-xl border border-border/60 bg-transparent px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-muted/40 hover:text-foreground"
+                    >
+                      <Eye className="size-3.5" />
+                      View
+                    </Button>
                   </div>
                 </div>
               </div>

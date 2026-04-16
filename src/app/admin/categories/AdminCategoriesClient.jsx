@@ -383,7 +383,7 @@ export default function AdminCategoriesClient() {
   }
 
   return (
-    <div className="max-w-4xl pb-24 md:pb-0">
+      <div className="w-full pb-10 md:pb-0">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Categories</h2>

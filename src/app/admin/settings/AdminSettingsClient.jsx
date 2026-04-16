@@ -439,7 +439,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
   }
 
   return (
-    <div className="max-w-5xl">
+      <div className="w-full">
       <div className="mb-6">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Store Settings</h2>
         <p className="mt-1 text-sm text-muted-foreground">

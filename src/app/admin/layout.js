@@ -7,9 +7,9 @@ function AdminLayoutFallback({ children }) {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="border-b border-border bg-background">
-        <div className="mx-auto h-16 max-w-7xl px-4" />
+        <div className="h-16 px-4 md:px-6 xl:px-8" />
       </div>
-      <div className="mx-auto max-w-7xl px-4 py-6">{children}</div>
+      <div className="px-4 py-6 md:px-6 xl:px-8">{children}</div>
     </div>
   );
 }

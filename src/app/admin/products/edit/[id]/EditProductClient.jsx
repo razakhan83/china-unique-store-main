@@ -402,11 +402,11 @@ export default function EditProduct({ id }) {
       : '✨ AI Auto-SEO';
 
   return (
-    <div className="w-full pb-10">
+    <div className="w-full pb-6 md:pb-10">
 
 
       {/* Page Header */}
-      <div className="mb-6 md:mb-8 flex items-center gap-4">
+      <div className="mb-4 flex items-center gap-3 md:mb-8 md:gap-4">
         <Link href="/admin/products" className={cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }), 'rounded-xl')}>
           <ArrowLeft className="size-4" />
         </Link>
@@ -417,7 +417,7 @@ export default function EditProduct({ id }) {
       </div>
 
       {/* Form Card */}
-      <div className="surface-card max-w-2xl rounded-xl p-4 shadow-lg md:p-8">
+      <div className="surface-card w-full rounded-xl p-3 shadow-lg md:p-8">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Product Name */}
           <div>
