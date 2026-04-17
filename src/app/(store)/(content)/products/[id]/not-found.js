@@ -14,11 +14,9 @@ export default function ProductNotFound() {
           This product doesn&apos;t exist or is no longer available.
         </p>
       </div>
-      <Button asChild variant="outline">
-        <Link href="/products" className="gap-2">
+      <Button variant="outline" render={<Link href="/products" />} className="gap-2">
           <ArrowLeft className="size-4" />
           Browse Products
-        </Link>
       </Button>
     </div>
   );

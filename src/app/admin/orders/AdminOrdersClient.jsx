@@ -4,26 +4,32 @@ import { useEffect, useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Receipt, Search, ChevronLeft, ChevronRight, X, Download, Edit, Zap, Loader2, Check, ChevronsUpDown, MoreVertical } from 'lucide-react';
+import { Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldDescription,
+} from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { updateOrderAction } from '@/app/actions';
@@ -397,7 +403,7 @@ export default function AdminOrdersClient({
     });
     
     if (res.success) {
-      toast.success('Order updated quickly');
+      toast.success('Order updated');
       setQuickActionOrder(null);
       setOrders((prev) => prev.map((order) => (
         order._id === id ? { ...order, status: quickStatus, trackingNumber: quickTracking, courierName: editingOrder?.courierName || '' } : order
@@ -430,7 +436,7 @@ export default function AdminOrdersClient({
     };
     const res = await updateOrderAction(editingOrder._id, updates);
     if (res.success) {
-      toast.success('Order details updated successfully');
+      toast.success('Order details updated');
       setIsEditModalOpen(false);
       setEditingOrder(null);
       setOrders((prev) => prev.map((order) => (
@@ -445,38 +451,40 @@ export default function AdminOrdersClient({
     setIsUpdating(false);
   };
 
+  const hasActiveFilters = searchQuery || statusFilter !== 'Confirmed' || startDate || endDate;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Orders</h2>
-        </div>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Orders</h2>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
+      {/* Status Filter Tabs — Compact pills */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {[
-          { id: 'Confirmed', label: `All Confirmed (${summary.confirmedCount})` },
+          { id: 'Confirmed', label: `Confirmed (${summary.confirmedCount})` },
           { id: 'Sourcing', label: `Sourcing (${summary.sourcingCount || 0})` },
           { id: 'In Process', label: `In Progress (${summary.inProcessCount})` },
           { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
           { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
-          { id: 'Out for Delivery', label: `Out for Delivery (${summary.outForDeliveryCount || 0})` },
+          { id: 'Out for Delivery', label: `Out (${summary.outForDeliveryCount || 0})` },
           { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
           { id: 'Returned', label: `Returned (${summary.returnedCount})` },
-          { id: 'all', label: `All Orders (${summary.allCount})` },
+          { id: 'all', label: `All (${summary.allCount})` },
         ].map((tab) => (
           <Button
             key={tab.id}
-            variant={statusFilter === tab.id ? "default" : "outline"}
+            variant={statusFilter === tab.id ? "default" : "ghost"}
             size="sm"
             onClick={() => {
               setStatusFilter(tab.id);
               navigate({ status: tab.id, page: null });
             }}
             className={cn(
-              "admin-touch-target h-11 rounded-full px-5 font-medium transition-all md:h-9",
-              statusFilter === tab.id ? "shadow-md scale-105" : "text-muted-foreground hover:text-foreground"
+              "h-7 rounded-md px-2.5 text-[11px] font-medium transition-colors md:h-7",
+              statusFilter === tab.id
+                ? "shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {tab.label}
@@ -484,9 +492,9 @@ export default function AdminOrdersClient({
         ))}
       </div>
 
-      {/* Filters Bar */}
+      {/* Filters Bar — Compact */}
       <form
-        className="flex flex-col gap-3"
+        className="flex flex-col gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           navigate({
@@ -498,48 +506,46 @@ export default function AdminOrdersClient({
         }}
       >
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" data-icon />
           <Input
             placeholder="Search by Order ID, Name, or Phone..."
-            className="h-11 pl-10 md:h-10"
+            className="h-8 pl-8 text-[13px] md:h-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         {/* Date Range Filters */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50">
-            <Label htmlFor="startDate" className="text-xs font-bold text-muted-foreground uppercase">From</Label>
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground">From</span>
             <Input
-              id="startDate"
               type="date"
-              className="h-10 min-w-0 flex-1 bg-background text-xs md:h-8 sm:w-[130px]"
+              className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1 text-[12px] shadow-none focus-visible:ring-0 sm:w-[120px]"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50">
-            <Label htmlFor="endDate" className="text-xs font-bold text-muted-foreground uppercase">To</Label>
+          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground">To</span>
             <Input
-              id="endDate"
               type="date"
-              className="h-10 min-w-0 flex-1 bg-background text-xs md:h-8 sm:w-[130px]"
+              className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1 text-[12px] shadow-none focus-visible:ring-0 sm:w-[120px]"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center gap-1.5">
           {selectedOrders.length > 0 && (
-            <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 p-1 sm:flex-row sm:items-center">
-              <Button onClick={handleDownloadExcel} size="sm" className="admin-touch-target h-11 gap-1.5 border border-foreground bg-foreground px-2.5 text-xs font-bold text-background hover:bg-foreground/88 md:h-8">
-                <Download className="size-3.5" />
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+              <Button onClick={handleDownloadExcel} size="sm" className="h-7 gap-1 px-2 text-[11px] font-semibold">
+                <Download data-icon="inline-start" />
                 XLSX ({selectedOrders.length})
               </Button>
-              <Button onClick={handleDownloadPDF} size="sm" variant="outline" className="admin-touch-target h-11 gap-1.5 border-destructive/20 px-2.5 text-xs font-bold text-destructive hover:bg-destructive/10 md:h-8">
-                <Download className="size-3.5" />
+              <Button onClick={handleDownloadPDF} size="sm" variant="outline" className="h-7 gap-1 border-destructive/20 px-2 text-[11px] font-semibold text-destructive hover:bg-destructive/10">
+                <Download data-icon="inline-start" />
                 PDF ({selectedOrders.length})
               </Button>
             </div>
@@ -547,86 +553,84 @@ export default function AdminOrdersClient({
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="admin-touch-target h-11 gap-2 text-xs font-bold uppercase tracking-wider md:h-10">
-                <Zap className="size-4 text-foreground" />
+              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
+                <Zap data-icon="inline-start" />
                 Reports
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 p-3" align="end">
-              <div className="space-y-3">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Monthly Sales Records</div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="admin-touch-target h-11 justify-start gap-2 border-border text-xs font-medium text-foreground hover:bg-muted/60 md:h-9"
-                    onClick={() => handleExportMonthlySales('excel')}
-                  >
-                    <Download className="size-3.5" />
-                    Export to Excel (.xlsx)
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="admin-touch-target h-11 justify-start gap-2 border-destructive/20 text-xs font-medium text-destructive hover:bg-destructive/10 md:h-9"
-                    onClick={() => handleExportMonthlySales('pdf')}
-                  >
-                    <Download className="size-3.5" />
-                    Export to PDF (.pdf)
-                  </Button>
-                </div>
+            <PopoverContent className="w-48 p-2" align="end">
+              <div className="flex flex-col gap-1.5">
+                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
+                  onClick={() => handleExportMonthlySales('excel')}
+                >
+                  <Download data-icon="inline-start" />
+                  Excel (.xlsx)
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
+                  onClick={() => handleExportMonthlySales('pdf')}
+                >
+                  <Download data-icon="inline-start" />
+                  PDF (.pdf)
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
 
-          {(searchQuery || statusFilter !== 'Confirmed' || startDate || endDate) && (
+          {hasActiveFilters && (
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="admin-touch-target h-11 gap-2 px-3 text-muted-foreground hover:text-foreground sm:self-auto md:h-10"
+              className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
             >
-              <X className="size-4" />
+              <X data-icon="inline-start" />
               Clear
             </Button>
           )}
         </div>
       </form>
 
-      {/* Table Section */}
-      <div className={cn("hidden overflow-hidden rounded-xl border border-border bg-card transition-opacity md:block", isPending && "opacity-70")}>
+      {/* ── Desktop Table ── */}
+      <div className={cn("hidden overflow-hidden rounded-lg border border-border bg-card md:block", isPending && "opacity-60")}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px]">
+          <table className="w-full min-w-[960px]">
             <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                <th className="px-6 py-4 w-12">
+              <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                <th className="w-10 px-3 py-2">
                   <Checkbox 
                     checked={isAllPaginatedSelected} 
                     onCheckedChange={handleSelectAll} 
                     aria-label="Select all on page"
                   />
                 </th>
-                <th className="px-6 py-4">Order ID</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">City</th>
-                <th className="px-6 py-4">Date & Time</th>
-                <th className="px-6 py-4">Payment</th>
-                <th className="px-6 py-4">Tracking</th>
-                <th className="px-6 py-4">Weight</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-center">Action</th>
+                <th className="px-3 py-2">Order</th>
+                <th className="px-3 py-2">Customer</th>
+                <th className="px-3 py-2">City</th>
+                <th className="px-3 py-2">Date</th>
+                <th className="px-3 py-2">Payment</th>
+                <th className="px-3 py-2">Tracking</th>
+                <th className="px-3 py-2">Weight</th>
+                <th className="px-3 py-2 text-right">Total</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="w-10 px-3 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {displayOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center">
-                    <Receipt className="mx-auto mb-4 size-10 text-muted-foreground/40" />
-                    <p className="text-lg font-semibold text-foreground">No orders found</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-                    {(searchQuery || statusFilter !== 'Confirmed' || startDate || endDate) && (
-                      <Button variant="outline" size="sm" onClick={clearFilters} className="mt-4">
+                  <td colSpan={11} className="px-3 py-14 text-center">
+                    <Receipt className="mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-sm font-medium text-foreground">No orders found</p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
+                    {hasActiveFilters && (
+                      <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 h-7 text-[12px]">
                         Clear all filters
                       </Button>
                     )}
@@ -636,133 +640,88 @@ export default function AdminOrdersClient({
                 displayOrders.map((order) => {
                   if (!order) return null;
                   return (
-                    <tr key={order._id} className="transition-colors hover:bg-muted/35">
-                    <td className="px-6 py-4">
+                    <tr key={order._id} className="transition-colors hover:bg-muted/25">
+                    <td className="px-3 py-2">
                       <Checkbox 
                         checked={selectedOrders.includes(order._id)} 
                         onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
                         aria-label={`Select order ${order.orderId}`}
                       />
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono font-bold text-foreground">{order.orderId}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2">
+                      <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
+                        {order.orderId}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2">
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-foreground">{order.customerName}</span>
-                        <span className="text-xs text-muted-foreground">{order.customerPhone}</span>
+                        <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
+                        <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground ring-1 ring-inset ring-border">
+                    <td className="px-3 py-2">
+                      <Badge variant="secondary" className="text-[10px] font-medium">
                         {order.customerCity || 'N/A'}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">{formatDate(order.createdAt)}</span>
-                        <span className="text-xs text-muted-foreground">{formatTime(order.createdAt)}</span>
+                        <span className="text-[12px] text-foreground">{formatDate(order.createdAt)}</span>
+                        <span className="text-[11px] text-muted-foreground">{formatTime(order.createdAt)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{order.paymentStatus || 'COD'}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex max-w-[180px] flex-col">
-                        <span className="truncate text-sm font-medium text-foreground">{order.trackingNumber || 'Pending'}</span>
-                        <span className="truncate text-xs text-muted-foreground">{order.courierName || 'Courier not set'}</span>
+                    <td className="px-3 py-2 text-[12px] text-foreground">{order.paymentStatus || 'COD'}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex max-w-[140px] flex-col">
+                        <span className="truncate text-[12px] text-foreground">{order.trackingNumber || '—'}</span>
+                        <span className="truncate text-[11px] text-muted-foreground">{order.courierName || ''}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatWeight(order.weight)}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-foreground">{formatPrice(order.totalAmount)}</td>
-                    <td className="px-6 py-4">
-                      <Badge variant={statusVariant[order.status] || 'secondary'} className="rounded-full px-3">
+                    <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
+                    <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</td>
+                    <td className="px-3 py-2">
+                      <Badge variant={statusVariant[order.status] || 'secondary'} className="text-[10px]">
                         {order.status}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center gap-4">
-                        {/* Quick Action Popover */}
-                        <Popover 
-                          open={quickActionOrder === order._id} 
-                          onOpenChange={(open) => {
-                            if (open) {
-                              setQuickActionOrder(order._id);
-                              setQuickStatus(order.status);
-                              setQuickTracking(order.trackingNumber || '');
-                            } else {
-                              setQuickActionOrder(null);
-                            }
-                          }}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="admin-touch-target flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground">
-                              <Zap className="size-5 mr-2" />
-                              <span className="text-sm font-semibold">Quick Update</span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-72 p-4" align="end">
-                            <div className="space-y-4">
-                              <h4 className="font-bold text-sm">Quick Update</h4>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Status</Label>
-                                <Select value={quickStatus} onValueChange={setQuickStatus}>
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.keys(statusVariant).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tracking ID</Label>
-                                <Input 
-                                  className="h-8 text-xs" 
-                                  value={quickTracking} 
-                                  onChange={(e) => setQuickTracking(e.target.value)} 
-                                  placeholder="Enter Tracking ID"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Courier Name</Label>
-                                <Input 
-                                  className="h-8 text-xs" 
-                                  value={editingOrder?.courierName || ''} 
-                                  onChange={(e) => setEditingOrder({ ...editingOrder, courierName: e.target.value })} 
-                                  placeholder="e.g. Trax, Leopard, PostEx"
-                                />
-                              </div>
-                              <Button 
-                                className="w-full h-11 text-xs md:h-8" 
-                                disabled={isQuickUpdating} 
-                                onClick={() => handleQuickUpdate(order._id)}
-                              >
-                                {isQuickUpdating ? <Loader2 className="size-3 animate-spin" /> : 'Update Order'}
-                              </Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-
-                        {/* Edit Modal Trigger */}
-                        <Button 
-                          variant="outline" 
-                          className="admin-touch-target flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
-                          onClick={() => {
-                            setEditingOrder(order);
-                            setIsEditModalOpen(true);
-                          }}
-                        >
-                          <Edit className="size-5 mr-2" />
-                          <span className="text-sm font-semibold">Edit</span>
-                        </Button>
-
-                        <Link
-                          href={`/admin/orders/${order._id}`}
-                          className={cn(
-                            "flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground hover:border-border"
-                          )}
-                        >
-                          <Eye className="size-5 mr-2" />
-                          <span className="text-sm font-semibold">View</span>
-                        </Link>
-                      </div>
+                    <td className="px-3 py-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
+                            <MoreHorizontal />
+                            <span className="sr-only">Order actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
+                                <Eye data-icon="inline-start" />
+                                View details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingOrder(order);
+                                setIsEditModalOpen(true);
+                              }}
+                            >
+                              <Edit data-icon="inline-start" />
+                              Edit order
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setQuickActionOrder(order._id);
+                                setQuickStatus(order.status);
+                                setQuickTracking(order.trackingNumber || '');
+                                setEditingOrder(order);
+                              }}
+                            >
+                              <Zap data-icon="inline-start" />
+                              Quick update
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                   );
@@ -773,14 +732,15 @@ export default function AdminOrdersClient({
         </div>
       </div>
 
-      <div className={cn("space-y-3 md:hidden", isPending && "opacity-70")}>
+      {/* ── Mobile Cards ── */}
+      <div className={cn("flex flex-col gap-2 md:hidden", isPending && "opacity-60")}>
         {displayOrders.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card px-4 py-10 text-center">
-            <Receipt className="mx-auto mb-4 size-10 text-muted-foreground/40" />
-            <p className="text-lg font-semibold text-foreground">No orders found</p>
-            <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-            {(searchQuery || statusFilter !== 'Confirmed' || startDate || endDate) && (
-              <Button variant="outline" size="sm" onClick={clearFilters} className="mt-4">
+          <div className="rounded-xl border border-border bg-card px-3 py-8 text-center">
+            <Receipt className="mx-auto mb-2 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-foreground">No orders found</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 h-8 text-[12px]">
                 Clear all filters
               </Button>
             )}
@@ -790,47 +750,43 @@ export default function AdminOrdersClient({
             if (!order) return null;
 
             return (
-              <div key={order._id} className="rounded-[1.5rem] border border-border bg-card p-4 shadow-sm">
-                <div className="flex items-start gap-3">
+              <div key={order._id} className="rounded-xl border border-border bg-card p-3">
+                <div className="flex items-start gap-2.5">
                   <Checkbox
                     checked={selectedOrders.includes(order._id)}
                     onCheckedChange={(checked) => handleSelectOne(checked, order._id)}
                     aria-label={`Select order ${order.orderId}`}
-                    className="mt-1"
+                    className="mt-0.5"
                   />
 
-                  <div className="min-w-0 flex-1 space-y-4">
-                    <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-mono font-bold text-foreground">{order.orderId}</p>
-                        <p className="mt-1 text-sm font-semibold text-foreground">{order.customerName}</p>
-                        <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
-                        <p className="mt-1 text-[11px] text-muted-foreground">
+                        <p className="text-[13px] font-semibold tabular-nums text-foreground">{order.orderId}</p>
+                        <p className="text-[12px] font-medium text-foreground">{order.customerName}</p>
+                        <p className="text-[11px] text-muted-foreground">{order.customerPhone}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
                         </p>
                       </div>
-                      <div className="flex items-start gap-2">
-                        <Badge variant={statusVariant[order.status] || 'secondary'} className="shrink-0 rounded-full px-3">
+                      <div className="flex items-start gap-1.5">
+                        <Badge variant={statusVariant[order.status] || 'secondary'} className="text-[10px]">
                           {order.status}
                         </Badge>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="admin-touch-target size-11 rounded-full text-muted-foreground">
-                              <MoreVertical className="size-4" />
-                              <span className="sr-only">Open order quick view</span>
+                            <Button variant="ghost" size="icon" className="admin-touch-target size-8 rounded-full text-muted-foreground">
+                              <MoreHorizontal />
+                              <span className="sr-only">Order actions</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-64">
+                          <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuGroup>
-                              <DropdownMenuLabel>Quick View</DropdownMenuLabel>
-                              <DropdownMenuItem disabled>City: {order.customerCity || 'N/A'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Total: {formatPrice(order.totalAmount)}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Date: {formatDate(order.createdAt)}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Time: {formatTime(order.createdAt)}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Payment: {order.paymentStatus || 'COD'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Weight: {formatWeight(order.weight)}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Tracking: {order.trackingNumber || 'Pending'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Courier: {order.courierName || 'Courier not set'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">City: {order.customerCity || 'N/A'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">Total: {formatPrice(order.totalAmount)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">Payment: {order.paymentStatus || 'COD'}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">Weight: {formatWeight(order.weight)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">Tracking: {order.trackingNumber || '—'}</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
@@ -838,14 +794,12 @@ export default function AdminOrdersClient({
                                   setIsEditModalOpen(true);
                                 }}
                               >
-                                <Edit className="mr-2 size-4" />
+                                <Edit data-icon="inline-start" />
                                 Edit Order
                               </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/orders/${order._id}`}>
-                                  <Eye className="mr-2 size-4" />
-                                  View Order
-                                </Link>
+                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
+                                <Eye data-icon="inline-start" />
+                                View Order
                               </DropdownMenuItem>
                             </DropdownMenuGroup>
                           </DropdownMenuContent>
@@ -853,88 +807,40 @@ export default function AdminOrdersClient({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3">
+                    <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/15 p-2">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">City</p>
-                        <p className="mt-1 text-sm font-medium text-foreground">{order.customerCity || 'N/A'}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">City</p>
+                        <p className="mt-0.5 text-[12px] font-medium text-foreground">{order.customerCity || 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Total</p>
-                        <p className="mt-1 text-sm font-semibold text-foreground">{formatPrice(order.totalAmount)}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Total</p>
+                        <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</p>
                       </div>
                     </div>
 
-                    <Popover
-                      open={quickActionOrder === order._id}
-                      onOpenChange={(open) => {
-                        if (open) {
-                          setQuickActionOrder(order._id);
-                          setQuickStatus(order.status);
-                          setQuickTracking(order.trackingNumber || '');
-                          setEditingOrder(order);
-                        } else {
-                          setQuickActionOrder(null);
-                        }
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="admin-touch-target mt-2 h-9 w-full justify-center gap-1.5 rounded-lg border border-border/50 bg-transparent text-[12px] font-medium text-muted-foreground shadow-none hover:bg-muted/30 hover:text-foreground"
+                      onClick={() => {
+                        setQuickActionOrder(order._id);
+                        setQuickStatus(order.status);
+                        setQuickTracking(order.trackingNumber || '');
+                        setEditingOrder(order);
                       }}
                     >
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" className="admin-touch-target h-10 w-full justify-center gap-2 rounded-xl border border-border/60 bg-transparent px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-muted/40 hover:text-foreground">
-                          <Zap className="size-3.5" />
-                          Quick Update
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4" align="center">
-                        <div className="space-y-4">
-                          <h4 className="font-bold text-sm">Quick Update</h4>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Status</Label>
-                            <Select value={quickStatus} onValueChange={setQuickStatus}>
-                              <SelectTrigger className="h-11 text-xs md:h-9">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.keys(statusVariant).map((s) => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tracking ID</Label>
-                            <Input
-                              className="h-11 text-xs md:h-9"
-                              value={quickTracking}
-                              onChange={(e) => setQuickTracking(e.target.value)}
-                              placeholder="Enter Tracking ID"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Courier Name</Label>
-                            <Input
-                              className="h-11 text-xs md:h-9"
-                              value={editingOrder?.courierName || ''}
-                              onChange={(e) => setEditingOrder({ ...editingOrder, courierName: e.target.value })}
-                              placeholder="e.g. Trax, Leopard, PostEx"
-                            />
-                          </div>
-                          <Button
-                            className="w-full h-11 text-xs md:h-9"
-                            disabled={isQuickUpdating}
-                            onClick={() => handleQuickUpdate(order._id)}
-                          >
-                            {isQuickUpdating ? <Loader2 className="size-3 animate-spin" /> : 'Update Order'}
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                      <Zap data-icon="inline-start" />
+                      Quick Update
+                    </Button>
 
                     <Button
                       variant="ghost"
+                      size="sm"
                       render={<Link href={`/admin/orders/${order._id}`} />}
                       nativeButton={false}
-                      className="admin-touch-target h-10 w-full justify-center gap-2 rounded-xl border border-border/60 bg-transparent px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-muted/40 hover:text-foreground"
+                      className="admin-touch-target mt-1.5 h-9 w-full justify-center gap-1.5 rounded-lg border border-border/50 bg-transparent text-[12px] font-medium text-muted-foreground shadow-none hover:bg-muted/30 hover:text-foreground"
                     >
-                      <Eye className="size-3.5" />
+                      <Eye data-icon="inline-start" />
                       View
                     </Button>
                   </div>
@@ -945,118 +851,155 @@ export default function AdminOrdersClient({
         )}
       </div>
 
-      {/* Edit Order Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Quick Update Dialog (unified — used by both desktop dropdown and mobile cards) */}
+      <Dialog open={quickActionOrder !== null} onOpenChange={(open) => { if (!open) setQuickActionOrder(null); }}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Edit Order {editingOrder?.orderId}</DialogTitle>
+            <DialogTitle className="text-sm">Quick Update</DialogTitle>
+          </DialogHeader>
+          <QuickUpdateForm
+            quickStatus={quickStatus}
+            setQuickStatus={setQuickStatus}
+            quickTracking={quickTracking}
+            setQuickTracking={setQuickTracking}
+            editingOrder={editingOrder}
+            setEditingOrder={setEditingOrder}
+            isQuickUpdating={isQuickUpdating}
+            onSubmit={() => handleQuickUpdate(quickActionOrder)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Order Dialog */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-h-[88vh] max-w-xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Edit Order {editingOrder?.orderId}</DialogTitle>
           </DialogHeader>
           
           {editingOrder && (
-            <form onSubmit={handleFullUpdate} className="space-y-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleFullUpdate} className="flex flex-col gap-5 py-2">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 {/* Consignee Info */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Consignee Details</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerName">Full Name</Label>
-                    <Input id="customerName" name="customerName" defaultValue={editingOrder.customerName} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerEmail">Email Address</Label>
-                    <Input id="customerEmail" name="customerEmail" type="email" defaultValue={editingOrder.customerEmail} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerPhone">Phone Number</Label>
-                    <Input id="customerPhone" name="customerPhone" defaultValue={editingOrder.customerPhone} required />
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Consignee Details</p>
+                  <Separator />
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="customerName" className="text-[12px]">Full Name</FieldLabel>
+                      <Input id="customerName" name="customerName" className="h-8 text-[13px]" defaultValue={editingOrder.customerName} required />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="customerEmail" className="text-[12px]">Email</FieldLabel>
+                      <Input id="customerEmail" name="customerEmail" type="email" className="h-8 text-[13px]" defaultValue={editingOrder.customerEmail} />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="customerPhone" className="text-[12px]">Phone</FieldLabel>
+                      <Input id="customerPhone" name="customerPhone" className="h-8 text-[13px]" defaultValue={editingOrder.customerPhone} required />
+                    </Field>
+                  </FieldGroup>
                 </div>
 
                 {/* Address Info */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Shipping Address</h3>
-                  <div className="space-y-2">
-                    <Label>City</Label>
-                    <Popover open={cityOpen} onOpenChange={setCityOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={cityOpen}
-                          className="w-full justify-between font-normal"
-                        >
-                          {editingOrder.customerCity || editingOrder.city || "Select city..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search city..." />
-                          <CommandList>
-                            <CommandEmpty>No city found.</CommandEmpty>
-                            <CommandGroup className="max-h-60 overflow-y-auto">
-                              {PAKISTAN_CITIES.map((city) => (
-                                <CommandItem
-                                  key={city}
-                                  value={city}
-                                  onSelect={(currentValue) => {
-                                    if (editingOrder) {
-                                      setEditingOrder({ ...editingOrder, customerCity: currentValue });
-                                    }
-                                    setCityOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      (editingOrder.customerCity || editingOrder.city) === city ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {city}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerAddress">Full Address</Label>
-                    <Input id="customerAddress" name="customerAddress" defaultValue={editingOrder.customerAddress} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="landmark">Landmark (Optional)</Label>
-                    <Input id="landmark" name="landmark" defaultValue={editingOrder.landmark} />
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Shipping Address</p>
+                  <Separator />
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel className="text-[12px]">City</FieldLabel>
+                      <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={cityOpen}
+                            className="h-8 w-full justify-between text-[13px] font-normal"
+                          >
+                            {editingOrder.customerCity || editingOrder.city || "Select city..."}
+                            <ChevronsUpDown data-icon="inline-end" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search city..." />
+                            <CommandList>
+                              <CommandEmpty>No city found.</CommandEmpty>
+                              <CommandGroup className="max-h-52 overflow-y-auto">
+                                {PAKISTAN_CITIES.map((city) => (
+                                  <CommandItem
+                                    key={city}
+                                    value={city}
+                                    onSelect={(currentValue) => {
+                                      if (editingOrder) {
+                                        setEditingOrder({ ...editingOrder, customerCity: currentValue });
+                                      }
+                                      setCityOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        (editingOrder.customerCity || editingOrder.city) === city ? "opacity-100" : "opacity-0"
+                                      )}
+                                      data-icon="inline-start"
+                                    />
+                                    {city}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="customerAddress" className="text-[12px]">Full Address</FieldLabel>
+                      <Input id="customerAddress" name="customerAddress" className="h-8 text-[13px]" defaultValue={editingOrder.customerAddress} required />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="landmark" className="text-[12px]">Landmark</FieldLabel>
+                      <Input id="landmark" name="landmark" className="h-8 text-[13px]" defaultValue={editingOrder.landmark} />
+                    </Field>
+                  </FieldGroup>
                 </div>
               </div>
 
-              <div className="border-t border-border pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Courier Sheet Overrides */}
-                <div className="space-y-2">
-                  <Label htmlFor="itemType">Item Type</Label>
-                  <Input id="itemType" name="itemType" defaultValue={editingOrder.itemType || 'Mix'} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="orderQuantity">Quantity</Label>
-                  <Input id="orderQuantity" name="orderQuantity" type="number" defaultValue={editingOrder.orderQuantity || 1} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Weight (kg)</Label>
-                  <Input id="weight" name="weight" type="number" step="0.5" defaultValue={editingOrder.weight ?? 2} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="manualCodAmount">COD Amount (Manual Override)</Label>
-                  <Input id="manualCodAmount" name="manualCodAmount" type="number" placeholder="Leave blank for automatic total" defaultValue={editingOrder.manualCodAmount ?? ''} />
-                  <p className="text-[10px] text-muted-foreground mt-1">If blank, COD will be {formatPrice(editingOrder.totalAmount || 0)}</p>
-                </div>
+              <Separator />
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="itemType" className="text-[12px]">Item Type</FieldLabel>
+                    <Input id="itemType" name="itemType" className="h-8 text-[13px]" defaultValue={editingOrder.itemType || 'Mix'} />
+                  </Field>
+                </FieldGroup>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="orderQuantity" className="text-[12px]">Quantity</FieldLabel>
+                    <Input id="orderQuantity" name="orderQuantity" type="number" className="h-8 text-[13px]" defaultValue={editingOrder.orderQuantity || 1} />
+                  </Field>
+                </FieldGroup>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="weight" className="text-[12px]">Weight (kg)</FieldLabel>
+                    <Input id="weight" name="weight" type="number" step="0.5" className="h-8 text-[13px]" defaultValue={editingOrder.weight ?? 2} />
+                  </Field>
+                </FieldGroup>
+                <FieldGroup className="md:col-span-2">
+                  <Field>
+                    <FieldLabel htmlFor="manualCodAmount" className="text-[12px]">COD Amount (Override)</FieldLabel>
+                    <Input id="manualCodAmount" name="manualCodAmount" type="number" className="h-8 text-[13px]" placeholder="Blank = auto" defaultValue={editingOrder.manualCodAmount ?? ''} />
+                    <FieldDescription className="text-[10px]">
+                      If blank, COD = {formatPrice(editingOrder.totalAmount || 0)}
+                    </FieldDescription>
+                  </Field>
+                </FieldGroup>
               </div>
 
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button type="button" variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isUpdating} className="min-w-[120px]">
-                  {isUpdating ? <Loader2 className="mr-2 size-4 animate-spin" /> : 'Save Changes'}
+              <DialogFooter className="gap-1.5 sm:gap-0">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)} className="h-8 text-[12px]">Cancel</Button>
+                <Button type="submit" size="sm" disabled={isUpdating} className="h-8 min-w-[100px] text-[12px]">
+                  {isUpdating ? <Spinner data-icon="inline-start" /> : null}
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>
             </form>
@@ -1064,10 +1007,10 @@ export default function AdminOrdersClient({
         </DialogContent>
       </Dialog>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col gap-3 px-2 py-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-2 px-1 py-2">
+          <p className="text-[12px] text-muted-foreground">
             Showing <span className="font-medium text-foreground">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
             <span className="font-medium text-foreground">
               {Math.min(currentPage * ITEMS_PER_PAGE, total)}
@@ -1082,5 +1025,52 @@ export default function AdminOrdersClient({
         </div>
       )}
     </div>
+  );
+}
+
+/* ── Quick Update Form (shared between mobile popover & desktop dialog) ── */
+function QuickUpdateForm({ quickStatus, setQuickStatus, quickTracking, setQuickTracking, editingOrder, setEditingOrder, isQuickUpdating, onSubmit }) {
+  return (
+    <FieldGroup>
+      <Field>
+        <FieldLabel className="text-[11px]">Status</FieldLabel>
+        <Select value={quickStatus} onValueChange={setQuickStatus}>
+          <SelectTrigger className="h-8 text-[12px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {Object.keys(statusVariant).map(s => <SelectItem key={s} value={s} className="text-[12px]">{s}</SelectItem>)}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field>
+        <FieldLabel className="text-[11px]">Tracking ID</FieldLabel>
+        <Input 
+          className="h-8 text-[12px]" 
+          value={quickTracking} 
+          onChange={(e) => setQuickTracking(e.target.value)} 
+          placeholder="Enter Tracking ID"
+        />
+      </Field>
+      <Field>
+        <FieldLabel className="text-[11px]">Courier</FieldLabel>
+        <Input 
+          className="h-8 text-[12px]" 
+          value={editingOrder?.courierName || ''} 
+          onChange={(e) => setEditingOrder({ ...editingOrder, courierName: e.target.value })} 
+          placeholder="e.g. Trax, Leopard, PostEx"
+        />
+      </Field>
+      <Button 
+        className="h-8 w-full text-[12px]" 
+        disabled={isQuickUpdating} 
+        onClick={onSubmit}
+      >
+        {isQuickUpdating ? <Spinner data-icon="inline-start" /> : null}
+        {isQuickUpdating ? 'Updating...' : 'Update Order'}
+      </Button>
+    </FieldGroup>
   );
 }

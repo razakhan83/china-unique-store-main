@@ -15,11 +15,9 @@ export default function NotFound() {
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
       </div>
-      <Button asChild>
-        <Link href="/" className="gap-2">
+      <Button render={<Link href="/" />} className="gap-2">
           <Home className="size-4" />
           Back to Home
-        </Link>
       </Button>
     </div>
   );
