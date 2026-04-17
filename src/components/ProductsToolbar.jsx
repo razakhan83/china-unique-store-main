@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { ArrowDownWideNarrow, Search } from 'lucide-react';
+import { ArrowDownWideNarrow, Loader2, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ export default function ProductsToolbar({
   const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(initialSearch);
   const [sortValue, setSortValue] = useState(initialSort || defaultSortValue);
+  const [pendingAction, setPendingAction] = useState('apply');
 
   useEffect(() => {
     setSearchValue(initialSearch);
@@ -26,6 +27,10 @@ export default function ProductsToolbar({
   useEffect(() => {
     setSortValue(initialSort || defaultSortValue);
   }, [initialSort]);
+
+  useEffect(() => {
+    setPendingAction('apply');
+  }, [initialSearch, initialSort, activeCategory]);
 
   const sortOptions = [
     { value: defaultSortValue, label: 'Newest First' },
@@ -59,15 +64,16 @@ export default function ProductsToolbar({
     });
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event, action = 'apply') {
     event.preventDefault();
+    setPendingAction(action);
     navigateWithFilters();
   }
 
   return (
     <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-4">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={(event) => handleSubmit(event, pendingAction)}
         className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-card/70 p-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur lg:flex-row lg:items-center"
       >
         <div className="min-w-0 flex-1">
@@ -84,8 +90,17 @@ export default function ProductsToolbar({
               placeholder="Search products"
               className="h-11 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm text-foreground outline-none placeholder:text-muted-foreground/75"
             />
-            <Button type="submit" size="sm" className="h-8 rounded-lg px-3 text-sm" disabled={isPending}>
-              {isPending ? 'Updating...' : 'Search'}
+            <Button
+              type="submit"
+              size="sm"
+              onClick={() => setPendingAction('search')}
+              className="h-7 rounded-md px-2.5 text-xs font-semibold shadow-none transition-transform active:scale-[0.97]"
+              disabled={isPending}
+            >
+              {isPending && pendingAction === 'search' ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : null}
+              {isPending && pendingAction === 'search' ? 'Loading...' : 'Search'}
             </Button>
           </div>
         </div>
@@ -110,8 +125,17 @@ export default function ProductsToolbar({
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" variant="outline" className="h-11 rounded-xl px-4" disabled={isPending}>
-            {isPending ? 'Applying...' : 'Apply'}
+          <Button
+            type="submit"
+            variant="default"
+            onClick={() => setPendingAction('apply')}
+            className="h-9 rounded-lg px-3 text-xs font-semibold shadow-none transition-transform active:scale-[0.97]"
+            disabled={isPending}
+          >
+            {isPending && pendingAction === 'apply' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : null}
+            {isPending && pendingAction === 'apply' ? 'Loading...' : 'Apply'}
           </Button>
         </div>
       </form>

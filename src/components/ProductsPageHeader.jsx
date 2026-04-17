@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { Search, Sparkles, Tag } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, Search, Sparkles, Tag } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -15,19 +15,19 @@ import {
 import { cn } from "@/lib/utils";
 
 const categoryPillClassName =
-  "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-[color,background-color,border-color,box-shadow] outline-none";
+  "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,transform] outline-none active:scale-[0.97]";
 
 function getCategoryPillClassName(isActive) {
   if (isActive) {
       return cn(
       categoryPillClassName,
-      "border-primary/18 bg-primary/10 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.32)] hover:bg-primary/12"
+      "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/92"
     );
   }
 
   return cn(
     categoryPillClassName,
-    "border-transparent bg-transparent text-muted-foreground hover:border-border/60 hover:bg-card hover:text-foreground"
+    "border-border/70 bg-card text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:border-primary/30 hover:bg-accent"
   );
 }
 
@@ -61,7 +61,10 @@ export default function ProductsPageHeader({
   searchTerm = "",
   sort = "newest",
 }) {
+  const router = useRouter();
   const categoryNavRef = useRef(null);
+  const [isPending, startTransition] = useTransition();
+  const [pendingCategoryId, setPendingCategoryId] = useState(null);
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search},
     { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
@@ -70,6 +73,7 @@ export default function ProductsPageHeader({
       .filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals')
       .map(c => ({ ...c, icon: Tag })),
   ];
+  const effectiveActiveCategory = pendingCategoryId ?? activeCategory;
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);
 
   useEffect(() => {
@@ -85,14 +89,23 @@ export default function ProductsPageHeader({
     });
   }, [activeCategory]);
 
-  function handleCategoryClick(event) {
+  function centerCategoryPill(target) {
     const nav = categoryNavRef.current;
-    const link = event.currentTarget;
-    if (!nav || !(link instanceof HTMLElement)) return;
+    if (!nav || !(target instanceof HTMLElement)) return;
 
     nav.scrollTo({
-      left: link.offsetLeft - nav.clientWidth / 2 + link.clientWidth / 2,
+      left: target.offsetLeft - nav.clientWidth / 2 + target.clientWidth / 2,
       behavior: "smooth",
+    });
+  }
+
+  function handleCategoryClick(categoryId, href, event) {
+    const target = event.currentTarget;
+    centerCategoryPill(target);
+    setPendingCategoryId(categoryId);
+
+    startTransition(() => {
+      router.push(href, { scroll: false });
     });
   }
 
@@ -106,19 +119,30 @@ export default function ProductsPageHeader({
           >
             {categoryButtons.map((category) => {
               const Icon = category.icon;
-              const isActive = activeCategory === category.id;
+              const isActive = effectiveActiveCategory === category.id;
+              const isLoading = isPending && pendingCategoryId === category.id;
+              const href = buildCategoryHref(category.id, searchTerm, sort);
               return (
-                <Link
+                <button
                   key={category.id}
-                  href={buildCategoryHref(category.id, searchTerm, sort)}
-                  scroll={false}
+                  type="button"
                   data-active={isActive}
-                  onClick={handleCategoryClick}
-                  className={cn(getCategoryPillClassName(isActive), "shrink-0 select-none")}
+                  aria-pressed={isActive}
+                  disabled={isLoading}
+                  onClick={(event) => handleCategoryClick(category.id, href, event)}
+                  className={cn(
+                    getCategoryPillClassName(isActive),
+                    "shrink-0 select-none",
+                    !isActive && "active:border-primary/28 active:bg-accent"
+                  )}
                 >
-                  {Icon ? <Icon className="size-4" aria-hidden="true" /> : null}
+                  {isLoading ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : Icon ? (
+                    <Icon className="size-4" aria-hidden="true" />
+                  ) : null}
                   {category.label}
-                </Link>
+                </button>
               );
             })}
           </div>
