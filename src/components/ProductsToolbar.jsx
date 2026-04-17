@@ -1,68 +1,14 @@
-'use client';
-
-import { startTransition, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowDownWideNarrow } from 'lucide-react';
 
-import { useProductsNavigationFeedback } from '@/components/ProductsNavigationFeedback';
-import SearchField from '@/components/SearchField';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { trackSearchEvent } from '@/lib/clientTracking';
+import { Button } from '@/components/ui/button';
 
-export default function ProductsToolbar({ initialSearch = '', initialSort = 'newest' }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { setManualPending } = useProductsNavigationFeedback();
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [isFocused, setIsFocused] = useState(false);
-  const [sortBy, setSortBy] = useState(initialSort);
-
-  useEffect(() => {
-    setSearchTerm(initialSearch);
-  }, [initialSearch]);
-
-  useEffect(() => {
-    setSortBy(initialSort);
-  }, [initialSort]);
-
-  useEffect(() => {
-    setManualPending(false);
-  }, [pathname, searchParams, setManualPending]);
-
-  function buildHref(nextValues = {}) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    Object.entries(nextValues).forEach(([key, value]) => {
-      const normalized = String(value ?? '').trim();
-      if (!normalized || normalized === 'all' || (key === 'sort' && normalized === 'newest')) {
-        params.delete(key);
-      } else {
-        params.set(key, normalized);
-      }
-    });
-
-    params.delete('page');
-    const query = params.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }
-
-  function navigate(nextHref) {
-    const currentQuery = searchParams.toString();
-    const currentHref = currentQuery ? `${pathname}?${currentQuery}` : pathname;
-    if (nextHref === currentHref) {
-      setManualPending(false);
-      return;
-    }
-
-    setManualPending(true);
-    startTransition(() => {
-      router.push(nextHref, { scroll: false });
-    });
-  }
-
+export default function ProductsToolbar({
+  initialSearch = '',
+  initialSort = 'newest',
+  activeCategory = 'all',
+}) {
   const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
+    { value: '', label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low to High' },
     { value: 'price-high', label: 'Price: High to Low' },
     { value: 'az', label: 'Name: A to Z' },
@@ -71,53 +17,54 @@ export default function ProductsToolbar({ initialSearch = '', initialSort = 'new
 
   return (
     <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <form action="/products" className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        {activeCategory && activeCategory !== 'all' ? (
+          <input type="hidden" name="category" value={activeCategory} />
+        ) : null}
+
         <div className="min-w-0 flex-1">
-          <SearchField
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            onSubmit={(event) => {
-              event.preventDefault();
-              setIsFocused(false);
-              if (searchTerm.trim()) {
-                trackSearchEvent({ searchString: searchTerm.trim() });
-              }
-              navigate(buildHref({ search: searchTerm }));
-            }}
-            onClear={() => {
-              setSearchTerm('');
-              setIsFocused(false);
-              navigate(buildHref({ search: '' }));
-            }}
-            onFocus={() => setIsFocused(true)}
-            isFocused={isFocused}
-            suggestions={[]}
-            showSuggestions={false}
-          />
+          <label htmlFor="products-search" className="sr-only">
+            Search products
+          </label>
+          <div className="flex min-h-12 items-center gap-2 rounded-xl border border-border/70 bg-card/95 px-3">
+            <input
+              id="products-search"
+              name="search"
+              type="search"
+              defaultValue={initialSearch}
+              placeholder="Search for premium products"
+              className="h-12 min-w-0 flex-1 border-0 bg-transparent px-1 text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
+            />
+            <Button type="submit" size="sm" className="h-9 rounded-xl px-3.5 text-sm">
+              Search
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 lg:w-64">
-          <Select
-            value={sortBy}
-            onValueChange={(value) => {
-              setSortBy(value);
-              navigate(buildHref({ sort: value }));
-            }}
+        <div className="flex items-center gap-2 lg:w-72">
+          <label
+            htmlFor="products-sort"
+            className="flex h-12 shrink-0 items-center rounded-xl border border-border/70 bg-card/95 px-3 text-muted-foreground"
           >
-            <SelectTrigger className="h-12 rounded-xl border-border/70 bg-card/95 px-4 text-sm font-medium transition-none hover:bg-card/95 focus:border-border/70 focus:ring-0">
-              <ArrowDownWideNarrow className="size-4 text-muted-foreground" />
-              <SelectValue placeholder="Sort products" />
-            </SelectTrigger>
-            <SelectContent>
-              {sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ArrowDownWideNarrow className="size-4" />
+          </label>
+          <select
+            id="products-sort"
+            name="sort"
+            defaultValue={initialSort === 'newest' ? '' : initialSort}
+            className="h-12 w-full rounded-xl border border-border/70 bg-card/95 px-4 text-sm font-medium text-foreground outline-none"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.label} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <Button type="submit" variant="outline" className="h-12 rounded-xl px-4">
+            Apply
+          </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

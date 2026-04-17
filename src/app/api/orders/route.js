@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { revalidateTag, updateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -9,8 +9,17 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { Resend } from 'resend';
 import { generateOrderEmailHtml, getEmailBranding } from '@/lib/emailTemplates';
+import { applyInventoryAdjustments, buildOrderItemsWithSourcing } from '@/lib/orderFulfillment';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function readJsonSafely(request) {
+    try {
+        return await request.json();
+    } catch {
+        return null;
+    }
+}
 
 async function sendOrderNotificationEmail({ order, customerName }) {
     try {
@@ -54,7 +63,13 @@ export async function POST(req) {
     try {
         await mongooseConnect();
 
-        const body = await req.json();
+        const body = await readJsonSafely(req);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json(
+                { success: false, message: 'Invalid request body.' },
+                { status: 400 }
+            );
+        }
         const { customerName, customerPhone, customerAddress, items, totalAmount, notes } = body;
 
         if (!customerName || !totalAmount || !items || items.length === 0) {
@@ -64,6 +79,8 @@ export async function POST(req) {
             );
         }
 
+        const normalizedItems = await buildOrderItemsWithSourcing(items);
+
         // Generate unique order ID: ORD-XXXXXX
         const orderId = `ORD-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
@@ -72,14 +89,17 @@ export async function POST(req) {
             customerName,
             customerPhone,
             customerAddress,
-            items,
+            items: normalizedItems,
             totalAmount,
             notes,
             status: 'Pending',
         });
 
-        updateTag('orders');
-        revalidateTag('admin-dashboard');
+        await applyInventoryAdjustments(normalizedItems);
+
+        revalidateTag('orders', 'max');
+        revalidateTag('admin-dashboard', 'max');
+        revalidateTag('products', 'max');
 
         after(() => sendOrderNotificationEmail({ order, customerName }));
 

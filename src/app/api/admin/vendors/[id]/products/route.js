@@ -8,6 +8,14 @@ import Vendor from '@/models/Vendor';
 import { normalizeProductImages } from '@/lib/productImages';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
 
+async function readJsonSafely(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 function buildVendorEntry(normalizedVendors, activeVendor, id) {
   return (
     normalizedVendors.find((vendor) => String(vendor.vendorId || '') === String(id)) ||
@@ -119,7 +127,10 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'Vendor not found.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await readJsonSafely(request);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Invalid request body.' }, { status: 400 });
+    }
     const productId = String(body?.productId || '').trim();
     if (!productId) {
       return NextResponse.json({ success: false, error: 'Product is required.' }, { status: 400 });
@@ -138,6 +149,10 @@ export async function POST(request, { params }) {
       vendorId: activeVendor._id,
       name: activeVendor.name,
       shopNumber: activeVendor.shopNumber || '',
+      phone: activeVendor.phone || '',
+      whatsappNumber: activeVendor.whatsappNumber || '',
+      email: activeVendor.email || '',
+      address: activeVendor.address || '',
       vendorProductName: String(body?.vendorProductName || '').trim(),
       vendorPrice:
         body?.vendorPrice === '' || body?.vendorPrice === null || body?.vendorPrice === undefined
@@ -179,7 +194,10 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: 'Vendor not found.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await readJsonSafely(request);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Invalid request body.' }, { status: 400 });
+    }
     const productId = String(body?.productId || '').trim();
     if (!productId) {
       return NextResponse.json({ success: false, error: 'Product is required.' }, { status: 400 });

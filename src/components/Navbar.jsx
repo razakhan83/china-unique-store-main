@@ -135,10 +135,10 @@ function NavbarContent({
   announcementBarText = '',
   announcementBarMessages = [],
 }) {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const { cartCount = 0 } = useCartItems() || {};
+  const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
   const { activeCategory = 'all', isSidebarOpen = false } = useCartUi() || {};
   const {
     setActiveCategory = () => {},
@@ -245,6 +245,7 @@ function NavbarContent({
   }
 
   function handleSearchToggle() {
+    setIsAuthModalOpen(false);
     setIsSidebarOpen(false);
     setIsAccountDrawerOpen(false);
     setIsSearchOpen((value) => {
@@ -257,12 +258,21 @@ function NavbarContent({
     });
   }
 
-  function handleWishlistClick() {
-    setIsSearchOpen(false);
-    setIsFocused(false);
-    setSuggestions([]);
-    setIsAccountDrawerOpen(false);
-    router.push('/wishlist');
+  function handleSearchOpenChange(open) {
+    const nextOpen = open === true;
+
+    if (nextOpen) {
+      setIsAuthModalOpen(false);
+      setIsSidebarOpen(false);
+      setIsAccountDrawerOpen(false);
+    }
+
+    setIsSearchOpen(nextOpen);
+
+    if (!nextOpen) {
+      setIsFocused(false);
+      setSuggestions([]);
+    }
   }
 
   function handleMobileNavigate(href) {
@@ -275,6 +285,7 @@ function NavbarContent({
 
   function handleAccountDrawerChange(open) {
     if (open) {
+      setIsAuthModalOpen(false);
       setIsSearchOpen(false);
       setIsFocused(false);
       setSuggestions([]);
@@ -320,6 +331,8 @@ function NavbarContent({
     { href: '/', label: 'Home', icon: Store },
     { href: '/products', label: 'All Products', icon: LayoutGrid },
   ];
+  const mobileMenuButtonClass =
+    'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground active:scale-[0.99]';
   const navActionButtonClass =
     'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-[transform,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:border-primary/18 hover:bg-background hover:text-foreground active:scale-[0.96]';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
@@ -431,14 +444,32 @@ function NavbarContent({
             <span className="relative flex size-5 items-center justify-center">
               <ShoppingBag className="size-[1.05rem]" />
             </span>
-            {cartCount > 0 ? (
+            {isCartInitialized ? (
+              cartCount > 0 ? (
+                <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                  {cartCount}
+                </span>
+              ) : null
+            ) : (
               <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
-                {cartCount}
+                <span className="h-2.5 w-2.5 rounded-full bg-primary-foreground/70" />
               </span>
-            ) : null}
+            )}
           </Button>
 
-          {session ? (
+          {sessionStatus === 'loading' ? (
+            <div className="hidden md:block">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
+                disabled
+                aria-label="Loading account"
+              >
+                <span className="size-9 rounded-full bg-muted/80" />
+              </Button>
+            </div>
+          ) : session ? (
             <div className="hidden md:block">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -573,6 +604,7 @@ function NavbarContent({
                           <SidebarMenuItem key={href}>
                             <SidebarMenuButton
                               isActive={pathname === href}
+                              className={mobileMenuButtonClass}
                               render={<Link href={href} onClick={() => setIsSidebarOpen(false)} />}
                             >
                               <Icon />
@@ -587,9 +619,9 @@ function NavbarContent({
                   <SidebarGroup className="gap-2 p-0">
                     <SidebarGroupLabel>Categories</SidebarGroupLabel>
                     <SidebarGroupContent>
-                      <Accordion className="w-full">
+                  <Accordion className="w-full">
                         <AccordionItem value="categories" className="border-none">
-                          <AccordionTrigger className="rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent">
+                          <AccordionTrigger className="rounded-xl px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent/35">
                             <div className="flex items-center gap-3">
                               <LayoutGrid className="size-4" />
                               <span>Shop by Category</span>
@@ -601,6 +633,7 @@ function NavbarContent({
                                 <SidebarMenuButton
                                   isActive={activeCategory === 'new-arrivals'}
                                   onClick={() => handleCategoryClick('new-arrivals')}
+                                  className={mobileMenuButtonClass}
                                 >
                                   <Sparkles />
                                   <span>New Arrivals</span>
@@ -610,6 +643,7 @@ function NavbarContent({
                                 <SidebarMenuButton
                                   isActive={activeCategory === 'special-offers'}
                                   onClick={() => handleCategoryClick('special-offers')}
+                                  className={mobileMenuButtonClass}
                                 >
                                   <Tag />
                                   <span>Special Offers</span>
@@ -620,6 +654,7 @@ function NavbarContent({
                                   <SidebarMenuButton
                                     isActive={activeCategory === category.id}
                                     onClick={() => handleCategoryClick(category.id)}
+                                    className={mobileMenuButtonClass}
                                   >
                                     <Tag />
                                     <span>{category.label}</span>
@@ -637,14 +672,14 @@ function NavbarContent({
 
                   <SidebarGroup className="gap-2 p-0">
                     <SidebarGroupLabel>Account</SidebarGroupLabel>
-                    <SidebarGroupContent className="space-y-1.5">
+                    <SidebarGroupContent className="flex flex-col gap-1">
                       <MyOrdersButton
                         isMobile
-                        className="min-h-10 rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        className={mobileMenuButtonClass}
                       />
                       <MyWishlistButton
                         isMobile
-                        className="min-h-10 rounded-xl bg-sidebar-accent/70 px-3.5 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        className={mobileMenuButtonClass}
                       />
                     </SidebarGroupContent>
                   </SidebarGroup>
@@ -672,6 +707,7 @@ function NavbarContent({
                           setIsSidebarOpen(false);
                           router.push('/settings');
                         }}
+                        className={mobileMenuButtonClass}
                       >
                         <Settings />
                         <span>Account Settings</span>
@@ -684,6 +720,7 @@ function NavbarContent({
                             setIsSidebarOpen(false);
                             router.push('/admin');
                           }}
+                          className={mobileMenuButtonClass}
                         >
                           <LayoutGrid />
                           <span>Admin Panel</span>
@@ -726,12 +763,15 @@ function NavbarContent({
       <MobileBottomNav
         pathname={pathname}
         isSearchOpen={isSearchOpen}
-        onSearchToggle={handleSearchToggle}
-        onWishlistClick={handleWishlistClick}
+        onSearchOpenChange={handleSearchOpenChange}
         accountOpen={isAccountDrawerOpen}
         onAccountOpenChange={handleAccountDrawerChange}
-        onAuthOpen={() => setIsAuthModalOpen(true)}
+        isAuthOpen={isAuthModalOpen}
+        onAuthOpenChange={setIsAuthModalOpen}
         onNavigate={handleMobileNavigate}
+        categories={categories}
+        activeCategory={activeCategory}
+        onCategorySelect={handleCategoryClick}
       />
     </div>
   );

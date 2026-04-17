@@ -39,6 +39,27 @@ const ProductVendorSchema = new mongoose.Schema(
             default: '',
             trim: true,
         },
+        phone: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        whatsappNumber: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        email: {
+            type: String,
+            default: '',
+            trim: true,
+            lowercase: true,
+        },
+        address: {
+            type: String,
+            default: '',
+            trim: true,
+        },
         vendorProductName: {
             type: String,
             default: '',
@@ -171,7 +192,11 @@ if (
     (
         !cachedProduct.schema.path('vendors') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorProductName') ||
-        !cachedProduct.schema.path('vendors').schema?.path('vendorPrice')
+        !cachedProduct.schema.path('vendors').schema?.path('vendorPrice') ||
+        !cachedProduct.schema.path('vendors').schema?.path('phone') ||
+        !cachedProduct.schema.path('vendors').schema?.path('whatsappNumber') ||
+        !cachedProduct.schema.path('vendors').schema?.path('email') ||
+        !cachedProduct.schema.path('vendors').schema?.path('address')
     )
 ) {
     delete mongoose.models.Product;

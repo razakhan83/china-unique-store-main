@@ -19,7 +19,11 @@ import {
 const ORDER_STATUSES = [
   'Pending',
   'Confirmed',
+  'Sourcing',
   'In Process',
+  'Packed',
+  'Shipped',
+  'Out for Delivery',
   'Delivered',
   'Delivery Address Issue',
   'Returned',

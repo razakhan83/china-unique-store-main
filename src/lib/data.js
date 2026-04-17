@@ -331,6 +331,12 @@ function toOrderSummaryRow(order) {
           ...item,
           _id: item._id?.toString(),
           productId: item.productId?.toString() || item.productId,
+          sourcingVendors: Array.isArray(item.sourcingVendors)
+            ? item.sourcingVendors.map((vendor) => ({
+                ...vendor,
+                vendorId: vendor?.vendorId?.toString?.() || vendor?.vendorId || '',
+              }))
+            : [],
         }))
       : [],
     createdAt: order.createdAt ? new Date(order.createdAt).toISOString() : null,
@@ -1455,11 +1461,15 @@ export async function getAdminOrdersPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, confirmedCount, inProcessCount, deliveredCount, returnedCount] = await Promise.all([
+  const [items, total, confirmedCount, sourcingCount, inProcessCount, packedCount, shippedCount, outForDeliveryCount, deliveredCount, returnedCount] = await Promise.all([
     Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
     Order.countDocuments({ status: { $in: ['Confirmed', 'Pending'] } }),
+    Order.countDocuments({ status: 'Sourcing' }),
     Order.countDocuments({ status: 'In Process' }),
+    Order.countDocuments({ status: 'Packed' }),
+    Order.countDocuments({ status: 'Shipped' }),
+    Order.countDocuments({ status: 'Out for Delivery' }),
     Order.countDocuments({ status: 'Delivered' }),
     Order.countDocuments({ status: 'Returned' }),
   ]);
@@ -1477,10 +1487,14 @@ export async function getAdminOrdersPage({
     endDate: safeEndDate,
     summary: {
       confirmedCount,
+      sourcingCount,
       inProcessCount,
+      packedCount,
+      shippedCount,
+      outForDeliveryCount,
       deliveredCount,
       returnedCount,
-      allCount: confirmedCount + inProcessCount + deliveredCount + returnedCount,
+      allCount: confirmedCount + sourcingCount + inProcessCount + packedCount + shippedCount + outForDeliveryCount + deliveredCount + returnedCount,
     },
   };
 }
@@ -1728,7 +1742,10 @@ export async function getOrderById(id) {
   const normalizedOrder = toOrderSummaryRow(order);
   normalizedOrder.items = normalizedOrder.items.map((item) => ({
     ...item,
-    sourcingVendors: productLookup.get(String(item.productId || '').trim()) || [],
+    sourcingVendors:
+      Array.isArray(item.sourcingVendors) && item.sourcingVendors.length > 0
+        ? item.sourcingVendors
+        : productLookup.get(String(item.productId || '').trim()) || [],
   }));
 
   return normalizedOrder;

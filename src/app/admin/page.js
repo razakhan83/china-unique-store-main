@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Store, Users } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { getAdminDashboardData } from '@/lib/data';
@@ -12,6 +11,13 @@ const statsConfig = [
   { title: 'Total Products', icon: Box, key: 'totalProducts' },
   { title: 'Customers', icon: Users, key: 'totalCustomers' },
 ];
+
+function formatAdminTimestamp(value) {
+  return new Intl.DateTimeFormat('en-PK', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
+}
 
 const quickActions = [
   {
@@ -184,7 +190,7 @@ async function DashboardContent() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-foreground tabular-nums">Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
-                        <p className="mt-1 text-[11px] text-muted-foreground">{formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{formatAdminTimestamp(order.createdAt)}</p>
                       </div>
                     </div>
                   </div>

@@ -55,6 +55,10 @@ function SettingSection({ icon: Icon, title, description, children }) {
 const emptyVendorForm = {
   name: '',
   shopNumber: '',
+  phone: '',
+  whatsappNumber: '',
+  email: '',
+  address: '',
 };
 
 export default function AdminVendorsSection() {
@@ -283,6 +287,10 @@ export default function AdminVendorsSection() {
     const payload = {
       name: vendorForm.name.trim(),
       shopNumber: vendorForm.shopNumber.trim(),
+      phone: vendorForm.phone.trim(),
+      whatsappNumber: vendorForm.whatsappNumber.trim(),
+      email: vendorForm.email.trim(),
+      address: vendorForm.address.trim(),
     };
 
     if (!payload.name) {
@@ -330,6 +338,10 @@ export default function AdminVendorsSection() {
     setVendorForm({
       name: vendor.name || '',
       shopNumber: vendor.shopNumber || '',
+      phone: vendor.phone || '',
+      whatsappNumber: vendor.whatsappNumber || '',
+      email: vendor.email || '',
+      address: vendor.address || '',
     });
     setIsVendorDialogOpen(true);
   }
@@ -546,6 +558,7 @@ export default function AdminVendorsSection() {
                       <span className="truncate font-medium">{vendor.name}</span>
                       <span className="mt-1 text-xs text-muted-foreground">
                         {vendor.shopNumber ? `Shop ${vendor.shopNumber}` : 'Shop number not added'}
+                        {vendor.whatsappNumber ? ` • WhatsApp ${vendor.whatsappNumber}` : vendor.phone ? ` • Phone ${vendor.phone}` : ''}
                       </span>
                     </button>
 
@@ -984,6 +997,54 @@ export default function AdminVendorsSection() {
                     placeholder="e.g. G-12"
                   />
                   <FieldDescription>Optional. Add the market shop number for quicker order fulfillment.</FieldDescription>
+                </FieldContent>
+              </Field>
+
+              <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel>Phone Number</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      value={vendorForm.phone}
+                      onChange={(event) => updateVendorForm('phone', event.target.value)}
+                      placeholder="e.g. 0300 1234567"
+                    />
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel>WhatsApp Number</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      value={vendorForm.whatsappNumber}
+                      onChange={(event) => updateVendorForm('whatsappNumber', event.target.value)}
+                      placeholder="e.g. 923001234567"
+                    />
+                  </FieldContent>
+                </Field>
+              </FieldGroup>
+
+              <Field>
+                <FieldLabel>Email Address</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="email"
+                    value={vendorForm.email}
+                    onChange={(event) => updateVendorForm('email', event.target.value)}
+                    placeholder="vendor@example.com"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Vendor Address</FieldLabel>
+                <FieldContent>
+                  <Input
+                    value={vendorForm.address}
+                    onChange={(event) => updateVendorForm('address', event.target.value)}
+                    placeholder="Market, floor, lane, or stall details"
+                  />
+                  <FieldDescription>Optional contact details that help your team source items faster.</FieldDescription>
                 </FieldContent>
               </Field>
             </FieldGroup>

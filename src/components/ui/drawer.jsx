@@ -47,11 +47,13 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  overlayClassName,
+  overlayStyle,
   ...props
 }) {
   return (
     <DrawerPortal data-slot="drawer-portal">
-      <DrawerOverlay />
+      <DrawerOverlay className={overlayClassName} style={overlayStyle} />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(

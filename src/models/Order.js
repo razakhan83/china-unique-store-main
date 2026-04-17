@@ -61,6 +61,19 @@ const OrderSchema = new mongoose.Schema(
                 quantity: { type: Number, default: 1 },
                 image: { type: String },
                 isReviewed: { type: Boolean, default: false },
+                sourcingVendors: [
+                    {
+                        vendorId: { type: String, default: '' },
+                        name: { type: String, default: '' },
+                        shopNumber: { type: String, default: '' },
+                        phone: { type: String, default: '' },
+                        whatsappNumber: { type: String, default: '' },
+                        email: { type: String, default: '' },
+                        address: { type: String, default: '' },
+                        vendorProductName: { type: String, default: '' },
+                        vendorPrice: { type: Number, default: null },
+                    },
+                ],
             },
         ],
         totalAmount: {
@@ -69,7 +82,7 @@ const OrderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['Pending', 'Confirmed', 'In Process', 'Delivery Address Issue', 'Delivered', 'Returned'],
+            enum: ['Pending', 'Confirmed', 'Sourcing', 'In Process', 'Packed', 'Shipped', 'Out for Delivery', 'Delivery Address Issue', 'Delivered', 'Returned'],
             default: 'Confirmed',
         },
         courierName: {
@@ -107,13 +120,18 @@ if (cachedOrder) {
     const hasStatusInProcess = cachedOrder.schema.path('status').options.enum.includes('In Process');
     const hasPendingStatus = cachedOrder.schema.path('status').options.enum.includes('Pending');
     const hasDeliveryAddressIssueStatus = cachedOrder.schema.path('status').options.enum.includes('Delivery Address Issue');
+    const hasSourcingStatus = cachedOrder.schema.path('status').options.enum.includes('Sourcing');
+    const hasPackedStatus = cachedOrder.schema.path('status').options.enum.includes('Packed');
+    const hasShippedStatus = cachedOrder.schema.path('status').options.enum.includes('Shipped');
+    const hasOutForDeliveryStatus = cachedOrder.schema.path('status').options.enum.includes('Out for Delivery');
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
     const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
+    const hasSourcingVendors = !!cachedOrder.schema.path('items').schema.paths.sourcingVendors;
     const hasWeight = !!cachedOrder.schema.paths.weight;
     const hasItemType = !!cachedOrder.schema.paths.itemType;
     const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
     
-    if (!hasStatusInProcess || !hasPendingStatus || !hasDeliveryAddressIssueStatus || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType || !hasSecureToken) {
+    if (!hasStatusInProcess || !hasPendingStatus || !hasDeliveryAddressIssueStatus || !hasSourcingStatus || !hasPackedStatus || !hasShippedStatus || !hasOutForDeliveryStatus || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken) {
         delete mongoose.models.Order;
     }
 }

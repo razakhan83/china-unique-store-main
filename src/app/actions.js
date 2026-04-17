@@ -7,6 +7,7 @@ import { after } from 'next/server';
 import { getConfiguredAdminEmails, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
+import { applyInventoryAdjustments, buildOrderItemsWithSourcing } from '@/lib/orderFulfillment';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -250,13 +251,7 @@ export async function submitOrderAction(input) {
     throw new Error('Missing required checkout details');
   }
 
-  const normalizedItems = items.map((item) => ({
-    productId: String(item.productId || item.id || item.slug || ''),
-    name: String(item.name || item.Name || ''),
-    price: Number(item.price || item.Price || 0),
-    quantity: Math.max(1, Number(item.quantity || 1)),
-    image: String(item.image || item.imageUrl || ''),
-  }));
+  const normalizedItems = await buildOrderItemsWithSourcing(items);
 
   const session = await getServerSession(authOptions);
   
@@ -286,8 +281,11 @@ export async function submitOrderAction(input) {
     notes,
   });
 
+  await applyInventoryAdjustments(normalizedItems);
+
   revalidateTag('orders');
   revalidateTag('admin-dashboard');
+  revalidateTag('products');
 
   // Update User Profile (Background)
   if (userEmail) {

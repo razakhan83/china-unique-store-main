@@ -14,6 +14,10 @@ export function serializeVendor(vendor) {
     id: vendor._id?.toString?.() || '',
     name: toTrimmedString(vendor.name),
     shopNumber: toTrimmedString(vendor.shopNumber),
+    phone: toTrimmedString(vendor.phone),
+    whatsappNumber: toTrimmedString(vendor.whatsappNumber),
+    email: toTrimmedString(vendor.email),
+    address: toTrimmedString(vendor.address),
     createdAt: vendor.createdAt ? new Date(vendor.createdAt).toISOString() : null,
     updatedAt: vendor.updatedAt ? new Date(vendor.updatedAt).toISOString() : null,
   };
@@ -33,6 +37,10 @@ export function normalizeVendorSnapshot(entry) {
     vendorId,
     name,
     shopNumber: toTrimmedString(entry.shopNumber),
+    phone: toTrimmedString(entry.phone),
+    whatsappNumber: toTrimmedString(entry.whatsappNumber),
+    email: toTrimmedString(entry.email),
+    address: toTrimmedString(entry.address),
     vendorProductName: toTrimmedString(entry.vendorProductName),
     vendorPrice:
       entry.vendorPrice === '' || entry.vendorPrice === null || entry.vendorPrice === undefined
@@ -55,6 +63,10 @@ export async function buildProductVendorSnapshots(input = []) {
       if (entry && typeof entry === 'object') {
         return {
           vendorId: toTrimmedString(entry.vendorId || entry._id || entry.id),
+          phone: toTrimmedString(entry.phone),
+          whatsappNumber: toTrimmedString(entry.whatsappNumber),
+          email: toTrimmedString(entry.email),
+          address: toTrimmedString(entry.address),
           vendorProductName: toTrimmedString(entry.vendorProductName),
           vendorPrice:
             entry.vendorPrice === '' || entry.vendorPrice === null || entry.vendorPrice === undefined
@@ -74,7 +86,7 @@ export async function buildProductVendorSnapshots(input = []) {
     return [];
   }
 
-  const vendors = await Vendor.find({ _id: { $in: requestedIds } }, 'name shopNumber').lean();
+  const vendors = await Vendor.find({ _id: { $in: requestedIds } }, 'name shopNumber phone whatsappNumber email address').lean();
   const vendorMap = new Map(vendors.map((vendor) => [vendor._id.toString(), vendor]));
   const entryMap = new Map(rawEntries.map((entry) => [entry.vendorId, entry]));
 
@@ -88,6 +100,10 @@ export async function buildProductVendorSnapshots(input = []) {
         vendorId: vendor._id,
         name: toTrimmedString(vendor.name),
         shopNumber: toTrimmedString(vendor.shopNumber),
+        phone: toTrimmedString(vendor.phone),
+        whatsappNumber: toTrimmedString(vendor.whatsappNumber),
+        email: toTrimmedString(vendor.email),
+        address: toTrimmedString(vendor.address),
         vendorProductName: toTrimmedString(rawEntry?.vendorProductName),
         vendorPrice:
           rawEntry?.vendorPrice === null || rawEntry?.vendorPrice === undefined

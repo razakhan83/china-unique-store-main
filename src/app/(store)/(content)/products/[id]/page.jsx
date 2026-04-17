@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { cache, Suspense } from 'react';
 import { BadgeCheck, PackageCheck, Truck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
@@ -131,9 +131,12 @@ async function getProductPageData(slug) {
   };
 }
 
+const getCachedProductPageData = cache(async (slug) => getProductPageData(slug));
+const getCachedProductBySlug = cache(async (slug) => getProductBySlug(slug));
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const product = await getProductBySlug(id);
+  const product = await getCachedProductBySlug(id);
 
   if (!product) {
     return {
@@ -206,7 +209,7 @@ export default function ProductPage({ params }) {
         </Suspense>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+9rem)] pt-3 md:pb-8 md:pt-5">
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-3 md:pb-8 md:pt-5">
         <Suspense fallback={<ProductHeroSkeleton />}>
           <ProductHeroSection slugPromise={slugPromise} />
         </Suspense>
@@ -227,9 +230,9 @@ export default function ProductPage({ params }) {
 
 async function ProductBreadcrumb({ slugPromise }) {
   const slug = await slugPromise;
-  const product = await getProductBySlug(slug);
+  const pageData = await getCachedProductPageData(slug);
 
-  if (!product) {
+  if (!pageData?.product) {
     notFound();
   }
 
@@ -245,7 +248,7 @@ async function ProductBreadcrumb({ slugPromise }) {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>{product.Name}</BreadcrumbPage>
+          <BreadcrumbPage>{pageData.product.Name}</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -254,7 +257,7 @@ async function ProductBreadcrumb({ slugPromise }) {
 
 async function ProductHeroSection({ slugPromise }) {
   const slug = await slugPromise;
-  const pageData = await getProductPageData(slug);
+  const pageData = await getCachedProductPageData(slug);
 
   if (!pageData) {
     notFound();
@@ -391,22 +394,24 @@ async function ProductHeroSection({ slugPromise }) {
 
 async function ProductReviewsSection({ slugPromise }) {
   const slug = await slugPromise;
-  const product = await getProductBySlug(slug);
+  const pageData = await getCachedProductPageData(slug);
 
-  if (!product) {
+  if (!pageData?.product) {
     notFound();
   }
 
-  return <ProductReviews productId={product._id} productName={product.Name} />;
+  return <ProductReviews productId={pageData.product._id} productName={pageData.product.Name} />;
 }
 
 async function RelatedProductsSection({ slugPromise }) {
   const slug = await slugPromise;
-  const product = await getProductBySlug(slug);
+  const pageData = await getCachedProductPageData(slug);
 
-  if (!product) {
+  if (!pageData?.product) {
     notFound();
   }
+
+  const product = pageData.product;
 
   const primaryCategory = getProductCategories(product)[0];
   const categorySlug = primaryCategory?.id || '';

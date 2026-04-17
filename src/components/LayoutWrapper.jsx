@@ -44,7 +44,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
         <main className="flex-grow">{children}</main>
 
-        <footer className="mt-auto border-t border-border bg-primary pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-12 text-primary-foreground md:pb-6">
+        <footer className="mt-auto border-t border-border bg-primary pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-primary-foreground md:pb-6">
           <div className="container mx-auto max-w-7xl px-4">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div>

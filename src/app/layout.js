@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { cacheLife, cacheTag } from 'next/cache';
 import "./globals.css";
 import { getStoreSettings } from "@/lib/data";
 import TrackingScripts from "@/components/TrackingScripts";
@@ -45,23 +44,16 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  'use cache';
-  cacheLife('foreverish');
-  cacheTag('settings');
-
   const settings = await getStoreSettings();
 
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="en">
       <head>
         <meta name="google" content="notranslate" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <TrackingScripts
           enabled={settings.trackingEnabled === true}

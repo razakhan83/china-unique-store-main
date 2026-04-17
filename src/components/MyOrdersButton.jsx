@@ -34,7 +34,7 @@ export default function MyOrdersButton({ className, isMobile = false }) {
           variant="ghost"
           onClick={handleClick}
           className={cn(
-            'h-auto w-full justify-start rounded-xl bg-muted/60 px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted',
+            'h-auto w-full justify-start rounded-xl bg-transparent px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted',
             className
           )}
         >

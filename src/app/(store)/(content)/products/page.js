@@ -75,6 +75,7 @@ export default async function ProductsPage({ searchParams }) {
         <ProductsToolbar
           initialSearch={resolvedSearchParams.search || ''}
           initialSort={resolvedSearchParams.sort || 'newest'}
+          activeCategory={resolvedSearchParams.category || 'all'}
         />
         <section className="mx-auto max-w-7xl px-4 py-6">
           <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>

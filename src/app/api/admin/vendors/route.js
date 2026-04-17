@@ -7,6 +7,14 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Vendor from '@/models/Vendor';
 import { serializeVendor } from '@/lib/vendors';
 
+async function readJsonSafely(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -34,9 +42,16 @@ export async function POST(request) {
     }
     await mongooseConnect();
 
-    const body = await request.json();
+    const body = await readJsonSafely(request);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Invalid request body.' }, { status: 400 });
+    }
     const name = String(body?.name || '').trim();
     const shopNumber = String(body?.shopNumber || '').trim();
+    const phone = String(body?.phone || '').trim();
+    const whatsappNumber = String(body?.whatsappNumber || '').trim();
+    const email = String(body?.email || '').trim().toLowerCase();
+    const address = String(body?.address || '').trim();
 
     if (!name) {
       return NextResponse.json({ success: false, error: 'Vendor name is required.' }, { status: 400 });
@@ -47,7 +62,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'A vendor with this name already exists.' }, { status: 409 });
     }
 
-    const vendor = await Vendor.create({ name, shopNumber });
+    const vendor = await Vendor.create({ name, shopNumber, phone, whatsappNumber, email, address });
 
     revalidateTag('admin-dashboard');
     revalidatePath('/admin/settings');

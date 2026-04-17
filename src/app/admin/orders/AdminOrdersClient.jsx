@@ -31,7 +31,11 @@ import { toast } from 'sonner';
 
 const statusVariant = {
   Confirmed: 'primary',
+  Sourcing: 'secondary',
   'In Process': 'secondary',
+  Packed: 'secondary',
+  Shipped: 'secondary',
+  'Out for Delivery': 'secondary',
   Delivered: 'secondary',
   Returned: 'outline',
 };
@@ -453,7 +457,11 @@ export default function AdminOrdersClient({
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
         {[
           { id: 'Confirmed', label: `All Confirmed (${summary.confirmedCount})` },
+          { id: 'Sourcing', label: `Sourcing (${summary.sourcingCount || 0})` },
           { id: 'In Process', label: `In Progress (${summary.inProcessCount})` },
+          { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
+          { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
+          { id: 'Out for Delivery', label: `Out for Delivery (${summary.outForDeliveryCount || 0})` },
           { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
           { id: 'Returned', label: `Returned (${summary.returnedCount})` },
           { id: 'all', label: `All Orders (${summary.allCount})` },

@@ -14,7 +14,11 @@ import OrderDetailActions from './OrderDetailActions';
 const statusVariant = {
   Pending: 'accent',
   Confirmed: 'primary',
+  Sourcing: 'secondary',
   'In Process': 'secondary',
+  Packed: 'secondary',
+  Shipped: 'secondary',
+  'Out for Delivery': 'secondary',
   Delivered: 'secondary',
   'Delivery Address Issue': 'destructive',
   Returned: 'outline',

@@ -8,6 +8,14 @@ import Product from '@/models/Product';
 import Vendor from '@/models/Vendor';
 import { serializeVendor } from '@/lib/vendors';
 
+async function readJsonSafely(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,9 +25,16 @@ export async function PUT(request, { params }) {
     await mongooseConnect();
 
     const { id } = await params;
-    const body = await request.json();
+    const body = await readJsonSafely(request);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Invalid request body.' }, { status: 400 });
+    }
     const name = String(body?.name || '').trim();
     const shopNumber = String(body?.shopNumber || '').trim();
+    const phone = String(body?.phone || '').trim();
+    const whatsappNumber = String(body?.whatsappNumber || '').trim();
+    const email = String(body?.email || '').trim().toLowerCase();
+    const address = String(body?.address || '').trim();
 
     if (!name) {
       return NextResponse.json({ success: false, error: 'Vendor name is required.' }, { status: 400 });
@@ -40,6 +55,10 @@ export async function PUT(request, { params }) {
 
     vendor.name = name;
     vendor.shopNumber = shopNumber;
+    vendor.phone = phone;
+    vendor.whatsappNumber = whatsappNumber;
+    vendor.email = email;
+    vendor.address = address;
     await vendor.save();
 
     await Product.updateMany(
@@ -48,6 +67,10 @@ export async function PUT(request, { params }) {
         $set: {
           'vendors.$[entry].name': vendor.name,
           'vendors.$[entry].shopNumber': vendor.shopNumber,
+          'vendors.$[entry].phone': vendor.phone,
+          'vendors.$[entry].whatsappNumber': vendor.whatsappNumber,
+          'vendors.$[entry].email': vendor.email,
+          'vendors.$[entry].address': vendor.address,
         },
       },
       {

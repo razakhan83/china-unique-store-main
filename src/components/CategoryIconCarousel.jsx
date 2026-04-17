@@ -1,6 +1,5 @@
-"use client";
-
 import Image from "next/image";
+import Link from "next/link";
 import {
   Armchair,
   Beef,
@@ -16,7 +15,6 @@ import {
   Tag,
   UtensilsCrossed,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { getCategoryColor } from "@/lib/categoryColors";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
@@ -43,7 +41,6 @@ function getCategoryIcon(name) {
 }
 
 export default function CategoryIconCarousel({ categories }) {
-  const router = useRouter();
   const categoryCount = categories?.length ?? 0;
 
   if (!categoryCount) return null;
@@ -78,9 +75,9 @@ export default function CategoryIconCarousel({ categories }) {
                   key={`${category.id}-${index}`}
                   className="category-icon-carousel-item"
                 >
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/products?category=${category.id}`, { scroll: true })}
+                  <Link
+                    href={`/products?category=${category.id}`}
+                    scroll
                     className="flex w-full min-w-0 flex-col items-center gap-3 px-1 py-1 text-center"
                   >
                     <span
@@ -109,7 +106,7 @@ export default function CategoryIconCarousel({ categories }) {
                     <span className="line-clamp-2 min-h-10 max-w-[112px] text-sm font-medium leading-tight text-muted-foreground md:max-w-[132px]">
                       {category.label}
                     </span>
-                  </button>
+                  </Link>
                 </div>
               );
             })}
