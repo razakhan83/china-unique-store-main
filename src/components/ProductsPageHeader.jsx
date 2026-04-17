@@ -1,7 +1,9 @@
+'use client';
+
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Sparkles, Tag } from "lucide-react";
 
-import { buttonVariants } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,19 +15,19 @@ import {
 import { cn } from "@/lib/utils";
 
 const categoryPillClassName =
-  "inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border px-3 text-sm font-medium shadow-xs transition-[color,box-shadow,background-color,border-color] outline-none";
+  "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-[color,background-color,border-color,box-shadow] outline-none";
 
 function getCategoryPillClassName(isActive) {
   if (isActive) {
-    return cn(
+      return cn(
       categoryPillClassName,
-      "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+      "border-primary/18 bg-primary/10 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.32)] hover:bg-primary/12"
     );
   }
 
   return cn(
     categoryPillClassName,
-    "border-border bg-background hover:bg-accent hover:text-accent-foreground"
+    "border-transparent bg-transparent text-muted-foreground hover:border-border/60 hover:bg-card hover:text-foreground"
   );
 }
 
@@ -59,6 +61,7 @@ export default function ProductsPageHeader({
   searchTerm = "",
   sort = "newest",
 }) {
+  const categoryNavRef = useRef(null);
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search},
     { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
@@ -69,12 +72,37 @@ export default function ProductsPageHeader({
   ];
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);
 
+  useEffect(() => {
+    const nav = categoryNavRef.current;
+    if (!nav) return;
+
+    const activePill = nav.querySelector("[data-active='true']");
+    if (!activePill) return;
+
+    nav.scrollTo({
+      left: activePill.offsetLeft - nav.clientWidth / 2 + activePill.clientWidth / 2,
+      behavior: "smooth",
+    });
+  }, [activeCategory]);
+
+  function handleCategoryClick(event) {
+    const nav = categoryNavRef.current;
+    const link = event.currentTarget;
+    if (!nav || !(link instanceof HTMLElement)) return;
+
+    nav.scrollTo({
+      left: link.offsetLeft - nav.clientWidth / 2 + link.clientWidth / 2,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <div>
-      <div className="products-page-bar fixed inset-x-0 top-24 z-30 border-y border-border/70 bg-card/95 backdrop-blur">
+      <div className="products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl">
         <div className="relative mx-auto max-w-7xl px-4">
           <div
-            className="relative flex gap-2 overflow-x-auto py-4 hide-scrollbar"
+            ref={categoryNavRef}
+            className="relative flex gap-1.5 overflow-x-auto py-3 hide-scrollbar"
           >
             {categoryButtons.map((category) => {
               const Icon = category.icon;
@@ -85,6 +113,7 @@ export default function ProductsPageHeader({
                   href={buildCategoryHref(category.id, searchTerm, sort)}
                   scroll={false}
                   data-active={isActive}
+                  onClick={handleCategoryClick}
                   className={cn(getCategoryPillClassName(isActive), "shrink-0 select-none")}
                 >
                   {Icon ? <Icon className="size-4" aria-hidden="true" /> : null}
@@ -96,10 +125,10 @@ export default function ProductsPageHeader({
         </div>
       </div>
 
-      <div className="h-22 md:h-24" aria-hidden="true" />
+      <div className="h-18 md:h-20" aria-hidden="true" />
 
-      <div className="container mx-auto mb-3 max-w-7xl px-4">
-        <Breadcrumb className="products-page-meta mb-3">
+      <div className="container mx-auto mb-2 max-w-7xl px-4 pt-3">
+        <Breadcrumb className="products-page-meta mb-2">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="/">Home</BreadcrumbLink>
@@ -110,7 +139,7 @@ export default function ProductsPageHeader({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <h1 className="products-page-heading text-3xl font-bold tracking-tight text-foreground [text-wrap:balance]">
+        <h1 className="products-page-heading text-[1.8rem] font-semibold tracking-tight text-foreground [text-wrap:balance] md:text-3xl">
           {pageTitle}
         </h1>
       </div>

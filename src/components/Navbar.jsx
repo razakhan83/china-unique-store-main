@@ -332,7 +332,7 @@ function NavbarContent({
     { href: '/products', label: 'All Products', icon: LayoutGrid },
   ];
   const mobileMenuButtonClass =
-    'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground active:scale-[0.99]';
+    'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground data-[active=true]:text-sidebar-primary-foreground active:scale-[0.99]';
   const navActionButtonClass =
     'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-[transform,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:border-primary/18 hover:bg-background hover:text-foreground active:scale-[0.96]';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
@@ -744,16 +744,13 @@ function NavbarContent({
                   </SidebarMenu>
                 </div>
               ) : (
-                <Button
-                  type="button"
+                <GoogleSignInButton
                   onClick={() => {
                     setIsSidebarOpen(false);
                     setIsAuthModalOpen(true);
                   }}
-                  className="min-h-10 w-full rounded-xl py-2.5"
-                >
-                  Sign in with Google
-                </Button>
+                  className="min-h-10 w-full rounded-xl py-2.5 shadow-none"
+                />
               )}
             </SidebarFooter>
           </Sidebar>

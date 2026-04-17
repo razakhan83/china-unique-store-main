@@ -1,32 +1,34 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { ArrowDownWideNarrow } from 'lucide-react';
+import { ArrowDownWideNarrow, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProductsToolbar({
   initialSearch = '',
   initialSort = 'newest',
   activeCategory = 'all',
 }) {
+  const defaultSortValue = 'newest';
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(initialSearch);
-  const [sortValue, setSortValue] = useState(initialSort === 'newest' ? '' : initialSort);
+  const [sortValue, setSortValue] = useState(initialSort || defaultSortValue);
 
   useEffect(() => {
     setSearchValue(initialSearch);
   }, [initialSearch]);
 
   useEffect(() => {
-    setSortValue(initialSort === 'newest' ? '' : initialSort);
+    setSortValue(initialSort || defaultSortValue);
   }, [initialSort]);
 
   const sortOptions = [
-    { value: '', label: 'Newest First' },
+    { value: defaultSortValue, label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low to High' },
     { value: 'price-high', label: 'Price: High to Low' },
     { value: 'az', label: 'Name: A to Z' },
@@ -45,7 +47,7 @@ export default function ProductsToolbar({
       params.set('search', trimmedSearch);
     }
 
-    if (sortValue) {
+    if (sortValue && sortValue !== defaultSortValue) {
       params.set('sort', sortValue);
     }
 
@@ -63,47 +65,52 @@ export default function ProductsToolbar({
   }
 
   return (
-    <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-5">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-4">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-card/70 p-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur lg:flex-row lg:items-center"
+      >
         <div className="min-w-0 flex-1">
           <label htmlFor="products-search" className="sr-only">
             Search products
           </label>
-          <div className="flex min-h-12 items-center gap-2 rounded-xl border border-border/70 bg-card/95 px-3">
+          <div className="flex min-h-11 items-center gap-2 rounded-xl bg-background/82 px-3">
+            <Search className="size-4 text-muted-foreground" />
             <input
               id="products-search"
               type="search"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search for premium products"
-              className="h-12 min-w-0 flex-1 border-0 bg-transparent px-1 text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
+              placeholder="Search products"
+              className="h-11 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm text-foreground outline-none placeholder:text-muted-foreground/75"
             />
-            <Button type="submit" size="sm" className="h-9 rounded-xl px-3.5 text-sm" disabled={isPending}>
+            <Button type="submit" size="sm" className="h-8 rounded-lg px-3 text-sm" disabled={isPending}>
               {isPending ? 'Updating...' : 'Search'}
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 lg:w-72">
-          <label
-            htmlFor="products-sort"
-            className="flex h-12 shrink-0 items-center rounded-xl border border-border/70 bg-card/95 px-3 text-muted-foreground"
-          >
-            <ArrowDownWideNarrow className="size-4" />
-          </label>
-          <select
-            id="products-sort"
-            value={sortValue}
-            onChange={(event) => setSortValue(event.target.value)}
-            className="h-12 w-full rounded-xl border border-border/70 bg-card/95 px-4 text-sm font-medium text-foreground outline-none"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <Button type="submit" variant="outline" className="h-12 rounded-xl px-4" disabled={isPending}>
+        <div className="flex items-center gap-2 lg:w-[18.5rem]">
+          <div className="flex h-11 w-full items-center gap-2 rounded-xl bg-background/82 px-3 text-muted-foreground">
+            <ArrowDownWideNarrow className="size-4 shrink-0" />
+            <Select value={sortValue} onValueChange={setSortValue}>
+              <SelectTrigger
+                id="products-sort"
+                aria-label="Sort products"
+                className="h-11 w-full border-0 bg-transparent px-0 text-sm font-medium text-foreground shadow-none ring-0 focus:ring-0 focus:ring-offset-0"
+              >
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent align="end" className="min-w-[13rem] rounded-xl border-border/60">
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.label} value={option.value} className="text-sm">
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" variant="outline" className="h-11 rounded-xl px-4" disabled={isPending}>
             {isPending ? 'Applying...' : 'Apply'}
           </Button>
         </div>
