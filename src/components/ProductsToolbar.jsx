@@ -94,7 +94,7 @@ export default function ProductsToolbar({
               type="submit"
               size="sm"
               onClick={() => setPendingAction('search')}
-              className="h-7 rounded-md px-2.5 text-xs font-semibold shadow-none transition-transform active:scale-[0.97]"
+              className="h-7 rounded-md px-2.5 text-xs font-semibold shadow-none transition-[transform,background-color] hover:bg-primary/90 active:scale-[0.97]"
               disabled={isPending}
             >
               {isPending && pendingAction === 'search' ? (
@@ -129,7 +129,7 @@ export default function ProductsToolbar({
             type="submit"
             variant="default"
             onClick={() => setPendingAction('apply')}
-            className="h-9 rounded-lg px-3 text-xs font-semibold shadow-none transition-transform active:scale-[0.97]"
+            className="h-9 rounded-lg px-3 text-xs font-semibold shadow-none transition-[transform,background-color] hover:bg-primary/90 active:scale-[0.97]"
             disabled={isPending}
           >
             {isPending && pendingAction === 'apply' ? (

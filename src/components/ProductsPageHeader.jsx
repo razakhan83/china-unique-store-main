@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search, Sparkles, Tag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Sparkles, Tag } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -27,7 +27,7 @@ function getCategoryPillClassName(isActive) {
 
   return cn(
     categoryPillClassName,
-    "border-border/70 bg-card text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:border-primary/30 hover:bg-accent"
+    "border-border/70 bg-card text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:border-border hover:bg-muted/70"
   );
 }
 
@@ -65,6 +65,8 @@ export default function ProductsPageHeader({
   const categoryNavRef = useRef(null);
   const [isPending, startTransition] = useTransition();
   const [pendingCategoryId, setPendingCategoryId] = useState(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search},
     { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
@@ -75,6 +77,26 @@ export default function ProductsPageHeader({
   ];
   const effectiveActiveCategory = pendingCategoryId ?? activeCategory;
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);
+
+  useEffect(() => {
+    const nav = categoryNavRef.current;
+    if (!nav) return;
+
+    const updateScrollState = () => {
+      const maxScrollLeft = nav.scrollWidth - nav.clientWidth;
+      setCanScrollPrev(nav.scrollLeft > 4);
+      setCanScrollNext(maxScrollLeft - nav.scrollLeft > 4);
+    };
+
+    updateScrollState();
+    nav.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      nav.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [categoryButtons.length]);
 
   useEffect(() => {
     const nav = categoryNavRef.current;
@@ -109,13 +131,45 @@ export default function ProductsPageHeader({
     });
   }
 
+  function scrollCategories(direction) {
+    const nav = categoryNavRef.current;
+    if (!nav) return;
+
+    nav.scrollBy({
+      left: direction === "left" ? -240 : 240,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <div>
       <div className="products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl">
         <div className="relative mx-auto max-w-7xl px-4">
+          <div className="pointer-events-none absolute inset-y-0 left-4 z-10 hidden items-center md:flex">
+            <button
+              type="button"
+              aria-label="Scroll categories left"
+              onClick={() => scrollCategories("left")}
+              disabled={!canScrollPrev}
+              className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/92 text-muted-foreground transition-[color,background-color,border-color,opacity] hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
+            >
+              <ChevronLeft className="size-3.5" />
+            </button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-4 z-10 hidden items-center md:flex">
+            <button
+              type="button"
+              aria-label="Scroll categories right"
+              onClick={() => scrollCategories("right")}
+              disabled={!canScrollNext}
+              className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/92 text-muted-foreground transition-[color,background-color,border-color,opacity] hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
+            >
+              <ChevronRight className="size-3.5" />
+            </button>
+          </div>
           <div
             ref={categoryNavRef}
-            className="relative flex gap-1.5 overflow-x-auto py-3 hide-scrollbar"
+            className="relative flex gap-1.5 overflow-x-auto py-3 hide-scrollbar md:px-8"
           >
             {categoryButtons.map((category) => {
               const Icon = category.icon;
@@ -133,7 +187,7 @@ export default function ProductsPageHeader({
                   className={cn(
                     getCategoryPillClassName(isActive),
                     "shrink-0 select-none",
-                    !isActive && "active:border-primary/28 active:bg-accent"
+                    !isActive && "active:border-border active:bg-muted/80"
                   )}
                 >
                   {isLoading ? (
