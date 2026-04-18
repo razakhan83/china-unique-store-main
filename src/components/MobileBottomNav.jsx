@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { ChevronRight, Heart, LayoutGrid, LogOut, Home, Search, Settings, ShoppingBag, Tag, User, UserPlus, X } from 'lucide-react';
+import { Heart, LogOut, Home, Search, Settings, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -121,12 +121,8 @@ export default function MobileBottomNav({
   isAuthOpen = false,
   onAuthOpenChange,
   onNavigate,
-  categories = [],
-  activeCategory = 'all',
-  onCategorySelect,
 }) {
   const { data: session } = useSession();
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const mobileDrawerReservedLane = 'calc(env(safe-area-inset-bottom) + var(--mobile-bottom-nav-offset))';
   const mobileDrawerOverlayClassName =
@@ -138,24 +134,6 @@ export default function MobileBottomNav({
   const mobileDrawerShellClassName =
     'pointer-events-none mx-auto flex w-full max-w-xl flex-col justify-end';
   const accountPanelOpen = session ? accountOpen : isAuthOpen;
-
-  const categoryLinks = [
-    { id: 'all', label: 'All Products', icon: LayoutGrid },
-    { id: 'new-arrivals', label: 'New Arrivals', icon: Tag },
-    { id: 'special-offers', label: 'Special Offers', icon: Tag },
-    ...categories
-      .filter((category) => category.id !== 'special-offers' && category.id !== 'new-arrivals')
-      .map((category) => ({
-        id: category.id,
-        label: category.label,
-        icon: Tag,
-      })),
-  ];
-
-  function handleCategoryNavigation(categoryId) {
-    setCategoriesOpen(false);
-    onCategorySelect?.(categoryId);
-  }
 
   function closeSearch() {
     onSearchOpenChange?.(false);
@@ -180,7 +158,6 @@ export default function MobileBottomNav({
   }
 
   function closeMobilePanels() {
-    setCategoriesOpen(false);
     closeSearch();
     closeAccountPanel();
   }
@@ -197,7 +174,10 @@ export default function MobileBottomNav({
               icon={Home}
               label="Home"
               href="/"
-              onClick={closeMobilePanels}
+              onClick={() => {
+                closeMobilePanels();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               active={pathname === '/'}
             />
             <MobileNavButton
@@ -209,7 +189,6 @@ export default function MobileBottomNav({
                   return;
                 }
 
-                setCategoriesOpen(false);
                 closeAccountPanel();
                 onSearchOpenChange?.(true);
               }}
@@ -217,20 +196,13 @@ export default function MobileBottomNav({
               iconSwap={isSearchOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
             />
             <MobileNavButton
-              icon={LayoutGrid}
-              label="Categories"
+              icon={ShoppingBag}
+              label="My Orders"
               onClick={() => {
-                if (categoriesOpen) {
-                  setCategoriesOpen(false);
-                  return;
-                }
-
-                closeSearch();
-                closeAccountPanel();
-                setCategoriesOpen(true);
+                closeMobilePanels();
+                onNavigate?.('/orders');
               }}
-              active={categoriesOpen || pathname.startsWith('/products')}
-              iconSwap={categoriesOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
+              active={pathname.startsWith('/orders')}
             />
             <MobileNavButton
               icon={User}
@@ -241,56 +213,15 @@ export default function MobileBottomNav({
                   return;
                 }
 
-                setCategoriesOpen(false);
                 closeSearch();
                 openAccountPanel();
               }}
-              active={accountPanelOpen || pathname.startsWith('/settings') || pathname.startsWith('/orders')}
+              active={accountPanelOpen || pathname.startsWith('/settings')}
               iconSwap={accountPanelOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
             />
           </nav>
         </div>
       </div>
-
-      <Drawer open={categoriesOpen} onOpenChange={setCategoriesOpen} shouldScaleBackground={false}>
-        <DrawerContent
-          overlayClassName={mobileDrawerOverlayClassName}
-          className={mobileDrawerContentClassName}
-          overlayStyle={{ bottom: mobileDrawerReservedLane }}
-        >
-          <div className={mobileDrawerShellClassName}>
-            <div className={mobileDrawerPanelClassName}>
-              <DrawerHeader className="px-5 pb-3 pt-5 text-left">
-                <DrawerTitle>Browse categories</DrawerTitle>
-                <DrawerDescription>Jump into the section you want without opening the full menu.</DrawerDescription>
-              </DrawerHeader>
-
-              <div className="flex flex-col gap-2 px-5 pb-4 pt-1">
-                {categoryLinks.map(({ id, label, icon: Icon }) => (
-                  <Button
-                    key={id}
-                    type="button"
-                    variant="ghost"
-                    onClick={() => handleCategoryNavigation(id)}
-                    className={cn(
-                      'h-auto w-full justify-between rounded-2xl border px-4 py-3 text-left',
-                      activeCategory === id
-                        ? 'border-primary/20 bg-primary/8 text-primary hover:bg-primary/10'
-                        : 'border-border/60 bg-background text-foreground hover:bg-muted/60'
-                    )}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Icon data-icon="inline-start" />
-                      <span className="font-medium">{label}</span>
-                    </span>
-                    <ChevronRight className="size-4 text-current/70" />
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
 
       <Drawer open={accountOpen} onOpenChange={onAccountOpenChange} shouldScaleBackground={false}>
         <DrawerContent

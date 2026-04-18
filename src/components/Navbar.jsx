@@ -766,9 +766,6 @@ function NavbarContent({
         isAuthOpen={isAuthModalOpen}
         onAuthOpenChange={setIsAuthModalOpen}
         onNavigate={handleMobileNavigate}
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategorySelect={handleCategoryClick}
       />
     </div>
   );
