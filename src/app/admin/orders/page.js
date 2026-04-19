@@ -11,7 +11,11 @@ export default async function AdminOrdersPage({ searchParams }) {
   const startDate = String(params?.startDate || '').trim();
   const endDate = String(params?.endDate || '').trim();
   const page = Math.max(1, Number(params?.page) || 1);
-  const orders = await getAdminOrdersPage({ search, status, startDate, endDate, page, limit: 12 });
+  
+  // Disable pagination fully if searching via specific date boundaries
+  const limit = (startDate || endDate) ? 999999 : 12;
+  
+  const orders = await getAdminOrdersPage({ search, status, startDate, endDate, page, limit });
 
   return (
     <AdminOrdersClient

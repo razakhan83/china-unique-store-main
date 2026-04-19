@@ -106,8 +106,8 @@ export default function AdminNotificationCenter() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 sm:w-96" align="end" sideOffset={8}>
-        <div className="flex items-center justify-between px-4 py-3">
+      <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-[380px]" align="end" sideOffset={8}>
+        <div className="flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-foreground">Notifications</h3>
             {unreadCount > 0 && (
@@ -141,7 +141,7 @@ export default function AdminNotificationCenter() {
           </div>
         </div>
         <Separator />
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[350px] sm:h-[400px] overflow-y-auto">
           {loading ? (
             <div className="flex h-40 items-center justify-center">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -156,7 +156,7 @@ export default function AdminNotificationCenter() {
                   <div
                     key={notification._id}
                     className={cn(
-                      "group relative flex items-start gap-3 border-b border-border/40 p-4 transition-colors hover:bg-muted/50",
+                      "group relative flex items-start gap-3 border-b border-border/40 p-3 transition-colors hover:bg-muted/50 sm:p-4",
                       !notification.isRead && "bg-muted/35"
                     )}
                   >
@@ -208,7 +208,7 @@ export default function AdminNotificationCenter() {
         <Separator />
         <Link 
           href="/admin" 
-          className="flex h-11 items-center justify-center text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          className="flex h-10 items-center justify-center text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:h-11 sm:text-xs"
           onClick={() => setOpen(false)}
         >
           View Dashboard

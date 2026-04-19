@@ -330,18 +330,19 @@ export default function AdminLayoutShell({ children, sessionUser }) {
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <AdminNotificationCenter />
-
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="hidden border border-border/70 bg-[color:color-mix(in_oklab,var(--color-card)_96%,white)] px-2.5 text-[12px] text-foreground shadow-none hover:border-foreground/16 hover:bg-foreground hover:text-background lg:inline-flex"
+                  className="flex h-8 gap-1.5 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground sm:px-2.5 sm:text-xs"
                   onClick={() => router.push('/')}
                 >
-                  <ExternalLink data-icon="inline-start" />
-                  <span className="hidden lg:inline">Store</span>
+                  <House className="size-3.5 shrink-0" data-icon="inline-start" />
+                  <span className="sm:hidden">Store</span>
+                  <span className="hidden sm:inline">Back to Store</span>
                 </Button>
+
+                <AdminNotificationCenter />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

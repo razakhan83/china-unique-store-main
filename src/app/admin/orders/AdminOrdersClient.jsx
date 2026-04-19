@@ -463,11 +463,9 @@ export default function AdminOrdersClient({
       <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {[
           { id: 'Confirmed', label: `Confirmed (${summary.confirmedCount})` },
-          { id: 'Sourcing', label: `Sourcing (${summary.sourcingCount || 0})` },
           { id: 'In Process', label: `In Progress (${summary.inProcessCount})` },
           { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
           { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
-          { id: 'Out for Delivery', label: `Out (${summary.outForDeliveryCount || 0})` },
           { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
           { id: 'Returned', label: `Returned (${summary.returnedCount})` },
           { id: 'all', label: `All (${summary.allCount})` },
@@ -537,7 +535,7 @@ export default function AdminOrdersClient({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 mt-1">
           {selectedOrders.length > 0 && (
             <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
               <Button onClick={handleDownloadExcel} size="sm" className="h-7 gap-1 px-2 text-[11px] font-semibold">
@@ -550,7 +548,14 @@ export default function AdminOrdersClient({
               </Button>
             </div>
           )}
-          
+
+          {(startDate || endDate) && (
+            <Button type="submit" variant="default" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
+              <Search data-icon="inline-start" className="size-3" />
+              Search Dates
+            </Button>
+          )}
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
@@ -734,6 +739,22 @@ export default function AdminOrdersClient({
 
       {/* ── Mobile Cards ── */}
       <div className={cn("flex flex-col gap-2 md:hidden", isPending && "opacity-60")}>
+        {displayOrders.length > 0 && (
+          <div className="flex items-center justify-between px-1 py-1 mb-0.5">
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                checked={isAllPaginatedSelected} 
+                onCheckedChange={handleSelectAll} 
+                aria-label="Select all on page"
+              />
+              <p className="text-[12px] font-medium text-muted-foreground cursor-pointer" onClick={() => handleSelectAll(!isAllPaginatedSelected)}>Select all on page</p>
+            </div>
+            {selectedOrders.length > 0 && (
+              <span className="text-[11px] font-semibold text-foreground">{selectedOrders.length} selected</span>
+            )}
+          </div>
+        )}
+
         {displayOrders.length === 0 ? (
           <div className="rounded-xl border border-border bg-card px-3 py-8 text-center">
             <Receipt className="mx-auto mb-2 text-muted-foreground/30" />
@@ -790,6 +811,17 @@ export default function AdminOrdersClient({
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
+                                  setQuickActionOrder(order._id);
+                                  setQuickStatus(order.status);
+                                  setQuickTracking(order.trackingNumber || '');
+                                  setEditingOrder(order);
+                                }}
+                              >
+                                <Zap data-icon="inline-start" />
+                                Quick Update
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
                                   setEditingOrder(order);
                                   setIsEditModalOpen(true);
                                 }}
@@ -797,52 +829,24 @@ export default function AdminOrdersClient({
                                 <Edit data-icon="inline-start" />
                                 Edit Order
                               </DropdownMenuItem>
-                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
-                                <Eye data-icon="inline-start" />
-                                View Order
-                              </DropdownMenuItem>
                             </DropdownMenuGroup>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
 
-                    <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/15 p-2">
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">City</p>
-                        <p className="mt-0.5 text-[12px] font-medium text-foreground">{order.customerCity || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Total</p>
-                        <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</p>
-                      </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
+                       <span className="text-[12px] font-bold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</span>
+                       <Button
+                          variant="secondary"
+                          size="sm"
+                          render={<Link href={`/admin/orders/${order._id}`} />}
+                          nativeButton={false}
+                          className="h-7 rounded-md px-3 text-[11px] font-semibold"
+                       >
+                          View order
+                       </Button>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="admin-touch-target mt-2 h-9 w-full justify-center gap-1.5 rounded-lg border border-border/50 bg-transparent text-[12px] font-medium text-muted-foreground shadow-none hover:bg-muted/30 hover:text-foreground"
-                      onClick={() => {
-                        setQuickActionOrder(order._id);
-                        setQuickStatus(order.status);
-                        setQuickTracking(order.trackingNumber || '');
-                        setEditingOrder(order);
-                      }}
-                    >
-                      <Zap data-icon="inline-start" />
-                      Quick Update
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      render={<Link href={`/admin/orders/${order._id}`} />}
-                      nativeButton={false}
-                      className="admin-touch-target mt-1.5 h-9 w-full justify-center gap-1.5 rounded-lg border border-border/50 bg-transparent text-[12px] font-medium text-muted-foreground shadow-none hover:bg-muted/30 hover:text-foreground"
-                    >
-                      <Eye data-icon="inline-start" />
-                      View
-                    </Button>
                   </div>
                 </div>
               </div>
