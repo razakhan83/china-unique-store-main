@@ -1015,15 +1015,10 @@ function HomePageSectionsWorkspace({
 
 export default function HomePageBuilderClient({ initialSections, availableCategories }) {
   const [sections, setSections] = useState(() => normalizeSections(initialSections));
-  const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1393,38 +1388,31 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
       />
 
       <div className="mt-3">
-        {!mounted ? (
-          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/5 p-12 text-center">
-            <Loader2 className="mb-4 size-10 animate-spin text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">Initializing builder...</p>
-          </div>
-        ) : (
-          <HomePageSectionsWorkspace
-            sections={sections}
-            sectionIds={sectionIds}
-            activeSection={activeSection}
-            sensors={sensors}
-            availableCategories={availableCategories}
-            uploadingKey={uploadingKey}
-            onAddSection={handleAddSection}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-            onDeleteSection={handleDeleteSection}
-            onToggleEnabled={handleToggleEnabled}
-            onSectionChange={updateSection}
-            onSectionImageUpload={handleSectionImageUpload}
-            onAddHeroSlide={handleAddHeroSlide}
-            onHeroSlideChange={handleHeroSlideChange}
-            onHeroSlideImageUpload={handleHeroSlideImageUpload}
-            onRemoveHeroSlide={handleRemoveHeroSlide}
-            onMoveHeroSlide={handleMoveHeroSlide}
-            onAddCarouselBanner={handleAddCarouselBanner}
-            onCarouselBannerChange={handleCarouselBannerChange}
-            onRemoveCarouselBanner={handleRemoveCarouselBanner}
-            onMoveCarouselBanner={handleMoveCarouselBanner}
-          />
-        )}
+        <HomePageSectionsWorkspace
+          sections={sections}
+          sectionIds={sectionIds}
+          activeSection={activeSection}
+          sensors={sensors}
+          availableCategories={availableCategories}
+          uploadingKey={uploadingKey}
+          onAddSection={handleAddSection}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+          onDeleteSection={handleDeleteSection}
+          onToggleEnabled={handleToggleEnabled}
+          onSectionChange={updateSection}
+          onSectionImageUpload={handleSectionImageUpload}
+          onAddHeroSlide={handleAddHeroSlide}
+          onHeroSlideChange={handleHeroSlideChange}
+          onHeroSlideImageUpload={handleHeroSlideImageUpload}
+          onRemoveHeroSlide={handleRemoveHeroSlide}
+          onMoveHeroSlide={handleMoveHeroSlide}
+          onAddCarouselBanner={handleAddCarouselBanner}
+          onCarouselBannerChange={handleCarouselBannerChange}
+          onRemoveCarouselBanner={handleRemoveCarouselBanner}
+          onMoveCarouselBanner={handleMoveCarouselBanner}
+        />
       </div>
     </div>
   );

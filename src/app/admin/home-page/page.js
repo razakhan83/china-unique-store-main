@@ -1,7 +1,6 @@
 import { getAdminHomePageBuilderData } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
-
-import HomePageBuilderClient from './HomePageBuilderClient';
+import HomePageBuilderWrapper from './HomePageBuilderWrapper';
 
 export default async function AdminHomePageBuilderPage() {
   await requireAdmin();
@@ -9,7 +8,7 @@ export default async function AdminHomePageBuilderPage() {
   const data = await getAdminHomePageBuilderData();
 
   return (
-    <HomePageBuilderClient
+    <HomePageBuilderWrapper
       initialSections={data.sections}
       availableCategories={data.categories}
     />
