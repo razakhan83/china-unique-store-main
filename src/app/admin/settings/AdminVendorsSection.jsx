@@ -485,17 +485,14 @@ export default function AdminVendorsSection() {
   }
 
   return (
-    <SettingSection
-      icon={Store}
-      title="Vendors"
-      description="Track which market vendors carry a product. This section is admin-only and not exposed on the storefront."
-    >
+    <div className="flex flex-col gap-4">
       <div id="vendors-section" className="sr-only" />
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-start">
         <Button
           type="button"
           variant="outline"
-          className="gap-2"
+          size="sm"
+          className="h-8 gap-1.5 text-[12px] font-semibold"
           onClick={() => {
             setIsVendorSearchDialogOpen(true);
             window.requestAnimationFrame(() => {
@@ -503,30 +500,29 @@ export default function AdminVendorsSection() {
             });
           }}
         >
-          <Search className="size-4" />
+          <Search className="size-3.5" />
           Search Vendor Products
         </Button>
         <Button
           type="button"
-          className="gap-2"
+          variant="default"
+          size="sm"
+          className="h-8 gap-1.5 text-[12px] font-semibold"
           onClick={() => {
             setVendorForm(emptyVendorForm);
             setEditingVendorId('');
             setIsVendorDialogOpen(true);
           }}
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           Add Vendor
         </Button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="rounded-xl border border-border bg-background">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">Vendor List</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Click any vendor to see which products are currently linked to them.
-            </p>
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_1.9fr]">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="border-b border-border bg-muted/40 px-3 py-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Vendor List</p>
           </div>
 
           <div className="flex flex-col">
@@ -605,18 +601,16 @@ export default function AdminVendorsSection() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-background">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="flex flex-col gap-1 border-b border-border bg-muted/40 px-3 py-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               {activeVendor ? `${activeVendor.name} Products` : 'Linked Products'}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {activeVendor
-                ? activeVendor.shopNumber
-                  ? `Shop ${activeVendor.shopNumber}`
-                  : 'No shop number saved for this vendor.'
-                : 'Select a vendor from the list to view their products.'}
-            </p>
+            {activeVendor && (
+              <p className="text-[10px] text-muted-foreground">
+                {activeVendor.shopNumber ? `Shop ${activeVendor.shopNumber}` : 'No shop number'}
+              </p>
+            )}
           </div>
 
           {activeVendor ? (
@@ -1227,6 +1221,6 @@ export default function AdminVendorsSection() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SettingSection>
+    </div>
   );
 }

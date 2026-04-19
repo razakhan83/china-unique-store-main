@@ -402,10 +402,10 @@ export default function AdminProductsClient({
           <h2 className="admin-page-title">Products</h2>
           <p className="admin-page-subtitle">{summary.totalProducts} total • {summary.liveProducts} live</p>
         </div>
-        <Link href="/admin/products/add" className="w-full md:w-auto">
-          <Button className="w-full border border-foreground bg-foreground text-background hover:bg-foreground/88 md:w-auto">
-            <Plus data-icon="inline-start" />
-            Add product
+        <Link href="/admin/products/add">
+          <Button variant="default" size="sm" className="h-8 gap-1.5 text-[12px] font-semibold">
+            <Plus className="size-3.5" />
+            Add Product
           </Button>
         </Link>
       </div>
@@ -500,20 +500,20 @@ export default function AdminProductsClient({
         </div>
       </div>
 
-      <div className={cn("admin-surface hidden overflow-hidden rounded-[1.2rem] md:block transition-opacity", isPending && "opacity-70")}>
+      <div className={cn("hidden overflow-hidden rounded-lg border border-border bg-card md:block transition-opacity", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full">
+          <table className="min-w-[1180px] w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Price</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Vendors</th>
-                <th className="px-6 py-4">Updated</th>
-                <th className="px-6 py-4">Stock Status</th>
-                <th className="px-6 py-4">Flags</th>
-                <th className="px-6 py-4 text-center">Visibility</th>
-                <th className="px-6 py-4 text-center">Actions</th>
+              <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <th className="px-4 py-2.5">Product</th>
+                <th className="px-4 py-2.5">Price</th>
+                <th className="px-4 py-2.5">Category</th>
+                <th className="px-4 py-2.5">Vendors</th>
+                <th className="px-4 py-2.5">Updated</th>
+                <th className="px-4 py-2.5">Stock Status</th>
+                <th className="px-4 py-2.5">Flags</th>
+                <th className="px-4 py-2.5 text-center">Visibility</th>
+                <th className="px-4 py-2.5 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -526,7 +526,7 @@ export default function AdminProductsClient({
               ) : (
                 products.map((product) => (
                   <tr key={product._id} className="transition-colors hover:bg-muted/35">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5">
                       <div className="flex items-center gap-4">
                         <div className="relative size-12 overflow-hidden rounded-lg border border-border bg-muted">
                           {getPrimaryProductImage(product)?.url ? (
@@ -546,7 +546,7 @@ export default function AdminProductsClient({
                         <span className="max-w-[220px] line-clamp-2 text-sm font-semibold text-foreground">{product.Name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5">
                       {product.isDiscounted && product.discountPercentage > 0 ? (
                         <div className="flex flex-col gap-0.5">
                           <span className="text-sm font-bold text-foreground">
@@ -558,7 +558,7 @@ export default function AdminProductsClient({
                         <span className="text-sm font-semibold text-foreground">{formatPrice(product.Price)}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5">
                       <div className="flex max-w-[180px] flex-wrap gap-1.5">
                         {getProductCategoryNames(product).map((category) => (
                           <Badge key={category} variant="secondary" className="text-[10px]">
@@ -567,11 +567,11 @@ export default function AdminProductsClient({
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">
+                    <td className="px-4 py-2.5 text-sm font-medium text-foreground">
                       {Array.isArray(product.vendors) ? product.vendors.length : 0}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatDate(product.updatedAt || product.createdAt)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5 text-sm font-medium text-foreground">{formatDate(product.updatedAt || product.createdAt)}</td>
+                    <td className="px-4 py-2.5">
                       <div className="inline-flex items-center gap-2">
                         <Switch
                           checked={product.StockStatus === "In Stock"}
@@ -584,7 +584,7 @@ export default function AdminProductsClient({
                         </Badge>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
@@ -608,7 +608,7 @@ export default function AdminProductsClient({
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-2.5 text-center">
                       <div className="inline-flex items-center gap-3">
                         <Switch
                           checked={product.isLive}
@@ -621,7 +621,7 @@ export default function AdminProductsClient({
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 relative">
+                    <td className="px-4 py-2.5 relative">
                       <div className="flex items-center justify-center gap-2">
                         <Button
                           variant={product.isDiscounted ? "default" : "outline"}
@@ -687,16 +687,16 @@ export default function AdminProductsClient({
         </div>
       </div>
 
-      <div className={cn("space-y-3 md:hidden transition-opacity", isPending && "opacity-70")}>
+      <div className={cn("md:hidden flex flex-col transition-opacity", isPending && "opacity-70")}>
         {products.length === 0 ? (
-          <div className="admin-surface rounded-[1.25rem] px-4 py-10 text-center">
-            <p className="font-medium text-muted-foreground">No products found for the selected criteria.</p>
+          <div className="px-4 py-10 text-center">
+            <p className="text-[12px] text-muted-foreground">No products found.</p>
           </div>
         ) : (
-          products.map((product) => (
-            <div key={product._id} className="admin-surface rounded-[1.25rem] p-3 sm:p-4">
-              <div className="flex items-start gap-3">
-                <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-16">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+            {products.map((product) => (
+              <div key={product._id} className="flex gap-2.5 border-b border-border/50 p-2.5 last:border-b-0">
+                <div className="relative size-[50px] shrink-0 overflow-hidden rounded border border-border bg-muted">
                   {getPrimaryProductImage(product)?.url ? (
                     <Image
                       src={getPrimaryProductImage(product).url}
@@ -707,73 +707,65 @@ export default function AdminProductsClient({
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center text-muted-foreground">
-                      <ImageIcon className="size-4" />
+                      <ImageIcon className="size-3" />
                     </div>
                   )}
                 </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="line-clamp-2 text-sm font-semibold text-foreground">{product.Name}</p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {getProductCategoryNames(product).map((category) => (
-                          <Badge key={category} variant="secondary" className="text-[10px]">
-                            {category}
-                          </Badge>
-                        ))}
+                      <p className="line-clamp-2 text-[12px] font-semibold leading-tight text-foreground">{product.Name}</p>
+                      
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                        {product.isDiscounted && product.discountPercentage > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-bold text-foreground">
+                              PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.Price)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-bold text-foreground">{formatPrice(product.Price)}</span>
+                        )}
                       </div>
                     </div>
 
                     <DropdownMenu>
-                      <DropdownMenuTrigger
-                        className={cn(
-                          "admin-touch-target inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-transparent text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-foreground",
-                        )}
-                        title="Actions"
-                      >
-                        <MoreVertical className="size-4" />
+                      <DropdownMenuTrigger className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted outline-none">
+                        <MoreVertical className="size-3.5" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[220px]">
+                      <DropdownMenuContent align="end" className="w-[200px]">
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>Quick View</DropdownMenuLabel>
-                          <DropdownMenuItem disabled>Vendors: {Array.isArray(product.vendors) ? product.vendors.length : 0}</DropdownMenuItem>
-                          <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
-                          <DropdownMenuItem disabled>Price: {formatPrice(product.Price)}</DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
-                              <Pencil className="mr-2 size-4" />
-                              Edit
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/products/edit/${product._id}`} className="flex w-full cursor-pointer items-center">
+                              <Pencil className="mr-2 size-3.5" />
+                              Edit Product
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setDiscountModal({ open: true, product })}
-                          >
-                            <Tag className="mr-2 size-4" />
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleLive(product)}>
+                            {product.isLive ? "Set as Draft" : "Set as Live"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleStock(product)}>
+                            {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
+                            <Tag className="mr-2 size-3.5" />
                             {product.isDiscounted ? "Edit Discount" : "Set Discount"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setReviewsModal({ open: true, product })}
-                          >
-                            <MessageSquare className="mr-2 size-4" />
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => setReviewsModal({ open: true, product })}>
+                            <MessageSquare className="mr-2 size-3.5" />
                             Reviews
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => setVendorsModal({ open: true, product })}
-                          >
-                            <Store className="mr-2 size-4" />
+                          <DropdownMenuItem className="cursor-pointer" onClick={() => setVendorsModal({ open: true, product })}>
+                            <Store className="mr-2 size-3.5" />
                             View Vendors
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
-                            onClick={() => setDeleteModal({ open: true, product })}
-                          >
-                            <Trash2 className="mr-2 size-4" />
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10" onClick={() => setDeleteModal({ open: true, product })}>
+                            <Trash2 className="mr-2 size-3.5" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
@@ -781,91 +773,24 @@ export default function AdminProductsClient({
                     </DropdownMenu>
                   </div>
 
-                  <div className="mt-3 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      {product.isDiscounted && product.discountPercentage > 0 ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold text-foreground">
-                            PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
-                          </span>
-                          <span className="text-xs text-muted-foreground line-through">{formatPrice(product.Price)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm font-semibold text-foreground">{formatPrice(product.Price)}</span>
-                      )}
-                    </div>
-
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="text-[10px] uppercase">
-                        {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
-                      </Badge>
-                      <Badge variant={product.isLive ? "default" : "secondary"} className="text-[10px] uppercase">
-                        {product.isLive ? "Live" : "Draft"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 rounded-lg border border-border bg-muted/20 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs font-medium text-muted-foreground">Visibility</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase text-muted-foreground">
+                  <div className="mt-1.5 flex items-center flex-wrap gap-1">
+                    <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
+                      {product.StockStatus === "In Stock" ? "In Stock" : "Out"}
+                    </Badge>
+                    <Badge variant={product.isLive ? "default" : "secondary"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
                       {product.isLive ? "Live" : "Draft"}
-                    </span>
-                    <Switch
-                      checked={product.isLive}
-                      disabled={togglingId === product._id}
-                      onCheckedChange={() => handleToggleLive(product)}
-                      aria-label={`Toggle ${product.Name} live status`}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs font-medium text-muted-foreground">Stock</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase text-muted-foreground">
-                      {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
-                    </span>
-                    <Switch
-                      checked={product.StockStatus === "In Stock"}
-                      disabled={togglingStockId === product._id}
-                      onCheckedChange={() => handleToggleStock(product)}
-                      aria-label={`Toggle ${product.Name} stock status`}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs font-medium text-muted-foreground">Flags</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
-                      className={cn(
-                        "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
-                        product.isNewArrival ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
-                      )}
-                      title="New Arrival"
-                    >
-                      NEW
-                    </button>
-                    <button
-                      onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
-                      className={cn(
-                        "admin-touch-target flex h-11 items-center justify-center rounded-md border px-2 text-[9px] font-bold transition-all md:h-7",
-                        product.isBestSelling ? "border-foreground/18 bg-foreground/8 text-foreground" : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
-                      )}
-                      title="Best Selling"
-                    >
-                      TOP
-                    </button>
+                    </Badge>
+                    {product.isNewArrival && (
+                      <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider text-muted-foreground border-foreground/10 bg-foreground/5">NEW</Badge>
+                    )}
+                    {product.isBestSelling && (
+                      <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider text-muted-foreground border-foreground/10 bg-foreground/5">TOP</Badge>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
