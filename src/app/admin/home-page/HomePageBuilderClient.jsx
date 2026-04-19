@@ -37,6 +37,7 @@ import {
   Trash2,
   Upload,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -317,6 +318,8 @@ function SortableSectionCard({
   index,
   categories,
   uploadingKey,
+  isExpanded,
+  onToggleExpand,
   isDragPreview = false,
   onDelete,
   onToggleEnabled,
@@ -340,25 +343,31 @@ function SortableSectionCard({
     id: section.id,
   });
 
+  const sectionLabel = section.title || template?.label || section.type;
+
   return (
     <section
       ref={setNodeRef}
       style={isDragPreview ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'surface-card rounded-2xl border border-border/70 p-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-[box-shadow,border-color,transform] duration-300',
+        'surface-card overflow-hidden rounded-2xl border border-border/70 shadow-[0_8px_20px_rgba(0,0,0,0.05)] transition-all duration-300',
         (isDragging || isDragPreview) && 'border-border bg-muted/60 shadow-[0_20px_44px_rgba(0,0,0,0.12)]',
         isDragging && !isDragPreview && 'opacity-60',
+        isExpanded && 'ring-1 ring-border shadow-[0_12px_28px_rgba(0,0,0,0.08)]',
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
+      <div className={cn(
+        "flex h-14 items-center justify-between gap-3 px-3",
+        isExpanded && "border-b border-border/50 bg-muted/20"
+      )}>
+        <div className="flex flex-1 items-center gap-2 overflow-hidden">
           <button
             type="button"
             className={cn(
-              'flex size-10 items-center justify-center rounded-xl border bg-background transition-[border-color,background-color,color,box-shadow] duration-300',
+              'flex size-8 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-all duration-200',
               (isDragging || isDragPreview)
-                ? 'border-border bg-foreground text-background shadow-[0_10px_22px_rgba(0,0,0,0.16)]'
-                : 'border-border text-foreground hover:border-border hover:bg-muted/70',
+                ? 'border-border bg-foreground text-background shadow-sm'
+                : 'border-border hover:bg-muted hover:text-foreground',
             )}
             aria-label={`Reorder ${template?.label || section.type}`}
             style={{ touchAction: 'none', cursor: isDragPreview ? 'grabbing' : 'grab' }}
@@ -367,40 +376,69 @@ function SortableSectionCard({
           >
             <GripVertical className="size-4" />
           </button>
-          <div className="flex size-9 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
-            <Icon className="size-4" />
+          
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
+            <Icon className="size-3.5" />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <h3 className="text-sm font-semibold text-foreground">{template?.label || section.type}</h3>
-              <Badge variant="secondary" className="rounded-full px-2 py-0 text-[10px]">
-                Position {index + 1}
+          
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <h3 className="truncate text-xs font-semibold text-foreground">
+              {sectionLabel}
+            </h3>
+            {!section.isEnabled && (
+              <Badge variant="outline" className="h-5 shrink-0 rounded-full bg-muted/50 px-2 py-0 text-[9px] uppercase tracking-wider text-muted-foreground">
+                Hidden
               </Badge>
-            </div>
+            )}
+            <Badge variant="secondary" className="h-5 shrink-0 rounded-full px-1.5 py-0 text-[10px] font-medium text-muted-foreground/70">
+              {index + 1}
+            </Badge>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-1">
-            <span className="text-xs font-semibold text-muted-foreground">Visible</span>
-            <Switch checked={section.isEnabled !== false} onCheckedChange={() => onToggleEnabled(section.id)} />
+        <div className="flex shrink-0 items-center gap-1">
+          <div className="mr-2 flex items-center gap-1.5 border-r border-border/50 pr-2">
+            <Switch 
+              className="scale-75"
+              checked={section.isEnabled !== false} 
+              onCheckedChange={() => onToggleEnabled(section.id)} 
+            />
           </div>
+          
           <Button
             type="button"
-            variant="outline"
-            size="icon-sm"
-            className="rounded-xl"
+            variant="ghost"
+            size="icon-xs"
+            className={cn(
+              "size-8 rounded-lg transition-transform duration-200",
+              isExpanded && "rotate-90 bg-muted text-foreground"
+            )}
+            onClick={() => onToggleExpand(section.id)}
+            aria-label={isExpanded ? "Collapse section" : "Expand section"}
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="size-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onDelete(section.id)}
             aria-label={`Delete ${template?.label || section.type}`}
           >
-            <Trash2 />
+            <Trash2 className="size-3.5" />
           </Button>
         </div>
       </div>
 
-      <Separator className="my-3" />
-
-      <FieldGroup>
+      <div className={cn(
+        "grid transition-all duration-300 ease-in-out",
+        isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      )}>
+        <div className="overflow-hidden">
+          <div className="p-4 pt-2">
+            <FieldGroup>
         {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ScrollableBannerCarousel' || section.type === 'ProductCollection') && (
           <Field>
             <FieldLabel>Section Title</FieldLabel>
@@ -787,6 +825,9 @@ function SortableSectionCard({
           </div>
         )}
       </FieldGroup>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -903,6 +944,8 @@ function HomePageSectionsWorkspace({
   sections,
   sectionIds,
   activeSection,
+  expandedIds,
+  onToggleExpand,
   sensors,
   availableCategories,
   uploadingKey,
@@ -926,19 +969,19 @@ function HomePageSectionsWorkspace({
 }) {
   if (sections.length === 0) {
     return (
-      <Empty className="surface-card rounded-2xl border border-border/70 px-6 py-10">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <LayoutGrid />
+      <Empty className="surface-card rounded-2xl border border-border/70 px-6 py-10 shadow-sm">
+        <EmptyHeader className="items-center text-center">
+          <EmptyMedia variant="icon" className="bg-muted/50">
+            <LayoutGrid className="size-8 text-muted-foreground/50" />
           </EmptyMedia>
-          <EmptyTitle>No sections added yet</EmptyTitle>
-          <EmptyDescription>
-            Start with a hero slider, category grid, or product collection to build the home page.
+          <EmptyTitle className="text-lg">No sections added yet</EmptyTitle>
+          <EmptyDescription className="max-w-[280px]">
+            Build your homepage by dragging templates from the menu above.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Button type="button" className="rounded-2xl" onClick={() => onAddSection(SECTION_TEMPLATES[0])}>
-            <Plus data-icon="inline-start" />
+        <EmptyContent className="flex justify-center">
+          <Button type="button" variant="default" size="sm" className="rounded-xl" onClick={() => onAddSection(SECTION_TEMPLATES[0])}>
+            <Plus className="size-4" />
             Add Hero Slider
           </Button>
         </EmptyContent>
@@ -956,8 +999,8 @@ function HomePageSectionsWorkspace({
       onDragCancel={onDragCancel}
     >
       <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-        <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 sm:pr-2">
-          <div className="flex flex-col gap-3">
+        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto pr-1 sm:pr-2">
+          <div className="flex flex-col gap-2">
             {sections.map((section, index) => (
               <SortableSectionCard
                 key={section.id}
@@ -965,6 +1008,8 @@ function HomePageSectionsWorkspace({
                 index={index}
                 categories={availableCategories}
                 uploadingKey={uploadingKey}
+                isExpanded={expandedIds.has(section.id)}
+                onToggleExpand={onToggleExpand}
                 onDelete={onDeleteSection}
                 onToggleEnabled={onToggleEnabled}
                 onSectionChange={onSectionChange}
@@ -992,6 +1037,8 @@ function HomePageSectionsWorkspace({
               categories={availableCategories}
               uploadingKey={uploadingKey}
               isDragPreview
+              isExpanded={false}
+              onToggleExpand={() => {}}
               onDelete={() => {}}
               onToggleEnabled={() => {}}
               onSectionChange={() => {}}
@@ -1015,10 +1062,23 @@ function HomePageSectionsWorkspace({
 
 export default function HomePageBuilderClient({ initialSections, availableCategories }) {
   const [sections, setSections] = useState(() => normalizeSections(initialSections));
+  const [expandedIds, setExpandedIds] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+
+  const toggleSection = (sectionId) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return next;
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1392,6 +1452,8 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
           sections={sections}
           sectionIds={sectionIds}
           activeSection={activeSection}
+          expandedIds={expandedIds}
+          onToggleExpand={toggleSection}
           sensors={sensors}
           availableCategories={availableCategories}
           uploadingKey={uploadingKey}
