@@ -19,10 +19,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import ProductRichTextEditor from "@/components/admin/ProductRichTextEditor";
 import VendorAssignmentsEditor from "@/components/admin/VendorAssignmentsEditor";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { moveProductImageToFront } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
+import { sanitizeRichTextHtml, stripHtmlTags } from "@/lib/richText";
 import { formatSeoKeywords } from "@/lib/seoKeywords";
 import { cn } from "@/lib/utils";
 
@@ -230,12 +232,13 @@ export default function AddProduct() {
     }
 
     try {
+      const sanitizedDescription = sanitizeRichTextHtml(Description);
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           Name,
-          Description,
+          Description: sanitizedDescription,
           seoTitle,
           seoDescription,
           seoKeywords,
@@ -273,7 +276,7 @@ export default function AddProduct() {
     }
 
     const title = Name.trim();
-    const description = Description.trim();
+    const description = stripHtmlTags(Description).trim();
 
     if (!title || !description) {
       toast.error("Add the product name and description before generating SEO.");
@@ -317,6 +320,7 @@ export default function AddProduct() {
   const trimmedSeoDescription = seoDescription.trim();
   const trimmedSeoKeywords = seoKeywords.trim();
   const trimmedSeoCanonicalUrl = seoCanonicalUrl.trim();
+  const plainDescription = stripHtmlTags(Description);
   const fallbackSlug = Name.trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -324,7 +328,7 @@ export default function AddProduct() {
   const seoPreviewTitle = trimmedSeoTitle || Name || "Product title preview";
   const seoPreviewDescription =
     trimmedSeoDescription ||
-    Description ||
+    plainDescription ||
     "Add a focused product summary so search snippets look polished from day one.";
   const seoPreviewUrl =
     trimmedSeoCanonicalUrl ||
@@ -647,12 +651,10 @@ export default function AddProduct() {
 
           <div>
             <Label className="mb-2">Description</Label>
-            <Textarea
+            <ProductRichTextEditor
               value={Description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-28 resize-none px-4 py-3"
-              placeholder="Enter product description..."
-              rows="4"
+              onChange={setDescription}
+              placeholder="Create a polished product description with formatting, images, videos, and HTML."
             />
           </div>
 

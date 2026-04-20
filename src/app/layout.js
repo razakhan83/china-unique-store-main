@@ -1,8 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { cacheLife, cacheTag } from 'next/cache';
 import "./globals.css";
-import { getStoreSettings } from "@/lib/data";
-import TrackingScripts from "@/components/TrackingScripts";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -44,13 +41,7 @@ export const viewport = {
   userScalable: false,
 };
 
-export default async function RootLayout({ children }) {
-  'use cache';
-  cacheLife('foreverish');
-  cacheTag('settings');
-
-  const settings = await getStoreSettings();
-
+export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -60,11 +51,6 @@ export default async function RootLayout({ children }) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         {children}
-        <TrackingScripts
-          enabled={settings.trackingEnabled === true}
-          facebookPixelId={settings.facebookPixelId}
-          tiktokPixelId={settings.tiktokPixelId}
-        />
         <Toaster position="bottom-center" richColors />
       </body>
     </html>

@@ -14,49 +14,70 @@ if (!cached) {
   cached = global.__mongooseConnection = { conn: null, promise: null };
 }
 
+const connectionOptions = {
+  bufferCommands: false,
+  maxPoolSize: 10,
+  minPoolSize: 0,
+  serverSelectionTimeoutMS: 15000,
+  connectTimeoutMS: 15000,
+  socketTimeoutMS: 45000,
+};
+
+async function createConnection() {
+  return mongoose.connect(MONGODB_URI, connectionOptions)
+    .then((mongooseInstance) => {
+      if (isDev) {
+        console.log('[DB] MongoDB connected successfully');
+      }
+      return mongooseInstance;
+    })
+    .catch((err) => {
+      console.error('[DB] MongoDB connection error:', err.message);
+      cached.promise = null;
+      throw err;
+    });
+}
+
 async function mongooseConnect() {
-  // If we have a cached connection, return it
   if (cached.conn) {
     return cached.conn;
   }
 
-  // If the connection is dropped (readyState 0), reset our cached connection state
+  if (mongoose.connection.readyState === 1) {
+    cached.conn = mongoose;
+    return cached.conn;
+  }
+
+  if (mongoose.connection.readyState === 2 && cached.promise) {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  }
+
   if (mongoose.connection.readyState === 0) {
     cached.promise = null;
     cached.conn = null;
   }
 
   if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-      maxPoolSize: 10,
-      minPoolSize: 0,
-      maxIdleTimeMS: 10000,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 20000,
-      family: 4,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts)
-      .then((mongoose) => {
-        if (isDev) {
-          console.log('[DB] MongoDB connected successfully');
-        }
-        return mongoose;
-      })
-      .catch((err) => {
-        console.error('[DB] MongoDB connection error:', err.message);
-        cached.promise = null;
-        throw err;
-      });
+    cached.promise = createConnection();
   }
 
   try {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    throw e;
+
+    // Atlas/server selection can be briefly flaky in local dev, so retry once
+    // after clearing any half-open state before surfacing the failure.
+    try {
+      await mongoose.disconnect().catch(() => {});
+      cached.promise = createConnection();
+      cached.conn = await cached.promise;
+    } catch (retryError) {
+      cached.promise = null;
+      cached.conn = null;
+      throw retryError;
+    }
   }
 
   return cached.conn;

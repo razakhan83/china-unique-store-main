@@ -25,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
+import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 const siteUrl = process.env.NEXTAUTH_URL || 'https://china-unique-items.vercel.app';
@@ -34,7 +35,11 @@ function getProductUrl(product) {
 }
 
 function getProductDescription(product) {
-  return product.seoDescription || product.Description || `Buy ${product.Name} from China Unique Store.`;
+  return (
+    product.seoDescription ||
+    stripHtmlTags(product.Description) ||
+    `Buy ${product.Name} from China Unique Store.`
+  );
 }
 
 function getProductTitle(product) {
@@ -272,6 +277,9 @@ async function ProductHeroSection({ slugPromise }) {
   const price = Number(product.discountedPrice ?? product.Price ?? 0);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
   const isOutOfStock = product.StockStatus === 'Out of Stock' || product.isLive === false;
+  const descriptionHtml =
+    formatRichTextDescriptionHtml(product.Description) ||
+    'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
 
   return (
     <>
@@ -346,15 +354,6 @@ async function ProductHeroSection({ slugPromise }) {
             </div>
 
             <Separator />
-
-            <div className="text-[15px] leading-relaxed text-muted-foreground">
-              <p>
-                {product.Description ||
-                  'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.'}
-              </p>
-            </div>
-
-            <Separator />
             <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
 
             <div className="mt-2 border-t border-border pt-5">
@@ -383,6 +382,18 @@ async function ProductHeroSection({ slugPromise }) {
                     <span className="text-xs font-semibold text-muted-foreground">Delivered</span>
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Description
+              </h2>
+              <div className="text-[15px] leading-relaxed text-muted-foreground">
+                <div
+                  className="[&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_h1]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_img]:my-4 [&_img]:max-w-full [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-2xl [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:my-4 [&_video]:max-w-full"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
               </div>
             </div>
           </div>

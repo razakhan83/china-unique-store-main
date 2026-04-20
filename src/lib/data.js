@@ -82,6 +82,7 @@ const PRODUCT_ADMIN_PROJECTION = [
   'stockQuantity',
   'vendors',
 ].join(' ');
+let hasLoggedSettingsFetchFailure = false;
 
 function sanitizeSectionOrder(order, fallbackOrder = []) {
   return Array.from(new Set([...(Array.isArray(order) ? order : []), ...fallbackOrder].filter(Boolean)));
@@ -424,8 +425,9 @@ async function getSettingsRaw() {
   } catch (error) {
     if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn('[BUILD] MongoDB connection failed during build, returning default settings.');
-    } else {
+    } else if (!hasLoggedSettingsFetchFailure) {
       console.error('[DB] Error fetching settings:', error.message);
+      hasLoggedSettingsFetchFailure = true;
     }
     return defaultSettings;
   }
