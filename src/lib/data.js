@@ -360,6 +360,79 @@ async function getAllProductsRaw() {
 
   const products = await Product.find({})
     .select(PRODUCT_ADMIN_PROJECTION)
+    .populate(PRODUCT_CATEGORY_POPULATE)
+    .sort({ createdAt: -1 })
+    .lean();
+  return products.map(serializeProduct);
+}
+
+async function getSettingsRaw() {
+  const defaultSettings = {
+    _id: 'default',
+    storeName: 'China Unique Store',
+    supportEmail: '',
+    businessAddress: '',
+    lightLogoUrl: '',
+    darkLogoUrl: '',
+    logoScalePercent: 100,
+    whatsappNumber: '',
+    facebookPageUrl: '',
+    instagramUrl: '',
+    trackingEnabled: false,
+    facebookPixelId: '',
+    tiktokPixelId: '',
+    karachiDeliveryFee: 200,
+    outsideKarachiDeliveryFee: 250,
+    freeShippingThreshold: 3000,
+    announcementBarEnabled: true,
+    announcementBarText: '',
+    announcementBarMessages: [],
+    homepageSectionOrder: [],
+  };
+
+  try {
+    await mongooseConnect();
+
+    let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+    if (!settings) {
+      settings = await Settings.create({ singletonKey: SETTINGS_KEY });
+      settings = settings.toObject();
+    }
+
+    return {
+      _id: settings._id.toString(),
+      storeName: settings.storeName || 'China Unique Store',
+      supportEmail: settings.supportEmail || '',
+      businessAddress: settings.businessAddress || '',
+      lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+      darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+      logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
+      whatsappNumber: settings.whatsappNumber || '',
+      facebookPageUrl: settings.facebookPageUrl || '',
+      instagramUrl: settings.instagramUrl || '',
+      trackingEnabled: settings.trackingEnabled === true,
+      facebookPixelId: settings.facebookPixelId || '',
+      tiktokPixelId: settings.tiktokPixelId || '',
+      karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
+      outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+      freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
+      announcementBarEnabled: settings.announcementBarEnabled ?? true,
+      announcementBarText: settings.announcementBarText || '',
+      announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
+      homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+    };
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn('[BUILD] MongoDB connection failed during build, returning default settings.');
+    } else {
+      console.error('[DB] Error fetching settings:', error.message);
+    }
+    return defaultSettings;
+  }
+}
+
+async function getCoverPhotosRaw() {
+  await mongooseConnect();
 
   let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
   if (!coverPhoto) {
@@ -398,7 +471,6 @@ async function getAllProductsRaw() {
 async function getCategoriesRaw() {
   await mongooseConnect();
 
-  // Sort by sortOrder first (admin-defined order), then by name as fallback
   const dbCategories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
   let mappedCategories = [];
   if (dbCategories.length > 0) {
@@ -415,7 +487,6 @@ async function getCategoriesRaw() {
     }));
   }
 
-  // Ensure special-offers is always in the list for the homepage sections
   if (!mappedCategories.some(c => c.id === 'special-offers')) {
     mappedCategories.unshift({
       _id: 'special-offers',
