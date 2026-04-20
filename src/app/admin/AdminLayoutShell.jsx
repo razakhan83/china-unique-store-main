@@ -397,7 +397,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
       </Sheet>
 
       <nav className="admin-mobile-nav fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="admin-mobile-nav__shell mx-auto grid max-w-xl grid-cols-4 items-center gap-1 border-t border-border/70 px-1 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2">
+        <div className="admin-mobile-nav__shell mx-auto grid max-w-xl grid-cols-4 items-center gap-1 border-t border-border/70 px-1 pb-2 pt-2">
           {mobileBottomNavItems.map(({ href, label, icon: Icon, match }) => {
             const active = match(pathname);
 
