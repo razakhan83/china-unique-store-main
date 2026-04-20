@@ -55,121 +55,183 @@ async function OrderDetailContent({ id }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <section className="surface-card rounded-xl p-5 lg:col-span-1">
+        <section className="surface-card min-w-0 overflow-hidden rounded-xl p-4 sm:p-5 lg:col-span-1 shadow-sm">
           <h2 className="font-semibold text-foreground">Customer</h2>
           <div className="mt-4 space-y-3 text-sm">
-            <p><span className="font-medium text-foreground">Name:</span> {order.customerName}</p>
-            <p><span className="font-medium text-foreground">Phone:</span> {order.customerPhone || 'Not provided'}</p>
-            <p><span className="font-medium text-foreground">Address:</span> {order.customerAddress || 'Not provided'}</p>
-            <p><span className="font-medium text-foreground">Status:</span> <Badge variant={statusVariant[order.status] || 'secondary'}>{order.status}</Badge></p>
+            <p className="flex flex-wrap gap-1.5"><span className="font-medium text-foreground">Name:</span> <span>{order.customerName}</span></p>
+            <p className="flex flex-wrap gap-1.5"><span className="font-medium text-foreground">Phone:</span> <span>{order.customerPhone || 'Not provided'}</span></p>
+            <p className="break-words"><span className="font-medium text-foreground">Address:</span> {order.customerAddress || 'Not provided'}</p>
+            <p className="flex items-center gap-1.5"><span className="font-medium text-foreground">Status:</span> <Badge variant={statusVariant[order.status] || 'secondary'}>{order.status}</Badge></p>
             <p><span className="font-medium text-foreground">Total:</span> Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
-            {order.notes ? <p><span className="font-medium text-foreground">Notes:</span> {order.notes}</p> : null}
+            {order.notes ? <p className="break-words mt-3 rounded-lg bg-muted/30 p-3 italic text-muted-foreground"><span className="font-medium text-foreground not-italic block mb-1">Notes:</span> {order.notes}</p> : null}
           </div>
         </section>
 
         <OrderDetailActions order={order} />
 
-        <section className="surface-card rounded-xl p-5 lg:col-span-2">
+        <section className="surface-card min-w-0 overflow-hidden rounded-xl p-4 sm:p-5 lg:col-span-2 shadow-sm">
           <h2 className="font-semibold text-foreground">Items</h2>
-          <div className="mt-4 overflow-hidden rounded-xl border border-border">
-            <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr className="bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">Qty</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Line Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {order.items.map((item, index) => (
-                  <Fragment key={`${item.productId}-${index}`}>
-                  <tr>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-border bg-muted">
-                          {item.image ? (
-                            <Image
-                              src={item.image}
-                              alt={item.name || 'Product image'}
-                              fill
-                              sizes="56px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                              N/A
-                            </div>
-                          )}
+          <div className="mt-4 space-y-4">
+            {/* Mobile View: Stacked Cards */}
+            <div className="grid gap-4 sm:hidden">
+              {order.items.map((item, index) => (
+                <div key={`${item.productId}-${index}`} className="flex flex-col rounded-xl border border-border bg-background p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border bg-muted shadow-inner">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name || 'Product'}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase text-muted-foreground">
+                          N/A
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">{item.name || 'Unnamed product'}</p>
-                          {item.productId ? (
-                            <p className="text-xs text-muted-foreground">Product ID: {item.productId}</p>
-                          ) : null}
-                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-foreground leading-tight">{item.name || 'Unnamed Product'}</p>
+                      {item.productId && (
+                        <p className="mt-0.5 text-[10px] text-muted-foreground font-mono">ID: {item.productId}</p>
+                      )}
+                      <div className="mt-2 flex items-baseline gap-2">
+                         <span className="text-xs text-muted-foreground">{item.quantity} × Rs. {Number(item.price || 0).toLocaleString('en-PK')}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">{item.quantity}</td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">Rs. {Number(item.price || 0).toLocaleString('en-PK')}</td>
-                    <td className="px-4 py-4 text-sm font-semibold text-foreground">
-                      Rs. {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString('en-PK')}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={4} className="bg-muted/20 px-4 pb-4 pt-0">
-                      <div className="rounded-xl border border-border bg-background p-4">
-                        <div className="mb-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                            Vendor Sourcing Info
-                          </p>
-                        </div>
-                        {Array.isArray(item.sourcingVendors) && item.sourcingVendors.length > 0 ? (
-                          <div className="overflow-hidden rounded-lg border border-border">
-                            <div className="overflow-x-auto">
-                            <table className="w-full min-w-[560px]">
-                              <thead>
-                                <tr className="bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                                  <th className="px-3 py-2">Vendor Name</th>
-                                  <th className="px-3 py-2">Shop Number</th>
-                                  <th className="px-3 py-2">Name on Vendor&apos;s List</th>
-                                  <th className="px-3 py-2">Our Cost Price</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-border">
-                                {item.sourcingVendors.map((vendor, vendorIndex) => (
-                                  <tr key={`${vendor.vendorId || vendor.name}-${vendorIndex}`}>
-                                    <td className="px-3 py-2.5 text-sm font-medium text-foreground">{vendor.name}</td>
-                                    <td className="px-3 py-2.5 text-sm text-muted-foreground">
-                                      {vendor.shopNumber || '—'}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-sm text-muted-foreground">
-                                      {vendor.vendorProductName || '—'}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-sm font-medium text-foreground">
-                                      {vendor.vendorPrice != null
-                                        ? `Rs. ${Number(vendor.vendorPrice).toLocaleString('en-PK')}`
-                                        : '—'}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                      <p className="mt-1 text-sm font-black text-foreground">
+                        Total: Rs. {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString('en-PK')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sourcing Info in Card */}
+                  {Array.isArray(item.sourcingVendors) && item.sourcingVendors.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-border/80 bg-muted/20 p-3">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                        Vendor Sourcing
+                      </p>
+                      <div className="space-y-3">
+                        {item.sourcingVendors.map((vendor, vIdx) => (
+                          <div key={vIdx} className="grid grid-cols-2 gap-2 text-xs border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                            <div>
+                              <p className="font-semibold text-foreground">{vendor.name}</p>
+                              <p className="text-[10px] text-muted-foreground">Shop: {vendor.shopNumber || '—'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-foreground">
+                                {vendor.vendorPrice != null ? `Rs. ${Number(vendor.vendorPrice).toLocaleString('en-PK')}` : '—'}
+                              </p>
+                              <p className="text-[10px] truncate text-muted-foreground italic px-1">{vendor.vendorProductName || '—'}</p>
                             </div>
                           </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            No vendor sourcing info has been added for this product yet.
-                          </p>
-                        )}
+                        ))}
                       </div>
-                    </td>
-                  </tr>
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View: Table (Hidden on small mobile) */}
+            <div className="hidden sm:block overflow-hidden rounded-xl border border-border bg-background">
+              <div className="overflow-x-auto scrollbar-hide">
+                <table className="w-full min-w-[640px] divide-y divide-border">
+                  <thead>
+                    <tr className="bg-muted/50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      <th className="px-4 py-3">Product</th>
+                      <th className="px-4 py-3">Qty</th>
+                      <th className="px-4 py-3">Price</th>
+                      <th className="px-4 py-3">Line Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {order.items.map((item, index) => (
+                      <Fragment key={`${item.productId}-${index}`}>
+                        <tr>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-border bg-muted">
+                                {item.image ? (
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name || 'Product image'}
+                                    fill
+                                    sizes="56px"
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    N/A
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-foreground">{item.name || 'Unnamed product'}</p>
+                                {item.productId ? (
+                                  <p className="text-xs text-muted-foreground font-mono opacity-70">ID: {item.productId}</p>
+                                ) : null}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground font-medium">{item.quantity}</td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground">Rs. {Number(item.price || 0).toLocaleString('en-PK')}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-foreground">
+                            Rs. {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString('en-PK')}
+                          </td>
+                        </tr>
+                        {/* Desktop Sourcing Sub-table */}
+                        <tr>
+                          <td colSpan={4} className="bg-muted/10 px-4 pb-4 pt-0">
+                            <div className="rounded-xl border border-border bg-background p-4 shadow-sm">
+                              <div className="mb-3">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                                  Vendor Sourcing Info
+                                </p>
+                              </div>
+                              {Array.isArray(item.sourcingVendors) && item.sourcingVendors.length > 0 ? (
+                                <div className="overflow-hidden rounded-lg border border-border">
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full min-w-[560px]">
+                                      <thead>
+                                        <tr className="bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                          <th className="px-3 py-2">Vendor Name</th>
+                                          <th className="px-3 py-2">Shop</th>
+                                          <th className="px-3 py-2">Vendor List Name</th>
+                                          <th className="px-3 py-2 text-right">Cost Price</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-border">
+                                        {item.sourcingVendors.map((vendor, vendorIndex) => (
+                                          <tr key={`${vendor.vendorId || vendor.name}-${vendorIndex}`}>
+                                            <td className="px-3 py-2.5 text-sm font-medium text-foreground">{vendor.name}</td>
+                                            <td className="px-3 py-2.5 text-xs text-muted-foreground">{vendor.shopNumber || '—'}</td>
+                                            <td className="px-3 py-2.5 text-xs text-muted-foreground italic">{vendor.vendorProductName || '—'}</td>
+                                            <td className="px-3 py-2.5 text-sm font-semibold text-right text-foreground">
+                                              {vendor.vendorPrice != null
+                                                ? `Rs. ${Number(vendor.vendorPrice).toLocaleString('en-PK')}`
+                                                : '—'}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-[11px] text-muted-foreground italic">
+                                  No sourcing info added.
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>

@@ -597,39 +597,41 @@ export default function EditProduct({ id }) {
           </div>
 
           <div className="space-y-4 rounded-xl border border-border bg-muted/35 p-4 md:p-5">
-            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-              <div>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-semibold text-foreground">SEO & Metadata</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                   These fields power the product page title, description, canonical URL, and schema markup.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={seoButtonDisabled}
-                  onClick={handleGenerateSeo}
-                  className="rounded-full"
-                >
-                  {isGeneratingSeo ? (
-                    <>
-                      <Loader2 className="mr-2 size-4 animate-spin" />
-                      {seoButtonLabel}
-                    </>
-                  ) : (
-                    seoButtonLabel
-                  )}
-                </Button>
-                {seoCooldownRemaining > 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Cooling down after Google AI rate limiting. Try again in {seoCooldownRemaining}s.
-                  </p>
-                ) : null}
+              <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={seoButtonDisabled}
+                    onClick={handleGenerateSeo}
+                    className="rounded-full shadow-sm"
+                  >
+                    {isGeneratingSeo ? (
+                      <>
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                        {seoButtonLabel}
+                      </>
+                    ) : (
+                      seoButtonLabel
+                    )}
+                  </Button>
+                  {seoCooldownRemaining > 0 ? (
+                    <p className="text-[10px] text-muted-foreground">
+                      Rate limited. Try again in {seoCooldownRemaining}s.
+                    </p>
+                  ) : null}
+                </div>
                 <div
                   className={cn(
-                    'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold',
+                    'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-[11px] sm:text-xs font-semibold',
                     seoReady
                       ? 'border-border bg-muted text-foreground'
                       : 'border-border bg-muted/60 text-foreground',
@@ -692,16 +694,16 @@ export default function EditProduct({ id }) {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-xl border border-border bg-background p-4">
+              <div className="min-w-0 rounded-xl border border-border bg-background p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Search Preview</p>
-                <div className="mt-3 space-y-1.5">
-                  <p className="line-clamp-2 text-base font-semibold text-foreground">{seoPreviewTitle}</p>
-                  <p className="truncate text-xs text-muted-foreground">{seoPreviewUrl}</p>
-                  <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{seoPreviewDescription}</p>
+                <div className="mt-3 space-y-2">
+                  <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground">{seoPreviewTitle}</p>
+                  <p className="break-all text-[11px] text-muted-foreground/80 md:text-xs">{seoPreviewUrl}</p>
+                  <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{seoPreviewDescription}</p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-background p-4">
+              <div className="min-w-0 rounded-xl border border-border bg-background p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Completion Check</p>
                 <div className="mt-3 space-y-2">
                   {seoChecks.map((item) => (
