@@ -360,47 +360,6 @@ async function getAllProductsRaw() {
 
   const products = await Product.find({})
     .select(PRODUCT_ADMIN_PROJECTION)
-    .populate(PRODUCT_CATEGORY_POPULATE)
-    .sort({ createdAt: -1 })
-    .lean();
-  return products.map(serializeProduct);
-}
-
-async function getSettingsRaw() {
-  await mongooseConnect();
-
-  let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
-  if (!settings) {
-    settings = await Settings.create({ singletonKey: SETTINGS_KEY });
-    settings = settings.toObject();
-  }
-
-  return {
-    _id: settings._id.toString(),
-    storeName: settings.storeName || 'China Unique Store',
-    supportEmail: settings.supportEmail || '',
-    businessAddress: settings.businessAddress || '',
-    lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
-    darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
-    logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
-    whatsappNumber: settings.whatsappNumber || '',
-    facebookPageUrl: settings.facebookPageUrl || '',
-    instagramUrl: settings.instagramUrl || '',
-    trackingEnabled: settings.trackingEnabled === true,
-    facebookPixelId: settings.facebookPixelId || '',
-    tiktokPixelId: settings.tiktokPixelId || '',
-    karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
-    outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
-    freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
-    announcementBarEnabled: settings.announcementBarEnabled ?? true,
-    announcementBarText: settings.announcementBarText || '',
-    announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
-    homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
-  };
-}
-
-async function getCoverPhotosRaw() {
-  await mongooseConnect();
 
   let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
   if (!coverPhoto) {
