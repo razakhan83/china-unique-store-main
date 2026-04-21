@@ -1,10 +1,23 @@
 import Link from 'next/link';
-import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Store, Users } from 'lucide-react';
+import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, ShoppingBag, Store, Users } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import DashboardChart from '@/components/admin/DashboardChart';
 import { getAdminDashboardData } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
+
+const STATUS_VARIANT = {
+  Pending: 'outline',
+  Confirmed: 'default',
+  Sourcing: 'secondary',
+  'In Process': 'secondary',
+  Packed: 'secondary',
+  Shipped: 'default',
+  'Out for Delivery': 'default',
+  Delivered: 'default',
+  Returned: 'destructive',
+  'Delivery Address Issue': 'destructive',
+};
 
 const statsConfig = [
   { title: 'Total Orders', icon: ShoppingBag, key: 'totalOrders' },
@@ -21,9 +34,12 @@ function formatAdminTimestamp(value) {
 }
 
 const quickActions = [
-  { href: '/admin/orders', title: 'Orders' },
-  { href: '/admin/products/add', title: 'Add product' },
-  { href: '/admin/settings', title: 'Settings' },
+  { href: '/admin/orders', title: 'Orders', icon: ShoppingBag },
+  { href: '/admin/products/add', title: 'Add Product', icon: Box },
+  { href: '/admin/categories', title: 'Categories', icon: LayoutGrid },
+  { href: '/admin/cover-photos', title: 'Cover Photos', icon: Images },
+  { href: '/admin/settings', title: 'Settings', icon: null },
+  { href: '/', title: 'View Store', icon: ExternalLink },
 ];
 
 export default async function AdminDashboardPage() {
@@ -81,7 +97,6 @@ async function DashboardContent() {
                 <Inbox className="size-4 text-muted-foreground" />
                 <h2 className="text-[13px] font-semibold text-foreground">Recent Orders</h2>
               </div>
-              {/* Embedded Today pulse inside recent orders header */}
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-end">
                     <p className="text-[15px] font-bold tabular-nums leading-none text-foreground">{summary.dailyConfirmedOrders}</p>
@@ -99,16 +114,21 @@ async function DashboardContent() {
               {recentOrders.length ? (
                 <div className="flex flex-col divide-y divide-border/60">
                   {recentOrders.map((order) => (
-                    <div key={order._id} className="flex items-center justify-between py-2.5">
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-foreground truncate">{order.customerName}</p>
+                    <Link key={order._id} href={`/admin/orders/${order._id}`} className="flex items-center justify-between gap-2 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-md">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[13px] font-medium text-foreground truncate">{order.customerName}</p>
+                          <Badge variant={STATUS_VARIANT[order.status] || 'outline'} className="text-[9px] px-1.5 py-0 h-4 shrink-0">
+                            {order.status}
+                          </Badge>
+                        </div>
                         <p className="text-[11px] text-muted-foreground mt-0.5">{order.orderId}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <p className="text-[13px] font-medium text-foreground tabular-nums">Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{formatAdminTimestamp(order.createdAt)}</p>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
@@ -117,6 +137,13 @@ async function DashboardContent() {
                 </div>
               )}
             </div>
+
+            {recentOrders.length > 0 && (
+              <Link href="/admin/orders" className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                View All Orders
+                <ArrowRight className="size-3" />
+              </Link>
+            )}
           </div>
           
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4">
@@ -129,16 +156,22 @@ async function DashboardContent() {
           <div className="admin-surface rounded-[0.5rem] p-4">
             <h2 className="mb-4 text-[13px] font-semibold text-foreground">Quick Actions</h2>
             <div className="flex flex-col gap-1.5">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="group flex items-center justify-between rounded-md border border-transparent bg-muted/30 px-3 py-2 transition-colors hover:bg-muted"
-                >
-                  <p className="text-[13px] font-medium text-foreground">{action.title}</p>
-                  <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                </Link>
-              ))}
+              {quickActions.map((action) => {
+                const ActionIcon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="group flex items-center justify-between rounded-md border border-transparent bg-muted/30 px-3 py-2 transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2">
+                      {ActionIcon ? <ActionIcon className="size-3.5 text-muted-foreground" /> : null}
+                      <p className="text-[13px] font-medium text-foreground">{action.title}</p>
+                    </div>
+                    <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </Link>
+                );
+              })}
             </div>
           </div>
           

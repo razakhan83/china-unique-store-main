@@ -20,7 +20,7 @@ function formatDate(value) {
 
   return date.toLocaleDateString('en-PK', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
   });
 }
@@ -33,7 +33,9 @@ function normalizeItems(items = []) {
     const unitPrice = getNumber(item?.price);
 
     return {
-      item: getText(item?.name || item?.Name, `Item ${index + 1}`),
+      name: getText(item?.name || item?.Name, `Item ${index + 1}`),
+      image: getText(item?.image || item?.Image || item?.imageUrl),
+      variant: getText(item?.variant),
       quantity,
       unitPrice,
       total: unitPrice * quantity,
@@ -67,50 +69,92 @@ async function loadImageDataUrl(url) {
   }
 }
 
-function drawSection(doc, { title, lines, x, y, width, palette }) {
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...palette.muted);
-  doc.text(title, x, y);
+// ─── Color Palette ──────────────────────────────────────────────────────────
+const PALETTE = {
+  text: [23, 23, 23],
+  muted: [115, 115, 115],
+  light: [163, 163, 163],
+  line: [229, 229, 229],
+  lineSoft: [243, 243, 243],
+  soft: [250, 250, 250],
+  white: [255, 255, 255],
+  accent: [15, 118, 110],       // teal-700
+  accentLight: [204, 251, 241], // teal-100
+  accentDark: [13, 87, 80],     // teal-800
+  statusPaid: [22, 101, 52],
+  statusPaidBg: [220, 252, 231],
+  statusUnpaid: [146, 64, 14],
+  statusUnpaidBg: [254, 243, 199],
+};
 
-  let currentY = y + 18;
+// ─── Drawing Helpers ────────────────────────────────────────────────────────
+
+function drawRoundedRect(doc, x, y, w, h, r, fillColor) {
+  doc.setFillColor(...fillColor);
+  doc.roundedRect(x, y, w, h, r, r, 'F');
+}
+
+function drawLine(doc, x1, y1, x2, y2, color = PALETTE.line) {
+  doc.setDrawColor(...color);
+  doc.setLineWidth(0.5);
+  doc.line(x1, y1, x2, y2);
+}
+
+function drawText(doc, text, x, y, opts = {}) {
+  const {
+    size = 10,
+    color = PALETTE.text,
+    weight = 'normal',
+    align = 'left',
+    maxWidth,
+  } = opts;
+
+  doc.setFont('helvetica', weight);
+  doc.setFontSize(size);
+  doc.setTextColor(...color);
+
+  const drawOpts = { align };
+  if (maxWidth) drawOpts.maxWidth = maxWidth;
+  doc.text(String(text), x, y, drawOpts);
+}
+
+function drawPill(doc, text, x, y, bgColor, textColor) {
+  const pillW = doc.getTextWidth(text) + 16;
+  const pillH = 18;
+  drawRoundedRect(doc, x, y - 12, pillW, pillH, 4, bgColor);
+  drawText(doc, text, x + 8, y, { size: 8, color: textColor, weight: 'bold' });
+  return pillW;
+}
+
+function drawInfoSection(doc, { title, lines, x, y, width }) {
+  drawText(doc, title, x, y, { size: 8, color: PALETTE.light, weight: 'bold' });
+
+  let currentY = y + 16;
   const safeLines = Array.isArray(lines) && lines.length > 0 ? lines : ['Not provided'];
 
   safeLines.forEach((line, index) => {
     const wrapped = doc.splitTextToSize(getText(line, 'Not provided'), width);
-    doc.setFont('helvetica', index === 0 ? 'bold' : 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(...palette.text);
-    doc.text(wrapped, x, currentY);
-    currentY += wrapped.length * 13 + 4;
+    drawText(doc, wrapped, x, currentY, {
+      size: index === 0 ? 10 : 9,
+      weight: index === 0 ? 'bold' : 'normal',
+      color: index === 0 ? PALETTE.text : PALETTE.muted,
+    });
+    currentY += wrapped.length * 13 + 3;
   });
 
   return currentY;
 }
 
+// ─── Main Generator ─────────────────────────────────────────────────────────
+
 export const generateInvoice = async (order, branding = {}) => {
   const { jsPDF } = await import('jspdf');
-  const autoTableImport = await import('jspdf-autotable');
-  const autoTable = autoTableImport.default || autoTableImport;
 
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 40;
-
-  if (typeof autoTable !== 'function' && typeof doc.autoTable !== 'function') {
-    throw new Error('PDF table plugin not loaded correctly.');
-  }
-
-  const palette = {
-    text: [31, 41, 55],
-    muted: [107, 114, 128],
-    line: [229, 231, 235],
-    soft: [243, 244, 246],
-    accent: [17, 24, 39],
-    statusPaid: [22, 101, 52],
-    statusUnpaid: [180, 83, 9],
-  };
+  const margin = 44;
+  const contentWidth = pageWidth - margin * 2;
 
   const items = normalizeItems(order?.items);
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -130,57 +174,66 @@ export const generateInvoice = async (order, branding = {}) => {
   const returnPolicyUrl = getText(branding?.returnPolicyUrl, `${baseUrl}/refund-policy`);
   const logoUrl = getText(branding?.lightLogoUrl || branding?.darkLogoUrl);
 
-  doc.setFillColor(255, 255, 255);
+  // ─── Page Background ───────────────────────────────────────────────────
+  doc.setFillColor(...PALETTE.white);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  const logoDataUrl = await loadImageDataUrl(logoUrl);
+  // ─── Header Bar ─────────────────────────────────────────────────────────
   const headerTop = margin;
 
+  // Logo or store name
+  const logoDataUrl = await loadImageDataUrl(logoUrl);
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, 'PNG', margin, headerTop, 120, 40, undefined, 'FAST');
+    doc.addImage(logoDataUrl, 'PNG', margin, headerTop - 4, 110, 36, undefined, 'FAST');
   } else {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.setTextColor(...palette.accent);
-    doc.text(storeName, margin, headerTop + 20);
+    drawText(doc, storeName, margin, headerTop + 18, {
+      size: 18, weight: 'bold', color: PALETTE.text,
+    });
   }
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(24);
-  doc.setTextColor(...palette.accent);
-  doc.text('INVOICE', pageWidth - margin, headerTop + 18, { align: 'right' });
+  // Right side: INVOICE title + accent underline
+  drawText(doc, 'INVOICE', pageWidth - margin, headerTop + 8, {
+    size: 26, weight: 'bold', color: PALETTE.accent, align: 'right',
+  });
+  // Accent underline below INVOICE
+  const invoiceTextWidth = 95;
+  doc.setFillColor(...PALETTE.accent);
+  doc.rect(pageWidth - margin - invoiceTextWidth, headerTop + 14, invoiceTextWidth, 2.5, 'F');
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(...palette.muted);
-  doc.text(`Invoice No: ${invoiceNumber}`, pageWidth - margin, headerTop + 36, { align: 'right' });
-  doc.text(`Date: ${formatDate(order?.createdAt)}`, pageWidth - margin, headerTop + 50, { align: 'right' });
+  // Invoice meta
+  drawText(doc, `#${invoiceNumber}`, pageWidth - margin, headerTop + 32, {
+    size: 10, color: PALETTE.muted, weight: 'bold', align: 'right',
+  });
+  drawText(doc, formatDate(order?.createdAt), pageWidth - margin, headerTop + 46, {
+    size: 9, color: PALETTE.muted, align: 'right',
+  });
 
-  doc.setDrawColor(...palette.line);
-  doc.line(margin, headerTop + 72, pageWidth - margin, headerTop + 72);
+  // Divider
+  const dividerY = headerTop + 64;
+  drawLine(doc, margin, dividerY, pageWidth - margin, dividerY, PALETTE.line);
 
-  const sectionY = headerTop + 102;
-  const gap = 36;
-  const colWidth = (pageWidth - margin * 2 - gap) / 2;
+  // ─── From / Ship To Sections ────────────────────────────────────────────
+  const sectionY = dividerY + 24;
+  const gap = 32;
+  const colWidth = (contentWidth - gap) / 2;
 
-  const leftBottom = drawSection(doc, {
-    title: 'STORE FROM',
+  const leftBottom = drawInfoSection(doc, {
+    title: 'FROM',
     lines: [
       storeName,
       businessAddress,
-      supportEmail ? `Email: ${supportEmail}` : 'Support email not configured',
-    ],
+      supportEmail ? `Email: ${supportEmail}` : '',
+    ].filter(Boolean),
     x: margin,
     y: sectionY,
     width: colWidth,
-    palette,
   });
 
-  const rightBottom = drawSection(doc, {
+  const rightBottom = drawInfoSection(doc, {
     title: 'SHIP TO',
     lines: [
       getText(order?.customerName, 'Customer'),
-      getText(order?.customerPhone) ? `Phone: ${getText(order?.customerPhone)}` : 'Phone: Not provided',
+      getText(order?.customerPhone) ? `Phone: ${getText(order?.customerPhone)}` : '',
       getText(order?.customerEmail) ? `Email: ${getText(order?.customerEmail)}` : '',
       getText(order?.customerAddress, 'Address not provided'),
       getText(order?.customerCity) ? `City: ${getText(order?.customerCity)}` : '',
@@ -189,126 +242,230 @@ export const generateInvoice = async (order, branding = {}) => {
     x: margin + colWidth + gap,
     y: sectionY,
     width: colWidth,
-    palette,
   });
 
-  const metaY = Math.max(leftBottom, rightBottom) + 18;
+  // ─── Payment Status Bar ─────────────────────────────────────────────────
+  const metaY = Math.max(leftBottom, rightBottom) + 12;
 
-  doc.setFillColor(...palette.soft);
-  doc.roundedRect(margin, metaY, pageWidth - margin * 2, 42, 8, 8, 'F');
+  drawRoundedRect(doc, margin, metaY, contentWidth, 36, 6, PALETTE.soft);
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...palette.text);
-  doc.text(`Payment Method: ${paymentMethod}`, margin + 14, metaY + 26);
-  doc.setTextColor(...(paymentStatus === 'Paid' ? palette.statusPaid : palette.statusUnpaid));
-  doc.text(`Status: ${paymentStatus}`, pageWidth / 2 + 20, metaY + 26);
-
-  autoTable(doc, {
-    startY: metaY + 62,
-    head: [['Item', 'Qty', 'Unit Price', 'Total']],
-    body: items.length
-      ? items.map((item) => [
-          item.item,
-          String(item.quantity),
-          formatCurrency(item.unitPrice),
-          formatCurrency(item.total),
-        ])
-      : [['No products found', '-', '-', formatCurrency(0)]],
-    theme: 'grid',
-    margin: { left: margin, right: margin },
-    headStyles: {
-      fillColor: palette.soft,
-      textColor: palette.text,
-      lineColor: palette.line,
-      lineWidth: 1,
-      fontStyle: 'bold',
-      fontSize: 10,
-    },
-    bodyStyles: {
-      textColor: palette.text,
-      lineColor: palette.line,
-      lineWidth: 1,
-      fontSize: 10,
-      cellPadding: 10,
-    },
-    styles: {
-      font: 'helvetica',
-      overflow: 'linebreak',
-      cellPadding: 10,
-    },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 48, halign: 'center' },
-      2: { cellWidth: 90, halign: 'right' },
-      3: { cellWidth: 90, halign: 'right' },
-    },
+  drawText(doc, 'Payment:', margin + 14, metaY + 22, {
+    size: 9, color: PALETTE.muted, weight: 'bold',
+  });
+  drawText(doc, paymentMethod, margin + 68, metaY + 22, {
+    size: 9, color: PALETTE.text, weight: 'bold',
   });
 
-  const tableBottom = doc.lastAutoTable?.finalY || metaY + 200;
-  const summaryY = tableBottom + 24;
-  const summaryWidth = 210;
-  const summaryX = pageWidth - margin - summaryWidth;
+  // Draw status pill
+  const isPaid = paymentStatus === 'Paid';
+  const pillBg = isPaid ? PALETTE.statusPaidBg : PALETTE.statusUnpaidBg;
+  const pillText = isPaid ? PALETTE.statusPaid : PALETTE.statusUnpaid;
+  drawPill(doc, paymentStatus.toUpperCase(), pageWidth - margin - 80, metaY + 22, pillBg, pillText);
 
-  if (getText(order?.notes)) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...palette.muted);
-    doc.text('NOTE', margin, summaryY + 10);
+  // ─── Product Table ──────────────────────────────────────────────────────
+  const tableStartY = metaY + 56;
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(...palette.text);
-    const noteLines = splitLines(doc, order.notes, pageWidth - margin * 2 - summaryWidth - 32);
-    doc.text(noteLines, margin, summaryY + 30);
+  // Table header
+  drawRoundedRect(doc, margin, tableStartY, contentWidth, 30, 6, PALETTE.accent);
+  const colProduct = margin + 14;
+  const colQty = margin + contentWidth * 0.55;
+  const colPrice = margin + contentWidth * 0.70;
+  const colTotal = pageWidth - margin - 14;
+
+  drawText(doc, 'Product', colProduct, tableStartY + 19, {
+    size: 9, color: PALETTE.white, weight: 'bold',
+  });
+  drawText(doc, 'Qty', colQty, tableStartY + 19, {
+    size: 9, color: PALETTE.white, weight: 'bold', align: 'center',
+  });
+  drawText(doc, 'Price', colPrice, tableStartY + 19, {
+    size: 9, color: PALETTE.white, weight: 'bold', align: 'right',
+  });
+  drawText(doc, 'Total', colTotal, tableStartY + 19, {
+    size: 9, color: PALETTE.white, weight: 'bold', align: 'right',
+  });
+
+  // Load product images in parallel
+  const imagePromises = items.map((item) => loadImageDataUrl(item.image));
+  const imageDataUrls = await Promise.all(imagePromises);
+
+  // Product rows
+  let rowY = tableStartY + 30;
+  const imgSize = 36;
+  const rowPadding = 14;
+  const minRowHeight = imgSize + rowPadding * 2;
+
+  if (items.length === 0) {
+    drawRoundedRect(doc, margin, rowY, contentWidth, 40, 0, PALETTE.white);
+    drawLine(doc, margin, rowY + 40, pageWidth - margin, rowY + 40);
+    drawText(doc, 'No products found', margin + contentWidth / 2, rowY + 25, {
+      size: 10, color: PALETTE.muted, align: 'center',
+    });
+    rowY += 40;
+  } else {
+    items.forEach((item, index) => {
+      // Check if we need a new page
+      if (rowY + minRowHeight > pageHeight - 100) {
+        doc.addPage();
+        doc.setFillColor(...PALETTE.white);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        rowY = margin;
+      }
+
+      const isEven = index % 2 === 0;
+      const rowBg = isEven ? PALETTE.white : PALETTE.soft;
+      const nameLines = doc.splitTextToSize(item.name, contentWidth * 0.38);
+      const actualRowHeight = Math.max(minRowHeight, nameLines.length * 14 + rowPadding * 2 + 8);
+
+      // Row background
+      drawRoundedRect(doc, margin, rowY, contentWidth, actualRowHeight, 0, rowBg);
+
+      // Bottom border
+      drawLine(doc, margin, rowY + actualRowHeight, pageWidth - margin, rowY + actualRowHeight, PALETTE.lineSoft);
+
+      const centerY = rowY + actualRowHeight / 2;
+
+      // Product image
+      const imgX = colProduct;
+      const imgY = centerY - imgSize / 2;
+      const imgDataUrl = imageDataUrls[index];
+
+      if (imgDataUrl) {
+        // Draw image border/background
+        doc.setFillColor(...PALETTE.soft);
+        doc.roundedRect(imgX, imgY, imgSize, imgSize, 4, 4, 'F');
+        doc.addImage(imgDataUrl, 'JPEG', imgX + 1, imgY + 1, imgSize - 2, imgSize - 2, `prod-${index}`, 'FAST');
+        // Border
+        doc.setDrawColor(...PALETTE.line);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(imgX, imgY, imgSize, imgSize, 4, 4, 'S');
+      } else {
+        // Placeholder square
+        drawRoundedRect(doc, imgX, imgY, imgSize, imgSize, 4, PALETTE.lineSoft);
+        drawText(doc, 'N/A', imgX + imgSize / 2, centerY + 3, {
+          size: 7, color: PALETTE.light, weight: 'bold', align: 'center',
+        });
+      }
+
+      // Product name + variant
+      const textX = imgX + imgSize + 10;
+      const nameY = nameLines.length > 1 ? centerY - 6 : centerY + 1;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...PALETTE.text);
+      doc.text(nameLines, textX, nameY);
+
+      if (item.variant) {
+        drawText(doc, item.variant, textX, nameY + nameLines.length * 13, {
+          size: 8, color: PALETTE.muted,
+        });
+      }
+
+      // Quantity
+      drawText(doc, String(item.quantity), colQty, centerY + 3, {
+        size: 10, color: PALETTE.text, weight: 'bold', align: 'center',
+      });
+
+      // Unit price
+      drawText(doc, formatCurrency(item.unitPrice), colPrice, centerY + 3, {
+        size: 9, color: PALETTE.muted, align: 'right',
+      });
+
+      // Line total
+      drawText(doc, formatCurrency(item.total), colTotal, centerY + 3, {
+        size: 10, color: PALETTE.text, weight: 'bold', align: 'right',
+      });
+
+      rowY += actualRowHeight;
+    });
   }
 
-  doc.setFillColor(...palette.soft);
-  doc.roundedRect(summaryX, summaryY, summaryWidth, 88, 8, 8, 'F');
+  // ─── Notes + Summary ────────────────────────────────────────────────────
+  const summaryY = rowY + 20;
+  const summaryWidth = 200;
+  const summaryX = pageWidth - margin - summaryWidth;
 
-  const totals = [
-    ['Subtotal', formatCurrency(subtotal)],
-    ['Shipping', formatCurrency(shipping)],
-    ['Total', formatCurrency(total)],
-  ];
+  // Check page overflow
+  if (summaryY + 120 > pageHeight - 60) {
+    doc.addPage();
+    doc.setFillColor(...PALETTE.white);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  }
 
-  let currentY = summaryY + 22;
-  totals.forEach(([label, value], index) => {
-    const isTotal = index === totals.length - 1;
-    if (isTotal) {
-      doc.setDrawColor(...palette.line);
-      doc.line(summaryX + 14, currentY - 10, summaryX + summaryWidth - 14, currentY - 10);
-    }
+  const finalSummaryY = (summaryY + 120 > pageHeight - 60) ? margin : summaryY;
 
-    doc.setFont('helvetica', isTotal ? 'bold' : 'normal');
-    doc.setFontSize(isTotal ? 11 : 10);
-    doc.setTextColor(...palette.text);
-    doc.text(label, summaryX + 14, currentY);
-    doc.text(value, summaryX + summaryWidth - 14, currentY, { align: 'right' });
-    currentY += isTotal ? 24 : 18;
+  // Notes (left side)
+  if (getText(order?.notes)) {
+    drawText(doc, 'ORDER NOTES', margin, finalSummaryY + 10, {
+      size: 8, color: PALETTE.light, weight: 'bold',
+    });
+    const noteLines = splitLines(doc, order.notes, contentWidth - summaryWidth - 28);
+    drawText(doc, noteLines, margin, finalSummaryY + 26, {
+      size: 9, color: PALETTE.muted,
+    });
+  }
+
+  // Summary box (right side)
+  drawRoundedRect(doc, summaryX, finalSummaryY, summaryWidth, 92, 8, PALETTE.soft);
+
+  // Border
+  doc.setDrawColor(...PALETTE.line);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(summaryX, finalSummaryY, summaryWidth, 92, 8, 8, 'S');
+
+  const summaryPad = 14;
+  let sumY = finalSummaryY + 22;
+
+  // Subtotal
+  drawText(doc, 'Subtotal', summaryX + summaryPad, sumY, { size: 9, color: PALETTE.muted });
+  drawText(doc, formatCurrency(subtotal), summaryX + summaryWidth - summaryPad, sumY, {
+    size: 9, color: PALETTE.text, align: 'right',
   });
 
-  let footerY = summaryY + 118;
-  if (footerY > pageHeight - 72) {
+  // Shipping
+  sumY += 18;
+  drawText(doc, 'Shipping', summaryX + summaryPad, sumY, { size: 9, color: PALETTE.muted });
+  drawText(doc, formatCurrency(shipping), summaryX + summaryWidth - summaryPad, sumY, {
+    size: 9, color: PALETTE.text, align: 'right',
+  });
+
+  // Divider
+  sumY += 12;
+  drawLine(doc, summaryX + summaryPad, sumY, summaryX + summaryWidth - summaryPad, sumY, PALETTE.line);
+
+  // Grand total with accent
+  sumY += 18;
+  drawText(doc, 'Total', summaryX + summaryPad, sumY, {
+    size: 11, color: PALETTE.accent, weight: 'bold',
+  });
+  drawText(doc, formatCurrency(total), summaryX + summaryWidth - summaryPad, sumY, {
+    size: 11, color: PALETTE.accent, weight: 'bold', align: 'right',
+  });
+
+  // ─── Footer ────────────────────────────────────────────────────────────
+  let footerY = finalSummaryY + 118;
+  if (footerY > pageHeight - 68) {
     doc.addPage();
+    doc.setFillColor(...PALETTE.white);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
     footerY = margin;
   }
 
-  doc.setDrawColor(...palette.line);
-  doc.line(margin, footerY, pageWidth - margin, footerY);
+  // Footer accent line
+  doc.setFillColor(...PALETTE.accent);
+  doc.rect(margin, footerY, contentWidth, 2, 'F');
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...palette.text);
-  doc.text('Thank you for shopping with us!', margin, footerY + 22);
+  drawText(doc, 'Thank you for your order!', margin, footerY + 20, {
+    size: 10, color: PALETTE.text, weight: 'bold',
+  });
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...palette.muted);
-  doc.text('Return policy:', margin, footerY + 40);
-  doc.text(returnPolicyUrl, margin + 60, footerY + 40, {
-    url: returnPolicyUrl,
-    maxWidth: pageWidth - margin * 2 - 60,
+  drawText(doc, `Return Policy: ${returnPolicyUrl}`, margin, footerY + 36, {
+    size: 8, color: PALETTE.muted, maxWidth: contentWidth,
+  });
+
+  drawText(doc, `${storeName} • Generated on ${new Date().toLocaleDateString('en-PK', { dateStyle: 'medium' })}`, margin, footerY + 50, {
+    size: 7, color: PALETTE.light,
   });
 
   doc.save(`Invoice_${invoiceNumber}.pdf`);

@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -17,16 +16,34 @@ import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 
-const theme = {
-  page: '#f5f6f7',
+/* ═══════════════════════════════════════════════════════════════════════════
+   Theme — unified palette
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const t = {
+  page: '#f4f2ee',
+  card: '#ffffff',
+  panel: '#f7f8f7',
+  border: '#e0e4e1',
+  borderSoft: '#ebeeed',
+  text: '#18201c',
+  textSecondary: '#374740',
+  muted: '#5e6e66',
+  light: '#94a39b',
+  accent: '#0f766e',
+  accentDark: '#0a5a54',
+  accentTint: '#e7f5f1',
+  accentBadge: '#d1fae5',
   white: '#ffffff',
-  text: '#1f2937',
-  muted: '#6b7280',
-  border: '#e5e7eb',
-  soft: '#f9fafb',
-  primary: '#0f766e',
-  primaryText: '#ffffff',
+  goldTint: '#faf6ec',
+  goldBorder: '#ead8b4',
+  goldText: '#725426',
+  goldLabel: '#9a6b11',
 };
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 function getText(value, fallback = '') {
   const text = String(value ?? '').trim();
@@ -44,39 +61,25 @@ function formatCurrency(value) {
 
 function formatDate(value) {
   if (!value) return 'Date unavailable';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Date unavailable';
-
-  return date.toLocaleDateString('en-PK', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  return date.toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function buildOrderUrl(order, baseUrl) {
   const orderId = getText(order?._id);
   const secureToken = getText(order?.secureToken);
-
-  if (orderId && secureToken) {
-    return `${baseUrl}/orders/${orderId}?token=${encodeURIComponent(secureToken)}`;
-  }
-
-  if (orderId) {
-    return `${baseUrl}/orders/${orderId}`;
-  }
-
+  if (orderId && secureToken) return `${baseUrl}/orders/${orderId}?token=${encodeURIComponent(secureToken)}`;
+  if (orderId) return `${baseUrl}/orders/${orderId}`;
   return `${baseUrl}/orders`;
 }
 
 function getOptimizedEmailImage(url) {
   const source = getText(url);
   if (!source) return '';
-
   return optimizeCloudinaryUrl(source, {
-    width: 96,
-    height: 96,
+    width: 128,
+    height: 128,
     crop: 'fill',
     gravity: 'auto',
     quality: 'auto',
@@ -87,19 +90,16 @@ function getOptimizedEmailImage(url) {
 
 function getItems(order) {
   if (!Array.isArray(order?.items)) return [];
-
   return order.items.map((item, index) => {
     const quantity = Math.max(1, getNumber(item?.quantity, 1));
     const unitPrice = getNumber(item?.price);
-    const lineTotal = unitPrice * quantity;
-
     return {
-      id: `${item?.productId || item?.name || item?.Name || 'item'}-${index}`,
+      id: `${item?.productId || item?.name || 'item'}-${index}`,
       name: getText(item?.name || item?.Name, `Item ${index + 1}`),
       quantity,
-      lineTotal,
+      unitPrice,
+      lineTotal: unitPrice * quantity,
       image: getOptimizedEmailImage(item?.image || item?.Image || item?.imageUrl),
-      variant: getText(item?.variant),
     };
   });
 }
@@ -108,46 +108,41 @@ function getPricing(order, items) {
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const total = Math.max(getNumber(order?.totalAmount, subtotal), subtotal);
   const shipping = Math.max(total - subtotal, 0);
-
   return { subtotal, shipping, total };
 }
 
-function InfoCard({ label, value }) {
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sub-components — all single-column, fully mobile safe
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function InfoRow({ label, value }) {
   return (
-    <Section style={styles.metaCard}>
-      <Text style={styles.metaLabel}>{label}</Text>
-      <Text style={styles.metaValue}>{value}</Text>
-    </Section>
+    <Text style={s.infoRow}>
+      <span style={s.infoLabel}>{label}: </span>
+      <span style={s.infoValue}>{value}</span>
+    </Text>
   );
 }
 
-function ItemCard({ item }) {
+function ProductRow({ item }) {
   return (
-    <Section style={styles.itemCard}>
+    <Section style={s.productRow}>
+      {/* Product image on its own line — prevents text cramping */}
       {item.image ? (
-        <Img src={item.image} alt={item.name} width="64" height="64" style={styles.productImage} />
-      ) : (
-        <Section style={styles.productImageFallback}>
-          <Text style={styles.productImageFallbackText}>N/A</Text>
-        </Section>
-      )}
-
-      <Text style={styles.productName}>{item.name}</Text>
-      {item.variant ? <Text style={styles.productMeta}>{item.variant}</Text> : null}
-
-      <Section style={styles.itemMetaBox}>
-        <Text style={styles.itemMetaRow}>
-          <span style={styles.itemMetaLabel}>Qty</span>
-          <span style={styles.itemMetaValue}>{item.quantity}</span>
-        </Text>
-        <Text style={styles.itemMetaRowLast}>
-          <span style={styles.itemMetaLabel}>Price</span>
-          <span style={styles.itemMetaValue}>{formatCurrency(item.lineTotal)}</span>
-        </Text>
-      </Section>
+        <Img src={item.image} alt={item.name} width="56" height="56" style={s.productImg} />
+      ) : null}
+      <Text style={s.productName}>{item.name}</Text>
+      <Text style={s.productMeta}>
+        Qty: {item.quantity} × {formatCurrency(item.unitPrice)}
+      </Text>
+      <Text style={s.productTotal}>{formatCurrency(item.lineTotal)}</Text>
     </Section>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Main Email Component
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function OrderConfirmationEmail({ order, branding }) {
   const customerName = getText(order?.customerName, 'Customer');
@@ -160,118 +155,143 @@ export default function OrderConfirmationEmail({ order, branding }) {
   const logoUrl = getText(branding?.lightLogoUrl || branding?.darkLogoUrl);
   const supportEmail = getText(branding?.supportEmail);
   const whatsappUrl = createWhatsAppUrl(branding?.whatsappNumber);
+  const shippingAddress = getText(order?.customerAddress, 'Will be confirmed.');
+  const customerCity = getText(order?.customerCity);
+  const customerPhone = getText(order?.customerPhone);
+  const landmark = getText(order?.landmark);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemSummary = itemCount === 1 ? '1 item' : `${itemCount} items`;
+
   const footerLinks = [
     { href: normalizeSocialUrl(branding?.facebookPageUrl), label: 'Facebook' },
     { href: normalizeSocialUrl(branding?.instagramUrl), label: 'Instagram' },
     { href: whatsappUrl, label: 'WhatsApp' },
-  ].filter((item) => item.href);
+  ].filter((l) => l.href);
 
   return (
     <Html>
       <Head />
-      <Preview>{`Order ${orderId} confirmed`}</Preview>
-      <Body style={styles.body}>
-        <Container style={styles.outer}>
-          <Section style={styles.card}>
-            <Section style={styles.logoWrap}>
-              {logoUrl ? (
-                <Img
-                  src={logoUrl}
-                  alt={branding?.storeName || 'China Unique'}
-                  width="180"
-                  style={styles.logo}
-                />
-              ) : (
-                <Text style={styles.logoFallback}>{branding?.storeName || 'China Unique Store'}</Text>
-              )}
-            </Section>
+      <Preview>{`Order ${orderId} confirmed — ${itemSummary}`}</Preview>
+      <Body style={s.body}>
+        <Container style={s.outer}>
+          <Section style={s.card}>
 
-            <Section style={styles.hero}>
-              <Text style={styles.eyebrow}>ORDER CONFIRMATION</Text>
-              <Heading as="h1" style={styles.heading}>
-                Thank you for your order, {customerName}!
-              </Heading>
-              <Text style={styles.lead}>
-                Hi {firstName}, your order has been placed successfully. We&apos;ll keep you updated as it moves through fulfillment.
+            {/* ─── Logo ──────────────────────────────────────── */}
+            {logoUrl ? (
+              <Section style={s.logoWrap}>
+                <Img src={logoUrl} alt={branding?.storeName || 'Store'} width="140" style={s.logo} />
+              </Section>
+            ) : null}
+
+            {/* ─── Hero ──────────────────────────────────────── */}
+            <Section style={s.hero}>
+              <Text style={s.heroCheck}>✓</Text>
+              <Text style={s.heroKicker}>ORDER CONFIRMED</Text>
+              <Heading as="h1" style={s.heroTitle}>Thank you, {firstName}!</Heading>
+              <Text style={s.heroSub}>
+                Your order is in and we&apos;re getting it ready. We&apos;ll update you as it moves to dispatch.
               </Text>
             </Section>
 
-            <Section style={styles.metaSection}>
-              <InfoCard label="Order ID" value={orderId} />
-              <InfoCard label="Date" value={orderDate} />
+            {/* ─── Progress bar (single row, no columns) ─────── */}
+            <Section style={s.progressWrap}>
+              <Text style={s.progressBar}>
+                <span style={s.progressStepActive}>● Confirmed</span>
+                <span style={s.progressDivider}>&nbsp;&nbsp;→&nbsp;&nbsp;</span>
+                <span style={s.progressStep}>Preparing</span>
+                <span style={s.progressDivider}>&nbsp;&nbsp;→&nbsp;&nbsp;</span>
+                <span style={s.progressStep}>Dispatched</span>
+              </Text>
             </Section>
 
-            <Section style={styles.trackWrap}>
-              <Button href={orderUrl} style={styles.trackButton}>
-                Track Order
-              </Button>
+            {/* ─── Order info (stacked rows, not columns) ───── */}
+            <Section style={s.infoBlock}>
+              <InfoRow label="Order ID" value={orderId} />
+              <InfoRow label="Date" value={orderDate} />
+              <InfoRow label="Items" value={itemSummary} />
+              <InfoRow label="Payment" value={getText(order?.paymentStatus, 'COD')} />
             </Section>
 
-            <Section style={styles.orderBlock}>
-              <Text style={styles.blockTitle}>Your order</Text>
+            {/* ─── Products ──────────────────────────────────── */}
+            <Section style={s.productsBlock}>
+              <Text style={s.sectionTitle}>Your order</Text>
 
               {items.length > 0 ? (
-                items.map((item) => <ItemCard key={item.id} item={item} />)
+                items.map((item) => <ProductRow key={item.id} item={item} />)
               ) : (
-                <Text style={styles.emptyText}>Order items were unavailable for this email.</Text>
+                <Text style={s.emptyText}>Order details were unavailable.</Text>
               )}
 
-              <Section style={styles.totalsWrap}>
-                <Text style={styles.totalRow}>
+              {/* Pricing */}
+              <Section style={s.pricingBox}>
+                <Text style={s.pricingRow}>
                   <span>Subtotal</span>
-                  <span>{formatCurrency(pricing.subtotal)}</span>
+                  <span style={s.pricingVal}>{formatCurrency(pricing.subtotal)}</span>
                 </Text>
-                <Text style={styles.totalRow}>
+                <Text style={s.pricingRow}>
                   <span>Shipping</span>
-                  <span>{formatCurrency(pricing.shipping)}</span>
+                  <span style={s.pricingVal}>{formatCurrency(pricing.shipping)}</span>
                 </Text>
-                <Hr style={styles.totalDivider} />
-                <Text style={styles.grandTotalRow}>
+                <Hr style={s.pricingHr} />
+                <Text style={s.pricingTotalRow}>
                   <span>Total</span>
-                  <span>{formatCurrency(pricing.total)}</span>
+                  <span style={s.pricingTotalVal}>{formatCurrency(pricing.total)}</span>
                 </Text>
               </Section>
             </Section>
 
-            <Section style={styles.helpBlock}>
-              <Text style={styles.blockTitle}>Need help?</Text>
-              <Text style={styles.helpText}>
-                If something looks off with your order, reach out and we&apos;ll sort it out quickly.
-              </Text>
-              <Text style={styles.helpText}>
+            {/* ─── Delivery Details ──────────────────────────── */}
+            <Section style={s.deliveryBlock}>
+              <Text style={s.deliveryLabel}>DELIVERY DETAILS</Text>
+              <Text style={s.deliveryLine}>{shippingAddress}</Text>
+              {customerCity ? <Text style={s.deliveryLine}>{customerCity}</Text> : null}
+              {landmark ? <Text style={s.deliveryLine}>Landmark: {landmark}</Text> : null}
+              {customerPhone ? <Text style={s.deliveryLine}>Phone: {customerPhone}</Text> : null}
+            </Section>
+
+            {/* ─── What happens next ─────────────────────────── */}
+            <Section style={s.nextBlock}>
+              <Text style={s.nextTitle}>What happens next</Text>
+              <Text style={s.nextStep}><span style={s.nextNum}>1.</span> We review your order and confirm stock.</Text>
+              <Text style={s.nextStep}><span style={s.nextNum}>2.</span> We prepare your package and update tracking.</Text>
+              <Text style={s.nextStep}><span style={s.nextNum}>3.</span> Tap below anytime to check your order.</Text>
+            </Section>
+
+            {/* ─── CTA ───────────────────────────────────────── */}
+            <Section style={s.ctaWrap}>
+              <Link href={orderUrl} style={s.ctaBtn}>View Order Details</Link>
+            </Section>
+
+            {/* ─── Support ───────────────────────────────────── */}
+            <Section style={s.supportWrap}>
+              <Text style={s.supportText}>
+                Need help?{' '}
                 {supportEmail ? (
-                  <>
-                    Email us at{' '}
-                    <Link href={`mailto:${supportEmail}`} style={styles.inlineLink}>
-                      {supportEmail}
-                    </Link>
-                  </>
-                ) : (
-                  'Reply to this email for support.'
-                )}
+                  <>Email <Link href={`mailto:${supportEmail}`} style={s.link}>{supportEmail}</Link></>
+                ) : 'Reply to this email.'}
               </Text>
             </Section>
 
-            <Hr style={styles.footerDivider} />
+            <Hr style={s.footerHr} />
 
-            <Section style={styles.footer}>
-              <Text style={styles.footerStore}>{branding?.storeName || 'China Unique Store'}</Text>
-              <Text style={styles.footerCopy}>
-                {branding?.businessAddress || 'Thank you for shopping with China Unique.'}
-              </Text>
+            {/* ─── Footer ────────────────────────────────────── */}
+            <Section style={s.footer}>
+              <Text style={s.footerStore}>{branding?.storeName || 'China Unique Store'}</Text>
               {footerLinks.length > 0 ? (
-                <Text style={styles.footerLinks}>
-                  {footerLinks.map((item, index) => (
+                <Text style={s.footerLinks}>
+                  {footerLinks.map((item, i) => (
                     <span key={item.label}>
-                      {index > 0 ? ' | ' : ''}
-                      <Link href={item.href} style={styles.inlineLink}>
-                        {item.label}
-                      </Link>
+                      {i > 0 ? ' · ' : ''}
+                      <Link href={item.href} style={s.link}>{item.label}</Link>
                     </span>
                   ))}
                 </Text>
               ) : null}
+              <Text style={s.footerDisclaimer}>
+                You received this because you placed an order. Thank you for your trust.
+              </Text>
             </Section>
+
           </Section>
         </Container>
       </Body>
@@ -279,258 +299,301 @@ export default function OrderConfirmationEmail({ order, branding }) {
   );
 }
 
-const styles = {
+/* ═══════════════════════════════════════════════════════════════════════════
+   Styles — everything single-column, no inline-block tricks
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+const s = {
   body: {
-    backgroundColor: theme.page,
+    backgroundColor: t.page,
     margin: 0,
-    padding: '24px 12px',
-    fontFamily: 'Helvetica Neue, Arial, sans-serif',
-    color: theme.text,
+    padding: '16px 8px',
+    fontFamily: font,
+    color: t.text,
+    WebkitTextSizeAdjust: '100%',
   },
-  outer: {
-    maxWidth: '640px',
-    margin: '0 auto',
-  },
+  outer: { maxWidth: '520px', margin: '0 auto' },
   card: {
-    backgroundColor: theme.white,
-    border: `1px solid ${theme.border}`,
-    borderRadius: '20px',
+    backgroundColor: t.card,
+    border: `1px solid ${t.border}`,
+    borderRadius: '16px',
     overflow: 'hidden',
   },
-  logoWrap: {
-    padding: '28px 20px 8px',
-    textAlign: 'center',
-  },
-  logo: {
-    margin: '0 auto',
-    width: '180px',
-    height: 'auto',
-  },
-  logoFallback: {
-    margin: 0,
-    fontSize: '24px',
-    lineHeight: '32px',
+
+  // Logo
+  logoWrap: { padding: '24px 20px 0', textAlign: 'center' },
+  logo: { margin: '0 auto', width: '140px', height: 'auto' },
+
+  // Hero
+  hero: { padding: '20px 20px 8px', textAlign: 'center' },
+  heroCheck: {
+    margin: '0 auto 6px',
+    width: '40px',
+    height: '40px',
+    lineHeight: '40px',
+    fontSize: '20px',
     fontWeight: 700,
-    color: theme.text,
-  },
-  hero: {
-    padding: '8px 20px 8px',
+    color: t.accent,
+    backgroundColor: t.accentTint,
+    borderRadius: '50%',
     textAlign: 'center',
   },
-  eyebrow: {
-    margin: '0 0 10px',
-    fontSize: '12px',
-    lineHeight: '18px',
+  heroKicker: {
+    margin: '0 0 4px',
+    fontSize: '11px',
+    lineHeight: '14px',
     letterSpacing: '0.12em',
     fontWeight: 700,
-    color: theme.muted,
+    color: t.accent,
   },
-  heading: {
-    margin: '0 0 12px',
-    fontSize: '28px',
-    lineHeight: '34px',
+  heroTitle: {
+    margin: '0 0 8px',
+    fontSize: '22px',
+    lineHeight: '28px',
     fontWeight: 700,
-    color: theme.text,
+    color: t.text,
   },
-  lead: {
+  heroSub: {
     margin: 0,
-    fontSize: '15px',
-    lineHeight: '24px',
-    color: theme.muted,
-  },
-  metaSection: {
-    padding: '18px 20px 0',
-  },
-  metaCard: {
-    border: `1px solid ${theme.border}`,
-    borderRadius: '12px',
-    padding: '14px 16px',
-    marginBottom: '10px',
-    backgroundColor: theme.soft,
-  },
-  metaLabel: {
-    margin: '0 0 4px',
-    fontSize: '12px',
-    lineHeight: '18px',
-    fontWeight: 700,
-    color: theme.muted,
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-  },
-  metaValue: {
-    margin: 0,
-    fontSize: '15px',
-    lineHeight: '22px',
-    fontWeight: 600,
-    color: theme.text,
-  },
-  trackWrap: {
-    padding: '24px 20px 8px',
-    textAlign: 'center',
-  },
-  trackButton: {
-    backgroundColor: theme.primary,
-    color: theme.primaryText,
-    borderRadius: '10px',
-    padding: '14px 24px',
-    fontSize: '14px',
+    fontSize: '13px',
     lineHeight: '20px',
-    fontWeight: 700,
-    textDecoration: 'none',
-    display: 'block',
-    width: '100%',
-    boxSizing: 'border-box',
+    color: t.muted,
   },
-  orderBlock: {
-    margin: '24px 20px 0',
-    border: `1px solid ${theme.border}`,
-    borderRadius: '18px',
+
+  // Progress bar — single horizontal line, no columns
+  progressWrap: { padding: '14px 20px 0', textAlign: 'center' },
+  progressBar: {
+    margin: 0,
+    fontSize: '13px',
+    lineHeight: '20px',
+    color: t.light,
+  },
+  progressStepActive: {
+    fontWeight: 700,
+    color: t.accent,
+  },
+  progressDivider: {
+    color: t.light,
+    fontSize: '12px',
+  },
+  progressStep: {
+    color: t.muted,
+    fontWeight: 500,
+  },
+
+  // Info rows — vertically stacked, never break
+  infoBlock: {
+    margin: '16px 20px 0',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    backgroundColor: t.panel,
+    border: `1px solid ${t.borderSoft}`,
+  },
+  infoRow: {
+    margin: '0 0 4px',
+    fontSize: '13px',
+    lineHeight: '20px',
+    color: t.text,
+  },
+  infoLabel: {
+    color: t.light,
+    fontWeight: 600,
+    fontSize: '12px',
+  },
+  infoValue: {
+    fontWeight: 700,
+    color: t.text,
+  },
+
+  // Products block
+  productsBlock: {
+    margin: '16px 20px 0',
+    border: `1px solid ${t.border}`,
+    borderRadius: '14px',
     overflow: 'hidden',
   },
-  blockTitle: {
+  sectionTitle: {
     margin: 0,
-    padding: '18px 18px 12px',
-    fontSize: '18px',
-    lineHeight: '26px',
-    fontWeight: 700,
-    color: theme.text,
-  },
-  itemCard: {
-    padding: '16px 18px',
-    borderTop: `1px solid ${theme.border}`,
-  },
-  productImage: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '12px',
-    objectFit: 'cover',
-    border: `1px solid ${theme.border}`,
-    display: 'block',
-    marginBottom: '12px',
-  },
-  productImageFallback: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '12px',
-    backgroundColor: theme.soft,
-    border: `1px solid ${theme.border}`,
-    textAlign: 'center',
-    marginBottom: '12px',
-  },
-  productImageFallbackText: {
-    margin: 0,
-    lineHeight: '64px',
-    fontSize: '10px',
-    fontWeight: 700,
-    color: theme.muted,
-  },
-  productName: {
-    margin: '0 0 4px',
+    padding: '14px 14px 8px',
     fontSize: '15px',
-    lineHeight: '22px',
-    fontWeight: 600,
-    color: theme.text,
-  },
-  productMeta: {
-    margin: '0 0 12px',
-    fontSize: '12px',
-    lineHeight: '18px',
-    color: theme.muted,
-  },
-  itemMetaBox: {
-    border: `1px solid ${theme.border}`,
-    borderRadius: '12px',
-    backgroundColor: theme.soft,
-    padding: '12px 14px',
-  },
-  itemMetaRow: {
-    margin: '0 0 10px',
-    fontSize: '14px',
     lineHeight: '20px',
-    color: theme.text,
-  },
-  itemMetaRowLast: {
-    margin: 0,
-    fontSize: '14px',
-    lineHeight: '20px',
-    color: theme.text,
-  },
-  itemMetaLabel: {
-    color: theme.muted,
-  },
-  itemMetaValue: {
-    float: 'right',
-    fontWeight: 600,
-    color: theme.text,
+    fontWeight: 700,
+    color: t.text,
   },
   emptyText: {
     margin: 0,
-    padding: '16px 18px 18px',
+    padding: '12px 14px',
+    fontSize: '13px',
+    color: t.muted,
+  },
+
+  // Product rows — image on its own line, text full-width below
+  productRow: {
+    padding: '12px 14px',
+    borderTop: `1px solid ${t.borderSoft}`,
+  },
+  productImg: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '10px',
+    objectFit: 'cover',
+    border: `1px solid ${t.borderSoft}`,
+    display: 'block',
+    marginBottom: '8px',
+  },
+  productName: {
+    margin: '0 0 2px',
     fontSize: '14px',
     lineHeight: '20px',
-    color: theme.muted,
+    fontWeight: 600,
+    color: t.text,
+    wordBreak: 'break-word',
   },
-  totalsWrap: {
-    padding: '18px',
-    backgroundColor: theme.soft,
-    borderTop: `1px solid ${theme.border}`,
+  productMeta: {
+    margin: '0 0 2px',
+    fontSize: '12px',
+    lineHeight: '18px',
+    color: t.muted,
   },
-  totalRow: {
-    margin: '0 0 10px',
-    fontSize: '14px',
-    lineHeight: '20px',
-    color: theme.text,
-  },
-  totalDivider: {
-    borderColor: theme.border,
-    margin: '10px 0 12px',
-  },
-  grandTotalRow: {
+  productTotal: {
     margin: 0,
-    fontSize: '16px',
-    lineHeight: '24px',
+    fontSize: '14px',
+    lineHeight: '20px',
     fontWeight: 700,
-    color: theme.text,
+    color: t.text,
   },
-  helpBlock: {
-    padding: '24px 20px 0',
+
+  // Pricing
+  pricingBox: {
+    padding: '12px 14px',
+    backgroundColor: t.panel,
+    borderTop: `1px solid ${t.border}`,
   },
-  helpText: {
+  pricingRow: {
+    margin: '0 0 4px',
+    fontSize: '13px',
+    lineHeight: '20px',
+    color: t.muted,
+  },
+  pricingVal: {
+    float: 'right',
+    fontWeight: 600,
+    color: t.text,
+  },
+  pricingHr: {
+    borderColor: t.border,
+    margin: '8px 0',
+  },
+  pricingTotalRow: {
+    margin: 0,
+    fontSize: '15px',
+    lineHeight: '22px',
+    fontWeight: 700,
+    color: t.accent,
+  },
+  pricingTotalVal: {
+    float: 'right',
+    color: t.accent,
+  },
+
+  // Delivery
+  deliveryBlock: {
+    margin: '14px 20px 0',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    backgroundColor: t.panel,
+    border: `1px solid ${t.borderSoft}`,
+  },
+  deliveryLabel: {
+    margin: '0 0 6px',
+    fontSize: '10px',
+    lineHeight: '14px',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    color: t.light,
+  },
+  deliveryLine: {
+    margin: '0 0 3px',
+    fontSize: '13px',
+    lineHeight: '20px',
+    color: t.textSecondary,
+    wordBreak: 'break-word',
+  },
+
+  // Next steps
+  nextBlock: {
+    margin: '14px 20px 0',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    backgroundColor: t.panel,
+    border: `1px solid ${t.borderSoft}`,
+  },
+  nextTitle: {
     margin: '0 0 8px',
     fontSize: '14px',
-    lineHeight: '22px',
-    color: theme.muted,
-  },
-  inlineLink: {
-    color: theme.primary,
-    textDecoration: 'none',
+    lineHeight: '20px',
     fontWeight: 700,
+    color: t.text,
   },
-  footerDivider: {
-    borderColor: theme.border,
-    margin: '24px 20px 0',
+  nextStep: {
+    margin: '0 0 4px',
+    fontSize: '13px',
+    lineHeight: '20px',
+    color: t.muted,
   },
-  footer: {
-    padding: '20px 20px 28px',
+  nextNum: {
+    fontWeight: 700,
+    color: t.accent,
+  },
+
+  // CTA
+  ctaWrap: { padding: '18px 20px 8px', textAlign: 'center' },
+  ctaBtn: {
+    backgroundColor: t.accent,
+    color: t.white,
+    borderRadius: '10px',
+    padding: '12px 20px',
+    fontSize: '14px',
+    lineHeight: '20px',
+    fontWeight: 700,
+    textDecoration: 'none',
+    display: 'block',
     textAlign: 'center',
   },
-  footerStore: {
-    margin: '0 0 6px',
-    fontSize: '14px',
-    lineHeight: '20px',
-    fontWeight: 700,
-    color: theme.text,
+
+  // Support
+  supportWrap: { padding: '12px 20px 0' },
+  supportText: {
+    margin: 0,
+    fontSize: '12px',
+    lineHeight: '18px',
+    color: t.muted,
+    textAlign: 'center',
   },
-  footerCopy: {
-    margin: '0 0 8px',
+  link: { color: t.accent, textDecoration: 'none', fontWeight: 600 },
+
+  // Footer
+  footerHr: { borderColor: t.borderSoft, margin: '16px 20px 0' },
+  footer: { padding: '16px 20px 24px', textAlign: 'center' },
+  footerStore: {
+    margin: '0 0 4px',
     fontSize: '13px',
-    lineHeight: '20px',
-    color: theme.muted,
+    lineHeight: '18px',
+    fontWeight: 700,
+    color: t.text,
   },
   footerLinks: {
+    margin: '0 0 6px',
+    fontSize: '12px',
+    lineHeight: '18px',
+    color: t.muted,
+  },
+  footerDisclaimer: {
     margin: 0,
-    fontSize: '13px',
-    lineHeight: '20px',
-    color: theme.muted,
+    fontSize: '11px',
+    lineHeight: '16px',
+    color: t.light,
   },
 };
