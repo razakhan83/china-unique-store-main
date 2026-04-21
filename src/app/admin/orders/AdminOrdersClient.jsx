@@ -53,6 +53,37 @@ const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { 
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
 
+function getStatusBadgeClass(status) {
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+
+  if (normalizedStatus === 'confirmed') {
+    return 'border-sky-200 bg-sky-100 text-sky-800';
+  }
+
+  if (normalizedStatus === 'delivered') {
+    return 'border-emerald-200 bg-emerald-100 text-emerald-800';
+  }
+
+  if (
+    normalizedStatus.includes('issue') ||
+    normalizedStatus.includes('return')
+  ) {
+    return 'border-red-200 bg-red-100 text-red-800';
+  }
+
+  if (
+    normalizedStatus === 'in process' ||
+    normalizedStatus === 'sourcing' ||
+    normalizedStatus === 'packed' ||
+    normalizedStatus === 'shipped' ||
+    normalizedStatus === 'out for delivery'
+  ) {
+    return 'border-amber-200 bg-amber-100 text-amber-800';
+  }
+
+  return 'border-slate-200 bg-slate-100 text-slate-800';
+}
+
 function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
 
@@ -685,7 +716,10 @@ export default function AdminOrdersClient({
                     <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
                     <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</td>
                     <td className="px-3 py-2">
-                      <Badge variant={statusVariant[order.status] || 'secondary'} className="text-[10px]">
+                      <Badge
+                        variant={statusVariant[order.status] || 'secondary'}
+                        className={cn('text-[10px]', getStatusBadgeClass(order.status))}
+                      >
                         {order.status}
                       </Badge>
                     </td>
@@ -791,7 +825,10 @@ export default function AdminOrdersClient({
                         </p>
                       </div>
                       <div className="flex items-start gap-1.5">
-                        <Badge variant={statusVariant[order.status] || 'secondary'} className="text-[10px]">
+                        <Badge
+                          variant={statusVariant[order.status] || 'secondary'}
+                          className={cn('text-[10px]', getStatusBadgeClass(order.status))}
+                        >
                           {order.status}
                         </Badge>
                         <DropdownMenu>
