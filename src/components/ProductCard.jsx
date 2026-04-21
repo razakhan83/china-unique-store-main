@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import ProductCardInteractiveControls from "@/components/ProductCardInteractiveControls";
+import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
+import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -97,7 +98,7 @@ export default function ProductCard({ product, className = "" }) {
           )}
         </div>
 
-        <ProductCardInteractiveControls product={product} isOutOfStock={isUnavailable} />
+        <ProductCardWishlistSlot product={product} />
 
         <Link
           href={productHref}
@@ -169,6 +170,7 @@ export default function ProductCard({ product, className = "" }) {
               </p>
             )}
           </div>
+          <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
         </div>
       </CardContent>
     </Card>
