@@ -219,11 +219,9 @@ export default function ProductPage({ params }) {
           <ProductHeroSection slugPromise={slugPromise} />
         </Suspense>
 
-        <div className="mb-4 mt-12">
-          <Suspense fallback={<ProductReviewsSkeleton />}>
-            <ProductReviewsSection slugPromise={slugPromise} />
-          </Suspense>
-        </div>
+        <Suspense fallback={<ProductReviewsSkeleton />}>
+          <ProductReviewsSection slugPromise={slugPromise} />
+        </Suspense>
       </div>
 
       <Suspense fallback={<RelatedProductsSkeleton />}>
@@ -411,7 +409,15 @@ async function ProductReviewsSection({ slugPromise }) {
     notFound();
   }
 
-  return <ProductReviews productId={pageData.product._id} productName={pageData.product.Name} />;
+  if (pageData.reviewSummary.reviewCount === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-4 mt-12">
+      <ProductReviews productId={pageData.product._id} productName={pageData.product.Name} />
+    </div>
+  );
 }
 
 async function RelatedProductsSection({ slugPromise }) {

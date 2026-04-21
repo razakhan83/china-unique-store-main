@@ -189,7 +189,9 @@ function toProductDetailView(product) {
     isLive: product.isLive !== false,
     stockQuantity: Number(product.stockQuantity || 0),
     createdAt: product.createdAt,
-    vendors: Array.isArray(product.vendors) ? product.vendors : [],
+    vendors: Array.isArray(product.vendors)
+      ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
+      : [],
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
@@ -212,7 +214,9 @@ function toAdminProductRow(product) {
     updatedAt: product.updatedAt,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
-    vendors: Array.isArray(product.vendors) ? product.vendors : [],
+    vendors: Array.isArray(product.vendors)
+      ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
+      : [],
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
@@ -333,10 +337,9 @@ function toOrderSummaryRow(order) {
           _id: item._id?.toString(),
           productId: item.productId?.toString() || item.productId,
           sourcingVendors: Array.isArray(item.sourcingVendors)
-            ? item.sourcingVendors.map((vendor) => ({
-                ...vendor,
-                vendorId: vendor?.vendorId?.toString?.() || vendor?.vendorId || '',
-              }))
+            ? item.sourcingVendors
+                .map((vendor) => normalizeVendorSnapshot(vendor))
+                .filter(Boolean)
             : [],
         }))
       : [],

@@ -34,6 +34,10 @@ function ReviewCard({ name, body, rating, date }) {
 
 export default async function ProductReviews({ productId, productName }) {
   const reviews = await getApprovedReviews(productId);
+  if (reviews.length === 0) {
+    return null;
+  }
+
   const averageRating =
     reviews.length > 0 ? Math.round(reviews.reduce((total, review) => total + review.rating, 0) / reviews.length) : 0;
 
@@ -56,24 +60,17 @@ export default async function ProductReviews({ productId, productName }) {
 
         <ProductReviewsClient productId={productId} productName={productName} reviewCount={reviews.length} />
       </div>
-
-      {reviews.length > 0 ? (
-        <div className="grid gap-4">
-          {reviews.map((review) => (
-            <ReviewCard
-              key={review._id}
-              name={review.userName}
-              body={review.comment}
-              rating={review.rating}
-              date={review.createdAt}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="py-8 text-center text-muted-foreground">
-          <p>No reviews yet for this product. Be the first to share your experience!</p>
-        </div>
-      )}
+      <div className="grid gap-4">
+        {reviews.map((review) => (
+          <ReviewCard
+            key={review._id}
+            name={review.userName}
+            body={review.comment}
+            rating={review.rating}
+            date={review.createdAt}
+          />
+        ))}
+      </div>
     </div>
   );
 }

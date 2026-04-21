@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,11 +37,27 @@ const STATUS_COLORS = {
   Returned: 'bg-muted text-muted-foreground border-border',
 };
 
+function splitOrdersForDisplay(orders) {
+  if (orders.length <= 1) {
+    return {
+      featuredOrders: orders,
+      collapsibleOrders: [],
+    };
+  }
+
+  return {
+    featuredOrders: [orders[0]],
+    collapsibleOrders: orders.slice(1),
+  };
+}
+
 export default function OrdersClient({ initialOrders, invoiceBranding }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('active');
+  const [activeOpenOrderIds, setActiveOpenOrderIds] = useState([]);
+  const [historyOpenOrderIds, setHistoryOpenOrderIds] = useState([]);
   const orders = initialOrders;
 
   useEffect(() => {
@@ -143,7 +160,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
     return (
       <div key={order._id} className="surface-card overflow-hidden rounded-xl border border-border shadow-sm transition-all hover:shadow-md">
         {/* Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-muted/30">
+        <div className="flex flex-col justify-between gap-4 bg-muted/30 p-6 sm:flex-row sm:items-center">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Order ID</span>
@@ -166,13 +183,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-start gap-2 sm:items-end">
-            <Badge 
-              variant="outline" 
-              className={cn("px-3 py-1 rounded-full border shadow-sm", STATUS_COLORS[order.status] || 'bg-muted')}
-            >
-              {order.status}
-            </Badge>
+          <div className="flex flex-wrap items-center justify-end gap-2 self-end text-right sm:self-auto">
             <InvoiceButton order={order} branding={invoiceBranding} />
             {hasUnreviewedItems && (
               <Button 
@@ -184,6 +195,12 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                 Review Now
               </Button>
             )}
+            <Badge 
+              variant="outline" 
+              className={cn("px-3 py-1 rounded-full border shadow-sm", STATUS_COLORS[order.status] || 'bg-muted')}
+            >
+              {order.status}
+            </Badge>
           </div>
         </div>
 
@@ -261,6 +278,106 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
     );
   };
 
+  const renderCollapsedOrderItem = (order, isExpanded) => {
+    const hasUnreviewedItems = order.status === 'Delivered' && order.items.some(item => !item.isReviewed);
+    const allReviewed = order.status === 'Delivered' && order.items.length > 0 && order.items.every(item => item.isReviewed);
+
+    return (
+      <AccordionItem
+        key={order._id}
+        value={order._id}
+        className="overflow-hidden rounded-xl border border-border bg-card px-4 shadow-sm"
+      >
+        {isExpanded ? (
+          <div className="flex items-center justify-end py-2">
+            <AccordionTrigger className="h-auto w-auto shrink-0 justify-center border-0 bg-transparent p-0 text-[11px] font-medium text-muted-foreground hover:no-underline">
+              Hide details
+              <span className="sr-only">Collapse order details</span>
+            </AccordionTrigger>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2 py-3 sm:gap-4 sm:py-4">
+            <div className="min-w-0 flex-1 space-y-1 text-left">
+              <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground sm:text-xs sm:tracking-wider">ID</span>
+                <span className="truncate font-mono text-[11px] font-semibold text-foreground sm:text-sm">{order.orderId}</span>
+              </div>
+              <div className="flex items-center gap-2 overflow-hidden text-[10px] text-muted-foreground sm:flex-wrap sm:gap-3 sm:text-xs">
+                <span>{mounted ? new Date(order.createdAt).toLocaleDateString() : '---'}</span>
+                <span className="shrink-0">{order.items.length} item{order.items.length === 1 ? '' : 's'}</span>
+                <span className="truncate">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+              {hasUnreviewedItems ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 px-2 text-[10px] bg-primary hover:bg-primary/90 sm:h-8 sm:gap-2 sm:px-3 sm:text-xs"
+                  onClick={() => handleReviewClick(order)}
+                >
+                  <MessageSquare className="size-3" />
+                  Review Now
+                </Button>
+              ) : null}
+              {allReviewed ? (
+                <Badge className="rounded-full bg-success px-2 py-0.5 text-[9px] text-success-foreground hover:bg-success/90 sm:px-2.5 sm:py-1 sm:text-[10px]">
+                  Reviewed
+                </Badge>
+              ) : null}
+              <Badge
+                variant="outline"
+                className={cn('max-w-max rounded-full border px-2 py-0.5 text-[9px] shadow-sm sm:px-3 sm:py-1 sm:text-[10px]', STATUS_COLORS[order.status] || 'bg-muted')}
+              >
+                {order.status}
+              </Badge>
+              <AccordionTrigger className="h-auto w-auto shrink-0 justify-center border-0 bg-transparent p-0 hover:no-underline">
+                <span className="sr-only">Expand order details</span>
+              </AccordionTrigger>
+            </div>
+          </div>
+        )}
+        <AccordionContent className="pb-4 pt-0">
+          {renderOrderCard(order)}
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
+  const renderOrdersSection = (sectionKey, ordersForSection, emptyTitle, emptyDescription, Icon) => {
+    if (ordersForSection.length === 0) {
+      return renderEmptyState(emptyTitle, emptyDescription, Icon);
+    }
+
+    const { featuredOrders, collapsibleOrders } = splitOrdersForDisplay(ordersForSection);
+    const openOrderIds = sectionKey === 'active' ? activeOpenOrderIds : historyOpenOrderIds;
+    const setOpenOrderIds = sectionKey === 'active' ? setActiveOpenOrderIds : setHistoryOpenOrderIds;
+
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        {featuredOrders.map(renderOrderCard)}
+
+        {collapsibleOrders.length > 0 ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <Archive className="size-3.5" />
+              More Orders
+            </div>
+            <Accordion
+              className="gap-3"
+              multiple
+              value={openOrderIds}
+              onValueChange={(value) => setOpenOrderIds(Array.isArray(value) ? value : [])}
+            >
+              {collapsibleOrders.map((order) => renderCollapsedOrderItem(order, openOrderIds.includes(order._id)))}
+            </Accordion>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-6">
@@ -284,22 +401,22 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
         </TabsList>
 
         <TabsContent value="active" className="space-y-4">
-          {activeOrders.length > 0 ? (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              {activeOrders.map(renderOrderCard)}
-            </div>
-          ) : (
-            renderEmptyState('No active orders', "You don't have any ongoing shipments at the moment.", PackageSearch)
+          {renderOrdersSection(
+            'active',
+            activeOrders,
+            'No active orders',
+            "You don't have any ongoing shipments at the moment.",
+            PackageSearch
           )}
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          {historyOrders.length > 0 ? (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              {historyOrders.map(renderOrderCard)}
-            </div>
-          ) : (
-            renderEmptyState('No order history', 'Your completed orders will appear here.', Archive)
+          {renderOrdersSection(
+            'history',
+            historyOrders,
+            'No order history',
+            'Your completed orders will appear here.',
+            Archive
           )}
         </TabsContent>
       </Tabs>
