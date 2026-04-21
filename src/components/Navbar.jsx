@@ -1,45 +1,28 @@
 'use client';
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   ChevronDown,
   LayoutGrid,
-  LogOut,
   Menu,
   Search,
   ShoppingBag,
   Sparkles,
   Store,
   Tag,
-  Heart,
-  Settings,
-  User,
   X,
 } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
 
-import SearchField from '@/components/SearchField';
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import GoogleSignInButton from '@/components/GoogleSignInButton';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import MyOrdersButton from '@/components/MyOrdersButton';
-import MyWishlistButton from '@/components/MyWishlistButton';
-import AuthModal from '@/components/AuthModal';
-import { trackSearchEvent } from '@/lib/clientTracking';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -69,6 +52,35 @@ import {
 } from '@/components/ui/sidebar';
 import StoreLogo from '@/components/StoreLogo';
 import { cn } from '@/lib/utils';
+
+const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), {
+  ssr: false,
+  loading: () => <div className="min-h-10 rounded-xl bg-sidebar-accent/25" aria-hidden="true" />,
+});
+
+const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), {
+  ssr: false,
+  loading: () => <div className="min-h-10 rounded-xl bg-sidebar-accent/25" aria-hidden="true" />,
+});
+
+const AuthModal = dynamic(() => import('@/components/AuthModal'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const NavbarSearchPanel = dynamic(() => import('@/components/NavbarSearchPanel'), {
+  loading: () => <div className="min-h-12 rounded-xl border border-border/70 bg-card/95" aria-hidden="true" />,
+});
+
+const NavbarDesktopAccountControl = dynamic(() => import('@/components/NavbarDesktopAccountControl'), {
+  ssr: false,
+  loading: () => <div className="hidden md:block md:size-11 md:rounded-2xl md:bg-muted/45" aria-hidden="true" />,
+});
+
+const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFooter'), {
+  ssr: false,
+  loading: () => <div className="min-h-10 w-full rounded-xl bg-muted/45" aria-hidden="true" />,
+});
 
 function normalizeAnnouncementItems(messages = [], announcementText = '') {
   const rawMessages = Array.isArray(messages) && messages.length > 0
@@ -135,7 +147,6 @@ function NavbarContent({
   announcementBarText = '',
   announcementBarMessages = [],
 }) {
-  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
@@ -151,18 +162,7 @@ function NavbarContent({
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const closeCategoriesTimeoutRef = useRef(null);
-  const deferredSearchTerm = useDeferredValue(searchTerm);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(deferredSearchTerm), 250);
-    return () => clearTimeout(timer);
-  }, [deferredSearchTerm]);
 
   useEffect(() => {
     return () => {
@@ -172,60 +172,6 @@ function NavbarContent({
     };
   }, []);
 
-  useEffect(() => {
-    let isActive = true;
-    const controller = new AbortController();
-
-    async function loadSuggestions() {
-      if (!debouncedSearch.trim()) {
-        if (isActive) {
-          setSuggestions([]);
-          setIsLoadingSuggestions(false);
-        }
-        return;
-      }
-
-      setIsLoadingSuggestions(true);
-
-      try {
-        const response = await fetch(`/api/search-products?q=${encodeURIComponent(debouncedSearch.trim())}&limit=5`, {
-          signal: controller.signal,
-        });
-        const result = await response.json();
-
-        if (!isActive) return;
-
-        setSuggestions(
-          Array.isArray(result?.data)
-            ? result.data.map((product) => ({
-                ...product,
-                onSelect: () => {
-                  setIsSearchOpen(false);
-                  setIsFocused(false);
-                  router.push(`/products/${product.slug || product._id || product.id}`, { scroll: true });
-                },
-              }))
-            : [],
-        );
-      } catch (error) {
-        if (error?.name !== 'AbortError' && isActive) {
-          setSuggestions([]);
-        }
-      } finally {
-        if (isActive) {
-          setIsLoadingSuggestions(false);
-        }
-      }
-    }
-
-    loadSuggestions();
-
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
-  }, [debouncedSearch, router]);
-
   function handleCategoryClick(categoryId) {
     setActiveCategory(categoryId);
     setIsSidebarOpen(false);
@@ -234,61 +180,32 @@ function NavbarContent({
     router.push(url, { scroll: true });
   }
 
-  function handleSearchSubmit(event) {
-    event.preventDefault();
-    if (!searchTerm.trim()) return;
-    trackSearchEvent({ searchString: searchTerm.trim() });
-    setIsSearchOpen(false);
-    setIsFocused(false);
-    setSuggestions([]);
-    router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
-  }
-
   function handleSearchToggle() {
-    setIsAuthModalOpen(false);
     setIsSidebarOpen(false);
     setIsAccountDrawerOpen(false);
-    setIsSearchOpen((value) => {
-      const nextValue = !value;
-      if (!nextValue) {
-        setIsFocused(false);
-        setSuggestions([]);
-      }
-      return nextValue;
-    });
+    setIsSearchOpen((value) => !value);
   }
 
   function handleSearchOpenChange(open) {
     const nextOpen = open === true;
 
     if (nextOpen) {
-      setIsAuthModalOpen(false);
       setIsSidebarOpen(false);
       setIsAccountDrawerOpen(false);
     }
 
     setIsSearchOpen(nextOpen);
-
-    if (!nextOpen) {
-      setIsFocused(false);
-      setSuggestions([]);
-    }
   }
 
   function handleMobileNavigate(href) {
     setIsSearchOpen(false);
-    setIsFocused(false);
-    setSuggestions([]);
     setIsAccountDrawerOpen(false);
     router.push(href);
   }
 
   function handleAccountDrawerChange(open) {
     if (open) {
-      setIsAuthModalOpen(false);
       setIsSearchOpen(false);
-      setIsFocused(false);
-      setSuggestions([]);
       setIsSidebarOpen(false);
     }
     setIsAccountDrawerOpen(open);
@@ -457,85 +374,7 @@ function NavbarContent({
             )}
           </Button>
 
-          {sessionStatus === 'loading' ? (
-            <div className="hidden md:block">
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
-                disabled
-                aria-label="Loading account"
-              >
-                <span className="size-9 rounded-full bg-muted/80" />
-              </Button>
-            </div>
-          ) : session ? (
-            <div className="hidden md:block">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-lg"
-                    className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
-                  >
-                    <Avatar className="size-9">
-                      <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
-                      <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{session.user?.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/orders')}>
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      <span>My Orders</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/wishlist')}>
-                      <Heart className="mr-2 h-4 w-4" />
-                      <span>Wishlist</span>
-                    </DropdownMenuItem>
-                    {session.user?.isAdmin ? (
-                      <DropdownMenuItem onClick={() => router.push('/admin')}>
-                        <LayoutGrid className="mr-2 h-4 w-4" />
-                        <span>Admin Panel</span>
-                      </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuItem onClick={() => router.push('/settings')}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Account Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <div className="hidden md:block">
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                onClick={() => setIsAuthModalOpen(true)}
-                className={`nav-profile-button overflow-hidden ${navActionButtonClass}`}
-              >
-                <span className="relative flex size-5 items-center justify-center">
-                  <User className="size-5" />
-                </span>
-              </Button>
-            </div>
-          )}
-          
-          <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+          <NavbarDesktopAccountControl navActionButtonClass={navActionButtonClass} />
         </div>
       </header>
 
@@ -552,210 +391,140 @@ function NavbarContent({
       >
         <div className="overflow-visible">
           <div className="navbar-search-inner mx-auto max-w-4xl px-4 py-4">
-            <SearchField
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              onSubmit={handleSearchSubmit}
-              onClear={() => {
-                setSearchTerm('');
-                setDebouncedSearch('');
-                setSuggestions([]);
-                setIsFocused(false);
-              }}
-              onFocus={() => setIsFocused(true)}
-              isFocused={isFocused}
-              suggestions={suggestions}
-              showSuggestions
-              emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}
-            />
+            {isSearchOpen ? (
+              <NavbarSearchPanel open={isSearchOpen} onOpenChange={handleSearchOpenChange} />
+            ) : null}
           </div>
         </div>
       </div>
 
-      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent
-          side="left"
-          showCloseButton={false}
-          className="w-screen min-w-0 max-w-none overflow-hidden border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]"
-        >
-          <Sidebar className="h-full bg-transparent text-inherit">
-            <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
-              <StoreLogo
-                href="/"
-                storeName={storeName}
-                lightLogoUrl={lightLogoUrl}
-                darkLogoUrl={darkLogoUrl}
-                logoScalePercent={logoScalePercent}
-                variant="light-surface"
-                compact
-                onClick={() => setIsSidebarOpen(false)}
-                className="max-w-full pl-3"
-              />
-            </SidebarHeader>
+      {isSidebarOpen ? (
+        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+          <SheetContent
+            side="left"
+            showCloseButton={false}
+            className="w-screen min-w-0 max-w-none overflow-hidden border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]"
+          >
+            <Sidebar className="h-full bg-transparent text-inherit">
+              <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
+                <StoreLogo
+                  href="/"
+                  storeName={storeName}
+                  lightLogoUrl={lightLogoUrl}
+                  darkLogoUrl={darkLogoUrl}
+                  logoScalePercent={logoScalePercent}
+                  variant="light-surface"
+                  compact
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="max-w-full pl-3"
+                />
+              </SidebarHeader>
 
-            <SidebarContent>
-              <ScrollArea className="min-h-0 flex-1 px-3 py-3">
-                <div className="flex min-h-full flex-col gap-3">
-                  <SidebarGroup className="gap-2 p-0">
-                    <SidebarGroupLabel>Main</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {mobileItems.map(({ href, label, icon: Icon }) => (
-                          <SidebarMenuItem key={href}>
-                            <SidebarMenuButton
-                              isActive={pathname === href}
-                              className={mobileMenuButtonClass}
-                              render={<Link href={href} onClick={() => setIsSidebarOpen(false)} />}
-                            >
-                              <Icon />
-                              <span>{label}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
+              <SidebarContent>
+                <ScrollArea className="min-h-0 flex-1 px-3 py-3">
+                  <div className="flex min-h-full flex-col gap-3">
+                    <SidebarGroup className="gap-2 p-0">
+                      <SidebarGroupLabel>Main</SidebarGroupLabel>
+                      <SidebarGroupContent>
+                        <SidebarMenu>
+                          {mobileItems.map(({ href, label, icon: Icon }) => (
+                            <SidebarMenuItem key={href}>
+                              <SidebarMenuButton
+                                isActive={pathname === href}
+                                className={mobileMenuButtonClass}
+                                render={<Link href={href} onClick={() => setIsSidebarOpen(false)} />}
+                              >
+                                <Icon />
+                                <span>{label}</span>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </SidebarMenu>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
 
-                  <SidebarGroup className="gap-2 p-0">
-                    <SidebarGroupLabel>Categories</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                  <Accordion className="w-full">
-                        <AccordionItem value="categories" className="border-none">
-                          <AccordionTrigger className="rounded-xl px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent/35">
-                            <div className="flex items-center gap-3">
-                              <LayoutGrid className="size-4" />
-                              <span>Shop by Category</span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-0 pt-2 pb-0">
-                            <SidebarMenu>
-                              <SidebarMenuItem>
-                                <SidebarMenuButton
-                                  isActive={activeCategory === 'new-arrivals'}
-                                  onClick={() => handleCategoryClick('new-arrivals')}
-                                  className={mobileMenuButtonClass}
-                                >
-                                  <Sparkles />
-                                  <span>New Arrivals</span>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                              <SidebarMenuItem>
-                                <SidebarMenuButton
-                                  isActive={activeCategory === 'special-offers'}
-                                  onClick={() => handleCategoryClick('special-offers')}
-                                  className={mobileMenuButtonClass}
-                                >
-                                  <Tag />
-                                  <span>Special Offers</span>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                              {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                                <SidebarMenuItem key={category.id}>
+                    <SidebarGroup className="gap-2 p-0">
+                      <SidebarGroupLabel>Categories</SidebarGroupLabel>
+                      <SidebarGroupContent>
+                    <Accordion className="w-full">
+                          <AccordionItem value="categories" className="border-none">
+                            <AccordionTrigger className="rounded-xl px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent/35">
+                              <div className="flex items-center gap-3">
+                                <LayoutGrid className="size-4" />
+                                <span>Shop by Category</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-0 pt-2 pb-0">
+                              <SidebarMenu>
+                                <SidebarMenuItem>
                                   <SidebarMenuButton
-                                    isActive={activeCategory === category.id}
-                                    onClick={() => handleCategoryClick(category.id)}
+                                    isActive={activeCategory === 'new-arrivals'}
+                                    onClick={() => handleCategoryClick('new-arrivals')}
+                                    className={mobileMenuButtonClass}
+                                  >
+                                    <Sparkles />
+                                    <span>New Arrivals</span>
+                                  </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                  <SidebarMenuButton
+                                    isActive={activeCategory === 'special-offers'}
+                                    onClick={() => handleCategoryClick('special-offers')}
                                     className={mobileMenuButtonClass}
                                   >
                                     <Tag />
-                                    <span>{category.label}</span>
+                                    <span>Special Offers</span>
                                   </SidebarMenuButton>
                                 </SidebarMenuItem>
-                              ))}
-                            </SidebarMenu>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
+                                {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                                  <SidebarMenuItem key={category.id}>
+                                    <SidebarMenuButton
+                                      isActive={activeCategory === category.id}
+                                      onClick={() => handleCategoryClick(category.id)}
+                                      className={mobileMenuButtonClass}
+                                    >
+                                      <Tag />
+                                      <span>{category.label}</span>
+                                    </SidebarMenuButton>
+                                  </SidebarMenuItem>
+                                ))}
+                              </SidebarMenu>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
 
-                  <SidebarSeparator />
+                    <SidebarSeparator />
 
-                  <SidebarGroup className="gap-2 p-0">
-                    <SidebarGroupLabel>Account</SidebarGroupLabel>
-                    <SidebarGroupContent className="flex flex-col gap-1">
-                      <MyOrdersButton
-                        isMobile
-                        className={mobileMenuButtonClass}
-                      />
-                      <MyWishlistButton
-                        isMobile
-                        className={mobileMenuButtonClass}
-                      />
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-                </div>
-              </ScrollArea>
-            </SidebarContent>
-
-            <SidebarFooter className="border-t border-sidebar-border px-3 pb-3 pt-3">
-              {session ? (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 rounded-2xl bg-sidebar-accent/55 px-3.5 py-3">
-                    <Avatar className="size-9">
-                      <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
-                      <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <p className="truncate text-sm font-semibold text-sidebar-foreground">{session.user?.name}</p>
-                      <p className="truncate text-xs text-sidebar-foreground/65">{session.user?.email}</p>
-                    </div>
-                  </div>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        onClick={() => {
-                          setIsSidebarOpen(false);
-                          router.push('/settings');
-                        }}
-                        className={mobileMenuButtonClass}
-                      >
-                        <Settings />
-                        <span>Account Settings</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {session.user?.isAdmin ? (
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          onClick={() => {
-                            setIsSidebarOpen(false);
-                            router.push('/admin');
-                          }}
+                    <SidebarGroup className="gap-2 p-0">
+                      <SidebarGroupLabel>Account</SidebarGroupLabel>
+                      <SidebarGroupContent className="flex flex-col gap-1">
+                        <MyOrdersButton
+                          isMobile
                           className={mobileMenuButtonClass}
-                        >
-                          <LayoutGrid />
-                          <span>Admin Panel</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ) : null}
-                    <SidebarMenuItem>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => {
-                          setIsSidebarOpen(false);
-                          signOut();
-                        }}
-                        className="min-h-10 w-full justify-start rounded-xl px-3.5 py-2.5 text-sm font-medium active:scale-[0.96]"
-                      >
-                        <LogOut />
-                        Logout
-                      </Button>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </div>
-              ) : (
-                <GoogleSignInButton
-                  onClick={() => {
-                    setIsSidebarOpen(false);
-                    setIsAuthModalOpen(true);
-                  }}
-                  className="min-h-10 w-full rounded-xl py-2.5 shadow-none"
+                        />
+                        <MyWishlistButton
+                          isMobile
+                          className={mobileMenuButtonClass}
+                        />
+                      </SidebarGroupContent>
+                    </SidebarGroup>
+                  </div>
+                </ScrollArea>
+              </SidebarContent>
+
+              <SidebarFooter className="border-t border-sidebar-border px-3 pb-3 pt-3">
+                <NavbarSidebarFooter
+                  mobileMenuButtonClass={mobileMenuButtonClass}
+                  onCloseSidebar={() => setIsSidebarOpen(false)}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
                 />
-              )}
-            </SidebarFooter>
-          </Sidebar>
-        </SheetContent>
-      </Sheet>
+              </SidebarFooter>
+            </Sidebar>
+          </SheetContent>
+        </Sheet>
+      ) : null}
 
       <MobileBottomNav
         pathname={pathname}
@@ -767,6 +536,7 @@ function NavbarContent({
         onAuthOpenChange={setIsAuthModalOpen}
         onNavigate={handleMobileNavigate}
       />
+      {isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 const ProductWishlistButton = dynamic(
   () => import('@/components/ProductWishlistButton'),
   {
+    ssr: false,
     loading: () => null,
   }
 );

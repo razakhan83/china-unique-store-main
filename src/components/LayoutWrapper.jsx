@@ -2,11 +2,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { ChevronRight, CreditCard, MapPin, Truck } from 'lucide-react';
 
-import CartDrawer from '@/components/CartDrawer';
 import FacebookIcon from '@/components/icons/FacebookIcon';
-import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import Navbar from '@/components/Navbar';
+import StoreDeferredChrome from '@/components/StoreDeferredChrome';
 import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { normalizeSocialUrl } from '@/lib/social';
@@ -69,7 +68,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                       rel={href ? 'noopener noreferrer' : undefined}
                       aria-label={label}
                       aria-disabled={!href}
-                      className={`inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all duration-300 ${
+                      className={`inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-[transform,border-color,background-color,color,opacity] duration-300 ${
                         href ? 'hover:-translate-y-1 hover:border-white/20 hover:bg-white/14 hover:text-white' : 'cursor-not-allowed opacity-45'
                       }`}
                     >
@@ -137,10 +136,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           </div>
         </footer>
       </div>
-      <Suspense fallback={null}>
-        <FloatingWhatsApp whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
-      </Suspense>
-      <CartDrawer whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
+      <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
     </>
   );
 }

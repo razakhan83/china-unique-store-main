@@ -9,13 +9,6 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
 
-function isPreloadCandidate(index, activeIndex, total) {
-  if (total <= 1) return true;
-  const prevIndex = (activeIndex - 1 + total) % total;
-  const nextIndex = (activeIndex + 1) % total;
-  return index === activeIndex || index === prevIndex || index === nextIndex;
-}
-
 function getSlideAssets(slide) {
   const desktopAsset = slide?.desktopImage || null;
   const tabletAsset = slide?.tabletImage || desktopAsset;
@@ -154,8 +147,9 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="100vw"
-                  priority={index === 0}
-                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  preload={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
                   {...getBlurPlaceholderProps(slide.assets.mobile.blurDataURL)}
                 />
@@ -167,8 +161,9 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
-                  priority={index === 0}
-                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  preload={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
                   {...getBlurPlaceholderProps(slide.assets.tablet.blurDataURL)}
                 />
@@ -180,8 +175,9 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="(min-width: 1024px) 100vw, 100vw"
-                  priority={index === 0}
-                  loading={index === 0 ? undefined : isPreloadCandidate(index, safeActiveIndex, resolvedSlides.length) ? 'eager' : 'lazy'}
+                  preload={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
                   {...getBlurPlaceholderProps(slide.assets.desktop.blurDataURL)}
                 />
@@ -222,7 +218,7 @@ export default function HeroSlider({ slides = [] }) {
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={safeActiveIndex === index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full transition-[width,background-color] duration-300 ${
                   safeActiveIndex === index ? 'w-5 bg-white' : 'w-2 bg-white/50'
                 }`}
               />

@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 const ProductCardAddToCartButtonClient = dynamic(
   () => import('@/components/ProductCardAddToCartButtonClient'),
   {
+    ssr: false,
     loading: () => (
       <span
         aria-hidden="true"
