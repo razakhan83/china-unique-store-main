@@ -4,6 +4,7 @@ import Product from '@/models/Product';
 import Vendor from '@/models/Vendor';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
+import { normalizeProductImages } from '@/lib/productImages';
 
 function toCleanId(value = '') {
   return String(value || '').trim();
@@ -18,24 +19,42 @@ function toSafeNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function resolveCheckoutUnitPrice(product) {
+  if (product.isDiscounted === true && product.discountedPrice != null) {
+    return Math.max(0, toSafeNumber(product.discountedPrice));
+  }
+
+  return Math.max(0, toSafeNumber(product.Price));
+}
+
+function buildProductLookupMap(products = []) {
+  const productMap = new Map();
+
+  for (const product of products) {
+    productMap.set(product._id.toString(), product);
+    if (product.slug) {
+      productMap.set(toCleanString(product.slug), product);
+    }
+  }
+
+  return productMap;
+}
+
 export async function buildOrderItemsWithSourcing(items = []) {
   await mongooseConnect();
 
-  const normalizedItems = (Array.isArray(items) ? items : [])
+  const requestedItems = (Array.isArray(items) ? items : [])
     .map((item) => ({
       productId: toCleanId(item.productId || item.id || item.slug),
-      name: toCleanString(item.name || item.Name),
-      price: toSafeNumber(item.price ?? item.Price),
       quantity: Math.max(1, toSafeNumber(item.quantity, 1)),
-      image: toCleanString(item.image || item.imageUrl),
     }))
-    .filter((item) => item.productId && item.name);
+    .filter((item) => item.productId);
 
-  if (normalizedItems.length === 0) {
+  if (requestedItems.length === 0) {
     return [];
   }
 
-  const productIdentifiers = Array.from(new Set(normalizedItems.map((item) => item.productId)));
+  const productIdentifiers = Array.from(new Set(requestedItems.map((item) => item.productId)));
   const objectIds = productIdentifiers.filter((value) => mongoose.Types.ObjectId.isValid(value));
   const products = await Product.find({
     $or: [
@@ -43,8 +62,16 @@ export async function buildOrderItemsWithSourcing(items = []) {
       ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
     ],
   })
-    .select('slug vendors')
+    .select('slug Name Price discountedPrice isDiscounted vendors Images')
     .lean();
+  const productMap = buildProductLookupMap(products);
+
+  const missingProductIds = requestedItems
+    .map((item) => item.productId)
+    .filter((productId) => !productMap.has(productId));
+  if (missingProductIds.length > 0) {
+    throw new Error(`Some checkout items are no longer available: ${missingProductIds.join(', ')}`);
+  }
 
   const vendorIds = Array.from(
     new Set(
@@ -61,7 +88,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
     : [];
   const vendorMap = new Map(vendors.map((vendor) => [vendor._id.toString(), vendor]));
 
-  const productMap = new Map();
+  const sourcingMap = new Map();
   products.forEach((product) => {
     const sourcingVendors = (Array.isArray(product.vendors) ? product.vendors : [])
       .map(normalizeVendorSnapshot)
@@ -81,16 +108,32 @@ export async function buildOrderItemsWithSourcing(items = []) {
         };
       });
 
-    productMap.set(product._id.toString(), sourcingVendors);
+    sourcingMap.set(product._id.toString(), sourcingVendors);
     if (product.slug) {
-      productMap.set(toCleanString(product.slug), sourcingVendors);
+      sourcingMap.set(toCleanString(product.slug), sourcingVendors);
     }
   });
 
-  return normalizedItems.map((item) => ({
-    ...item,
-    sourcingVendors: productMap.get(item.productId) || [],
-  }));
+  return requestedItems.map((item) => {
+    const product = productMap.get(item.productId);
+    const images = normalizeProductImages(product.Images);
+
+    return {
+      productId: item.productId,
+      name: toCleanString(product.Name),
+      price: resolveCheckoutUnitPrice(product),
+      quantity: item.quantity,
+      image: toCleanString(images[0]?.url),
+      sourcingVendors: sourcingMap.get(item.productId) || [],
+    };
+  });
+}
+
+export function calculateOrderTotal(orderItems = []) {
+  return (Array.isArray(orderItems) ? orderItems : []).reduce(
+    (sum, item) => sum + Math.max(0, toSafeNumber(item.price)) * Math.max(1, toSafeNumber(item.quantity, 1)),
+    0
+  );
 }
 
 export async function applyInventoryAdjustments(orderItems = []) {

@@ -7,7 +7,7 @@ import { after } from 'next/server';
 import { getConfiguredAdminEmails, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
-import { applyInventoryAdjustments, buildOrderItemsWithSourcing } from '@/lib/orderFulfillment';
+import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -252,6 +252,13 @@ export async function submitOrderAction(input) {
   }
 
   const normalizedItems = await buildOrderItemsWithSourcing(items);
+  const canonicalTotalAmount = calculateOrderTotal(normalizedItems);
+  if (canonicalTotalAmount <= 0) {
+    throw new Error('Unable to calculate a valid order total.');
+  }
+  if (totalAmount !== canonicalTotalAmount) {
+    throw new Error('Checkout total no longer matches current product pricing. Please review your cart and try again.');
+  }
 
   const session = await getServerSession(authOptions);
   
@@ -276,7 +283,7 @@ export async function submitOrderAction(input) {
     customerCity,
     landmark,
     items: normalizedItems,
-    totalAmount,
+    totalAmount: canonicalTotalAmount,
     status: 'Confirmed',
     notes,
   });
@@ -362,7 +369,7 @@ export async function submitOrderAction(input) {
   normalizedItems.forEach((item, index) => {
     lines.push(`${index + 1}. ${item.name} - ${item.quantity} x Rs. ${item.price.toLocaleString('en-PK')}`);
   });
-  lines.push('', `*Total:* Rs. ${totalAmount.toLocaleString('en-PK')}`);
+  lines.push('', `*Total:* Rs. ${canonicalTotalAmount.toLocaleString('en-PK')}`);
   lines.push(`*Order ID:* ${order.orderId}`);
 
   return {

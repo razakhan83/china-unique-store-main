@@ -9,7 +9,7 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { Resend } from 'resend';
 import { generateOrderEmailHtml, getEmailBranding } from '@/lib/emailTemplates';
-import { applyInventoryAdjustments, buildOrderItemsWithSourcing } from '@/lib/orderFulfillment';
+import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -80,6 +80,19 @@ export async function POST(req) {
         }
 
         const normalizedItems = await buildOrderItemsWithSourcing(items);
+        const canonicalTotalAmount = calculateOrderTotal(normalizedItems);
+        if (canonicalTotalAmount <= 0) {
+            return NextResponse.json(
+                { success: false, message: 'Unable to calculate a valid order total.' },
+                { status: 400 }
+            );
+        }
+        if (Number(totalAmount) !== canonicalTotalAmount) {
+            return NextResponse.json(
+                { success: false, message: 'Checkout total no longer matches current product pricing. Please refresh and try again.' },
+                { status: 409 }
+            );
+        }
 
         // Generate unique order ID: ORD-XXXXXX
         const orderId = `ORD-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
@@ -90,7 +103,7 @@ export async function POST(req) {
             customerPhone,
             customerAddress,
             items: normalizedItems,
-            totalAmount,
+            totalAmount: canonicalTotalAmount,
             notes,
             status: 'Pending',
         });

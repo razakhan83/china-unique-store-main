@@ -1,4 +1,53 @@
+import sanitizeHtml from 'sanitize-html';
+
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*>/i;
+
+const RICH_TEXT_SANITIZER_OPTIONS = {
+  allowedTags: [
+    'a',
+    'b',
+    'blockquote',
+    'br',
+    'code',
+    'em',
+    'figcaption',
+    'figure',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'hr',
+    'i',
+    'iframe',
+    'img',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    'strong',
+    'u',
+    'ul',
+    'video',
+  ],
+  allowedAttributes: {
+    a: ['href', 'name', 'target', 'rel'],
+    iframe: ['src', 'title', 'allow', 'allowfullscreen', 'frameborder'],
+    img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+    video: ['src', 'controls', 'autoplay', 'muted', 'loop', 'playsinline', 'poster', 'preload'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data'],
+  allowedSchemesByTag: {
+    img: ['http', 'https', 'data'],
+    iframe: ['https'],
+    video: ['http', 'https'],
+  },
+  allowedIframeHostnames: ['www.youtube.com', 'youtube.com', 'www.youtube-nocookie.com', 'player.vimeo.com'],
+  transformTags: {
+    a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer nofollow' }, true),
+  },
+  disallowedTagsMode: 'discard',
+  enforceHtmlBoundary: true,
+};
 
 function escapeHtml(value) {
   return String(value)
@@ -14,11 +63,7 @@ export function looksLikeHtml(value = "") {
 }
 
 export function sanitizeRichTextHtml(value = "") {
-  return String(value)
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/\son\w+=(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    .replace(/\s(href|src)\s*=\s*(['"])javascript:[\s\S]*?\2/gi, "");
+  return sanitizeHtml(String(value || ''), RICH_TEXT_SANITIZER_OPTIONS).trim();
 }
 
 export function stripHtmlTags(value = "") {

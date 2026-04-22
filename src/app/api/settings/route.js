@@ -48,10 +48,7 @@ function serializeSettings(settings) {
         instagramUrl: settings.instagramUrl || '',
         trackingEnabled: settings.trackingEnabled === true,
         facebookPixelId: settings.facebookPixelId || '',
-        facebookConversionsApiToken: settings.facebookConversionsApiToken || '',
-        facebookTestEventCode: settings.facebookTestEventCode || '',
         tiktokPixelId: settings.tiktokPixelId || '',
-        tiktokAccessToken: settings.tiktokAccessToken || '',
         karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
         outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
         freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
@@ -62,6 +59,15 @@ function serializeSettings(settings) {
             settings.announcementBarText
         ),
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+    };
+}
+
+function serializeAdminSettings(settings) {
+    return {
+        ...serializeSettings(settings),
+        facebookConversionsApiToken: settings.facebookConversionsApiToken || '',
+        facebookTestEventCode: settings.facebookTestEventCode || '',
+        tiktokAccessToken: settings.tiktokAccessToken || '',
     };
 }
 
@@ -149,7 +155,7 @@ export async function PUT(req) {
         revalidateTag('home-sections');
         revalidatePath('/');
 
-        return NextResponse.json({ success: true, data: serializeSettings(settings) });
+        return NextResponse.json({ success: true, data: serializeAdminSettings(settings) });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
