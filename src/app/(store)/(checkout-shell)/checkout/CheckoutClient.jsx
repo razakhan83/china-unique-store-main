@@ -200,18 +200,11 @@ export default function CheckoutClient({ settings }) {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
+  const [orderState, setOrderState] = useState(() => readStoredSuccessfulOrder() || { orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
-
-  useEffect(() => {
-    const storedOrder = readStoredSuccessfulOrder();
-    if (storedOrder) {
-      setOrderState(storedOrder);
-    }
-  }, []);
 
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
