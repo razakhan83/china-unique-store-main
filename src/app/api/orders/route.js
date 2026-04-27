@@ -10,6 +10,8 @@ import Order from '@/models/Order';
 import { Resend } from 'resend';
 import { generateOrderEmailHtml, getEmailBranding } from '@/lib/emailTemplates';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
+import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
+import { getStoreSettings } from '@/lib/data';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -70,7 +72,7 @@ export async function POST(req) {
                 { status: 400 }
             );
         }
-        const { customerName, customerPhone, customerAddress, items, totalAmount, notes } = body;
+        const { customerName, customerPhone, customerAddress, customerCity, items, totalAmount, notes } = body;
 
         if (!customerName || !totalAmount || !items || items.length === 0) {
             return NextResponse.json(
@@ -80,14 +82,21 @@ export async function POST(req) {
         }
 
         const normalizedItems = await buildOrderItemsWithSourcing(items);
-        const canonicalTotalAmount = calculateOrderTotal(normalizedItems);
-        if (canonicalTotalAmount <= 0) {
+        const canonicalSubtotalAmount = calculateOrderTotal(normalizedItems);
+        if (canonicalSubtotalAmount <= 0) {
             return NextResponse.json(
                 { success: false, message: 'Unable to calculate a valid order total.' },
                 { status: 400 }
             );
         }
-        if (Number(totalAmount) !== canonicalTotalAmount) {
+        const expectedTotalAmount = customerCity
+            ? calculateCheckoutPricing({
+                subtotal: canonicalSubtotalAmount,
+                city: customerCity,
+                settings: await getStoreSettings(),
+            }).total
+            : canonicalSubtotalAmount;
+        if (Number(totalAmount) !== expectedTotalAmount) {
             return NextResponse.json(
                 { success: false, message: 'Checkout total no longer matches current product pricing. Please refresh and try again.' },
                 { status: 409 }
@@ -102,8 +111,9 @@ export async function POST(req) {
             customerName,
             customerPhone,
             customerAddress,
+            customerCity: String(customerCity || '').trim(),
             items: normalizedItems,
-            totalAmount: canonicalTotalAmount,
+            totalAmount: expectedTotalAmount,
             notes,
             status: 'Pending',
         });

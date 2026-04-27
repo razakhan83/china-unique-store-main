@@ -8,6 +8,8 @@ import { getConfiguredAdminEmails, normalizeEmail, normalizePhone, getPhoneRegex
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
+import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
+import { getStoreSettings } from '@/lib/data';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -233,150 +235,169 @@ export async function saveStoreSettingsAction(nextSettings) {
 }
 
 export async function submitOrderAction(input) {
-  await mongooseConnect();
-
-  const customerName = String(input?.customerName || '').trim();
-  const customerPhone = String(input?.customerPhone || '').trim();
-  const customerAddress = String(input?.customerAddress || '').trim();
-  const customerCity = String(input?.customerCity || '').trim();
-  const items = Array.isArray(input?.items) ? input.items : [];
-  const totalAmount = Number(input?.totalAmount || 0);
-  const notes = String(input?.notes || '').trim();
-  const whatsappNumber = String(input?.whatsappNumber || '').trim();
-
-  // Simplified fields from Phase 13
-  const landmark = String(input?.landmark || '').trim();
-
-  if (!customerName || !customerPhone || !customerAddress || items.length === 0 || totalAmount <= 0) {
-    throw new Error('Missing required checkout details');
-  }
-
-  const normalizedItems = await buildOrderItemsWithSourcing(items);
-  const canonicalTotalAmount = calculateOrderTotal(normalizedItems);
-  if (canonicalTotalAmount <= 0) {
-    throw new Error('Unable to calculate a valid order total.');
-  }
-  if (totalAmount !== canonicalTotalAmount) {
-    throw new Error('Checkout total no longer matches current product pricing. Please review your cart and try again.');
-  }
-
-  const session = await getServerSession(authOptions);
-  
-  // Robust email capture:
-  const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
-  const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
-  const userEmail = sessionEmail || inputEmail || null;
-
-  // STRICT VALIDATION
-  if (session?.user && !userEmail) {
-    throw new Error('Unable to capture user email.');
-  }
-
-  // Create Order record
-  const order = await Order.create({
-    orderId: makeOrderId(),
-    secureToken: crypto.randomUUID(),
-    customerEmail: userEmail || null,
-    customerName,
-    customerPhone,
-    customerAddress,
-    customerCity,
-    landmark,
-    items: normalizedItems,
-    totalAmount: canonicalTotalAmount,
-    status: 'Confirmed',
-    notes,
-  });
-
-  await applyInventoryAdjustments(normalizedItems);
-
-  revalidateTag('orders');
-  revalidateTag('admin-dashboard');
-  revalidateTag('products');
-
-  // Update User Profile (Background)
-  if (userEmail) {
-    try {
-      await User.findOneAndUpdate(
-        { email: userEmail },
-        {
-          $set: {
-            email: userEmail,
-            name: customerName,
-            phone: customerPhone,
-            city: customerCity,
-            address: customerAddress,
-            landmark,
-          },
-        },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-
-      // 2. Link all previous orders using fuzzy phone matching
-      const phoneRegex = getPhoneRegex(customerPhone);
-      if (phoneRegex) {
-        const linkResult = await Order.updateMany(
-          { customerPhone: { $regex: phoneRegex }, customerEmail: null },
-          { customerEmail: userEmail }
-        );
-        
-        if (linkResult.modifiedCount > 0) {
-          console.log(`Linked ${linkResult.modifiedCount} previous orders to ${userEmail} via fuzzy phone ${customerPhone}`);
-        }
-      }
-    } catch (profileError) {
-      console.error('Error updating user profile/linking orders:', profileError);
-    }
-  }
-
-  // Create Admin Notification
   try {
-    const Notification = (await import('@/models/Notification')).default;
-    await Notification.create({
-      type: 'order',
-      message: `New Order ${order.orderId} received from ${customerName}`,
-      link: `/admin/orders/${order._id}`,
-      metadata: {
-        id: order.orderId,
-        userName: customerName,
-      }
+    await mongooseConnect();
+
+    const customerName = String(input?.customerName || '').trim();
+    const customerPhone = String(input?.customerPhone || '').trim();
+    const customerAddress = String(input?.customerAddress || '').trim();
+    const customerCity = String(input?.customerCity || '').trim();
+    const items = Array.isArray(input?.items) ? input.items : [];
+    const totalAmount = Number(input?.totalAmount || 0);
+    const notes = String(input?.notes || '').trim();
+    const whatsappNumber = String(input?.whatsappNumber || '').trim();
+
+    // Simplified fields from Phase 13
+    const landmark = String(input?.landmark || '').trim();
+
+    if (!customerName || !customerPhone || !customerAddress || !customerCity || items.length === 0 || totalAmount <= 0) {
+      return { success: false, error: 'Missing required checkout details' };
+    }
+
+    const normalizedItems = await buildOrderItemsWithSourcing(items);
+    const canonicalSubtotalAmount = calculateOrderTotal(normalizedItems);
+    if (canonicalSubtotalAmount <= 0) {
+      return { success: false, error: 'Unable to calculate a valid order total.' };
+    }
+
+    const settings = await getStoreSettings();
+    const pricing = calculateCheckoutPricing({
+      subtotal: canonicalSubtotalAmount,
+      city: customerCity,
+      settings,
     });
-  } catch (notifyError) {
-    console.error('Failed to create order notification:', notifyError);
+
+    if (totalAmount !== pricing.total) {
+      return {
+        success: false,
+        error: 'Checkout total no longer matches current product pricing. Please review your cart and try again.',
+      };
+    }
+
+    const session = await getServerSession(authOptions);
+  
+    // Robust email capture:
+    const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
+    const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
+    const userEmail = sessionEmail || inputEmail || null;
+
+    // STRICT VALIDATION
+    if (session?.user && !userEmail) {
+      return { success: false, error: 'Unable to capture user email.' };
+    }
+
+    // Create Order record
+    const order = await Order.create({
+      orderId: makeOrderId(),
+      secureToken: crypto.randomUUID(),
+      customerEmail: userEmail || null,
+      customerName,
+      customerPhone,
+      customerAddress,
+      customerCity,
+      landmark,
+      items: normalizedItems,
+      totalAmount: pricing.total,
+      status: 'Confirmed',
+      notes,
+    });
+
+    await applyInventoryAdjustments(normalizedItems);
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidateTag('products');
+
+    // Update User Profile (Background)
+    if (userEmail) {
+      try {
+        await User.findOneAndUpdate(
+          { email: userEmail },
+          {
+            $set: {
+              email: userEmail,
+              name: customerName,
+              phone: customerPhone,
+              city: customerCity,
+              address: customerAddress,
+              landmark,
+            },
+          },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        // 2. Link all previous orders using fuzzy phone matching
+        const phoneRegex = getPhoneRegex(customerPhone);
+        if (phoneRegex) {
+          const linkResult = await Order.updateMany(
+            { customerPhone: { $regex: phoneRegex }, customerEmail: null },
+            { customerEmail: userEmail }
+          );
+        
+          if (linkResult.modifiedCount > 0) {
+            console.log(`Linked ${linkResult.modifiedCount} previous orders to ${userEmail} via fuzzy phone ${customerPhone}`);
+          }
+        }
+      } catch (profileError) {
+        console.error('Error updating user profile/linking orders:', profileError);
+      }
+    }
+
+    // Create Admin Notification
+    try {
+      const Notification = (await import('@/models/Notification')).default;
+      await Notification.create({
+        type: 'order',
+        message: `New Order ${order.orderId} received from ${customerName}`,
+        link: `/admin/orders/${order._id}`,
+        metadata: {
+          id: order.orderId,
+          userName: customerName,
+        }
+      });
+    } catch (notifyError) {
+      console.error('Failed to create order notification:', notifyError);
+    }
+
+    after(async () => {
+      await Promise.allSettled([
+        sendOrderEmails({ order, customerName, userEmail }),
+        sendPurchaseTrackingEvents({ order, items: normalizedItems }),
+      ]);
+    });
+
+    const lines = [
+      '*New Order from China Unique Store*',
+      '',
+      '*Customer Details*',
+      `Name: ${customerName}`,
+      `Phone: ${customerPhone}`,
+      `Address: ${customerAddress}`,
+    ];
+
+    if (notes) {
+      lines.push(`Notes: ${notes}`);
+    }
+
+    lines.push('', '*Items*');
+    normalizedItems.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item.name} - ${item.quantity} x Rs. ${item.price.toLocaleString('en-PK')}`);
+    });
+    lines.push('', `*Total:* Rs. ${pricing.total.toLocaleString('en-PK')}`);
+    lines.push(`*Order ID:* ${order.orderId}`);
+
+    return {
+      success: true,
+      orderId: order.orderId,
+      whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}` : '',
+    };
+  } catch (error) {
+    console.error('submitOrderAction failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unable to place the order right now.',
+    };
   }
-
-  after(async () => {
-    await Promise.allSettled([
-      sendOrderEmails({ order, customerName, userEmail }),
-      sendPurchaseTrackingEvents({ order, items: normalizedItems }),
-    ]);
-  });
-
-  const lines = [
-    '*New Order from China Unique Store*',
-    '',
-    '*Customer Details*',
-    `Name: ${customerName}`,
-    `Phone: ${customerPhone}`,
-    `Address: ${customerAddress}`,
-  ];
-
-  if (notes) {
-    lines.push(`Notes: ${notes}`);
-  }
-
-  lines.push('', '*Items*');
-  normalizedItems.forEach((item, index) => {
-    lines.push(`${index + 1}. ${item.name} - ${item.quantity} x Rs. ${item.price.toLocaleString('en-PK')}`);
-  });
-  lines.push('', `*Total:* Rs. ${canonicalTotalAmount.toLocaleString('en-PK')}`);
-  lines.push(`*Order ID:* ${order.orderId}`);
-
-  return {
-    success: true,
-    orderId: order.orderId,
-    whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}` : '',
-  };
 }
 
 export async function getLastOrderDetailsAction() {

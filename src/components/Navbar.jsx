@@ -18,7 +18,6 @@ import {
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import MobileBottomNav from '@/components/MobileBottomNav';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +79,11 @@ const NavbarDesktopAccountControl = dynamic(() => import('@/components/NavbarDes
 const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFooter'), {
   ssr: false,
   loading: () => <div className="min-h-10 w-full rounded-xl bg-muted/45" aria-hidden="true" />,
+});
+
+const MobileBottomNav = dynamic(() => import('@/components/MobileBottomNav'), {
+  ssr: false,
+  loading: () => null,
 });
 
 function normalizeAnnouncementItems(messages = [], announcementText = '') {

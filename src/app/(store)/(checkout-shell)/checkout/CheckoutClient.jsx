@@ -58,6 +58,7 @@ import { trackInitiateCheckoutEvent, trackPurchaseEvent } from '@/lib/clientTrac
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { getPrimaryProductImage } from '@/lib/productImages';
 import { cn } from '@/lib/utils';
+import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import styles from './CheckoutClient.module.css';
 
 const formatPrice = (raw) => Number(raw || 0);
@@ -191,14 +192,12 @@ export default function CheckoutClient({ settings }) {
 
     return CITY_OPTIONS.filter((city) => city.sortKey.includes(normalizedCitySearch)).slice(0, SEARCH_RESULTS_LIMIT);
   }, [normalizedCitySearch]);
-  const isKarachi = normalizeCitySearchValue(formData.city) === 'karachi';
-  const shippingBase = isKarachi
-    ? Number(settings.karachiDeliveryFee || 0)
-    : Number(settings.outsideKarachiDeliveryFee || 0);
-  const freeShippingThreshold = Number(settings.freeShippingThreshold || 0);
-  const isFreeShipping = subtotal >= freeShippingThreshold;
-  const shipping = isFreeShipping ? 0 : shippingBase;
-  const total = subtotal + shipping;
+  const pricing = calculateCheckoutPricing({
+    subtotal,
+    city: formData.city,
+    settings,
+  });
+  const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi } = pricing;
   const shippingStatusLabel = isFreeShipping
     ? 'Free delivery unlocked'
     : `Delivery estimate ${formatPriceLabel(shipping)}`;
@@ -283,6 +282,14 @@ export default function CheckoutClient({ settings }) {
             image: getPrimaryProductImage(item)?.url || '',
           })),
         });
+
+        if (!result?.success) {
+          setErrors((previous) => ({
+            ...previous,
+            submit: result?.error || 'Unable to place the order right now.',
+          }));
+          return;
+        }
 
         trackPurchaseEvent({ orderId: result.orderId, cart, total });
         setOrderState(result);
