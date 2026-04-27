@@ -16,14 +16,24 @@ function getCartItemId(item) {
 }
 
 function normalizeCartItem(item) {
+  const basePrice = Number(item.Price || item.price || 0);
+  const discountPercentage = Math.max(0, Number(item.discountPercentage || 0));
+  const isDiscounted = item.isDiscounted === true;
+  const discountedPrice = item.discountedPrice != null
+    ? Number(item.discountedPrice)
+    : isDiscounted && discountPercentage > 0
+      ? Math.round(basePrice * (1 - discountPercentage / 100))
+      : null;
+
   return {
     id: getCartItemId(item),
     slug: item.slug || item.id || item._id || '',
     _id: item._id || item.id || item.slug || '',
     Name: item.Name || item.name || 'Untitled Product',
-    Price: Number(item.Price || item.price || 0),
-    discountedPrice: item.discountedPrice != null ? Number(item.discountedPrice) : null,
-    isDiscounted: item.isDiscounted === true,
+    Price: basePrice,
+    discountedPrice,
+    discountPercentage,
+    isDiscounted,
     Category: Array.isArray(item.Category) ? item.Category : item.Category ? [item.Category] : [],
     Images: item.Images || [],
     quantity: Math.max(1, Number(item.quantity || 1)),
