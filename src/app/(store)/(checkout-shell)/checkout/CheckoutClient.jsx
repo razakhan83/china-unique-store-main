@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Check,
@@ -66,6 +66,7 @@ const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK'
 const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
 const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
 const SEARCH_RESULTS_LIMIT = 24;
+const CHECKOUT_PROFILE_STORAGE_KEY = 'kifayatly_checkout_profile_v1';
 
 function normalizeCitySearchValue(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -102,12 +103,75 @@ const CITY_OPTIONS = Array.from(new Map(PAKISTAN_CITIES.map((city) => [city.toLo
     return left.label.localeCompare(right.label, 'en-PK');
   });
 
+function readCachedCheckoutProfile() {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(CHECKOUT_PROFILE_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch (error) {
+    console.error('Failed to read cached checkout profile', error);
+    return null;
+  }
+}
+
+function mergeCheckoutProfile(previous, nextProfile = {}, options = {}) {
+  const { overwriteEmail = false } = options;
+
+  return {
+    ...previous,
+    fullName: previous.fullName || nextProfile.name || nextProfile.fullName || '',
+    phone: previous.phone || nextProfile.phone || '',
+    email: overwriteEmail
+      ? nextProfile.email || previous.email || ''
+      : previous.email || nextProfile.email || '',
+    city: previous.city || nextProfile.city || '',
+    address: previous.address || nextProfile.address || nextProfile.addressOnly || '',
+    landmark: previous.landmark || nextProfile.landmark || '',
+  };
+}
+
+function getEffectiveCartUnitPrice(item) {
+  if (item?.isDiscounted === true && item?.discountedPrice != null) {
+    return Number(item.discountedPrice);
+  }
+
+  if (item?.discountedPrice != null) {
+    return Number(item.discountedPrice);
+  }
+
+  return Number(item?.Price || item?.price || 0);
+}
+
+function hasCartPricingDifference(currentCart, nextCart) {
+  if (!Array.isArray(currentCart) || !Array.isArray(nextCart) || currentCart.length !== nextCart.length) {
+    return true;
+  }
+
+  return nextCart.some((nextItem, index) => {
+    const currentItem = currentCart[index];
+
+    return (
+      String(currentItem?.id || currentItem?._id || currentItem?.slug || '') !==
+        String(nextItem?.id || nextItem?._id || nextItem?.slug || '') ||
+      Number(currentItem?.quantity || 0) !== Number(nextItem?.quantity || 0) ||
+      getEffectiveCartUnitPrice(currentItem) !== getEffectiveCartUnitPrice(nextItem)
+    );
+  });
+}
+
 export default function CheckoutClient({ settings }) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { cart } = useCartItems();
+  const { cart, isInitialized } = useCartItems();
   const { clearCart, replaceCart } = useCartActions();
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
+  const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
+  const [isHydratingProfile, setIsHydratingProfile] = useState(false);
+  const [isSyncingCartPricing, setIsSyncingCartPricing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -119,45 +183,77 @@ export default function CheckoutClient({ settings }) {
   });
   const [orderPopupShown, setOrderPopupShown] = useState(false);
   const [errors, setErrors] = useState({});
+  const [cartNotice, setCartNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
+  const lastSyncedCartSignatureRef = useRef('');
+
+  useEffect(() => {
+    if (hasHydratedCachedProfile) return;
+
+    const cachedProfile = readCachedCheckoutProfile();
+    if (cachedProfile) {
+      setFormData((prev) => mergeCheckoutProfile(prev, cachedProfile));
+    }
+
+    setHasHydratedCachedProfile(true);
+  }, [hasHydratedCachedProfile]);
 
   useEffect(() => {
     let isMounted = true;
 
-    const syncData = async (isInitial = false) => {
+    const syncData = async () => {
       if (status !== 'authenticated' || !session?.user) return;
 
+      setIsHydratingProfile(true);
+
+      const profileRequest = fetch('/api/user/settings', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((settingsRes) => {
+          if (!isMounted || !settingsRes) return;
+
+          setFormData((prev) =>
+            mergeCheckoutProfile(
+              {
+                ...prev,
+                email: prev.email || session.user.email || '',
+              },
+              {
+                ...settingsRes,
+                name: settingsRes?.name || session.user.name || '',
+                email: settingsRes?.email || session.user.email || '',
+              },
+              { overwriteEmail: true },
+            )
+          );
+        });
+
+      const lastOrderRequest = getLastOrderDetailsAction().then((lastOrder) => {
+        if (!isMounted || !lastOrder) return;
+
+        setFormData((prev) => mergeCheckoutProfile(prev, lastOrder));
+      });
+
       try {
-        const [settingsRes, lastOrder] = await Promise.all([
-          fetch('/api/user/settings').then((res) => (res.ok ? res.json() : null)),
-          getLastOrderDetailsAction(),
-        ]);
-
-        if (!isMounted) return;
-
-        setFormData((prev) => ({
-          ...prev,
-          fullName: prev.fullName || settingsRes?.name || session.user.name || '',
-          email: settingsRes?.email || session.user.email || prev.email,
-          phone: prev.phone || settingsRes?.phone || lastOrder?.phone || '',
-          city: prev.city || settingsRes?.city || lastOrder?.city || '',
-          address: prev.address || settingsRes?.address || lastOrder?.address || '',
-          landmark: prev.landmark || settingsRes?.landmark || lastOrder?.landmark || '',
-        }));
-
-        if (isInitial) setHasAutoFilled(true);
+        await Promise.allSettled([profileRequest, lastOrderRequest]);
       } catch (error) {
         console.error('Auto-fill sync error:', error);
+      } finally {
+        if (isMounted) {
+          setHasAutoFilled(true);
+          setIsHydratingProfile(false);
+        }
       }
     };
 
     if (status === 'authenticated' && !hasAutoFilled) {
-      syncData(true);
+      syncData();
+    } else if (status !== 'loading' && !hasAutoFilled) {
+      setHasAutoFilled(true);
     }
 
     function handleFocus() {
@@ -171,6 +267,34 @@ export default function CheckoutClient({ settings }) {
       window.removeEventListener('focus', handleFocus);
     };
   }, [hasAutoFilled, session, status]);
+
+  useEffect(() => {
+    if (!hasHydratedCachedProfile) return;
+
+    try {
+      window.localStorage.setItem(
+        CHECKOUT_PROFILE_STORAGE_KEY,
+        JSON.stringify({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          city: formData.city,
+          address: formData.address,
+          landmark: formData.landmark,
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to persist checkout profile', error);
+    }
+  }, [
+    formData.address,
+    formData.city,
+    formData.email,
+    formData.fullName,
+    formData.landmark,
+    formData.phone,
+    hasHydratedCachedProfile,
+  ]);
 
   const subtotal = useMemo(
     () =>
@@ -214,10 +338,28 @@ export default function CheckoutClient({ settings }) {
   }, [cart, hasTrackedCheckoutView, total]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+    if (!cart.length) {
+      lastSyncedCartSignatureRef.current = '';
+      setIsSyncingCartPricing(false);
+      return;
+    }
+
+    const cartSignature = JSON.stringify(
+      cart.map((item) => ({
+        id: item.id || item._id || item.slug || '',
+        quantity: Number(item.quantity || 0),
+      }))
+    );
+
+    if (lastSyncedCartSignatureRef.current === cartSignature) {
+      return;
+    }
+
     let isMounted = true;
 
     async function syncCartPricing() {
-      if (!cart.length) return;
+      setIsSyncingCartPricing(true);
 
       const result = await syncCartPricingAction(
         cart.map((item) => ({
@@ -226,21 +368,22 @@ export default function CheckoutClient({ settings }) {
         }))
       );
 
-      if (!isMounted || !result?.success || !Array.isArray(result.items) || result.items.length !== cart.length) {
+      if (!isMounted) {
         return;
       }
 
-      const hasPricingChange = result.items.some((nextItem, index) => {
-        const currentItem = cart[index];
-        const currentPrice = currentItem?.isDiscounted === true && currentItem?.discountedPrice != null
-          ? Number(currentItem.discountedPrice)
-          : Number(currentItem?.Price || currentItem?.price || 0);
-        return currentPrice !== Number(nextItem?.Price || 0);
-      });
-
-      if (hasPricingChange) {
+      if (result?.success && Array.isArray(result.items) && hasCartPricingDifference(cart, result.items)) {
         replaceCart(result.items);
+        setCartNotice('Your cart was refreshed with the latest product pricing before checkout.');
+      } else if (!result?.success) {
+        setErrors((previous) => ({
+          ...previous,
+          submit: result?.error || 'Unable to refresh your cart right now. Please try again.',
+        }));
       }
+
+      lastSyncedCartSignatureRef.current = cartSignature;
+      setIsSyncingCartPricing(false);
     }
 
     syncCartPricing();
@@ -248,7 +391,7 @@ export default function CheckoutClient({ settings }) {
     return () => {
       isMounted = false;
     };
-  }, [cart, replaceCart]);
+  }, [cart, isInitialized, replaceCart]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -281,7 +424,8 @@ export default function CheckoutClient({ settings }) {
       sessionStorage.setItem(`order-popup-shown-${orderState.orderId}`, 'true');
       setOrderPopupShown(true);
     }
-    router.push('/');
+    router.replace('/');
+    router.refresh();
   }
 
   function handleViewOrders() {
@@ -294,10 +438,13 @@ export default function CheckoutClient({ settings }) {
 
   function handlePlaceOrder(event) {
     event.preventDefault();
-    if (!validateForm() || cart.length === 0) return;
+    if (submitting || isSyncingCartPricing || !isInitialized || !validateForm() || cart.length === 0) return;
 
     setSubmitting(true);
-    startTransition(async () => {
+    setErrors((previous) => ({ ...previous, submit: '' }));
+    setCartNotice('');
+
+    (async () => {
       try {
         const result = await submitOrderAction({
           customerEmail: formData.email,
@@ -323,6 +470,12 @@ export default function CheckoutClient({ settings }) {
         if (!result?.success) {
           if (result?.code === 'PRICE_MISMATCH' && Array.isArray(result?.cartItems) && result.cartItems.length > 0) {
             replaceCart(result.cartItems);
+            lastSyncedCartSignatureRef.current = JSON.stringify(
+              result.cartItems.map((item) => ({
+                id: item.id || item._id || item.slug || '',
+                quantity: Number(item.quantity || 0),
+              }))
+            );
             setErrors((previous) => ({
               ...previous,
               submit: 'Your cart was updated to the latest product pricing. Please review it and place the order again.',
@@ -347,7 +500,35 @@ export default function CheckoutClient({ settings }) {
       } finally {
         setSubmitting(false);
       }
-    });
+    })();
+  }
+
+  useEffect(() => {
+    if (!orderState.orderId || orderPopupShown) return undefined;
+
+    const redirectTimer = window.setTimeout(() => {
+      sessionStorage.setItem(`order-popup-shown-${orderState.orderId}`, 'true');
+      setOrderPopupShown(true);
+      router.replace('/');
+      router.refresh();
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(redirectTimer);
+    };
+  }, [orderPopupShown, orderState.orderId, router]);
+
+  if (!isInitialized && !orderState.orderId) {
+    return (
+      <section className="flex min-h-[60vh] items-center justify-center px-4">
+        <Card className="surface-card w-full max-w-md rounded-[1.4rem] border border-border/80 py-10 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
+          <CardContent className="flex flex-col items-center gap-4 text-center">
+            <Loader2 className="size-8 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">Loading your checkout...</p>
+          </CardContent>
+        </Card>
+      </section>
+    );
   }
 
   if (cart.length === 0 && !orderState.orderId) {
@@ -571,6 +752,20 @@ export default function CheckoutClient({ settings }) {
                     </Alert>
                   ) : null}
 
+                  {cartNotice ? (
+                    <Alert>
+                      <AlertTitle>Cart updated</AlertTitle>
+                      <AlertDescription>{cartNotice}</AlertDescription>
+                    </Alert>
+                  ) : null}
+
+                  {isHydratingProfile ? (
+                    <Alert>
+                      <AlertTitle>Filling your saved details</AlertTitle>
+                      <AlertDescription>Your saved address details are loading in the background.</AlertDescription>
+                    </Alert>
+                  ) : null}
+
                   <button type="submit" id="checkout-submit" className="hidden" />
                 </form>
               </CardContent>
@@ -689,10 +884,11 @@ export default function CheckoutClient({ settings }) {
                   className={cn('hidden w-full md:inline-flex', styles.ctaButton)}
                   size="lg"
                   onClick={() => document.getElementById('checkout-submit')?.click()}
-                  disabled={submitting}
+                  disabled={submitting || isSyncingCartPricing || !isInitialized}
                 >
                   {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-                  {submitting ? 'Placing Order...' : 'Place Order'}
+                  {!submitting && isSyncingCartPricing ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
+                  {submitting ? 'Placing Order...' : isSyncingCartPricing ? 'Updating Cart...' : 'Place Order'}
                 </Button>
 
                 <div className="mt-4 grid gap-2 text-xs font-medium text-muted-foreground">
@@ -718,9 +914,15 @@ export default function CheckoutClient({ settings }) {
             <span className={styles.mobileAmountLabel}>Net Amount</span>
             <strong>Rs. {total.toLocaleString('en-PK')}</strong>
           </div>
-          <Button className={cn('min-w-[10rem]', styles.ctaButton)} size="lg" onClick={() => document.getElementById('checkout-submit')?.click()} disabled={submitting}>
+          <Button
+            className={cn('min-w-[10rem]', styles.ctaButton)}
+            size="lg"
+            onClick={() => document.getElementById('checkout-submit')?.click()}
+            disabled={submitting || isSyncingCartPricing || !isInitialized}
+          >
             {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-            {submitting ? 'Placing...' : 'Place Order'}
+            {!submitting && isSyncingCartPricing ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
+            {submitting ? 'Placing...' : isSyncingCartPricing ? 'Updating...' : 'Place Order'}
           </Button>
         </div>
       </div>
