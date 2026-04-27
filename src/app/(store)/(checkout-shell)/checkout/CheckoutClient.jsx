@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Check,
@@ -17,7 +17,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { getLastOrderDetailsAction, submitOrderAction, syncCartPricingAction } from '@/app/actions';
+import { getLastOrderDetailsAction, submitOrderAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,7 @@ const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
 const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
 const SEARCH_RESULTS_LIMIT = 24;
 const CHECKOUT_PROFILE_STORAGE_KEY = 'kifayatly_checkout_profile_v1';
+const CHECKOUT_SUCCESS_STORAGE_KEY = 'kifayatly_checkout_success_v1';
 
 function normalizeCitySearchValue(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -134,33 +135,50 @@ function mergeCheckoutProfile(previous, nextProfile = {}, options = {}) {
   };
 }
 
-function getEffectiveCartUnitPrice(item) {
-  if (item?.isDiscounted === true && item?.discountedPrice != null) {
-    return Number(item.discountedPrice);
-  }
+function readStoredSuccessfulOrder() {
+  if (typeof window === 'undefined') return null;
 
-  if (item?.discountedPrice != null) {
-    return Number(item.discountedPrice);
-  }
+  try {
+    const raw = window.sessionStorage.getItem(CHECKOUT_SUCCESS_STORAGE_KEY);
+    if (!raw) return null;
 
-  return Number(item?.Price || item?.price || 0);
+    const parsed = JSON.parse(raw);
+    if (!parsed?.orderId) return null;
+
+    return {
+      orderId: String(parsed.orderId),
+      whatsappUrl: String(parsed.whatsappUrl || ''),
+    };
+  } catch (error) {
+    console.error('Failed to restore checkout success state', error);
+    return null;
+  }
 }
 
-function hasCartPricingDifference(currentCart, nextCart) {
-  if (!Array.isArray(currentCart) || !Array.isArray(nextCart) || currentCart.length !== nextCart.length) {
-    return true;
-  }
+function persistSuccessfulOrder(order) {
+  if (typeof window === 'undefined' || !order?.orderId) return;
 
-  return nextCart.some((nextItem, index) => {
-    const currentItem = currentCart[index];
-
-    return (
-      String(currentItem?.id || currentItem?._id || currentItem?.slug || '') !==
-        String(nextItem?.id || nextItem?._id || nextItem?.slug || '') ||
-      Number(currentItem?.quantity || 0) !== Number(nextItem?.quantity || 0) ||
-      getEffectiveCartUnitPrice(currentItem) !== getEffectiveCartUnitPrice(nextItem)
+  try {
+    window.sessionStorage.setItem(
+      CHECKOUT_SUCCESS_STORAGE_KEY,
+      JSON.stringify({
+        orderId: order.orderId,
+        whatsappUrl: order.whatsappUrl || '',
+      }),
     );
-  });
+  } catch (error) {
+    console.error('Failed to persist checkout success state', error);
+  }
+}
+
+function clearStoredSuccessfulOrder() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.sessionStorage.removeItem(CHECKOUT_SUCCESS_STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear checkout success state', error);
+  }
 }
 
 export default function CheckoutClient({ settings }) {
@@ -171,7 +189,6 @@ export default function CheckoutClient({ settings }) {
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
   const [isHydratingProfile, setIsHydratingProfile] = useState(false);
-  const [isSyncingCartPricing, setIsSyncingCartPricing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -183,14 +200,19 @@ export default function CheckoutClient({ settings }) {
   });
   const [orderPopupShown, setOrderPopupShown] = useState(false);
   const [errors, setErrors] = useState({});
-  const [cartNotice, setCartNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
-  const lastSyncedCartSignatureRef = useRef('');
+
+  useEffect(() => {
+    const storedOrder = readStoredSuccessfulOrder();
+    if (storedOrder) {
+      setOrderState(storedOrder);
+    }
+  }, []);
 
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
@@ -337,62 +359,6 @@ export default function CheckoutClient({ settings }) {
     setHasTrackedCheckoutView(true);
   }, [cart, hasTrackedCheckoutView, total]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (!cart.length) {
-      lastSyncedCartSignatureRef.current = '';
-      setIsSyncingCartPricing(false);
-      return;
-    }
-
-    const cartSignature = JSON.stringify(
-      cart.map((item) => ({
-        id: item.id || item._id || item.slug || '',
-        quantity: Number(item.quantity || 0),
-      }))
-    );
-
-    if (lastSyncedCartSignatureRef.current === cartSignature) {
-      return;
-    }
-
-    let isMounted = true;
-
-    async function syncCartPricing() {
-      setIsSyncingCartPricing(true);
-
-      const result = await syncCartPricingAction(
-        cart.map((item) => ({
-          productId: item.id || item._id || item.slug,
-          quantity: item.quantity,
-        }))
-      );
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (result?.success && Array.isArray(result.items) && hasCartPricingDifference(cart, result.items)) {
-        replaceCart(result.items);
-        setCartNotice('Your cart was refreshed with the latest product pricing before checkout.');
-      } else if (!result?.success) {
-        setErrors((previous) => ({
-          ...previous,
-          submit: result?.error || 'Unable to refresh your cart right now. Please try again.',
-        }));
-      }
-
-      lastSyncedCartSignatureRef.current = cartSignature;
-      setIsSyncingCartPricing(false);
-    }
-
-    syncCartPricing();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [cart, isInitialized, replaceCart]);
-
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
@@ -420,15 +386,14 @@ export default function CheckoutClient({ settings }) {
   }
 
   function handleModalClose() {
-    if (orderState.orderId) {
-      sessionStorage.setItem(`order-popup-shown-${orderState.orderId}`, 'true');
-      setOrderPopupShown(true);
-    }
+    clearStoredSuccessfulOrder();
+    setOrderPopupShown(true);
     router.replace('/');
     router.refresh();
   }
 
   function handleViewOrders() {
+    clearStoredSuccessfulOrder();
     if (session) {
       router.push('/orders');
     } else {
@@ -438,11 +403,10 @@ export default function CheckoutClient({ settings }) {
 
   function handlePlaceOrder(event) {
     event.preventDefault();
-    if (submitting || isSyncingCartPricing || !isInitialized || !validateForm() || cart.length === 0) return;
+    if (submitting || !isInitialized || !validateForm() || cart.length === 0) return;
 
     setSubmitting(true);
     setErrors((previous) => ({ ...previous, submit: '' }));
-    setCartNotice('');
 
     (async () => {
       try {
@@ -470,12 +434,6 @@ export default function CheckoutClient({ settings }) {
         if (!result?.success) {
           if (result?.code === 'PRICE_MISMATCH' && Array.isArray(result?.cartItems) && result.cartItems.length > 0) {
             replaceCart(result.cartItems);
-            lastSyncedCartSignatureRef.current = JSON.stringify(
-              result.cartItems.map((item) => ({
-                id: item.id || item._id || item.slug || '',
-                quantity: Number(item.quantity || 0),
-              }))
-            );
             setErrors((previous) => ({
               ...previous,
               submit: 'Your cart was updated to the latest product pricing. Please review it and place the order again.',
@@ -491,6 +449,7 @@ export default function CheckoutClient({ settings }) {
 
         trackPurchaseEvent({ orderId: result.orderId, cart, total });
         setOrderState(result);
+        persistSuccessfulOrder(result);
         clearCart();
       } catch (error) {
         setErrors((previous) => ({
@@ -502,21 +461,6 @@ export default function CheckoutClient({ settings }) {
       }
     })();
   }
-
-  useEffect(() => {
-    if (!orderState.orderId || orderPopupShown) return undefined;
-
-    const redirectTimer = window.setTimeout(() => {
-      sessionStorage.setItem(`order-popup-shown-${orderState.orderId}`, 'true');
-      setOrderPopupShown(true);
-      router.replace('/');
-      router.refresh();
-    }, 2600);
-
-    return () => {
-      window.clearTimeout(redirectTimer);
-    };
-  }, [orderPopupShown, orderState.orderId, router]);
 
   if (!isInitialized && !orderState.orderId) {
     return (
@@ -752,13 +696,6 @@ export default function CheckoutClient({ settings }) {
                     </Alert>
                   ) : null}
 
-                  {cartNotice ? (
-                    <Alert>
-                      <AlertTitle>Cart updated</AlertTitle>
-                      <AlertDescription>{cartNotice}</AlertDescription>
-                    </Alert>
-                  ) : null}
-
                   {isHydratingProfile ? (
                     <Alert>
                       <AlertTitle>Filling your saved details</AlertTitle>
@@ -884,11 +821,10 @@ export default function CheckoutClient({ settings }) {
                   className={cn('hidden w-full md:inline-flex', styles.ctaButton)}
                   size="lg"
                   onClick={() => document.getElementById('checkout-submit')?.click()}
-                  disabled={submitting || isSyncingCartPricing || !isInitialized}
+                  disabled={submitting || !isInitialized}
                 >
                   {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-                  {!submitting && isSyncingCartPricing ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-                  {submitting ? 'Placing Order...' : isSyncingCartPricing ? 'Updating Cart...' : 'Place Order'}
+                  {submitting ? 'Placing Order...' : 'Place Order'}
                 </Button>
 
                 <div className="mt-4 grid gap-2 text-xs font-medium text-muted-foreground">
@@ -918,11 +854,10 @@ export default function CheckoutClient({ settings }) {
             className={cn('min-w-[10rem]', styles.ctaButton)}
             size="lg"
             onClick={() => document.getElementById('checkout-submit')?.click()}
-            disabled={submitting || isSyncingCartPricing || !isInitialized}
+            disabled={submitting || !isInitialized}
           >
             {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-            {!submitting && isSyncingCartPricing ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-            {submitting ? 'Placing...' : isSyncingCartPricing ? 'Updating...' : 'Place Order'}
+            {submitting ? 'Placing...' : 'Place Order'}
           </Button>
         </div>
       </div>
