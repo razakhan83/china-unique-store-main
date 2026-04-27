@@ -198,7 +198,6 @@ export default function CheckoutClient({ settings }) {
     landmark: '',
     instructions: '',
   });
-  const [orderPopupShown, setOrderPopupShown] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
@@ -387,13 +386,14 @@ export default function CheckoutClient({ settings }) {
 
   function handleModalClose() {
     clearStoredSuccessfulOrder();
-    setOrderPopupShown(true);
+    setOrderState({ orderId: '', whatsappUrl: '' });
     router.replace('/');
     router.refresh();
   }
 
   function handleViewOrders() {
     clearStoredSuccessfulOrder();
+    setOrderState({ orderId: '', whatsappUrl: '' });
     if (session) {
       router.push('/orders');
     } else {
@@ -432,14 +432,6 @@ export default function CheckoutClient({ settings }) {
         });
 
         if (!result?.success) {
-          if (result?.code === 'PRICE_MISMATCH' && Array.isArray(result?.cartItems) && result.cartItems.length > 0) {
-            replaceCart(result.cartItems);
-            setErrors((previous) => ({
-              ...previous,
-              submit: 'Your cart was updated to the latest product pricing. Please review it and place the order again.',
-            }));
-            return;
-          }
           setErrors((previous) => ({
             ...previous,
             submit: result?.error || 'Unable to place the order right now.',
@@ -447,7 +439,7 @@ export default function CheckoutClient({ settings }) {
           return;
         }
 
-        trackPurchaseEvent({ orderId: result.orderId, cart, total });
+        trackPurchaseEvent({ orderId: result.orderId, cart, total: result.totalAmount || total });
         setOrderState(result);
         persistSuccessfulOrder(result);
         clearCart();
@@ -497,7 +489,7 @@ export default function CheckoutClient({ settings }) {
 
   return (
     <>
-      <Dialog open={!!orderState.orderId && !orderPopupShown} onOpenChange={(open) => !open && handleModalClose()}>
+      <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
         <DialogContent className={cn('p-8 text-center sm:max-w-md', styles.dialogPanel)} hideClose>
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[1.35rem] bg-success/10 text-success shadow-[0_18px_32px_-26px_color-mix(in_oklab,var(--color-success)_52%,transparent)]">
             <CheckCircle2 className="size-10" />

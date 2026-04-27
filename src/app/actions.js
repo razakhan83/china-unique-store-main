@@ -267,26 +267,6 @@ export async function submitOrderAction(input) {
       settings,
     });
 
-    if (totalAmount !== pricing.total) {
-      return {
-        success: false,
-        code: 'PRICE_MISMATCH',
-        error: 'Checkout total no longer matches current product pricing. Please review your cart and try again.',
-        cartItems: normalizedItems.map((item) => ({
-          id: item.productId,
-          slug: item.productId,
-          _id: item.productId,
-          Name: item.name,
-          Price: item.price,
-          discountedPrice: null,
-          isDiscounted: false,
-          Images: item.image ? [{ url: item.image }] : [],
-          quantity: item.quantity,
-        })),
-        expectedTotal: pricing.total,
-      };
-    }
-
     const session = await getServerSession(authOptions);
   
     // Robust email capture:
@@ -321,62 +301,69 @@ export async function submitOrderAction(input) {
     revalidateTag('admin-dashboard');
     revalidateTag('products');
 
-    // Update User Profile (Background)
-    if (userEmail) {
-      try {
-        await User.findOneAndUpdate(
-          { email: userEmail },
-          {
-            $set: {
-              email: userEmail,
-              name: customerName,
-              phone: customerPhone,
-              city: customerCity,
-              address: customerAddress,
-              landmark,
-            },
-          },
-          { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
-
-        // 2. Link all previous orders using fuzzy phone matching
-        const phoneRegex = getPhoneRegex(customerPhone);
-        if (phoneRegex) {
-          const linkResult = await Order.updateMany(
-            { customerPhone: { $regex: phoneRegex }, customerEmail: null },
-            { customerEmail: userEmail }
-          );
-        
-          if (linkResult.modifiedCount > 0) {
-            console.log(`Linked ${linkResult.modifiedCount} previous orders to ${userEmail} via fuzzy phone ${customerPhone}`);
-          }
-        }
-      } catch (profileError) {
-        console.error('Error updating user profile/linking orders:', profileError);
-      }
-    }
-
-    // Create Admin Notification
-    try {
-      const Notification = (await import('@/models/Notification')).default;
-      await Notification.create({
-        type: 'order',
-        message: `New Order ${order.orderId} received from ${customerName}`,
-        link: `/admin/orders/${order._id}`,
-        metadata: {
-          id: order.orderId,
-          userName: customerName,
-        }
-      });
-    } catch (notifyError) {
-      console.error('Failed to create order notification:', notifyError);
-    }
-
     after(async () => {
-      await Promise.allSettled([
+      const backgroundTasks = [
         sendOrderEmails({ order, customerName, userEmail }),
         sendPurchaseTrackingEvents({ order, items: normalizedItems }),
-      ]);
+      ];
+
+      if (userEmail) {
+        backgroundTasks.push(
+          (async () => {
+            try {
+              await User.findOneAndUpdate(
+                { email: userEmail },
+                {
+                  $set: {
+                    email: userEmail,
+                    name: customerName,
+                    phone: customerPhone,
+                    city: customerCity,
+                    address: customerAddress,
+                    landmark,
+                  },
+                },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+              );
+
+              const phoneRegex = getPhoneRegex(customerPhone);
+              if (phoneRegex) {
+                const linkResult = await Order.updateMany(
+                  { customerPhone: { $regex: phoneRegex }, customerEmail: null },
+                  { customerEmail: userEmail }
+                );
+
+                if (linkResult.modifiedCount > 0) {
+                  console.log(`Linked ${linkResult.modifiedCount} previous orders to ${userEmail} via fuzzy phone ${customerPhone}`);
+                }
+              }
+            } catch (profileError) {
+              console.error('Error updating user profile/linking orders:', profileError);
+            }
+          })()
+        );
+      }
+
+      backgroundTasks.push(
+        (async () => {
+          try {
+            const Notification = (await import('@/models/Notification')).default;
+            await Notification.create({
+              type: 'order',
+              message: `New Order ${order.orderId} received from ${customerName}`,
+              link: `/admin/orders/${order._id}`,
+              metadata: {
+                id: order.orderId,
+                userName: customerName,
+              }
+            });
+          } catch (notifyError) {
+            console.error('Failed to create order notification:', notifyError);
+          }
+        })()
+      );
+
+      await Promise.allSettled(backgroundTasks);
     });
 
     const lines = [
@@ -402,6 +389,7 @@ export async function submitOrderAction(input) {
     return {
       success: true,
       orderId: order.orderId,
+      totalAmount: pricing.total,
       whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}` : '',
     };
   } catch (error) {
