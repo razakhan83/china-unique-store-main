@@ -17,7 +17,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { getLastOrderDetailsAction, submitOrderAction } from '@/app/actions';
+import { getLastOrderDetailsAction, submitOrderAction, syncCartPricingAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -106,7 +106,7 @@ export default function CheckoutClient({ settings }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { cart } = useCartItems();
-  const { clearCart } = useCartActions();
+  const { clearCart, replaceCart } = useCartActions();
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -213,6 +213,43 @@ export default function CheckoutClient({ settings }) {
     setHasTrackedCheckoutView(true);
   }, [cart, hasTrackedCheckoutView, total]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncCartPricing() {
+      if (!cart.length) return;
+
+      const result = await syncCartPricingAction(
+        cart.map((item) => ({
+          productId: item.id || item._id || item.slug,
+          quantity: item.quantity,
+        }))
+      );
+
+      if (!isMounted || !result?.success || !Array.isArray(result.items) || result.items.length !== cart.length) {
+        return;
+      }
+
+      const hasPricingChange = result.items.some((nextItem, index) => {
+        const currentItem = cart[index];
+        const currentPrice = currentItem?.isDiscounted === true && currentItem?.discountedPrice != null
+          ? Number(currentItem.discountedPrice)
+          : Number(currentItem?.Price || currentItem?.price || 0);
+        return currentPrice !== Number(nextItem?.Price || 0);
+      });
+
+      if (hasPricingChange) {
+        replaceCart(result.items);
+      }
+    }
+
+    syncCartPricing();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cart, replaceCart]);
+
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
@@ -284,6 +321,14 @@ export default function CheckoutClient({ settings }) {
         });
 
         if (!result?.success) {
+          if (result?.code === 'PRICE_MISMATCH' && Array.isArray(result?.cartItems) && result.cartItems.length > 0) {
+            replaceCart(result.cartItems);
+            setErrors((previous) => ({
+              ...previous,
+              submit: 'Your cart was updated to the latest product pricing. Please review it and place the order again.',
+            }));
+            return;
+          }
           setErrors((previous) => ({
             ...previous,
             submit: result?.error || 'Unable to place the order right now.',

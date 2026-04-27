@@ -23,6 +23,7 @@ function normalizeCartItem(item) {
     Name: item.Name || item.name || 'Untitled Product',
     Price: Number(item.Price || item.price || 0),
     discountedPrice: item.discountedPrice != null ? Number(item.discountedPrice) : null,
+    isDiscounted: item.isDiscounted === true,
     Category: Array.isArray(item.Category) ? item.Category : item.Category ? [item.Category] : [],
     Images: item.Images || [],
     quantity: Math.max(1, Number(item.quantity || 1)),
@@ -194,6 +195,15 @@ function CartProviderContent({ children }) {
         );
         if (!persistCartSnapshot(nextCart)) {
           toast.error('Could not update your cart right now.');
+          return { success: false, error: 'Failed to persist cart' };
+        }
+        setCart(nextCart);
+        return { success: true, cart: nextCart };
+      },
+      replaceCart(items) {
+        const nextCart = Array.isArray(items) ? items.map(normalizeCartItem) : [];
+        if (!persistCartSnapshot(nextCart)) {
+          toast.error('Could not refresh your cart right now.');
           return { success: false, error: 'Failed to persist cart' };
         }
         setCart(nextCart);

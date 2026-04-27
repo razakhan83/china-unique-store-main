@@ -270,7 +270,20 @@ export async function submitOrderAction(input) {
     if (totalAmount !== pricing.total) {
       return {
         success: false,
+        code: 'PRICE_MISMATCH',
         error: 'Checkout total no longer matches current product pricing. Please review your cart and try again.',
+        cartItems: normalizedItems.map((item) => ({
+          id: item.productId,
+          slug: item.productId,
+          _id: item.productId,
+          Name: item.name,
+          Price: item.price,
+          discountedPrice: null,
+          isDiscounted: false,
+          Images: item.image ? [{ url: item.image }] : [],
+          quantity: item.quantity,
+        })),
+        expectedTotal: pricing.total,
       };
     }
 
@@ -418,6 +431,36 @@ export async function getLastOrderDetailsAction() {
     city: lastOrder.customerCity || '',
     landmark: lastOrder.landmark || '',
   };
+}
+
+export async function syncCartPricingAction(items) {
+  try {
+    await mongooseConnect();
+
+    const requestedItems = Array.isArray(items) ? items : [];
+    const normalizedItems = await buildOrderItemsWithSourcing(requestedItems);
+
+    return {
+      success: true,
+      items: normalizedItems.map((item) => ({
+        id: item.productId,
+        slug: item.productId,
+        _id: item.productId,
+        Name: item.name,
+        Price: item.price,
+        discountedPrice: null,
+        isDiscounted: false,
+        Images: item.image ? [{ url: item.image }] : [],
+        quantity: item.quantity,
+      })),
+    };
+  } catch (error) {
+    console.error('syncCartPricingAction failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unable to refresh cart pricing right now.',
+    };
+  }
 }
 
 export async function linkOrdersAction(phone) {
