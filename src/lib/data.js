@@ -895,131 +895,140 @@ export async function getStorefrontHomePage() {
   cacheLife('foreverish');
   cacheTag('home-page', 'home-sections', 'products', 'categories');
 
-  const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
-  const activeCategories = categories.filter(
-    (category) => category.isEnabled !== false && category.id !== 'special-offers',
-  );
-  const categoryMap = new Map(categories.map((category) => [category._id, category]));
-  const categorySectionIds = homePage.sections
-    .filter((section) => section.isEnabled !== false && section.type === 'ProductGridByCategory')
-    .map((section) => section.categoryId)
-    .filter(Boolean);
-  const collectionSections = homePage.sections.filter(
-    (section) => section.isEnabled !== false && section.type === 'ProductCollection',
-  );
-  const collectionLimitMap = new Map();
-  collectionSections.forEach((section) => {
-    const currentLimit = Number(collectionLimitMap.get(section.collectionKey) || 0);
-    collectionLimitMap.set(
-      section.collectionKey,
-      Math.max(currentLimit, Number(section.productLimit || 8)),
+  try {
+    const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
+    const activeCategories = categories.filter(
+      (category) => category.isEnabled !== false && category.id !== 'special-offers',
     );
-  });
-  const categoryProducts = await getProductsForHomeCategorySectionsRaw(categorySectionIds);
-  const collectionProductsMap = await getProductsForHomeCollectionSectionsRaw(
-    collectionSections.map((section) => section.collectionKey),
-    collectionLimitMap,
-  );
-  const productsByCategoryId = new Map();
+    const categoryMap = new Map(categories.map((category) => [category._id, category]));
+    const categorySectionIds = homePage.sections
+      .filter((section) => section.isEnabled !== false && section.type === 'ProductGridByCategory')
+      .map((section) => section.categoryId)
+      .filter(Boolean);
+    const collectionSections = homePage.sections.filter(
+      (section) => section.isEnabled !== false && section.type === 'ProductCollection',
+    );
+    const collectionLimitMap = new Map();
+    collectionSections.forEach((section) => {
+      const currentLimit = Number(collectionLimitMap.get(section.collectionKey) || 0);
+      collectionLimitMap.set(
+        section.collectionKey,
+        Math.max(currentLimit, Number(section.productLimit || 8)),
+      );
+    });
+    const categoryProducts = await getProductsForHomeCategorySectionsRaw(categorySectionIds);
+    const collectionProductsMap = await getProductsForHomeCollectionSectionsRaw(
+      collectionSections.map((section) => section.collectionKey),
+      collectionLimitMap,
+    );
+    const productsByCategoryId = new Map();
 
-  for (const product of categoryProducts) {
-    const cardItem = toProductCardItem(product);
+    for (const product of categoryProducts) {
+      const cardItem = toProductCardItem(product);
 
-    for (const category of getProductCategories(product)) {
-      const categoryId = String(category._id || '');
-      if (!categoryId || !categorySectionIds.includes(categoryId)) continue;
+      for (const category of getProductCategories(product)) {
+        const categoryId = String(category._id || '');
+        if (!categoryId || !categorySectionIds.includes(categoryId)) continue;
 
-      if (!productsByCategoryId.has(categoryId)) {
-        productsByCategoryId.set(categoryId, []);
-      }
+        if (!productsByCategoryId.has(categoryId)) {
+          productsByCategoryId.set(categoryId, []);
+        }
 
-      const items = productsByCategoryId.get(categoryId);
-      if (!items.some((item) => item._id === cardItem._id)) {
-        items.push(cardItem);
+        const items = productsByCategoryId.get(categoryId);
+        if (!items.some((item) => item._id === cardItem._id)) {
+          items.push(cardItem);
+        }
       }
     }
+
+    const sections = homePage.sections
+      .filter((section) => section.isEnabled !== false)
+      .map((section) => {
+        if (section.type === 'HeroSlider') {
+          const slides = Array.isArray(section.slides)
+            ? section.slides.filter((slide) => slide?.desktopImage?.url && slide?.mobileImage?.url)
+            : [];
+
+          return slides.length > 0 ? { ...section, slides } : null;
+        }
+
+        if (section.type === 'CategoriesGrid') {
+          return activeCategories.length > 0 ? { ...section, categories: activeCategories } : null;
+        }
+
+        if (section.type === 'ProductBanner') {
+          const desktopImages = Array.isArray(section.desktopImages)
+            ? section.desktopImages.filter((item) => item?.image?.url).slice(0, 2)
+            : [];
+          const mobileImage = section.mobileImage?.image?.url ? section.mobileImage : null;
+
+          return desktopImages.length === 2 && mobileImage
+            ? {
+                ...section,
+                desktopImages,
+                mobileImage,
+              }
+            : null;
+        }
+
+        if (section.type === 'ScrollableBannerCarousel') {
+          const carouselBanners = Array.isArray(section.carouselBanners)
+            ? section.carouselBanners.filter((item) => item?.image?.url)
+            : [];
+
+          return carouselBanners.length > 0
+            ? {
+                ...section,
+                carouselBanners,
+              }
+            : null;
+        }
+
+        if (section.type === 'ProductGridByCategory') {
+          const category = categoryMap.get(section.categoryId);
+          if (!category || category.isEnabled === false) return null;
+
+          const products = (productsByCategoryId.get(section.categoryId) || []).slice(0, section.productLimit || 8);
+          if (products.length === 0) return null;
+
+          return {
+            ...section,
+            category,
+            products,
+          };
+        }
+
+        if (section.type === 'ProductCollection') {
+          const collectionKey = HOME_PAGE_PRODUCT_COLLECTIONS.includes(section.collectionKey)
+            ? section.collectionKey
+            : 'new-arrivals';
+          const config = HOME_PAGE_PRODUCT_COLLECTION_CONFIG[collectionKey];
+          const products = (collectionProductsMap.get(collectionKey) || []).slice(0, section.productLimit || 8);
+
+          if (!config || products.length === 0) return null;
+
+          return {
+            ...section,
+            collectionKey,
+            title: section.title || config.label,
+            viewAllHref: config.viewAllHref || '',
+            products,
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    return { sections };
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn('[BUILD] MongoDB connection failed while building homepage, returning empty sections.');
+      return { sections: [] };
+    }
+
+    throw error;
   }
-
-  const sections = homePage.sections
-    .filter((section) => section.isEnabled !== false)
-    .map((section) => {
-      if (section.type === 'HeroSlider') {
-        const slides = Array.isArray(section.slides)
-          ? section.slides.filter((slide) => slide?.desktopImage?.url && slide?.mobileImage?.url)
-          : [];
-
-        return slides.length > 0 ? { ...section, slides } : null;
-      }
-
-      if (section.type === 'CategoriesGrid') {
-        return activeCategories.length > 0 ? { ...section, categories: activeCategories } : null;
-      }
-
-      if (section.type === 'ProductBanner') {
-        const desktopImages = Array.isArray(section.desktopImages)
-          ? section.desktopImages.filter((item) => item?.image?.url).slice(0, 2)
-          : [];
-        const mobileImage = section.mobileImage?.image?.url ? section.mobileImage : null;
-
-        return desktopImages.length === 2 && mobileImage
-          ? {
-              ...section,
-              desktopImages,
-              mobileImage,
-            }
-          : null;
-      }
-
-      if (section.type === 'ScrollableBannerCarousel') {
-        const carouselBanners = Array.isArray(section.carouselBanners)
-          ? section.carouselBanners.filter((item) => item?.image?.url)
-          : [];
-
-        return carouselBanners.length > 0
-          ? {
-              ...section,
-              carouselBanners,
-            }
-          : null;
-      }
-
-      if (section.type === 'ProductGridByCategory') {
-        const category = categoryMap.get(section.categoryId);
-        if (!category || category.isEnabled === false) return null;
-
-        const products = (productsByCategoryId.get(section.categoryId) || []).slice(0, section.productLimit || 8);
-        if (products.length === 0) return null;
-
-        return {
-          ...section,
-          category,
-          products,
-        };
-      }
-
-      if (section.type === 'ProductCollection') {
-        const collectionKey = HOME_PAGE_PRODUCT_COLLECTIONS.includes(section.collectionKey)
-          ? section.collectionKey
-          : 'new-arrivals';
-        const config = HOME_PAGE_PRODUCT_COLLECTION_CONFIG[collectionKey];
-        const products = (collectionProductsMap.get(collectionKey) || []).slice(0, section.productLimit || 8);
-
-        if (!config || products.length === 0) return null;
-
-        return {
-          ...section,
-          collectionKey,
-          title: section.title || config.label,
-          viewAllHref: config.viewAllHref || '',
-          products,
-        };
-      }
-
-      return null;
-    })
-    .filter(Boolean);
-
-  return { sections };
 }
 
 export async function getProductsList({ category = 'all', search = '', sort = 'newest', page = 1, limit = 12 } = {}) {
