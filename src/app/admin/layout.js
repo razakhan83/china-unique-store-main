@@ -1,17 +1,11 @@
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { AdminShellSkeleton } from '@/components/AdminDashboardSkeleton';
 import AdminLayoutShell from './AdminLayoutShell';
 
 function AdminLayoutFallback({ children }) {
-  return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="border-b border-border bg-background">
-        <div className="h-16 px-4 md:px-6 xl:px-8" />
-      </div>
-      <div className="px-4 py-6 md:px-6 xl:px-8">{children}</div>
-    </div>
-  );
+  return <AdminShellSkeleton>{children}</AdminShellSkeleton>;
 }
 
 async function AdminSessionLayout({ children }) {

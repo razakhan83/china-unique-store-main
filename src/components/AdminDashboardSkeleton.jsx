@@ -1,6 +1,76 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export function AdminShellSkeleton({ children = null }) {
+  return (
+    <div className="admin-theme min-h-screen">
+      <div className="admin-shell-grid">
+        <aside className="admin-shell-sidebar hidden shrink-0 border-r border-border/70 bg-white md:block">
+          <div className="flex h-full flex-col gap-3 bg-white px-3 py-3 text-foreground">
+            <div className="flex items-center gap-2 px-0.5 py-0.5">
+              <Skeleton className="size-7 rounded-md" />
+              <div className="flex min-w-0 flex-col gap-1">
+                <Skeleton className="h-3 w-24 rounded-md" />
+                <Skeleton className="h-2.5 w-12 rounded-md" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Skeleton key={index} className="h-8 rounded-lg" />
+              ))}
+            </div>
+
+            <div className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
+              <Skeleton className="h-8 rounded-lg" />
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-white px-2.5 py-2">
+                <Skeleton className="size-7 rounded-full" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <Skeleton className="h-3 w-24 rounded-md" />
+                  <Skeleton className="h-2.5 w-32 rounded-md" />
+                </div>
+              </div>
+              <Skeleton className="h-8 rounded-lg" />
+            </div>
+          </div>
+        </aside>
+
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 border-b border-border/80 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)]/95 backdrop-blur">
+            <div className="flex min-h-12 items-center justify-between gap-2 px-2.5 py-1.5 sm:px-3 md:min-h-13 md:px-5 xl:px-6">
+              <div className="flex items-center gap-2">
+                <Skeleton className="size-9 rounded-lg md:hidden" />
+                <Skeleton className="hidden size-8 rounded-lg md:block" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Skeleton className="h-8 w-24 rounded-md sm:w-32" />
+                <Skeleton className="size-8 rounded-full" />
+                <Skeleton className="size-8 rounded-full" />
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 px-2 py-2 pb-22 sm:px-3 md:px-4 md:py-4 md:pb-4 xl:px-6">
+            <div className="w-full">{children}</div>
+          </main>
+        </div>
+      </div>
+
+      <nav className="admin-mobile-nav fixed inset-x-0 bottom-0 z-40 md:hidden">
+        <div className="admin-mobile-nav__shell mx-auto grid max-w-xl grid-cols-4 items-center gap-1 border-t border-border/70 px-1 pb-2 pt-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="flex min-w-0 flex-col items-center justify-center gap-1 px-1">
+              <Skeleton className="size-4 rounded-full" />
+              <Skeleton className="h-2.5 w-10 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
 function PageIntroSkeleton({ titleWidth = 'w-56', descriptionWidth = 'w-80', action = false }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

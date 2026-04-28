@@ -254,20 +254,21 @@ export async function submitOrderAction(input) {
       return { success: false, error: 'Missing required checkout details' };
     }
 
-    const normalizedItems = await buildOrderItemsWithSourcing(items);
+    const [normalizedItems, settings, session] = await Promise.all([
+      buildOrderItemsWithSourcing(items),
+      getStoreSettings(),
+      getServerSession(authOptions),
+    ]);
     const canonicalSubtotalAmount = calculateOrderTotal(normalizedItems);
     if (canonicalSubtotalAmount <= 0) {
       return { success: false, error: 'Unable to calculate a valid order total.' };
     }
 
-    const settings = await getStoreSettings();
     const pricing = calculateCheckoutPricing({
       subtotal: canonicalSubtotalAmount,
       city: customerCity,
       settings,
     });
-
-    const session = await getServerSession(authOptions);
   
     // Robust email capture:
     const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;

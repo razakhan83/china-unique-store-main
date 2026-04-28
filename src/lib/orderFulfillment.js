@@ -153,33 +153,32 @@ export async function applyInventoryAdjustments(orderItems = []) {
     return [];
   }
 
-  const products = await Product.find({ _id: { $in: Array.from(requestedAdjustments.keys()) } })
-    .select('_id stockQuantity StockStatus')
-    .lean();
-
-  const operations = products
-    .map((product) => {
-      const orderedQuantity = requestedAdjustments.get(product._id.toString()) || 0;
-      const currentStock = Math.max(0, toSafeNumber(product.stockQuantity, 0));
-      const nextStock = Math.max(0, currentStock - orderedQuantity);
-
-      if (nextStock === currentStock) {
-        return null;
-      }
-
-      return {
-        updateOne: {
-          filter: { _id: product._id },
-          update: {
-            $set: {
-              stockQuantity: nextStock,
-              ...(nextStock === 0 ? { StockStatus: 'Out of Stock' } : {}),
+  const operations = Array.from(requestedAdjustments.entries()).map(([productId, orderedQuantity]) => ({
+    updateOne: {
+      filter: { _id: new mongoose.Types.ObjectId(productId) },
+      update: [
+        {
+          $set: {
+            stockQuantity: {
+              $max: [
+                0,
+                {
+                  $subtract: [{ $ifNull: ['$stockQuantity', 0] }, orderedQuantity],
+                },
+              ],
             },
           },
         },
-      };
-    })
-    .filter(Boolean);
+        {
+          $set: {
+            StockStatus: {
+              $cond: [{ $lte: ['$stockQuantity', 0] }, 'Out of Stock', 'In Stock'],
+            },
+          },
+        },
+      ],
+    },
+  }));
 
   if (operations.length > 0) {
     await Product.bulkWrite(operations, { ordered: false });

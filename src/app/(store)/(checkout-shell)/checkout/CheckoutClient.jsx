@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Check,
@@ -205,6 +205,7 @@ export default function CheckoutClient({ settings }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
+  const submissionLockRef = useRef(false);
 
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
@@ -396,8 +397,9 @@ export default function CheckoutClient({ settings }) {
 
   function handlePlaceOrder(event) {
     event.preventDefault();
-    if (submitting || !isInitialized || !validateForm() || cart.length === 0) return;
+    if (submissionLockRef.current || submitting || !isInitialized || !validateForm() || cart.length === 0) return;
 
+    submissionLockRef.current = true;
     setSubmitting(true);
     setErrors((previous) => ({ ...previous, submit: '' }));
 
@@ -436,12 +438,16 @@ export default function CheckoutClient({ settings }) {
         setOrderState(result);
         persistSuccessfulOrder(result);
         clearCart();
+        startTransition(() => {
+          router.refresh();
+        });
       } catch (error) {
         setErrors((previous) => ({
           ...previous,
           submit: error.message || 'Unable to place the order right now.',
         }));
       } finally {
+        submissionLockRef.current = false;
         setSubmitting(false);
       }
     })();
