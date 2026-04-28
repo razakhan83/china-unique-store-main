@@ -3,7 +3,7 @@ import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutG
 
 import { Badge } from '@/components/ui/badge';
 import DashboardChart from '@/components/admin/DashboardChart';
-import { getAdminDashboardData } from '@/lib/data';
+import { getAdminChartData, getAdminDashboardData } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
 
 const STATUS_VARIANT = {
@@ -49,7 +49,10 @@ export default async function AdminDashboardPage() {
 }
 
 async function DashboardContent() {
-  const { summary, recentOrders, topVendors } = await getAdminDashboardData();
+  const [{ summary, recentOrders, topVendors }, initialChartData] = await Promise.all([
+    getAdminDashboardData(),
+    getAdminChartData('monthly'),
+  ]);
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} pending` },
@@ -147,7 +150,7 @@ async function DashboardContent() {
           </div>
           
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4">
-             <DashboardChart />
+             <DashboardChart initialData={initialChartData} initialPeriod="monthly" />
           </div>
         </div>
 

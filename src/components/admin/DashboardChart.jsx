@@ -20,13 +20,19 @@ const chartConfig = {
   }
 };
 
-export default function DashboardChart() {
-  const [period, setPeriod] = useState('monthly');
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function DashboardChart({ initialData = [], initialPeriod = 'monthly' }) {
+  const [period, setPeriod] = useState(initialPeriod);
+  const [data, setData] = useState(Array.isArray(initialData) ? initialData : []);
+  const [isLoading, setIsLoading] = useState(!Array.isArray(initialData) || initialData.length === 0);
 
   useEffect(() => {
     async function fetchChart() {
+      if (period === initialPeriod && Array.isArray(initialData) && initialData.length > 0) {
+        setData(initialData);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
         const res = await fetch(`/api/admin/chart?period=${period}`);
@@ -41,7 +47,7 @@ export default function DashboardChart() {
       }
     }
     fetchChart();
-  }, [period]);
+  }, [initialData, initialPeriod, period]);
 
   return (
     <div className="flex h-full flex-col w-full">

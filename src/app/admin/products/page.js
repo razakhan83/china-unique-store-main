@@ -20,6 +20,7 @@ export default async function AdminProductsPage({ searchParams }) {
       total={result.total}
       totalPages={result.totalPages}
       currentPage={result.page}
+      pageSize={result.limit}
       initialSearchQuery={result.searchTerm}
       initialStatusFilter={result.status}
       initialStockFilter={result.stock}

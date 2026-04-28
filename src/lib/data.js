@@ -1367,6 +1367,9 @@ export async function getAdminProductsPage({
   page = 1,
   limit = 12,
 } = {}) {
+  'use cache';
+  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
+  cacheTag('products', 'categories');
   await mongooseConnect();
 
   const safeSearch = String(search || '').trim();
@@ -1461,6 +1464,9 @@ export async function getAdminOrdersPage({
   page = 1,
   limit = 12,
 } = {}) {
+  'use cache';
+  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
+  cacheTag('orders');
   await mongooseConnect();
 
   const safeSearch = String(search || '').trim();
@@ -1505,18 +1511,32 @@ export async function getAdminOrdersPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, confirmedCount, sourcingCount, inProcessCount, packedCount, shippedCount, outForDeliveryCount, deliveredCount, returnedCount] = await Promise.all([
+  const [items, total, statusCounts] = await Promise.all([
     Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
-    Order.countDocuments({ status: { $in: ['Confirmed', 'Pending'] } }),
-    Order.countDocuments({ status: 'Sourcing' }),
-    Order.countDocuments({ status: 'In Process' }),
-    Order.countDocuments({ status: 'Packed' }),
-    Order.countDocuments({ status: 'Shipped' }),
-    Order.countDocuments({ status: 'Out for Delivery' }),
-    Order.countDocuments({ status: 'Delivered' }),
-    Order.countDocuments({ status: 'Returned' }),
+    Order.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]),
   ]);
+
+  const statusCountMap = new Map(
+    (Array.isArray(statusCounts) ? statusCounts : []).map((entry) => [String(entry?._id || ''), Number(entry?.count || 0)])
+  );
+  const confirmedCount =
+    (statusCountMap.get('Confirmed') || 0) +
+    (statusCountMap.get('Pending') || 0);
+  const sourcingCount = statusCountMap.get('Sourcing') || 0;
+  const inProcessCount = statusCountMap.get('In Process') || 0;
+  const packedCount = statusCountMap.get('Packed') || 0;
+  const shippedCount = statusCountMap.get('Shipped') || 0;
+  const outForDeliveryCount = statusCountMap.get('Out for Delivery') || 0;
+  const deliveredCount = statusCountMap.get('Delivered') || 0;
+  const returnedCount = statusCountMap.get('Returned') || 0;
 
   return {
     items,
@@ -1814,6 +1834,9 @@ export async function getOrderLogs(orderId) {
 }
 
 export async function getAdminDashboardData() {
+  'use cache';
+  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
+  cacheTag('admin-dashboard', 'orders', 'products');
   await mongooseConnect();
 
   const startOfToday = new Date();
@@ -1821,74 +1844,110 @@ export async function getAdminDashboardData() {
   const startOfTomorrow = new Date(startOfToday);
   startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-  const [
-    totalOrders,
-    pendingOrders,
-    totalProducts,
-    liveProducts,
-    revenueAgg,
-    customersAgg,
-    recentOrders,
-    dailyConfirmedOrders,
-    topVendorsAgg,
-  ] = await Promise.all([
-    Order.countDocuments(),
-    Order.countDocuments({ status: 'Pending' }),
-    Product.countDocuments(),
-    Product.countDocuments({ isLive: true }),
-    Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+  const [orderDashboardAgg, productDashboardAgg] = await Promise.all([
     Order.aggregate([
       {
-        $group: {
-          _id: {
-            $cond: [
-              { $ne: [{ $ifNull: ['$customerEmail', ''] }, ''] },
-              { $ifNull: ['$customerEmail', ''] },
-              {
-                $cond: [
-                  { $ne: [{ $ifNull: ['$customerPhone', ''] }, ''] },
-                  { $ifNull: ['$customerPhone', ''] },
-                  { $toString: '$_id' },
-                ],
+        $facet: {
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalOrders: { $sum: 1 },
+                pendingOrders: {
+                  $sum: {
+                    $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0],
+                  },
+                },
+                totalRevenue: { $sum: '$totalAmount' },
               },
-            ],
-          },
+            },
+          ],
+          customers: [
+            {
+              $group: {
+                _id: {
+                  $cond: [
+                    { $ne: [{ $ifNull: ['$customerEmail', ''] }, ''] },
+                    { $ifNull: ['$customerEmail', ''] },
+                    {
+                      $cond: [
+                        { $ne: [{ $ifNull: ['$customerPhone', ''] }, ''] },
+                        { $ifNull: ['$customerPhone', ''] },
+                        { $toString: '$_id' },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $count: 'count' },
+          ],
+          recentOrders: [{ $sort: { createdAt: -1 } }, { $limit: 5 }],
+          dailyConfirmedOrders: [
+            {
+              $match: {
+                status: { $in: ['Confirmed', 'Pending'] },
+                createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
+              },
+            },
+            { $count: 'count' },
+          ],
         },
       },
-      { $count: 'count' },
     ]),
-    Order.find({}).sort({ createdAt: -1 }).limit(5).lean(),
-    Order.countDocuments({
-      status: { $in: ['Confirmed', 'Pending'] },
-      createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
-    }),
     Product.aggregate([
-      { $match: { isLive: true, vendors: { $exists: true, $ne: [] } } },
-      { $unwind: '$vendors' },
       {
-        $group: {
-          _id: {
-            vendorId: '$vendors.vendorId',
-            name: '$vendors.name',
-            shopNumber: '$vendors.shopNumber',
-          },
-          totalLiveItems: { $sum: 1 },
+        $facet: {
+          counts: [
+            {
+              $group: {
+                _id: null,
+                totalProducts: { $sum: 1 },
+                liveProducts: {
+                  $sum: {
+                    $cond: [{ $eq: ['$isLive', true] }, 1, 0],
+                  },
+                },
+              },
+            },
+          ],
+          topVendors: [
+            { $match: { isLive: true, vendors: { $exists: true, $ne: [] } } },
+            { $unwind: '$vendors' },
+            {
+              $group: {
+                _id: {
+                  vendorId: '$vendors.vendorId',
+                  name: '$vendors.name',
+                  shopNumber: '$vendors.shopNumber',
+                },
+                totalLiveItems: { $sum: 1 },
+              },
+            },
+            { $sort: { totalLiveItems: -1, '_id.name': 1 } },
+            { $limit: 5 },
+          ],
         },
       },
-      { $sort: { totalLiveItems: -1, '_id.name': 1 } },
-      { $limit: 5 },
     ]),
   ]);
 
+  const orderDashboard = orderDashboardAgg?.[0] || {};
+  const productDashboard = productDashboardAgg?.[0] || {};
+  const totals = orderDashboard.totals?.[0] || {};
+  const productCounts = productDashboard.counts?.[0] || {};
+  const recentOrders = Array.isArray(orderDashboard.recentOrders) ? orderDashboard.recentOrders : [];
+  const topVendorsAgg = Array.isArray(productDashboard.topVendors) ? productDashboard.topVendors : [];
+
   return {
     summary: {
-      totalOrders,
-      pendingOrders,
-      totalProducts,
-      liveProducts,
-      totalRevenue: Number(revenueAgg[0]?.total || 0),
-      totalCustomers: Number(customersAgg[0]?.count || 0),
-      dailyConfirmedOrders: Number(dailyConfirmedOrders || 0),
+      totalOrders: Number(totals.totalOrders || 0),
+      pendingOrders: Number(totals.pendingOrders || 0),
+      totalProducts: Number(productCounts.totalProducts || 0),
+      liveProducts: Number(productCounts.liveProducts || 0),
+      totalRevenue: Number(totals.totalRevenue || 0),
+      totalCustomers: Number(orderDashboard.customers?.[0]?.count || 0),
+      dailyConfirmedOrders: Number(orderDashboard.dailyConfirmedOrders?.[0]?.count || 0),
     },
     recentOrders: recentOrders.map(toOrderSummaryRow),
     topVendors: topVendorsAgg.map((entry) => ({
@@ -1900,7 +1959,97 @@ export async function getAdminDashboardData() {
   };
 }
 
+export async function getAdminChartData(period = 'monthly') {
+  'use cache';
+  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
+  cacheTag('admin-dashboard', 'orders');
+  await mongooseConnect();
+
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+
+  const safePeriod = ['weekly', 'monthly', 'yearly'].includes(String(period)) ? String(period) : 'monthly';
+  const startDate = new Date(now);
+  const labels = [];
+  let groupByFormat = '%Y-%m-%d';
+
+  if (safePeriod === 'weekly') {
+    startDate.setDate(now.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  } else if (safePeriod === 'yearly') {
+    startDate.setMonth(now.getMonth() - 11);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+    groupByFormat = '%Y-%m';
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setMonth(now.getMonth() - i);
+      labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+  } else {
+    startDate.setDate(now.getDate() - 29);
+    startDate.setHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  }
+
+  const results = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: startDate, $lte: now },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: groupByFormat, date: '$createdAt' },
+        },
+        revenue: { $sum: '$totalAmount' },
+        orders: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  const dataMap = new Map(
+    (Array.isArray(results) ? results : []).map((row) => [row._id, { revenue: Number(row.revenue || 0), orders: Number(row.orders || 0) }])
+  );
+
+  return labels.map((dateLabel) => {
+    const data = dataMap.get(dateLabel) || { revenue: 0, orders: 0 };
+    let displayLabel = dateLabel;
+
+    if (safePeriod === 'weekly') {
+      displayLabel = new Date(dateLabel).toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (safePeriod === 'monthly') {
+      displayLabel = new Date(dateLabel).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (safePeriod === 'yearly') {
+      const [year, month] = dateLabel.split('-');
+      const d = new Date(Number(year), Number(month) - 1, 1);
+      displayLabel = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    }
+
+    return {
+      rawDate: dateLabel,
+      date: displayLabel,
+      revenue: data.revenue,
+      orders: data.orders,
+    };
+  });
+}
+
 export async function getAdminSettings() {
+  'use cache';
+  cacheLife({ stale: 30, revalidate: 60, expire: 300 });
+  cacheTag('settings');
   await mongooseConnect();
 
   let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();

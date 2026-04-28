@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { AdminShellSkeleton } from '@/components/AdminDashboardSkeleton';
+import { getAdminSession } from '@/lib/requireAdmin';
 import AdminLayoutShell from './AdminLayoutShell';
 
 function AdminLayoutFallback({ children }) {
@@ -9,7 +8,7 @@ function AdminLayoutFallback({ children }) {
 }
 
 async function AdminSessionLayout({ children }) {
-  const session = await getServerSession(authOptions);
+  const session = await getAdminSession();
   return (
     <Suspense fallback={<AdminLayoutFallback>{children}</AdminLayoutFallback>}>
       <AdminLayoutShell sessionUser={session?.user || null}>{children}</AdminLayoutShell>

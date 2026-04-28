@@ -5,5 +5,9 @@ import { requireAdmin } from '@/lib/requireAdmin';
 export default async function AddProductPage() {
   await connection();
   await requireAdmin();
-  return <AddProductClient />;
+  return (
+    <div className="mx-auto w-full max-w-6xl">
+      <AddProductClient />
+    </div>
+  );
 }

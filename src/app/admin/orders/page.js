@@ -23,6 +23,7 @@ export default async function AdminOrdersPage({ searchParams }) {
       total={orders.total}
       totalPages={orders.totalPages}
       currentPage={orders.page}
+      pageSize={orders.limit}
       initialSearchQuery={orders.searchTerm}
       initialStatusFilter={orders.status}
       initialStartDate={orders.startDate}

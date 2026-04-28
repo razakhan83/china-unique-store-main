@@ -239,7 +239,7 @@ function FormFieldSkeleton({ tall = false }) {
 
 function ProductEditorSkeletonContent({ edit = false }) {
   return (
-    <div className="w-full pb-10">
+    <div className="mx-auto w-full max-w-6xl pb-10">
       <div className="mb-6 flex items-center gap-4 md:mb-8">
         <Skeleton className="size-9 rounded-xl" />
         <div className="flex flex-col gap-2">
@@ -248,7 +248,7 @@ function ProductEditorSkeletonContent({ edit = false }) {
         </div>
       </div>
 
-      <div className="surface-card max-w-2xl rounded-xl p-4 shadow-lg md:p-8">
+      <div className="surface-card w-full rounded-xl p-4 shadow-lg md:p-8">
         <div className="flex flex-col gap-6">
           <FormFieldSkeleton />
           <div className="grid gap-4 md:grid-cols-2">

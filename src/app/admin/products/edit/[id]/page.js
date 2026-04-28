@@ -6,5 +6,9 @@ export default async function Page({ params }) {
     await connection();
     await requireAdmin();
     const { id } = await params;
-    return <EditProductClient id={id} />;
+    return (
+        <div className="mx-auto w-full max-w-6xl">
+            <EditProductClient id={id} />
+        </div>
+    );
 }

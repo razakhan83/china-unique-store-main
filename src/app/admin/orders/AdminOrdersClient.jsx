@@ -46,8 +46,6 @@ const statusVariant = {
   Returned: 'outline',
 };
 
-const ITEMS_PER_PAGE = 12;
-
 const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -104,6 +102,7 @@ export default function AdminOrdersClient({
   total,
   totalPages,
   currentPage,
+  pageSize,
   initialSearchQuery,
   initialStatusFilter,
   initialStartDate,
@@ -483,6 +482,13 @@ export default function AdminOrdersClient({
   };
 
   const hasActiveFilters = searchQuery || statusFilter !== 'Confirmed' || startDate || endDate;
+  const appliedFilters = [
+    statusFilter !== 'Confirmed' ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter}` : null,
+    initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
+    initialStartDate || initialEndDate
+      ? `Date: ${initialStartDate || 'Any'} - ${initialEndDate || 'Any'}`
+      : null,
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-col gap-4">
@@ -491,12 +497,14 @@ export default function AdminOrdersClient({
       </div>
 
       {/* Status Filter Tabs — Compact pills */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {[
           { id: 'Confirmed', label: `Confirmed (${summary.confirmedCount})` },
+          { id: 'Sourcing', label: `Sourcing (${summary.sourcingCount || 0})` },
           { id: 'In Process', label: `In Progress (${summary.inProcessCount})` },
           { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
           { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
+          { id: 'Out for Delivery', label: `Out for Delivery (${summary.outForDeliveryCount || 0})` },
           { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
           { id: 'Returned', label: `Returned (${summary.returnedCount})` },
           { id: 'all', label: `All (${summary.allCount})` },
@@ -632,6 +640,16 @@ export default function AdminOrdersClient({
           )}
         </div>
       </form>
+
+      {appliedFilters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {appliedFilters.map((filter) => (
+            <Badge key={filter} variant="outline" className="rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {filter}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {/* ── Desktop Table ── */}
       <div className={cn("hidden overflow-hidden rounded-lg border border-border bg-card md:block", isPending && "opacity-60")}>
@@ -1052,9 +1070,9 @@ export default function AdminOrdersClient({
       {totalPages > 1 && (
         <div className="flex flex-col gap-2 px-1 py-2">
           <p className="text-[12px] text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
+            Showing <span className="font-medium text-foreground">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
             <span className="font-medium text-foreground">
-              {Math.min(currentPage * ITEMS_PER_PAGE, total)}
+              {Math.min(currentPage * pageSize, total)}
             </span>{' '}
             of <span className="font-medium text-foreground">{total}</span> orders
           </p>
