@@ -59,10 +59,39 @@ async function loadImageDataUrl(url) {
 
     const blob = await response.blob();
     return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
+      const image = new window.Image();
+
+      image.crossOrigin = 'anonymous';
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const width = Math.max(1, image.naturalWidth || image.width || 1);
+          const height = Math.max(1, image.naturalHeight || image.height || 1);
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            throw new Error('Unable to create image canvas.');
+          }
+
+          context.drawImage(image, 0, 0, width, height);
+          const pngDataUrl = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(objectUrl);
+          resolve(pngDataUrl);
+        } catch (error) {
+          URL.revokeObjectURL(objectUrl);
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Unable to decode image file.'));
+      };
+
+      image.src = objectUrl;
     });
   } catch {
     return null;
@@ -334,7 +363,7 @@ export const generateInvoice = async (order, branding = {}) => {
         // Draw image border/background
         doc.setFillColor(...PALETTE.soft);
         doc.roundedRect(imgX, imgY, imgSize, imgSize, 4, 4, 'F');
-        doc.addImage(imgDataUrl, 'JPEG', imgX + 1, imgY + 1, imgSize - 2, imgSize - 2, `prod-${index}`, 'FAST');
+        doc.addImage(imgDataUrl, 'PNG', imgX + 1, imgY + 1, imgSize - 2, imgSize - 2, `prod-${index}`, 'FAST');
         // Border
         doc.setDrawColor(...PALETTE.line);
         doc.setLineWidth(0.5);
