@@ -22,6 +22,12 @@ import {
 import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
 import {
+  DEFAULT_ORDER_STATUS,
+  getOrderStatusQueryValue,
+  getOrderStatusSummaryCounts,
+  normalizeOrderStatus,
+} from '@/lib/order-status';
+import {
   getProductCategories,
   getProductCategoryNames,
   hasProductCategory,
@@ -315,6 +321,8 @@ function toOrderSummaryRow(order) {
   return {
     _id: order._id.toString(),
     orderId: order.orderId,
+    isDraft: order.isDraft === true,
+    sourceTag: order.sourceTag || '',
     customerName: order.customerName,
     customerEmail: order.customerEmail || '',
     customerPhone: order.customerPhone || '',
@@ -327,7 +335,7 @@ function toOrderSummaryRow(order) {
     itemType: order.itemType || 'Mix',
     orderQuantity: Number(order.orderQuantity || 1),
     totalAmount: Number(order.totalAmount || 0),
-    status: order.status,
+    status: normalizeOrderStatus(order.status),
     notes: order.notes || '',
     courierName: order.courierName || '',
     trackingNumber: order.trackingNumber || '',
@@ -1458,7 +1466,7 @@ export async function getAdminProductsPage({
 
 export async function getAdminOrdersPage({
   search = '',
-  status = 'Confirmed',
+  status = DEFAULT_ORDER_STATUS,
   startDate = '',
   endDate = '',
   page = 1,
@@ -1470,7 +1478,7 @@ export async function getAdminOrdersPage({
   await mongooseConnect();
 
   const safeSearch = String(search || '').trim();
-  const safeStatus = String(status || 'Confirmed').trim() || 'Confirmed';
+  const safeStatus = normalizeOrderStatus(status || DEFAULT_ORDER_STATUS);
   const safeStartDate = String(startDate || '').trim();
   const safeEndDate = String(endDate || '').trim();
   const safePage = Math.max(1, Number(page) || 1);
@@ -1478,12 +1486,11 @@ export async function getAdminOrdersPage({
 
   const query = {};
 
-  if (safeStatus !== 'all') {
-    if (safeStatus === 'Confirmed') {
-      query.status = { $in: ['Confirmed', 'Pending'] };
-    } else {
-      query.status = safeStatus;
-    }
+  if (safeStatus === 'draft') {
+    query.isDraft = true;
+  } else if (safeStatus !== 'all') {
+    query.isDraft = { $ne: true };
+    query.status = getOrderStatusQueryValue(safeStatus);
   }
 
   if (safeSearch) {
@@ -1511,10 +1518,15 @@ export async function getAdminOrdersPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, statusCounts] = await Promise.all([
+  const [items, total, statusCounts, draftCount] = await Promise.all([
     Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
     Order.aggregate([
+      {
+        $match: {
+          isDraft: { $ne: true },
+        },
+      },
       {
         $group: {
           _id: '$status',
@@ -1522,21 +1534,13 @@ export async function getAdminOrdersPage({
         },
       },
     ]),
+    Order.countDocuments({ isDraft: true }),
   ]);
 
   const statusCountMap = new Map(
     (Array.isArray(statusCounts) ? statusCounts : []).map((entry) => [String(entry?._id || ''), Number(entry?.count || 0)])
   );
-  const confirmedCount =
-    (statusCountMap.get('Confirmed') || 0) +
-    (statusCountMap.get('Pending') || 0);
-  const sourcingCount = statusCountMap.get('Sourcing') || 0;
-  const inProcessCount = statusCountMap.get('In Process') || 0;
-  const packedCount = statusCountMap.get('Packed') || 0;
-  const shippedCount = statusCountMap.get('Shipped') || 0;
-  const outForDeliveryCount = statusCountMap.get('Out for Delivery') || 0;
-  const deliveredCount = statusCountMap.get('Delivered') || 0;
-  const returnedCount = statusCountMap.get('Returned') || 0;
+  const summaryCounts = getOrderStatusSummaryCounts(statusCountMap);
 
   return {
     items,
@@ -1550,15 +1554,9 @@ export async function getAdminOrdersPage({
     startDate: safeStartDate,
     endDate: safeEndDate,
     summary: {
-      confirmedCount,
-      sourcingCount,
-      inProcessCount,
-      packedCount,
-      shippedCount,
-      outForDeliveryCount,
-      deliveredCount,
-      returnedCount,
-      allCount: confirmedCount + sourcingCount + inProcessCount + packedCount + shippedCount + outForDeliveryCount + deliveredCount + returnedCount,
+      ...summaryCounts,
+      draftCount,
+      allCount: summaryCounts.allCount + draftCount,
     },
   };
 }
@@ -1749,6 +1747,7 @@ export async function getUserOrders(email) {
   
   // 2. Build query: match by customerEmail OR by customerPhone if phone exists (fuzzy)
   const query = {
+    isDraft: { $ne: true },
     $or: [
       { customerEmail: normalizedEmail }
     ]
@@ -1847,6 +1846,11 @@ export async function getAdminDashboardData() {
   const [orderDashboardAgg, productDashboardAgg] = await Promise.all([
     Order.aggregate([
       {
+        $match: {
+          isDraft: { $ne: true },
+        },
+      },
+      {
         $facet: {
           totals: [
             {
@@ -1855,7 +1859,7 @@ export async function getAdminDashboardData() {
                 totalOrders: { $sum: 1 },
                 pendingOrders: {
                   $sum: {
-                    $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0],
+                    $cond: [{ $in: ['$status', ['Order Confirmed', 'Confirmed', 'Pending']] }, 1, 0],
                   },
                 },
                 totalRevenue: { $sum: '$totalAmount' },
@@ -1886,7 +1890,7 @@ export async function getAdminDashboardData() {
           dailyConfirmedOrders: [
             {
               $match: {
-                status: { $in: ['Confirmed', 'Pending'] },
+                status: { $in: ['Order Confirmed', 'Confirmed', 'Pending'] },
                 createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
               },
             },

@@ -26,14 +26,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InvoiceButton from '@/components/InvoiceButtonWrapper';
 import CopyButton from '@/components/CopyButton';
 import ReviewModal from '@/components/ReviewModal';
+import { normalizeOrderStatus } from '@/lib/order-status';
 import { cn } from '@/lib/utils';
 
 const STATUS_COLORS = {
-  Pending: 'bg-accent/15 text-accent-foreground border-accent/25',
-  Confirmed: 'bg-primary/10 text-primary border-primary/20',
+  'Order Confirmed': 'bg-primary/10 text-primary border-primary/20',
   'In Process': 'bg-secondary text-secondary-foreground border-border',
+  Packed: 'bg-secondary text-secondary-foreground border-border',
+  Shipped: 'bg-secondary text-secondary-foreground border-border',
+  'Out For Delivery': 'bg-secondary text-secondary-foreground border-border',
   Delivered: 'bg-success/12 text-success border-success/20',
-  'Delivery Address Issue': 'bg-destructive/10 text-destructive border-destructive/20',
   Returned: 'bg-muted text-muted-foreground border-border',
 };
 
@@ -70,11 +72,11 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
 
   // Updated Grouping Logic
   const activeOrders = orders.filter(order => 
-    ['Pending', 'Confirmed', 'In Process', 'Delivery Address Issue'].includes(order.status)
+    ['Order Confirmed', 'In Process', 'Packed', 'Shipped', 'Out For Delivery'].includes(normalizeOrderStatus(order.status))
   );
   
   const historyOrders = orders.filter(order => 
-    ['Delivered', 'Returned'].includes(order.status)
+    ['Delivered', 'Returned'].includes(normalizeOrderStatus(order.status))
   );
 
   // Auto-popup and Cleanup logic
@@ -94,7 +96,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
 
     // 2. Auto-popup: Find a delivered order that needs a review prompt
     const deliveredUnreviewedOrders = orders.filter(order => 
-      order.status === 'Delivered' && 
+      normalizeOrderStatus(order.status) === 'Delivered' && 
       order.items.some(item => !item.isReviewed)
     );
 
@@ -155,7 +157,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
   }
 
   const renderOrderCard = (order) => {
-    const hasUnreviewedItems = order.status === 'Delivered' && order.items.some(item => !item.isReviewed);
+    const hasUnreviewedItems = normalizeOrderStatus(order.status) === 'Delivered' && order.items.some(item => !item.isReviewed);
     
     return (
       <div key={order._id} className="surface-card overflow-hidden rounded-xl border border-border shadow-sm transition-all hover:shadow-md">
@@ -197,9 +199,9 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
             )}
             <Badge 
               variant="outline" 
-              className={cn("px-3 py-1 rounded-full border shadow-sm", STATUS_COLORS[order.status] || 'bg-muted')}
+              className={cn("px-3 py-1 rounded-full border shadow-sm", STATUS_COLORS[normalizeOrderStatus(order.status)] || 'bg-muted')}
             >
-              {order.status}
+              {normalizeOrderStatus(order.status)}
             </Badge>
           </div>
         </div>
@@ -279,8 +281,8 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
   };
 
   const renderCollapsedOrderItem = (order, isExpanded) => {
-    const hasUnreviewedItems = order.status === 'Delivered' && order.items.some(item => !item.isReviewed);
-    const allReviewed = order.status === 'Delivered' && order.items.length > 0 && order.items.every(item => item.isReviewed);
+    const hasUnreviewedItems = normalizeOrderStatus(order.status) === 'Delivered' && order.items.some(item => !item.isReviewed);
+    const allReviewed = normalizeOrderStatus(order.status) === 'Delivered' && order.items.length > 0 && order.items.every(item => item.isReviewed);
 
     return (
       <AccordionItem
@@ -328,9 +330,9 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
               ) : null}
               <Badge
                 variant="outline"
-                className={cn('max-w-max rounded-full border px-2 py-0.5 text-[9px] shadow-sm sm:px-3 sm:py-1 sm:text-[10px]', STATUS_COLORS[order.status] || 'bg-muted')}
+                className={cn('max-w-max rounded-full border px-2 py-0.5 text-[9px] shadow-sm sm:px-3 sm:py-1 sm:text-[10px]', STATUS_COLORS[normalizeOrderStatus(order.status)] || 'bg-muted')}
               >
-                {order.status}
+                {normalizeOrderStatus(order.status)}
               </Badge>
               <AccordionTrigger className="h-auto w-auto shrink-0 justify-center border-0 bg-transparent p-0 hover:no-underline">
                 <span className="sr-only">Expand order details</span>

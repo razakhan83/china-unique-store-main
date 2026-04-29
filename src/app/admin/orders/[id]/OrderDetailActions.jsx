@@ -15,19 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const ORDER_STATUSES = [
-  'Pending',
-  'Confirmed',
-  'Sourcing',
-  'In Process',
-  'Packed',
-  'Shipped',
-  'Out for Delivery',
-  'Delivered',
-  'Delivery Address Issue',
-  'Returned',
-];
+import { ORDER_STATUSES } from '@/lib/order-status';
 
 export default function OrderDetailActions({ order }) {
   const router = useRouter();

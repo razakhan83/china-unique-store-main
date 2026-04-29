@@ -8,19 +8,17 @@ import { Receipt } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getOrderById, getOrderLogs } from '@/lib/data';
+import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 import OrderDetailActions from './OrderDetailActions';
 
 const statusVariant = {
-  Pending: 'accent',
-  Confirmed: 'primary',
-  Sourcing: 'secondary',
+  'Order Confirmed': 'primary',
   'In Process': 'secondary',
   Packed: 'secondary',
   Shipped: 'secondary',
-  'Out for Delivery': 'secondary',
+  'Out For Delivery': 'secondary',
   Delivered: 'secondary',
-  'Delivery Address Issue': 'destructive',
   Returned: 'outline',
 };
 
@@ -42,6 +40,8 @@ async function OrderDetailContent({ id }) {
     notFound();
   }
 
+  const normalizedStatus = order.isDraft ? 'Draft' : normalizeOrderStatus(order.status);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -61,7 +61,8 @@ async function OrderDetailContent({ id }) {
             <p className="flex flex-wrap gap-1.5"><span className="font-medium text-foreground">Name:</span> <span>{order.customerName}</span></p>
             <p className="flex flex-wrap gap-1.5"><span className="font-medium text-foreground">Phone:</span> <span>{order.customerPhone || 'Not provided'}</span></p>
             <p className="break-words"><span className="font-medium text-foreground">Address:</span> {order.customerAddress || 'Not provided'}</p>
-            <p className="flex items-center gap-1.5"><span className="font-medium text-foreground">Status:</span> <Badge variant={statusVariant[order.status] || 'secondary'}>{order.status}</Badge></p>
+            <p className="flex items-center gap-1.5"><span className="font-medium text-foreground">Status:</span> <Badge variant={statusVariant[normalizedStatus] || 'secondary'}>{normalizedStatus}</Badge></p>
+            {order.sourceTag ? <p><span className="font-medium text-foreground">Source:</span> {order.sourceTag}</p> : null}
             <p><span className="font-medium text-foreground">Total:</span> Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
             {order.notes ? <p className="break-words mt-3 rounded-lg bg-muted/30 p-3 italic text-muted-foreground"><span className="font-medium text-foreground not-italic block mb-1">Notes:</span> {order.notes}</p> : null}
           </div>

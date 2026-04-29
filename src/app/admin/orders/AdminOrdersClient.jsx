@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal } from 'lucide-react';
+import { Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Trash2 } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,29 +33,41 @@ import {
 } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
-import { updateOrderAction } from '@/app/actions';
+import { bulkUpdateOrderStatusAction, createDraftOrderAction, updateOrderAction } from '@/app/actions';
+import { DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
 import { toast } from 'sonner';
 
 const statusVariant = {
-  Confirmed: 'primary',
-  Sourcing: 'secondary',
+  'Order Confirmed': 'primary',
   'In Process': 'secondary',
   Packed: 'secondary',
   Shipped: 'secondary',
-  'Out for Delivery': 'secondary',
+  'Out For Delivery': 'secondary',
   Delivered: 'secondary',
   Returned: 'outline',
 };
+
+const BULK_STATUS_OPTIONS = ORDER_STATUSES;
+const DRAFT_TAB_ID = 'draft';
 
 const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
 
-function getStatusBadgeClass(status) {
-  const normalizedStatus = String(status || '').trim().toLowerCase();
+function sanitizePdfText(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  if (normalizedStatus === 'confirmed') {
+function getStatusBadgeClass(status) {
+  const normalizedStatus = normalizeOrderStatus(status).toLowerCase();
+
+  if (normalizedStatus === 'order confirmed') {
     return 'border-sky-200 bg-sky-100 text-sky-800';
   }
 
@@ -71,7 +84,6 @@ function getStatusBadgeClass(status) {
 
   if (
     normalizedStatus === 'in process' ||
-    normalizedStatus === 'sourcing' ||
     normalizedStatus === 'packed' ||
     normalizedStatus === 'shipped' ||
     normalizedStatus === 'out for delivery'
@@ -86,7 +98,7 @@ function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
 
   Object.entries(updates).forEach(([key, value]) => {
-    if (value === null || value === undefined || value === '' || (key === 'status' && value === 'Confirmed')) {
+    if (value === null || value === undefined || value === '' || (key === 'status' && value === DEFAULT_ORDER_STATUS)) {
       params.delete(key);
     } else {
       params.set(key, String(value));
@@ -99,6 +111,7 @@ function buildHref(pathname, searchParams, updates) {
 
 export default function AdminOrdersClient({
   initialOrders,
+  productCatalog,
   total,
   totalPages,
   currentPage,
@@ -119,6 +132,26 @@ export default function AdminOrdersClient({
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [pendingWorkflowAction, setPendingWorkflowAction] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatingDraft, setIsCreatingDraft] = useState(false);
+  const [createCityOpen, setCreateCityOpen] = useState(false);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [draftForm, setDraftForm] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    customerAddress: '',
+    customerCity: '',
+    landmark: '',
+    sourceTag: '',
+    itemType: 'Mix',
+    weight: '2',
+    notes: '',
+  });
+  const [draftItems, setDraftItems] = useState([]);
   
   // Modals & Popovers State
   const [editingOrder, setEditingOrder] = useState(null);
@@ -145,6 +178,8 @@ export default function AdminOrdersClient({
     setEndDate(initialEndDate);
   }, [initialSearchQuery, initialStatusFilter, initialStartDate, initialEndDate]);
 
+  const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+
   const displayOrders = orders;
 
   function navigate(updates) {
@@ -156,7 +191,7 @@ export default function AdminOrdersClient({
 
   const clearFilters = () => {
     setSearchQuery('');
-    setStatusFilter('Confirmed');
+    setStatusFilter(DEFAULT_ORDER_STATUS);
     setStartDate('');
     setEndDate('');
     navigate({ search: null, status: null, startDate: null, endDate: null, page: null });
@@ -184,143 +219,556 @@ export default function AdminOrdersClient({
     }
   };
 
-  const handleDownloadExcel = async () => {
-    const ordersToExport = orders.filter(o => selectedOrders.includes(o._id));
-    if (ordersToExport.length === 0) return;
+  const getSelectedOrders = () => orders.filter((order) => selectedOrders.includes(order._id));
+  const getOrderDisplayStatus = (order) => (order?.isDraft ? 'Draft' : normalizeOrderStatus(order?.status));
 
-    const ExcelJS = (await import('exceljs')).default;
-    const workbook = new ExcelJS.Workbook();
-    
-    // 1. Create a single sheet named 'Sheet1' (Courier Portal requirement)
-    const mainSheet = workbook.addWorksheet('Sheet1');
-
-    // 2. Populate Reference Cities into a far-off hidden column (Column T / 20)
-    // This allows a single-sheet file while still providing dropdown functionality.
-    PAKISTAN_CITIES.forEach((city, index) => {
-      mainSheet.getCell(index + 1, 20).value = city;
+  const resetDraftComposer = () => {
+    setDraftForm({
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      customerAddress: '',
+      customerCity: '',
+      landmark: '',
+      sourceTag: '',
+      itemType: 'Mix',
+      weight: '2',
+      notes: '',
     });
-    mainSheet.getColumn(20).hidden = true;
-
-    // 3. Define exact headers for courier portal (No hidden spaces)
-    const headers = [
-      'ConsigneeName',
-      'ConsigneeAddress',
-      'ConsigneeEmail',
-      'ConsigneeCellNo',
-      'ConsigneeCity',
-      'ItemType',
-      'Quantity',
-      'CODAmount',
-      'Weight',
-      'SpecialInstruction'
-    ];
-    
-    mainSheet.getRow(1).values = headers;
-    mainSheet.getRow(1).font = { bold: true };
-
-    // 4. Populate Rows and Formatting
-    ordersToExport.forEach((order, index) => {
-      // CODAmount Logic: 0 if Online, manual override, or totalAmount
-      let codAmount = 0;
-      if (order.manualCodAmount !== undefined && order.manualCodAmount !== null && order.manualCodAmount !== '') {
-        codAmount = Number(order.manualCodAmount);
-      } else if (order.paymentStatus === 'Online') {
-        codAmount = 0;
-      } else {
-        codAmount = order.totalAmount;
-      }
-
-      // Address Cleaning: Merge, remove commas/newlines. NO MANUAL QUOTES (Excel handles it).
-      const cleanAddress = [order.customerAddress, order.landmark]
-        .filter(Boolean)
-        .join(' - ')
-        .replace(/[, \n\r]+/g, ' ') 
-        .trim();
-
-      // Pre-process City: Trim, Match Case, and Fallback
-      let city = (order.customerCity || '').trim();
-      const exactMatch = PAKISTAN_CITIES.find(c => c.trim().toLowerCase() === city.toLowerCase());
-      city = exactMatch || 'KARACHI';
-
-      const rowIndex = index + 2; // Data starts from row 2
-      const row = mainSheet.getRow(rowIndex);
-      
-      // Email Fallback: Ensure never empty
-      const email = (order.customerEmail || 'customer@store.com').trim();
-      
-      row.values = [
-        order.customerName,
-        cleanAddress,           // NO manual quotes here
-        email,
-        order.customerPhone,
-        city,
-        'Mix',                 // Static ItemType
-        '1',                   // Static Quantity
-        codAmount,
-        order.weight ?? 2,
-        order.notes || ''
-      ];
-
-      // 5. Apply Data Validation Rule to ConsigneeCity cell (Column 5/E)
-      // Reference the hidden T column on the same sheet
-      row.getCell(5).dataValidation = {
-        type: 'list',
-        allowBlank: true,
-        formulae: [`$T$1:$T$${PAKISTAN_CITIES.length}`],
-        showDropDown: true,
-      };
-    });
-
-    // Finalize columns width for better readability
-    mainSheet.columns.forEach((column, index) => {
-      if (index < 10) column.width = 20;
-    });
-
-    // Generate buffer and trigger download
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Daily_Courier_Sheet_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    setSelectedOrders([]);
+    setDraftItems([]);
+    setCreateCityOpen(false);
+    setProductPickerOpen(false);
   };
 
-  const handleDownloadPDF = async () => {
-    const ordersToExport = orders.filter(o => selectedOrders.includes(o._id));
-    if (ordersToExport.length === 0) return;
+  const updateDraftField = (field, value) => {
+    setDraftForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
 
-    // Dynamically import jspdf to avoid SSR errors with Node-specific modules
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+  const addDraftProduct = (product) => {
+    const productId = String(product?._id || product?.slug || '').trim();
+    if (!productId) return;
 
-    const doc = new jsPDF();
-    doc.text('Order Data Export', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    setDraftItems((current) => {
+      const existingIndex = current.findIndex((item) => item.productId === productId);
+      if (existingIndex >= 0) {
+        return current.map((item, index) =>
+          index === existingIndex
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
 
-    const tableData = ordersToExport.map(o => [
-      o.orderId,
-      o.customerName,
-      o.customerCity,
-      o.status,
-      o.totalAmount,
-      new Date(o.createdAt).toLocaleDateString()
-    ]);
-
-    autoTable(doc, {
-      head: [['ID', 'Customer', 'City', 'Status', 'Amount', 'Date']],
-      body: tableData,
-      startY: 30,
+      return [
+        ...current,
+        {
+          productId,
+          name: product.Name,
+          price: Number(product.discountedPrice ?? product.Price ?? 0),
+          image: Array.isArray(product.Images) ? product.Images[0]?.url || '' : '',
+          quantity: 1,
+        },
+      ];
     });
 
-    doc.save(`Orders_Export_${new Date().toISOString().slice(0, 10)}.pdf`);
-    setSelectedOrders([]);
+    setProductPickerOpen(false);
+  };
+
+  const updateDraftItemQuantity = (productId, nextQuantity) => {
+    const safeQuantity = Math.max(1, Number(nextQuantity) || 1);
+    setDraftItems((current) =>
+      current.map((item) =>
+        item.productId === productId
+          ? { ...item, quantity: safeQuantity }
+          : item
+      )
+    );
+  };
+
+  const removeDraftItem = (productId) => {
+    setDraftItems((current) => current.filter((item) => item.productId !== productId));
+  };
+
+  const validateSelectedOrders = (expectedStatus, actionLabel) => {
+    const normalizedExpectedStatus = normalizeOrderStatus(expectedStatus);
+    const selectedRecords = getSelectedOrders();
+
+    if (selectedRecords.length === 0) {
+      toast.error(`Select at least one order to ${actionLabel.toLowerCase()}.`);
+      return [];
+    }
+
+    const invalidOrders = selectedRecords.filter(
+      (order) => normalizeOrderStatus(order.status) !== normalizedExpectedStatus
+    );
+
+    if (invalidOrders.length > 0) {
+      toast.error(`${actionLabel} only works for ${normalizedExpectedStatus.toLowerCase()} orders.`);
+      return null;
+    }
+
+    return selectedRecords;
+  };
+
+  const moveSelectedOrdersToStatus = async (nextStatus, options = {}) => {
+    const selectedRecords = getSelectedOrders();
+    if (selectedRecords.length === 0) {
+      toast.error('Select at least one order first.');
+      return false;
+    }
+
+    setIsBulkUpdating(true);
+    try {
+      const result = await bulkUpdateOrderStatusAction({
+        orderIds: selectedRecords.map((order) => order._id),
+        nextStatus,
+        allowedCurrentStatuses: options.allowedCurrentStatuses || [],
+        logReason: options.logReason || '',
+      });
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to update selected orders.');
+        return false;
+      }
+
+      if (result.blockedOrders?.length > 0) {
+        toast.error(`${result.blockedOrders.length} orders were skipped because their current status did not match this action.`);
+      }
+
+      if (result.updatedCount > 0) {
+        const normalizedNextStatus = normalizeOrderStatus(nextStatus);
+        setOrders((prev) =>
+          prev.map((order) =>
+            result.updatedOrderIds?.includes(order._id)
+              ? { ...order, isDraft: false, status: normalizedNextStatus }
+              : order
+          )
+        );
+        toast.success(`${result.updatedCount} order${result.updatedCount === 1 ? '' : 's'} moved to ${normalizedNextStatus}.`);
+      }
+
+      setSelectedOrders([]);
+      setBulkStatus('');
+      router.refresh();
+      return true;
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const blobToPngDataUrl = (blob) =>
+    new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(blob);
+      const image = new window.Image();
+
+      image.crossOrigin = 'anonymous';
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const width = Math.max(1, image.naturalWidth || image.width || 1);
+          const height = Math.max(1, image.naturalHeight || image.height || 1);
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext('2d');
+          if (!context) {
+            throw new Error('Unable to create image canvas.');
+          }
+
+          context.drawImage(image, 0, 0, width, height);
+          const pngDataUrl = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(objectUrl);
+          resolve(pngDataUrl);
+        } catch (error) {
+          URL.revokeObjectURL(objectUrl);
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Unable to decode image file.'));
+      };
+
+      image.src = objectUrl;
+    });
+
+  const loadImageDataUrl = async (url) => {
+    const safeUrl = String(url || '').trim();
+    if (!safeUrl) return null;
+
+    try {
+      const response = await fetch(safeUrl);
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return await blobToPngDataUrl(blob);
+    } catch {
+      return null;
+    }
+  };
+
+  const handleGenerateCourierSheet = async () => {
+    const ordersToExport = validateSelectedOrders('Packed', 'Generate Courier Sheet');
+    if (!ordersToExport) return;
+
+    setPendingWorkflowAction('courier');
+
+    try {
+      const ExcelJS = (await import('exceljs')).default;
+      const workbook = new ExcelJS.Workbook();
+      const mainSheet = workbook.addWorksheet('Sheet1');
+
+      PAKISTAN_CITIES.forEach((city, index) => {
+        mainSheet.getCell(index + 1, 20).value = city;
+      });
+      mainSheet.getColumn(20).hidden = true;
+
+      const headers = [
+        'ConsigneeName',
+        'ConsigneeAddress',
+        'ConsigneeEmail',
+        'ConsigneeCellNo',
+        'ConsigneeCity',
+        'ItemType',
+        'Quantity',
+        'CODAmount',
+        'Weight',
+        'SpecialInstruction'
+      ];
+
+      mainSheet.getRow(1).values = headers;
+      mainSheet.getRow(1).font = { bold: true };
+
+      ordersToExport.forEach((order, index) => {
+        let codAmount = 0;
+        if (order.manualCodAmount !== undefined && order.manualCodAmount !== null && order.manualCodAmount !== '') {
+          codAmount = Number(order.manualCodAmount);
+        } else if (order.paymentStatus === 'Online') {
+          codAmount = 0;
+        } else {
+          codAmount = order.totalAmount;
+        }
+
+        const cleanAddress = [order.customerAddress, order.landmark]
+          .filter(Boolean)
+          .join(' - ')
+          .replace(/[, \n\r]+/g, ' ')
+          .trim();
+
+        let city = (order.customerCity || '').trim();
+        const exactMatch = PAKISTAN_CITIES.find((entry) => entry.trim().toLowerCase() === city.toLowerCase());
+        city = exactMatch || 'KARACHI';
+
+        const row = mainSheet.getRow(index + 2);
+        const email = (order.customerEmail || 'customer@store.com').trim();
+
+        row.values = [
+          order.customerName,
+          cleanAddress,
+          email,
+          order.customerPhone,
+          city,
+          order.itemType || 'Mix',
+          String(order.orderQuantity || 1),
+          codAmount,
+          order.weight ?? 2,
+          order.notes || ''
+        ];
+
+        row.getCell(5).dataValidation = {
+          type: 'list',
+          allowBlank: true,
+          formulae: [`$T$1:$T$${PAKISTAN_CITIES.length}`],
+          showDropDown: true,
+        };
+      });
+
+      mainSheet.columns.forEach((column, index) => {
+        if (index < 10) column.width = 20;
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const statusMoved = await moveSelectedOrdersToStatus('Shipped', {
+        allowedCurrentStatuses: ['Packed'],
+        logReason: 'Courier sheet generated. Status moved from Packed to Shipped.',
+      });
+
+      if (!statusMoved) return;
+
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Courier_Sheet_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } finally {
+      setPendingWorkflowAction('');
+    }
+  };
+
+  const handleGenerateSourcingSlip = async () => {
+    const ordersToExport = validateSelectedOrders('Order Confirmed', 'Generate Sourcing Slip');
+    if (!ordersToExport) return;
+
+    setPendingWorkflowAction('sourcing');
+
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+
+      const sourcingMap = new Map();
+
+      ordersToExport.forEach((order) => {
+        (Array.isArray(order.items) ? order.items : []).forEach((item, index) => {
+          const productKey = String(item.productId || `${item.name || 'item'}-${index}`).trim();
+          const existing = sourcingMap.get(productKey) || {
+            image: item.image || '',
+            itemName: sanitizePdfText(item.name || 'Unnamed item'),
+            totalQuantity: 0,
+            vendors: [],
+          };
+
+          existing.totalQuantity += Number(item.quantity || 0);
+          if (!existing.image && item.image) {
+            existing.image = item.image;
+          }
+
+          if (!existing.itemName) {
+            existing.itemName = sanitizePdfText(item.name || 'Unnamed item');
+          }
+
+          const vendorMap = new Map(
+            existing.vendors.map((vendor) => [
+              `${vendor.vendorId || vendor.name}-${vendor.vendorProductName}-${vendor.vendorPrice}`,
+              vendor,
+            ])
+          );
+
+          (Array.isArray(item.sourcingVendors) ? item.sourcingVendors : []).forEach((vendor) => {
+            const vendorKey = `${vendor.vendorId || vendor.name}-${vendor.vendorProductName}-${vendor.vendorPrice}`;
+            if (!vendorMap.has(vendorKey)) {
+              vendorMap.set(vendorKey, vendor);
+            }
+          });
+
+          existing.vendors = Array.from(vendorMap.values());
+          sourcingMap.set(productKey, existing);
+        });
+      });
+
+      const sourcingRows = Array.from(sourcingMap.values());
+      const imageEntries = await Promise.all(
+        sourcingRows.map(async (row) => [row.image, await loadImageDataUrl(row.image)])
+      );
+      const imageLookup = new Map(imageEntries);
+
+      const grandTotalCost = sourcingRows.reduce((total, row) => {
+        const vendorPrices = row.vendors
+          .map((vendor) => Number(vendor.vendorPrice))
+          .filter((value) => Number.isFinite(value) && value >= 0);
+
+        if (vendorPrices.length === 0) return total;
+        return total + Math.min(...vendorPrices) * Number(row.totalQuantity || 0);
+      }, 0);
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      doc.setFillColor(245, 247, 250);
+      doc.roundedRect(28, 28, 539, 70, 18, 18, 'F');
+      doc.setTextColor(17, 24, 39);
+      doc.setFontSize(18);
+      doc.text('Daily Sourcing Slip', 44, 56);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Generated ${new Date().toLocaleString('en-PK')}`, 44, 76);
+      doc.text(`${ordersToExport.length} order${ordersToExport.length === 1 ? '' : 's'} selected`, 44, 92);
+
+      autoTable(doc, {
+        startY: 118,
+        head: [['Image', 'Item / Variant', 'Vendor List', 'Qty']],
+        body: sourcingRows.map((row) => [
+          '',
+          row.itemName,
+          row.vendors.length > 0
+            ? row.vendors
+                .map((vendor) => {
+                  const vendorName = sanitizePdfText(vendor.name || 'Vendor');
+                  const vendorProductName = sanitizePdfText(vendor.vendorProductName || '');
+                  const priceLabel = vendor.vendorPrice != null
+                    ? `PKR ${Number(vendor.vendorPrice).toLocaleString('en-PK')}`
+                    : 'Price N/A';
+                  return `${vendorName}${vendorProductName ? ` (${vendorProductName})` : ''} - ${priceLabel}`;
+                })
+                .join('\n')
+            : '',
+          String(row.totalQuantity || 0),
+        ]),
+        theme: 'grid',
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+        },
+        bodyStyles: {
+          fontSize: 9,
+          cellPadding: 8,
+          textColor: [30, 41, 59],
+          valign: 'middle',
+        },
+        columnStyles: {
+          0: { cellWidth: 72, minCellHeight: 60 },
+          1: { cellWidth: 170 },
+          2: { cellWidth: 220 },
+          3: { cellWidth: 45, halign: 'center' },
+        },
+        didDrawCell: (hookData) => {
+          if (hookData.section !== 'body' || hookData.column.index !== 0) return;
+
+          const imageKey = sourcingRows[hookData.row.index]?.image;
+          const imageData = imageLookup.get(imageKey);
+
+          if (imageData) {
+            doc.addImage(imageData, hookData.cell.x + 8, hookData.cell.y + 6, 48, 48);
+            return;
+          }
+
+          doc.setDrawColor(203, 213, 225);
+          doc.roundedRect(hookData.cell.x + 8, hookData.cell.y + 6, 48, 48, 8, 8);
+          doc.setFontSize(8);
+          doc.setTextColor(148, 163, 184);
+          doc.text('No image', hookData.cell.x + 16, hookData.cell.y + 34);
+        },
+      });
+
+      const tableEndY = doc.lastAutoTable?.finalY || 118;
+      doc.setDrawColor(226, 232, 240);
+      doc.line(28, tableEndY + 18, 567, tableEndY + 18);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Grand Total Cost (lowest vendor price):', 332, tableEndY + 40);
+      doc.setFontSize(14);
+      doc.setTextColor(15, 23, 42);
+      doc.text(`PKR ${grandTotalCost.toLocaleString('en-PK')}`, 567, tableEndY + 40, { align: 'right' });
+
+      const statusMoved = await moveSelectedOrdersToStatus('In Process', {
+        allowedCurrentStatuses: ['Order Confirmed'],
+        logReason: 'Sourcing slip generated. Status moved from Order Confirmed to In Process.',
+      });
+
+      if (!statusMoved) return;
+
+      doc.save(`Sourcing_Slip_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } finally {
+      setPendingWorkflowAction('');
+    }
+  };
+
+  const handleGeneratePackingSlip = async () => {
+    const selectedRecords = getSelectedOrders();
+    if (selectedRecords.length === 0) {
+      toast.error('Select at least one order to generate packing slips.');
+      return;
+    }
+
+    setPendingWorkflowAction('packing');
+
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let cursorY = 28;
+      const sectionX = 42;
+      const sectionWidth = pageWidth - 84;
+      const bottomMargin = 24;
+      const sectionGap = 14;
+
+      selectedRecords.forEach((order, orderIndex) => {
+        const items = Array.isArray(order.items) ? order.items : [];
+        const addressLabel = `Address: ${sanitizePdfText(
+          [order.customerAddress, order.customerCity].filter(Boolean).join(', ') || 'N/A'
+        )}`;
+        const addressLines = doc.splitTextToSize(addressLabel, sectionWidth - 24);
+        const addressHeight = Math.max(12, addressLines.slice(0, 2).length * 10);
+        const estimatedSectionHeight = 70 + addressHeight + 24 + (items.length * 20);
+
+        if (cursorY + estimatedSectionHeight > pageHeight - bottomMargin) {
+          doc.addPage();
+          cursorY = 28;
+        }
+
+        const sectionTop = cursorY;
+        const tableStartY = sectionTop + 50 + addressHeight;
+
+        doc.setDrawColor(203, 213, 225);
+        doc.setFillColor(255, 255, 255);
+        doc.setLineWidth(1);
+        doc.roundedRect(sectionX, sectionTop, sectionWidth, estimatedSectionHeight - 8, 8, 8, 'S');
+
+        doc.setFillColor(15, 23, 42);
+        doc.roundedRect(sectionX, sectionTop, sectionWidth, 24, 8, 8, 'F');
+        doc.rect(sectionX, sectionTop + 12, sectionWidth, 12, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text('PACKING SLIP', sectionX + 12, sectionTop + 16);
+        doc.text(`${sanitizePdfText(order.orderId)}`, pageWidth - sectionX - 12, sectionTop + 16, { align: 'right' });
+
+        doc.setTextColor(17, 24, 39);
+        doc.setFontSize(8);
+        doc.text(`Name: ${sanitizePdfText(order.customerName || 'N/A')}`, sectionX + 12, sectionTop + 38);
+        doc.text(`Phone: ${sanitizePdfText(order.customerPhone || 'N/A')}`, sectionX + 210, sectionTop + 38);
+        doc.text(addressLines.slice(0, 2), sectionX + 12, sectionTop + 50);
+
+        autoTable(doc, {
+          startY: tableStartY,
+          head: [['Items', 'Qty']],
+          body: items.map((item) => [
+            sanitizePdfText(item.name || 'Unnamed item'),
+            String(Number(item.quantity || 0)),
+          ]),
+          theme: 'grid',
+          margin: { left: sectionX, right: sectionX },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontSize: 8,
+          },
+          bodyStyles: {
+            fontSize: 8,
+            cellPadding: 4,
+            textColor: [30, 41, 59],
+          },
+          alternateRowStyles: {
+            fillColor: [255, 255, 255],
+          },
+          columnStyles: {
+            0: { cellWidth: sectionWidth - 70 },
+            1: { cellWidth: 70, halign: 'center' },
+          },
+        });
+
+        const finalY = doc.lastAutoTable?.finalY || tableStartY;
+        cursorY = finalY + sectionGap;
+      });
+
+      const statusMoved = await moveSelectedOrdersToStatus('Packed', {
+        allowedCurrentStatuses: ['In Process'],
+        logReason: 'Packing slip generated. Status moved from In Process to Packed.',
+      });
+
+      if (!statusMoved) return;
+
+      doc.save(`Packing_Slips_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } finally {
+      setPendingWorkflowAction('');
+    }
   };
 
   const handleExportMonthlySales = async (format) => {
@@ -436,7 +884,7 @@ export default function AdminOrdersClient({
       toast.success('Order updated');
       setQuickActionOrder(null);
       setOrders((prev) => prev.map((order) => (
-        order._id === id ? { ...order, status: quickStatus, trackingNumber: quickTracking, courierName: editingOrder?.courierName || '' } : order
+        order._id === id ? { ...order, isDraft: false, status: normalizeOrderStatus(quickStatus), trackingNumber: quickTracking, courierName: editingOrder?.courierName || '' } : order
       )));
       router.refresh();
     } else {
@@ -458,6 +906,7 @@ export default function AdminOrdersClient({
       customerAddress: form.customerAddress.value,
       landmark: form.landmark.value,
       customerCity: editingOrder.customerCity,
+      sourceTag: form.sourceTag.value,
       itemType: form.itemType.value,
       orderQuantity: form.orderQuantity.value,
       weight: form.weight.value,
@@ -481,9 +930,43 @@ export default function AdminOrdersClient({
     setIsUpdating(false);
   };
 
-  const hasActiveFilters = searchQuery || statusFilter !== 'Confirmed' || startDate || endDate;
+  const handleCreateDraftOrder = async (event) => {
+    event.preventDefault();
+
+    if (draftItems.length === 0) {
+      toast.error('Add at least one item before creating the order.');
+      return;
+    }
+
+    setIsCreatingDraft(true);
+    try {
+      const result = await createDraftOrderAction({
+        ...draftForm,
+        items: draftItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to create draft order.');
+        return;
+      }
+
+      toast.success('Draft order created.');
+      setIsCreateModalOpen(false);
+      resetDraftComposer();
+      setStatusFilter(DRAFT_TAB_ID);
+      navigate({ status: DRAFT_TAB_ID, page: null });
+      router.refresh();
+    } finally {
+      setIsCreatingDraft(false);
+    }
+  };
+
+  const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ORDER_STATUS || startDate || endDate;
   const appliedFilters = [
-    statusFilter !== 'Confirmed' ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter}` : null,
+    statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter}` : null,
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
     initialStartDate || initialEndDate
       ? `Date: ${initialStartDate || 'Any'} - ${initialEndDate || 'Any'}`
@@ -494,17 +977,26 @@ export default function AdminOrdersClient({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Orders</h2>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+        >
+          <Plus data-icon="inline-start" />
+          Create Order
+        </Button>
       </div>
 
       {/* Status Filter Tabs — Compact pills */}
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {[
-          { id: 'Confirmed', label: `Confirmed (${summary.confirmedCount})` },
-          { id: 'Sourcing', label: `Sourcing (${summary.sourcingCount || 0})` },
-          { id: 'In Process', label: `In Progress (${summary.inProcessCount})` },
+          { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
+          { id: DEFAULT_ORDER_STATUS, label: `Order Confirmed (${summary.orderConfirmedCount})` },
+          { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
           { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
           { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
-          { id: 'Out for Delivery', label: `Out for Delivery (${summary.outForDeliveryCount || 0})` },
+          { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
           { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
           { id: 'Returned', label: `Returned (${summary.returnedCount})` },
           { id: 'all', label: `All (${summary.allCount})` },
@@ -575,57 +1067,12 @@ export default function AdminOrdersClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 mt-1">
-          {selectedOrders.length > 0 && (
-            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-              <Button onClick={handleDownloadExcel} size="sm" className="h-7 gap-1 px-2 text-[11px] font-semibold">
-                <Download data-icon="inline-start" />
-                XLSX ({selectedOrders.length})
-              </Button>
-              <Button onClick={handleDownloadPDF} size="sm" variant="outline" className="h-7 gap-1 border-destructive/20 px-2 text-[11px] font-semibold text-destructive hover:bg-destructive/10">
-                <Download data-icon="inline-start" />
-                PDF ({selectedOrders.length})
-              </Button>
-            </div>
-          )}
-
           {(startDate || endDate) && (
             <Button type="submit" variant="default" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
               <Search data-icon="inline-start" className="size-3" />
               Search Dates
             </Button>
           )}
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
-                <Zap data-icon="inline-start" />
-                Reports
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2" align="end">
-              <div className="flex flex-col gap-1.5">
-                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
-                  onClick={() => handleExportMonthlySales('excel')}
-                >
-                  <Download data-icon="inline-start" />
-                  Excel (.xlsx)
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
-                  onClick={() => handleExportMonthlySales('pdf')}
-                >
-                  <Download data-icon="inline-start" />
-                  PDF (.pdf)
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
 
           {hasActiveFilters && (
             <Button 
@@ -640,6 +1087,107 @@ export default function AdminOrdersClient({
           )}
         </div>
       </form>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {statusFilter === DEFAULT_ORDER_STATUS ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleGenerateSourcingSlip}
+            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+          >
+            {pendingWorkflowAction === 'sourcing' ? <Spinner data-icon="inline-start" /> : <FileSpreadsheet data-icon="inline-start" />}
+            {pendingWorkflowAction === 'sourcing' ? 'Generating Sourcing Slip...' : `Generate Sourcing Slip${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+          </Button>
+        ) : null}
+        {statusFilter === 'In Process' ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleGeneratePackingSlip}
+            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+          >
+            {pendingWorkflowAction === 'packing' ? <Spinner data-icon="inline-start" /> : <Receipt data-icon="inline-start" />}
+            {pendingWorkflowAction === 'packing' ? 'Generating Packing Slip...' : `Packing Slip${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+          </Button>
+        ) : null}
+        {statusFilter === 'Packed' ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={handleGenerateCourierSheet}
+            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+          >
+            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
+            {pendingWorkflowAction === 'courier' ? 'Generating Courier Sheet...' : `Generate Courier Sheet${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+          </Button>
+        ) : null}
+        <Select value={bulkStatus} onValueChange={setBulkStatus}>
+          <SelectTrigger
+            disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
+            className="h-8 w-[180px] rounded-xl text-[12px]"
+          >
+            <SelectValue placeholder="Choose status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {BULK_STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status} value={status} className="text-[12px]">
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
+          disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
+          className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+        >
+          {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
+          Move Selected{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+        </Button>
+        {statusFilter === 'all' ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-xl text-[12px] font-semibold">
+                <Zap data-icon="inline-start" />
+                Reports
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="end">
+              <div className="flex flex-col gap-1.5">
+                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
+                  onClick={() => handleExportMonthlySales('excel')}
+                >
+                  <Download data-icon="inline-start" />
+                  Excel (.xlsx)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
+                  onClick={() => handleExportMonthlySales('pdf')}
+                >
+                  <Download data-icon="inline-start" />
+                  PDF (.pdf)
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : null}
+      </div>
 
       {appliedFilters.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -711,6 +1259,20 @@ export default function AdminOrdersClient({
                       <div className="flex flex-col">
                         <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
                         <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
+                        {(order.isDraft || order.sourceTag) ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {order.isDraft ? (
+                              <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide">
+                                Draft
+                              </Badge>
+                            ) : null}
+                            {order.sourceTag ? (
+                              <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[9px] font-medium">
+                                {order.sourceTag}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-3 py-2">
@@ -735,10 +1297,10 @@ export default function AdminOrdersClient({
                     <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</td>
                     <td className="px-3 py-2">
                       <Badge
-                        variant={statusVariant[order.status] || 'secondary'}
-                        className={cn('text-[10px]', getStatusBadgeClass(order.status))}
+                        variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
+                        className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                       >
-                        {order.status}
+                        {getOrderDisplayStatus(order)}
                       </Badge>
                     </td>
                     <td className="px-3 py-2">
@@ -838,16 +1400,30 @@ export default function AdminOrdersClient({
                         <p className="text-[13px] font-semibold tabular-nums text-foreground">{order.orderId}</p>
                         <p className="text-[12px] font-medium text-foreground">{order.customerName}</p>
                         <p className="text-[11px] text-muted-foreground">{order.customerPhone}</p>
+                        {(order.isDraft || order.sourceTag) ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {order.isDraft ? (
+                              <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide">
+                                Draft
+                              </Badge>
+                            ) : null}
+                            {order.sourceTag ? (
+                              <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[9px] font-medium">
+                                {order.sourceTag}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        ) : null}
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
                         </p>
                       </div>
                       <div className="flex items-start gap-1.5">
                         <Badge
-                          variant={statusVariant[order.status] || 'secondary'}
-                          className={cn('text-[10px]', getStatusBadgeClass(order.status))}
+                          variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
+                          className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                         >
-                          {order.status}
+                          {getOrderDisplayStatus(order)}
                         </Badge>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -911,6 +1487,210 @@ export default function AdminOrdersClient({
       </div>
 
       {/* Quick Update Dialog (unified — used by both desktop dropdown and mobile cards) */}
+      <Dialog
+        open={isCreateModalOpen}
+        onOpenChange={(open) => {
+          setIsCreateModalOpen(open);
+          if (!open) {
+            resetDraftComposer();
+          }
+        }}
+      >
+        <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Create Draft Order</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-5 py-2">
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
+                <Separator />
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Full Name</FieldLabel>
+                    <Input className="h-8 text-[13px]" value={draftForm.customerName} onChange={(event) => updateDraftField('customerName', event.target.value)} required />
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Email</FieldLabel>
+                    <Input type="email" className="h-8 text-[13px]" value={draftForm.customerEmail} onChange={(event) => updateDraftField('customerEmail', event.target.value)} />
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Phone</FieldLabel>
+                    <Input className="h-8 text-[13px]" value={draftForm.customerPhone} onChange={(event) => updateDraftField('customerPhone', event.target.value)} required />
+                  </Field>
+                </FieldGroup>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source</p>
+                <Separator />
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Tag</FieldLabel>
+                    <Input className="h-8 text-[13px]" value={draftForm.sourceTag} onChange={(event) => updateDraftField('sourceTag', event.target.value)} placeholder="WhatsApp, Instagram, Call..." />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field>
+                      <FieldLabel className="text-[12px]">Item Type</FieldLabel>
+                      <Input className="h-8 text-[13px]" value={draftForm.itemType} onChange={(event) => updateDraftField('itemType', event.target.value)} />
+                    </Field>
+                    <Field>
+                      <FieldLabel className="text-[12px]">Weight (kg)</FieldLabel>
+                      <Input type="number" step="0.5" min="0.5" className="h-8 text-[13px]" value={draftForm.weight} onChange={(event) => updateDraftField('weight', event.target.value)} />
+                    </Field>
+                  </div>
+                </FieldGroup>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Address</p>
+              <Separator />
+              <div className="grid gap-4 md:grid-cols-2">
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel className="text-[12px]">City</FieldLabel>
+                    <Popover open={createCityOpen} onOpenChange={setCreateCityOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-8 justify-between text-[13px] font-normal">
+                          {draftForm.customerCity || 'Select city...'}
+                          <ChevronsUpDown data-icon="inline-end" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search city..." />
+                          <CommandList>
+                            <CommandEmpty>No city found.</CommandEmpty>
+                            <CommandGroup className="max-h-52 overflow-y-auto">
+                              {PAKISTAN_CITIES.map((city) => (
+                                <CommandItem
+                                  key={city}
+                                  value={city}
+                                  onSelect={(value) => {
+                                    updateDraftField('customerCity', value);
+                                    setCreateCityOpen(false);
+                                  }}
+                                >
+                                  <Check className={cn(draftForm.customerCity === city ? 'opacity-100' : 'opacity-0')} data-icon="inline-start" />
+                                  {city}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </Field>
+                </FieldGroup>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Landmark</FieldLabel>
+                    <Input className="h-8 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} />
+                  </Field>
+                </FieldGroup>
+              </div>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel className="text-[12px]">Full Address</FieldLabel>
+                  <Input className="h-8 text-[13px]" value={draftForm.customerAddress} onChange={(event) => updateDraftField('customerAddress', event.target.value)} required />
+                </Field>
+                <Field>
+                  <FieldLabel className="text-[12px]">Notes</FieldLabel>
+                  <Textarea rows={3} className="text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Optional internal note" />
+                </Field>
+              </FieldGroup>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Items</p>
+                <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl px-3 text-[12px] font-semibold">
+                      <Plus data-icon="inline-start" />
+                      Add Item
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search product..." />
+                      <CommandList>
+                        <CommandEmpty>No product found.</CommandEmpty>
+                        <CommandGroup className="max-h-72 overflow-y-auto">
+                          {(Array.isArray(productCatalog) ? productCatalog : []).map((product) => (
+                            <CommandItem key={product._id} value={`${product.Name} ${product.slug || ''}`} onSelect={() => addDraftProduct(product)}>
+                              <div className="flex w-full items-center justify-between gap-3">
+                                <span className="truncate text-[12px]">{product.Name}</span>
+                                <span className="shrink-0 text-[11px] text-muted-foreground">{formatPrice(product.discountedPrice ?? product.Price ?? 0)}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Separator />
+              {draftItems.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-[12px] text-muted-foreground">
+                  Add products to build the draft order.
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-border">
+                  <table className="w-full">
+                    <thead className="bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2">Item</th>
+                        <th className="w-24 px-3 py-2">Qty</th>
+                        <th className="w-28 px-3 py-2 text-right">Price</th>
+                        <th className="w-10 px-3 py-2" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card">
+                      {draftItems.map((item) => (
+                        <tr key={item.productId}>
+                          <td className="px-3 py-2 text-[13px] font-medium text-foreground">{item.name}</td>
+                          <td className="px-3 py-2">
+                            <Input type="number" min="1" className="h-8 text-[12px]" value={item.quantity} onChange={(event) => updateDraftItemQuantity(item.productId, event.target.value)} />
+                          </td>
+                          <td className="px-3 py-2 text-right text-[12px] font-semibold text-foreground">
+                            {formatPrice(Number(item.price || 0) * Number(item.quantity || 0))}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground" onClick={() => removeDraftItem(item.productId)}>
+                              <Trash2 className="size-4" />
+                              <span className="sr-only">Remove item</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {draftItems.length} item{draftItems.length === 1 ? '' : 's'}
+                    </span>
+                    <span className="text-[13px] font-semibold text-foreground">{formatPrice(draftTotalAmount)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-1.5 sm:gap-0">
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setIsCreateModalOpen(false); resetDraftComposer(); }} className="h-8 text-[12px]">
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" disabled={isCreatingDraft} className="h-8 min-w-[120px] text-[12px]">
+                {isCreatingDraft ? <Spinner data-icon="inline-start" /> : null}
+                {isCreatingDraft ? 'Creating...' : 'Create Draft'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={quickActionOrder !== null} onOpenChange={(open) => { if (!open) setQuickActionOrder(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -1041,6 +1821,12 @@ export default function AdminOrdersClient({
                   <Field>
                     <FieldLabel htmlFor="weight" className="text-[12px]">Weight (kg)</FieldLabel>
                     <Input id="weight" name="weight" type="number" step="0.5" className="h-8 text-[13px]" defaultValue={editingOrder.weight ?? 2} />
+                  </Field>
+                </FieldGroup>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="sourceTag" className="text-[12px]">Source Tag</FieldLabel>
+                    <Input id="sourceTag" name="sourceTag" className="h-8 text-[13px]" defaultValue={editingOrder.sourceTag || ''} placeholder="WhatsApp, Instagram, Call..." />
                   </Field>
                 </FieldGroup>
                 <FieldGroup className="md:col-span-2">

@@ -4,19 +4,17 @@ import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutG
 import { Badge } from '@/components/ui/badge';
 import DashboardChart from '@/components/admin/DashboardChart';
 import { getAdminChartData, getAdminDashboardData } from '@/lib/data';
+import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 
 const STATUS_VARIANT = {
-  Pending: 'outline',
-  Confirmed: 'default',
-  Sourcing: 'secondary',
+  'Order Confirmed': 'default',
   'In Process': 'secondary',
   Packed: 'secondary',
   Shipped: 'default',
-  'Out for Delivery': 'default',
+  'Out For Delivery': 'default',
   Delivered: 'default',
   Returned: 'destructive',
-  'Delivery Address Issue': 'destructive',
 };
 
 const statsConfig = [
@@ -55,7 +53,7 @@ async function DashboardContent() {
   ]);
 
   const stats = [
-    { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} pending` },
+    { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
     { value: `Rs. ${summary.totalRevenue.toLocaleString('en-PK')}`, change: 'All-time' },
     { value: `${summary.totalProducts}`, change: `${summary.liveProducts} live` },
     { value: `${summary.totalCustomers}`, change: 'Total reach' },
@@ -108,7 +106,7 @@ async function DashboardContent() {
                 <div className="h-6 w-px bg-border/80"></div>
                 <div className="flex flex-col items-end">
                     <p className="text-[15px] font-bold tabular-nums leading-none text-foreground">{summary.pendingOrders}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Pending</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Order Confirmed</p>
                 </div>
               </div>
             </div>
@@ -121,8 +119,8 @@ async function DashboardContent() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-[13px] font-medium text-foreground truncate">{order.customerName}</p>
-                          <Badge variant={STATUS_VARIANT[order.status] || 'outline'} className="text-[9px] px-1.5 py-0 h-4 shrink-0">
-                            {order.status}
+                          <Badge variant={STATUS_VARIANT[normalizeOrderStatus(order.status)] || 'outline'} className="text-[9px] px-1.5 py-0 h-4 shrink-0">
+                            {normalizeOrderStatus(order.status)}
                           </Badge>
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-0.5">{order.orderId}</p>

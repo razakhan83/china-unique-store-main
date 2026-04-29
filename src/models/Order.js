@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { DEFAULT_ORDER_STATUS, normalizeOrderStatus, ORDER_STATUSES } from '@/lib/order-status';
 
 const OrderSchema = new mongoose.Schema(
     {
@@ -80,10 +81,20 @@ const OrderSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Total amount is required.'],
         },
+        isDraft: {
+            type: Boolean,
+            default: false,
+        },
+        sourceTag: {
+            type: String,
+            default: '',
+            trim: true,
+        },
         status: {
             type: String,
-            enum: ['Pending', 'Confirmed', 'Sourcing', 'In Process', 'Packed', 'Shipped', 'Out for Delivery', 'Delivery Address Issue', 'Delivered', 'Returned'],
-            default: 'Confirmed',
+            enum: ORDER_STATUSES,
+            default: DEFAULT_ORDER_STATUS,
+            set: normalizeOrderStatus,
         },
         courierName: {
             type: String,
@@ -117,21 +128,20 @@ OrderSchema.index({ status: 1, customerEmail: 1, 'items.productId': 1, createdAt
 // If the cached Order model doesn't have the updated status enum or missing fields, we must delete it to force re-registration.
 const cachedOrder = mongoose.models.Order;
 if (cachedOrder) {
-    const hasStatusInProcess = cachedOrder.schema.path('status').options.enum.includes('In Process');
-    const hasPendingStatus = cachedOrder.schema.path('status').options.enum.includes('Pending');
-    const hasDeliveryAddressIssueStatus = cachedOrder.schema.path('status').options.enum.includes('Delivery Address Issue');
-    const hasSourcingStatus = cachedOrder.schema.path('status').options.enum.includes('Sourcing');
-    const hasPackedStatus = cachedOrder.schema.path('status').options.enum.includes('Packed');
-    const hasShippedStatus = cachedOrder.schema.path('status').options.enum.includes('Shipped');
-    const hasOutForDeliveryStatus = cachedOrder.schema.path('status').options.enum.includes('Out for Delivery');
+    const cachedStatuses = cachedOrder.schema.path('status').options.enum || [];
+    const hasExpectedStatuses =
+        cachedStatuses.length === ORDER_STATUSES.length &&
+        ORDER_STATUSES.every((status) => cachedStatuses.includes(status));
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
     const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
     const hasSourcingVendors = !!cachedOrder.schema.path('items').schema.paths.sourcingVendors;
     const hasWeight = !!cachedOrder.schema.paths.weight;
     const hasItemType = !!cachedOrder.schema.paths.itemType;
     const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
+    const hasIsDraft = !!cachedOrder.schema.paths.isDraft;
+    const hasSourceTag = !!cachedOrder.schema.paths.sourceTag;
     
-    if (!hasStatusInProcess || !hasPendingStatus || !hasDeliveryAddressIssueStatus || !hasSourcingStatus || !hasPackedStatus || !hasShippedStatus || !hasOutForDeliveryStatus || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken) {
+    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag) {
         delete mongoose.models.Order;
     }
 }

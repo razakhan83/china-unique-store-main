@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
+import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, normalizeOrderStatus } from '@/lib/order-status';
 
 export async function GET(request) {
     try {
@@ -22,7 +23,7 @@ export async function GET(request) {
 
         // --- Summary Stats ---
         const totalOrders = await Order.countDocuments();
-        const pendingOrders = await Order.countDocuments({ status: 'Pending' });
+        const pendingOrders = await Order.countDocuments({ status: getOrderStatusQueryValue(DEFAULT_ORDER_STATUS) });
 
         const revenueAgg = await Order.aggregate([
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
@@ -111,7 +112,7 @@ export async function GET(request) {
             orderId: o.orderId,
             customerName: o.customerName,
             totalAmount: o.totalAmount,
-            status: o.status,
+            status: normalizeOrderStatus(o.status),
             createdAt: o.createdAt,
         }));
 
@@ -140,4 +141,3 @@ export async function GET(request) {
         );
     }
 }
-

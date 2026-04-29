@@ -599,11 +599,38 @@ export function AdminOrdersSkeleton() {
     <div className="space-y-6">
       <PageIntroSkeleton titleWidth="w-28" descriptionWidth="w-0" />
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {Array.from({ length: 7 }).map((_, index) => (
           <Skeleton key={index} className="h-9 w-32 rounded-full" />
         ))}
       </div>
-      <FilterToolbarSkeleton filters={0} showDateRange showActions={3} />
+      <FilterToolbarSkeleton filters={0} showDateRange showActions={2} />
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32 rounded-md" />
+              <Skeleton className="h-5 w-64 rounded-md" />
+              <Skeleton className="h-4 w-80 rounded-md" />
+            </div>
+            <Skeleton className="h-7 w-24 rounded-full" />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-8 w-40 rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-28 rounded-md" />
+            <Skeleton className="h-5 w-56 rounded-md" />
+          </div>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <Skeleton className="h-9 flex-1 rounded-xl" />
+            <Skeleton className="h-9 w-36 rounded-xl" />
+          </div>
+        </div>
+      </div>
       <TableSkeleton rows={8} columns={8} />
     </div>
   );

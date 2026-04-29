@@ -12,6 +12,7 @@ import { generateOrderEmailHtml, getEmailBranding } from '@/lib/emailTemplates';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import { getStoreSettings } from '@/lib/data';
+import { DEFAULT_ORDER_STATUS, normalizeOrderStatus } from '@/lib/order-status';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -52,6 +53,7 @@ export async function GET() {
         const safeOrders = orders.map(o => ({
             ...o,
             _id: o._id.toString(),
+            status: normalizeOrderStatus(o.status),
         }));
 
         return NextResponse.json({ success: true, data: safeOrders });
@@ -115,7 +117,7 @@ export async function POST(req) {
             items: normalizedItems,
             totalAmount: expectedTotalAmount,
             notes,
-            status: 'Pending',
+            status: DEFAULT_ORDER_STATUS,
         });
 
         await applyInventoryAdjustments(normalizedItems);

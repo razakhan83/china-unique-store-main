@@ -6,19 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import InvoiceButton from '@/components/InvoiceButtonWrapper';
 import CopyButton from '@/components/CopyButton';
+import { normalizeOrderStatus } from '@/lib/order-status';
 import { cn } from '@/lib/utils';
 
 const STATUS_COLORS = {
-  Pending: 'bg-accent/15 text-accent-foreground border-accent/25',
-  Confirmed: 'bg-primary/10 text-primary border-primary/20',
+  'Order Confirmed': 'bg-primary/10 text-primary border-primary/20',
   'In Process': 'bg-secondary text-secondary-foreground border-border',
+  Packed: 'bg-secondary text-secondary-foreground border-border',
+  Shipped: 'bg-secondary text-secondary-foreground border-border',
+  'Out For Delivery': 'bg-secondary text-secondary-foreground border-border',
   Delivered: 'bg-success/12 text-success border-success/20',
-  'Delivery Address Issue': 'bg-destructive/10 text-destructive border-destructive/20',
   Returned: 'bg-muted text-muted-foreground border-border',
 };
 
 export default function OrderDetailsClient({ order, invoiceBranding }) {
   if (!order) return null;
+  const normalizedStatus = normalizeOrderStatus(order.status);
 
   return (
     <div className="surface-card overflow-hidden rounded-xl border border-border shadow-md">
@@ -50,9 +53,9 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
           <InvoiceButton order={order} branding={invoiceBranding} />
           <Badge 
             variant="outline" 
-            className={cn("px-4 py-1.5 text-sm rounded-full border shadow-sm font-semibold", STATUS_COLORS[order.status] || 'bg-muted')}
+            className={cn("px-4 py-1.5 text-sm rounded-full border shadow-sm font-semibold", STATUS_COLORS[normalizedStatus] || 'bg-muted')}
           >
-            {order.status}
+            {normalizedStatus}
           </Badge>
         </div>
       </div>

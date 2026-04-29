@@ -10,6 +10,7 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import { getStoreSettings } from '@/lib/data';
+import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -73,6 +74,10 @@ function normalizeCoverImages(input) {
 
 function makeOrderId() {
   return `ORD-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+}
+
+function normalizeSourceTag(value) {
+  return String(value || '').trim();
 }
 
 async function assertAdmin() {
@@ -292,7 +297,7 @@ export async function submitOrderAction(input) {
       landmark,
       items: normalizedItems,
       totalAmount: pricing.total,
-      status: 'Confirmed',
+      status: DEFAULT_ORDER_STATUS,
       notes,
     });
 
@@ -500,6 +505,82 @@ export async function linkOrdersAction(phone) {
   }
 }
 
+export async function createDraftOrderAction(input = {}) {
+  await assertAdmin();
+  await mongooseConnect();
+
+  try {
+    const customerName = String(input?.customerName || '').trim();
+    const customerEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : '';
+    const customerPhone = String(input?.customerPhone || '').trim();
+    const customerAddress = String(input?.customerAddress || '').trim();
+    const customerCity = String(input?.customerCity || '').trim();
+    const landmark = String(input?.landmark || '').trim();
+    const notes = String(input?.notes || '').trim();
+    const sourceTag = normalizeSourceTag(input?.sourceTag);
+    const itemType = String(input?.itemType || 'Mix').trim() || 'Mix';
+    const weight = Math.max(0.5, Number(input?.weight || 2));
+    const requestedItems = Array.isArray(input?.items) ? input.items : [];
+
+    if (!customerName || !customerPhone || !customerAddress || !customerCity) {
+      throw new Error('Customer name, phone, city, and address are required.');
+    }
+
+    if (requestedItems.length === 0) {
+      throw new Error('Add at least one item to create a draft order.');
+    }
+
+    const normalizedItems = await buildOrderItemsWithSourcing(requestedItems);
+    const totalAmount = calculateOrderTotal(normalizedItems);
+    if (totalAmount <= 0) {
+      throw new Error('Unable to calculate a valid draft order total.');
+    }
+
+    const orderQuantity = normalizedItems.reduce(
+      (sum, item) => sum + Math.max(1, Number(item?.quantity || 1)),
+      0
+    );
+
+    const order = await Order.create({
+      orderId: makeOrderId(),
+      secureToken: crypto.randomUUID(),
+      customerEmail: customerEmail || null,
+      customerName,
+      customerPhone,
+      customerAddress,
+      customerCity,
+      landmark,
+      items: normalizedItems,
+      totalAmount,
+      status: DEFAULT_ORDER_STATUS,
+      notes,
+      isDraft: true,
+      sourceTag,
+      itemType,
+      orderQuantity,
+      weight,
+    });
+
+    const session = await getServerSession(authOptions);
+    await OrderLog.create({
+      orderId: order._id,
+      action: 'CREATE',
+      details: sourceTag ? `Draft order created from ${sourceTag}` : 'Draft order created',
+      adminName: session?.user?.name,
+      adminEmail: session?.user?.email,
+    });
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+
+    return { success: true, data: JSON.parse(JSON.stringify(order)) };
+  } catch (error) {
+    console.error('Failed to create draft order:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function updateOrderAction(id, updates) {
   await assertAdmin();
   await mongooseConnect();
@@ -517,11 +598,20 @@ export async function updateOrderAction(id, updates) {
     if (updates.customerCity !== undefined) order.customerCity = updates.customerCity;
     if (updates.landmark !== undefined) order.landmark = updates.landmark;
     if (updates.customerEmail !== undefined) order.customerEmail = updates.customerEmail;
+    if (updates.sourceTag !== undefined) order.sourceTag = normalizeSourceTag(updates.sourceTag);
     
-    const hasStatusChanged = updates.status !== undefined && updates.status !== order.status;
+    const nextStatus = updates.status !== undefined ? normalizeOrderStatus(updates.status) : undefined;
+    const hasStatusChanged = nextStatus !== undefined && nextStatus !== order.status;
     const oldStatus = order.status;
+    const wasDraft = order.isDraft === true;
     
-    if (updates.status !== undefined) order.status = updates.status;
+    if (nextStatus !== undefined) {
+      if (!isValidOrderStatus(nextStatus)) {
+        throw new Error('Invalid order status');
+      }
+      order.status = nextStatus;
+      order.isDraft = false;
+    }
     if (updates.trackingNumber !== undefined) order.trackingNumber = updates.trackingNumber;
     if (updates.courierName !== undefined) order.courierName = updates.courierName;
     
@@ -535,13 +625,23 @@ export async function updateOrderAction(id, updates) {
 
     await order.save();
 
+    if (wasDraft && order.isDraft === false) {
+      await applyInventoryAdjustments(order.items);
+    }
+
     // Log the change
     try {
       const session = await getServerSession(authOptions);
       let details = 'Order updated';
       let action = 'UPDATE';
 
-      if (hasStatusChanged) {
+      if (wasDraft && order.isDraft === false && hasStatusChanged) {
+        action = 'STATUS_CHANGE';
+        details = `Draft published and status changed from Draft to ${order.status}`;
+      } else if (wasDraft && order.isDraft === false) {
+        action = 'STATUS_CHANGE';
+        details = `Draft published to ${order.status}`;
+      } else if (hasStatusChanged) {
         action = 'STATUS_CHANGE';
         details = `Status changed from ${oldStatus} to ${order.status}`;
       } else if (updates.trackingNumber !== undefined) {
@@ -553,8 +653,8 @@ export async function updateOrderAction(id, updates) {
         orderId: order._id,
         action,
         details,
-        previousStatus: hasStatusChanged ? oldStatus : undefined,
-        newStatus: hasStatusChanged ? order.status : undefined,
+        previousStatus: hasStatusChanged ? oldStatus : (wasDraft && order.isDraft === false ? 'Draft' : undefined),
+        newStatus: hasStatusChanged ? order.status : (wasDraft && order.isDraft === false ? order.status : undefined),
         adminName: session?.user?.name,
         adminEmail: session?.user?.email,
       });
@@ -569,6 +669,120 @@ export async function updateOrderAction(id, updates) {
     return { success: true, data: JSON.parse(JSON.stringify(order)) };
   } catch (error) {
     console.error('Failed to update order:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkUpdateOrderStatusAction({
+  orderIds = [],
+  nextStatus,
+  allowedCurrentStatuses = [],
+  logReason = '',
+} = {}) {
+  await assertAdmin();
+  await mongooseConnect();
+
+  try {
+    const normalizedIds = Array.from(
+      new Set(
+        (Array.isArray(orderIds) ? orderIds : [])
+          .map((value) => String(value || '').trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (normalizedIds.length === 0) {
+      throw new Error('Select at least one order');
+    }
+
+    const normalizedNextStatus = normalizeOrderStatus(nextStatus);
+    if (!isValidOrderStatus(normalizedNextStatus)) {
+      throw new Error('Invalid order status');
+    }
+
+    const normalizedAllowedStatuses = Array.from(
+      new Set(
+        (Array.isArray(allowedCurrentStatuses) ? allowedCurrentStatuses : [])
+          .map((status) => normalizeOrderStatus(status))
+          .filter(Boolean)
+      )
+    );
+
+    const session = await getServerSession(authOptions);
+    const orders = await Order.find({ _id: { $in: normalizedIds } });
+    const blockedOrders = [];
+    const updatedOrders = [];
+    const logs = [];
+
+    for (const order of orders) {
+      const currentStatus = normalizeOrderStatus(order.status);
+      const wasDraft = order.isDraft === true;
+
+      if (
+        normalizedAllowedStatuses.length > 0 &&
+        !normalizedAllowedStatuses.some((status) => {
+          const queryValue = getOrderStatusQueryValue(status);
+          if (typeof queryValue === 'string') {
+            return currentStatus === queryValue;
+          }
+          return Array.isArray(queryValue?.$in) && queryValue.$in.includes(order.status);
+        })
+      ) {
+        blockedOrders.push({
+          _id: order._id.toString(),
+          orderId: order.orderId,
+          status: currentStatus,
+        });
+        continue;
+      }
+
+      if (currentStatus === normalizedNextStatus && !wasDraft) {
+        continue;
+      }
+
+      const previousStatus = currentStatus;
+      order.status = normalizedNextStatus;
+      if (wasDraft) {
+        order.isDraft = false;
+      }
+      await order.save();
+
+      if (wasDraft) {
+        await applyInventoryAdjustments(order.items);
+      }
+
+      updatedOrders.push(order._id.toString());
+      logs.push({
+        orderId: order._id,
+        action: 'STATUS_CHANGE',
+        details:
+          logReason ||
+          (wasDraft
+            ? `Draft published and status changed from Draft to ${normalizedNextStatus}`
+            : `Status changed from ${previousStatus} to ${normalizedNextStatus}`),
+        previousStatus: wasDraft ? 'Draft' : previousStatus,
+        newStatus: normalizedNextStatus,
+        adminName: session?.user?.name,
+        adminEmail: session?.user?.email,
+      });
+    }
+
+    if (logs.length > 0) {
+      await OrderLog.insertMany(logs, { ordered: false });
+    }
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+
+    return {
+      success: true,
+      updatedCount: updatedOrders.length,
+      updatedOrderIds: updatedOrders,
+      blockedOrders,
+    };
+  } catch (error) {
+    console.error('Failed to bulk update orders:', error);
     return { success: false, error: error.message };
   }
 }
