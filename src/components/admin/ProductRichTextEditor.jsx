@@ -35,6 +35,7 @@ function ToolbarButton({ icon: Icon, label, onClick }) {
       type="button"
       aria-label={label}
       title={label}
+      onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
       className={toolbarButtonClass}
     >
@@ -69,11 +70,32 @@ export default function ProductRichTextEditor({
   className,
 }) {
   const editorRef = useRef(null);
+  const lastEmittedValueRef = useRef("");
   const [mode, setMode] = useState("visual");
   const normalizedValue = formatRichTextDescriptionHtml(value);
 
   useEffect(() => {
+    lastEmittedValueRef.current = normalizedValue;
+  }, [normalizedValue]);
+
+  useEffect(() => {
+    if (!editorRef.current) {
+      return;
+    }
+
+    document.execCommand("styleWithCSS", false, false);
+    document.execCommand("defaultParagraphSeparator", false, "p");
+  }, []);
+
+  useEffect(() => {
     if (mode !== "visual" || !editorRef.current) {
+      return;
+    }
+
+    const isFocused = document.activeElement === editorRef.current;
+    const isEditorOwnedUpdate = normalizedValue === lastEmittedValueRef.current;
+
+    if (isFocused && isEditorOwnedUpdate) {
       return;
     }
 
@@ -91,7 +113,9 @@ export default function ProductRichTextEditor({
       return;
     }
 
-    onChange(sanitizeRichTextHtml(editorRef.current.innerHTML));
+    const sanitizedValue = sanitizeRichTextHtml(editorRef.current.innerHTML);
+    lastEmittedValueRef.current = sanitizedValue;
+    onChange(sanitizedValue);
   };
 
   const runCommand = (command, commandValue = null) => {
@@ -132,6 +156,21 @@ export default function ProductRichTextEditor({
     runCommand("insertHTML", getEmbedVideoHtml(url));
   };
 
+  const handleBlur = () => {
+    if (!editorRef.current) {
+      return;
+    }
+
+    const sanitizedValue = sanitizeRichTextHtml(editorRef.current.innerHTML);
+    lastEmittedValueRef.current = sanitizedValue;
+
+    if (editorRef.current.innerHTML !== sanitizedValue) {
+      editorRef.current.innerHTML = sanitizedValue;
+    }
+
+    onChange(sanitizedValue);
+  };
+
   return (
     <div
       className={cn(
@@ -144,17 +183,17 @@ export default function ProductRichTextEditor({
           <ToolbarButton
             icon={Pilcrow}
             label="Paragraph"
-            onClick={() => runCommand("formatBlock", "<p>")}
+            onClick={() => runCommand("formatBlock", "p")}
           />
           <ToolbarButton
             icon={Heading1}
             label="Heading 1"
-            onClick={() => runCommand("formatBlock", "<h1>")}
+            onClick={() => runCommand("formatBlock", "h1")}
           />
           <ToolbarButton
             icon={Heading2}
             label="Heading 2"
-            onClick={() => runCommand("formatBlock", "<h2>")}
+            onClick={() => runCommand("formatBlock", "h2")}
           />
         </div>
 
@@ -246,6 +285,7 @@ export default function ProductRichTextEditor({
           suppressContentEditableWarning
           data-placeholder={placeholder}
           onInput={syncEditorValue}
+          onBlur={handleBlur}
           className="rich-editor min-h-[280px] w-full px-4 py-4 text-sm leading-7 text-foreground outline-none empty:before:pointer-events-none empty:before:block empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)] [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_h1]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:tracking-tight [&_h2]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_img]:my-4 [&_img]:max-w-full [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-2xl [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:my-4 [&_video]:max-w-full"
         />
       ) : (
