@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import Image from 'next/image';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -31,6 +32,9 @@ import {
   FieldLabel,
   FieldDescription,
 } from '@/components/ui/field';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import { getPrimaryProductImage } from '@/lib/productImages';
+import { getProductCategoryNames } from '@/lib/productCategories';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { bulkUpdateOrderStatusAction, createDraftOrderAction, updateOrderAction } from '@/app/actions';
@@ -49,6 +53,14 @@ const statusVariant = {
 
 const BULK_STATUS_OPTIONS = ORDER_STATUSES;
 const DRAFT_TAB_ID = 'draft';
+const DRAFT_SOURCE_OPTIONS = [
+  { value: 'WhatsApp', label: 'WhatsApp' },
+  { value: 'Instagram', label: 'Instagram' },
+  { value: 'Website', label: 'Website' },
+  { value: 'Facebook', label: 'Facebook' },
+  { value: 'Call', label: 'Call' },
+  { value: 'Walk In', label: 'Walk In' },
+];
 
 const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -137,8 +149,9 @@ export default function AdminOrdersClient({
   const [pendingWorkflowAction, setPendingWorkflowAction] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
-  const [createCityOpen, setCreateCityOpen] = useState(false);
+  const [createSourceOpen, setCreateSourceOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [citySuggestionsOpen, setCitySuggestionsOpen] = useState(false);
   const [draftForm, setDraftForm] = useState({
     customerName: '',
     customerEmail: '',
@@ -179,6 +192,14 @@ export default function AdminOrdersClient({
   }, [initialSearchQuery, initialStatusFilter, initialStartDate, initialEndDate]);
 
   const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+  const filteredDraftCities = useMemo(() => {
+    const query = String(draftForm.customerCity || '').trim().toLowerCase();
+    if (!query) {
+      return PAKISTAN_CITIES.slice(0, 8);
+    }
+
+    return PAKISTAN_CITIES.filter((city) => city.toLowerCase().includes(query)).slice(0, 8);
+  }, [draftForm.customerCity]);
 
   const displayOrders = orders;
 
@@ -236,8 +257,9 @@ export default function AdminOrdersClient({
       notes: '',
     });
     setDraftItems([]);
-    setCreateCityOpen(false);
+    setCreateSourceOpen(false);
     setProductPickerOpen(false);
+    setCitySuggestionsOpen(false);
   };
 
   const updateDraftField = (field, value) => {
@@ -267,12 +289,11 @@ export default function AdminOrdersClient({
           productId,
           name: product.Name,
           price: Number(product.discountedPrice ?? product.Price ?? 0),
-          image: Array.isArray(product.Images) ? product.Images[0]?.url || '' : '',
+          image: getPrimaryProductImage(product)?.url || '',
           quantity: 1,
         },
       ];
     });
-
     setProductPickerOpen(false);
   };
 
@@ -1496,165 +1517,269 @@ export default function AdminOrdersClient({
           }
         }}
       >
-        <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-x-hidden overflow-y-auto p-3 sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:p-5 lg:max-w-5xl lg:p-6 xl:max-w-6xl">
           <DialogHeader>
-            <DialogTitle className="text-sm">Create Draft Order</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Create Draft Order</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-5 py-2">
-            <div className="grid gap-5 md:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
-                <Separator />
-                <FieldGroup>
+          <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-3 py-1 sm:gap-4">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:items-start lg:gap-4">
+              <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Basic details and delivery information.</p>
+                  </div>
+                </div>
+
+                <FieldGroup className="grid gap-3 md:grid-cols-2">
                   <Field>
                     <FieldLabel className="text-[12px]">Full Name</FieldLabel>
-                    <Input className="h-8 text-[13px]" value={draftForm.customerName} onChange={(event) => updateDraftField('customerName', event.target.value)} required />
-                  </Field>
-                  <Field>
-                    <FieldLabel className="text-[12px]">Email</FieldLabel>
-                    <Input type="email" className="h-8 text-[13px]" value={draftForm.customerEmail} onChange={(event) => updateDraftField('customerEmail', event.target.value)} />
+                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerName} onChange={(event) => updateDraftField('customerName', event.target.value)} required />
                   </Field>
                   <Field>
                     <FieldLabel className="text-[12px]">Phone</FieldLabel>
-                    <Input className="h-8 text-[13px]" value={draftForm.customerPhone} onChange={(event) => updateDraftField('customerPhone', event.target.value)} required />
+                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerPhone} onChange={(event) => updateDraftField('customerPhone', event.target.value)} required />
                   </Field>
-                </FieldGroup>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Source</p>
-                <Separator />
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel className="text-[12px]">Tag</FieldLabel>
-                    <Input className="h-8 text-[13px]" value={draftForm.sourceTag} onChange={(event) => updateDraftField('sourceTag', event.target.value)} placeholder="WhatsApp, Instagram, Call..." />
+                  <Field className="md:col-span-2">
+                    <FieldLabel className="text-[12px]">Email</FieldLabel>
+                    <Input type="email" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerEmail} onChange={(event) => updateDraftField('customerEmail', event.target.value)} />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field>
-                      <FieldLabel className="text-[12px]">Item Type</FieldLabel>
-                      <Input className="h-8 text-[13px]" value={draftForm.itemType} onChange={(event) => updateDraftField('itemType', event.target.value)} />
-                    </Field>
-                    <Field>
-                      <FieldLabel className="text-[12px]">Weight (kg)</FieldLabel>
-                      <Input type="number" step="0.5" min="0.5" className="h-8 text-[13px]" value={draftForm.weight} onChange={(event) => updateDraftField('weight', event.target.value)} />
-                    </Field>
-                  </div>
-                </FieldGroup>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Address</p>
-              <Separator />
-              <div className="grid gap-4 md:grid-cols-2">
-                <FieldGroup>
                   <Field>
                     <FieldLabel className="text-[12px]">City</FieldLabel>
-                    <Popover open={createCityOpen} onOpenChange={setCreateCityOpen}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="h-8 justify-between text-[13px] font-normal">
-                          {draftForm.customerCity || 'Select city...'}
-                          <ChevronsUpDown data-icon="inline-end" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search city..." />
+                    <div className="relative">
+                      <Input
+                        className="h-9 rounded-xl px-3 text-[13px]"
+                        value={draftForm.customerCity}
+                        onChange={(event) => {
+                          updateDraftField('customerCity', event.target.value);
+                          setCitySuggestionsOpen(true);
+                        }}
+                        onFocus={() => setCitySuggestionsOpen(true)}
+                        onBlur={() => {
+                          window.setTimeout(() => setCitySuggestionsOpen(false), 120);
+                        }}
+                        placeholder="Start typing city"
+                      />
+                      {citySuggestionsOpen && filteredDraftCities.length > 0 ? (
+                        <div className="absolute top-full z-[120] mt-1 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+                          <div className="max-h-56 overflow-y-auto p-1">
+                            {filteredDraftCities.map((city) => (
+                              <button
+                                key={city}
+                                type="button"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  updateDraftField('customerCity', city);
+                                  setCitySuggestionsOpen(false);
+                                }}
+                                className="flex w-full items-center rounded-lg px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
+                              >
+                                {city}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </Field>
+                  <Field>
+                    <FieldLabel className="text-[12px]">Landmark</FieldLabel>
+                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} />
+                  </Field>
+                  <Field className="md:col-span-2">
+                    <FieldLabel className="text-[12px]">Full Address</FieldLabel>
+                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerAddress} onChange={(event) => updateDraftField('customerAddress', event.target.value)} required />
+                  </Field>
+                  <Field className="md:col-span-2">
+                    <FieldLabel className="text-[12px]">Notes</FieldLabel>
+                    <Textarea rows={3} className="min-h-24 rounded-xl px-3 py-2 text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Optional internal note" />
+                  </Field>
+                </FieldGroup>
+              </div>
+
+              <div className="min-w-0 space-y-3">
+                <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
+                  <div className="mb-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order Setup</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Choose source, parcel details, and add products.</p>
+                  </div>
+
+                  <FieldGroup className="grid gap-3">
+                    <Field>
+                      <FieldLabel className="text-[12px]">Source Tag</FieldLabel>
+                      <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+                        <Popover open={createSourceOpen} onOpenChange={setCreateSourceOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="h-9 w-full justify-between rounded-xl px-3 text-[13px] font-normal">
+                              <span className="truncate">{draftForm.sourceTag || 'Pick source...'}</span>
+                              <ChevronsUpDown data-icon="inline-end" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="z-[120] w-[min(18rem,calc(100vw-2rem))] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search source..." />
+                              <CommandList>
+                                <CommandEmpty>No source found.</CommandEmpty>
+                                <CommandGroup>
+                                  {DRAFT_SOURCE_OPTIONS.map((option) => (
+                                    <CommandItem
+                                      key={option.value}
+                                      value={option.value}
+                                      onSelect={(value) => {
+                                        updateDraftField('sourceTag', value);
+                                        setCreateSourceOpen(false);
+                                      }}
+                                    >
+                                      <Check className={cn(draftForm.sourceTag === option.value ? 'opacity-100' : 'opacity-0')} data-icon="inline-start" />
+                                      {option.label}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <Input
+                          className="h-9 rounded-xl px-3 text-[13px]"
+                          value={draftForm.sourceTag}
+                          onChange={(event) => updateDraftField('sourceTag', event.target.value)}
+                          placeholder="Or type custom source"
+                        />
+                      </div>
+                      <FieldDescription className="text-[11px]">Choose a source or type your own.</FieldDescription>
+                    </Field>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field>
+                        <FieldLabel className="text-[12px]">Item Type</FieldLabel>
+                        <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.itemType} onChange={(event) => updateDraftField('itemType', event.target.value)} />
+                      </Field>
+                      <Field>
+                        <FieldLabel className="text-[12px]">Weight (kg)</FieldLabel>
+                        <Input type="number" step="0.5" min="0.5" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.weight} onChange={(event) => updateDraftField('weight', event.target.value)} />
+                      </Field>
+                    </div>
+                  </FieldGroup>
+                </div>
+
+                <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Items</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">Search products with images and categories, then add them to the draft.</p>
+                    </div>
+                    <span className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+                      {draftItems.length} item{draftItems.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+
+                  <Field className="mb-3">
+                    <FieldLabel className="text-[12px]">Search & Add Items</FieldLabel>
+                      <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="h-9 w-full justify-between rounded-xl px-3 text-[13px] font-normal">
+                            <span className="truncate text-muted-foreground">Search products, categories, or tags</span>
+                            <Plus data-icon="inline-end" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-(--anchor-width) max-w-(--available-width) overflow-hidden p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search product..." />
                           <CommandList>
-                            <CommandEmpty>No city found.</CommandEmpty>
-                            <CommandGroup className="max-h-52 overflow-y-auto">
-                              {PAKISTAN_CITIES.map((city) => (
-                                <CommandItem
-                                  key={city}
-                                  value={city}
-                                  onSelect={(value) => {
-                                    updateDraftField('customerCity', value);
-                                    setCreateCityOpen(false);
-                                  }}
-                                >
-                                  <Check className={cn(draftForm.customerCity === city ? 'opacity-100' : 'opacity-0')} data-icon="inline-start" />
-                                  {city}
-                                </CommandItem>
-                              ))}
+                            <CommandEmpty>No matching product found.</CommandEmpty>
+                            <CommandGroup className="max-h-80 overflow-y-auto">
+                              {(Array.isArray(productCatalog) ? productCatalog : [])
+                                .filter((product) => !draftItems.some((item) => item.productId === String(product?._id || product?.slug || '').trim()))
+                                .map((product) => {
+                                  const primaryImage = getPrimaryProductImage(product);
+                                  const categoryNames = getProductCategoryNames(product).slice(0, 2);
+
+                                  return (
+                                    <CommandItem
+                                      key={product._id}
+                                      value={[product.Name, product.slug || '', ...getProductCategoryNames(product)].filter(Boolean).join(' ')}
+                                      onSelect={() => addDraftProduct(product)}
+                                      className="px-3 py-3"
+                                    >
+                                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                                        <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted">
+                                          {primaryImage?.url ? (
+                                            <Image
+                                              src={primaryImage.url}
+                                              alt={product.Name}
+                                              fill
+                                              sizes="48px"
+                                              className="object-cover"
+                                              {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
+                                            />
+                                          ) : null}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <p className="truncate text-sm font-semibold text-foreground">{product.Name}</p>
+                                          <div className="mt-1 flex flex-wrap gap-1.5">
+                                            {categoryNames.length > 0 ? categoryNames.map((category) => (
+                                              <span key={category} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                {category}
+                                              </span>
+                                            )) : (
+                                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                Uncategorized
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <span className="shrink-0 text-[11px] font-semibold text-foreground">
+                                          {formatPrice(product.discountedPrice ?? product.Price ?? 0)}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  );
+                                })}
                             </CommandGroup>
                           </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
                   </Field>
-                </FieldGroup>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel className="text-[12px]">Landmark</FieldLabel>
-                    <Input className="h-8 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} />
-                  </Field>
-                </FieldGroup>
-              </div>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel className="text-[12px]">Full Address</FieldLabel>
-                  <Input className="h-8 text-[13px]" value={draftForm.customerAddress} onChange={(event) => updateDraftField('customerAddress', event.target.value)} required />
-                </Field>
-                <Field>
-                  <FieldLabel className="text-[12px]">Notes</FieldLabel>
-                  <Textarea rows={3} className="text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Optional internal note" />
-                </Field>
-              </FieldGroup>
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Items</p>
-                <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button type="button" variant="outline" size="sm" className="h-8 rounded-xl px-3 text-[12px] font-semibold">
-                      <Plus data-icon="inline-start" />
-                      Add Item
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="end">
-                    <Command>
-                      <CommandInput placeholder="Search product..." />
-                      <CommandList>
-                        <CommandEmpty>No product found.</CommandEmpty>
-                        <CommandGroup className="max-h-72 overflow-y-auto">
-                          {(Array.isArray(productCatalog) ? productCatalog : []).map((product) => (
-                            <CommandItem key={product._id} value={`${product.Name} ${product.slug || ''}`} onSelect={() => addDraftProduct(product)}>
-                              <div className="flex w-full items-center justify-between gap-3">
-                                <span className="truncate text-[12px]">{product.Name}</span>
-                                <span className="shrink-0 text-[11px] text-muted-foreground">{formatPrice(product.discountedPrice ?? product.Price ?? 0)}</span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <Separator />
-              {draftItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-[12px] text-muted-foreground">
-                  Add products to build the draft order.
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-xl border border-border">
-                  <table className="w-full">
-                    <thead className="bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2">Item</th>
-                        <th className="w-24 px-3 py-2">Qty</th>
-                        <th className="w-28 px-3 py-2 text-right">Price</th>
-                        <th className="w-10 px-3 py-2" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-card">
+                  {draftItems.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-[12px] text-muted-foreground">
+                      Add products to build the draft order.
+                    </div>
+                  ) : (
+                    <>
+                        <div className="hidden overflow-hidden rounded-xl border border-border md:block">
+                          <div>
+                    <table className="w-full table-fixed">
+                      <thead className="bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2">Item</th>
+                          <th className="w-20 px-3 py-2">Qty</th>
+                          <th className="w-24 px-3 py-2 text-right">Price</th>
+                          <th className="w-12 px-3 py-2" />
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border bg-card">
                       {draftItems.map((item) => (
                         <tr key={item.productId}>
-                          <td className="px-3 py-2 text-[13px] font-medium text-foreground">{item.name}</td>
                           <td className="px-3 py-2">
-                            <Input type="number" min="1" className="h-8 text-[12px]" value={item.quantity} onChange={(event) => updateDraftItemQuantity(item.productId, event.target.value)} />
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="relative size-10 overflow-hidden rounded-lg border border-border/80 bg-muted">
+                                {item.image ? (
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    fill
+                                    sizes="40px"
+                                    className="object-cover"
+                                  />
+                                ) : null}
+                              </div>
+                              <span className="truncate text-[13px] font-medium text-foreground">{item.name}</span>
+                            </div>
                           </td>
+                            <td className="px-3 py-2">
+                              <Input type="number" min="1" className="ml-auto h-8 w-16 rounded-lg px-2 text-[12px]" value={item.quantity} onChange={(event) => updateDraftItemQuantity(item.productId, event.target.value)} />
+                            </td>
                           <td className="px-3 py-2 text-right text-[12px] font-semibold text-foreground">
                             {formatPrice(Number(item.price || 0) * Number(item.quantity || 0))}
                           </td>
@@ -1668,14 +1793,55 @@ export default function AdminOrdersClient({
                       ))}
                     </tbody>
                   </table>
-                  <div className="flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {draftItems.length} item{draftItems.length === 1 ? '' : 's'}
-                    </span>
-                    <span className="text-[13px] font-semibold text-foreground">{formatPrice(draftTotalAmount)}</span>
-                  </div>
+                        </div>
+                      </div>
+
+                        <div className="space-y-2.5 md:hidden">
+                          {draftItems.map((item) => (
+                            <div key={item.productId} className="rounded-xl border border-border bg-card p-3">
+                              <div className="flex items-start gap-3">
+                                <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted">
+                                  {item.image ? (
+                                    <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    fill
+                                    sizes="48px"
+                                    className="object-cover"
+                                  />
+                                ) : null}
+                              </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-[13px] font-medium text-foreground">{item.name}</p>
+                                  <p className="mt-1 text-[12px] font-semibold text-foreground">
+                                    {formatPrice(Number(item.price || 0) * Number(item.quantity || 0))}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="mt-2 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                  <FieldLabel className="text-[11px] text-muted-foreground">Qty</FieldLabel>
+                                  <Input type="number" min="1" className="h-8 w-16 rounded-lg px-2 text-[12px]" value={item.quantity} onChange={(event) => updateDraftItemQuantity(item.productId, event.target.value)} />
+                                </div>
+                                <Button type="button" variant="ghost" size="icon" className="size-8 shrink-0 text-muted-foreground" onClick={() => removeDraftItem(item.productId)}>
+                                  <Trash2 className="size-4" />
+                                  <span className="sr-only">Remove item</span>
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {draftItems.length} item{draftItems.length === 1 ? '' : 's'}
+                        </span>
+                        <span className="text-[13px] font-semibold text-foreground">{formatPrice(draftTotalAmount)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             <DialogFooter className="gap-1.5 sm:gap-0">

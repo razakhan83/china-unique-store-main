@@ -91,6 +91,115 @@
   overflow: visible;
 }
 
+.paymentGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.paymentCardPrimary,
+.paymentCardSecondary {
+  display: grid;
+  gap: 0.85rem;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.paymentCardPrimary {
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 92%, white);
+  box-shadow: 0 12px 24px -28px color-mix(in oklab, black 18%, transparent);
+}
+
+.paymentCardSecondary {
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 88%, white);
+  box-shadow: none;
+}
+
+.paymentCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.paymentIconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border-radius: 0.8rem;
+  background: color-mix(in oklab, var(--color-muted) 72%, white);
+  color: color-mix(in oklab, var(--color-foreground) 76%, white);
+}
+
+.paymentIconMuted {
+  color: color-mix(in oklab, var(--color-foreground) 48%, white);
+}
+
+.paymentBadgeActive,
+.paymentBadgeSoon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.paymentBadgeActive {
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 94%, white);
+  color: var(--color-foreground);
+}
+
+.paymentBadgeSoon {
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  background: color-mix(in oklab, var(--color-card) 92%, white);
+  color: var(--color-muted-foreground);
+}
+
+.paymentCopy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.paymentTitle {
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.paymentDescription {
+  margin-top: 0.35rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+@media (min-width: 768px) {
+  .paymentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .paymentCardPrimary,
+  .paymentCardSecondary {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .paymentDescription {
+    line-height: 1.45;
+  }
+}
+
 .summaryHeader {
   gap: 0.8rem;
 }
@@ -355,6 +464,39 @@
 }
 
 @media (max-width: 767px) {
+  .paymentCardTop {
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .paymentCardPrimary,
+  .paymentCardSecondary {
+    gap: 0.7rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .paymentIconWrap {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    border-radius: 0.7rem;
+  }
+
+  .paymentBadgeActive,
+  .paymentBadgeSoon {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.68rem;
+  }
+
+  .paymentTitle {
+    font-size: 0.95rem;
+  }
+
+  .paymentDescription {
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
   .summaryMeta {
     align-items: flex-start;
   }
