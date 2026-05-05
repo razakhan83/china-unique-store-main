@@ -40,6 +40,30 @@ const quickActions = [
   { href: '/', title: 'View Store', icon: ExternalLink },
 ];
 
+const emptySummary = {
+  totalOrders: 0,
+  pendingOrders: 0,
+  totalProducts: 0,
+  liveProducts: 0,
+  totalRevenue: 0,
+  totalCustomers: 0,
+  dailyConfirmedOrders: 0,
+};
+
+async function loadDashboardDataSafely() {
+  try {
+    return await getAdminDashboardData();
+  } catch (error) {
+    console.error('[admin/dashboard] failed to load dashboard summary', error);
+    return {
+      summary: emptySummary,
+      recentOrders: [],
+      topVendors: [],
+      hasError: true,
+    };
+  }
+}
+
 export default async function AdminDashboardPage() {
   await requireAdmin();
 
@@ -47,10 +71,12 @@ export default async function AdminDashboardPage() {
 }
 
 async function DashboardContent() {
-  const [{ summary, recentOrders, topVendors }, initialChartData] = await Promise.all([
-    getAdminDashboardData(),
-    getAdminChartData('monthly'),
-  ]);
+  const {
+    summary,
+    recentOrders,
+    topVendors,
+    hasError = false,
+  } = await loadDashboardDataSafely();
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
@@ -66,6 +92,12 @@ async function DashboardContent() {
           Dashboard
         </h1>
       </div>
+
+      {hasError ? (
+        <div className="admin-surface rounded-[0.5rem] border border-destructive/20 bg-destructive/5 p-3 text-[12px] text-destructive">
+          Dashboard data could not be loaded completely. The admin panel shell is still available, and you can continue to other sections.
+        </div>
+      ) : null}
 
       {/* Top Level Stats */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -148,7 +180,7 @@ async function DashboardContent() {
           </div>
           
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4">
-             <DashboardChart initialData={initialChartData} initialPeriod="monthly" />
+             <DashboardChart initialPeriod="monthly" />
           </div>
         </div>
 

@@ -23,7 +23,7 @@ const chartConfig = {
 export default function DashboardChart({ initialData = [], initialPeriod = 'monthly' }) {
   const [period, setPeriod] = useState(initialPeriod);
   const [data, setData] = useState(Array.isArray(initialData) ? initialData : []);
-  const [isLoading, setIsLoading] = useState(!Array.isArray(initialData) || initialData.length === 0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchChart() {
@@ -36,12 +36,18 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
       setIsLoading(true);
       try {
         const res = await fetch(`/api/admin/chart?period=${period}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch chart data (${res.status})`);
+        }
         const result = await res.json();
         if (result.success) {
           setData(result.data);
+        } else {
+          setData([]);
         }
       } catch (error) {
         console.error('Failed to fetch chart data:', error);
+        setData([]);
       } finally {
         setIsLoading(false);
       }
