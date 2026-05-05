@@ -119,6 +119,18 @@ function readCachedCheckoutProfile() {
   }
 }
 
+async function safeReadJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Failed to parse JSON response', error);
+    return null;
+  }
+}
+
 function mergeCheckoutProfile(previous, nextProfile = {}, options = {}) {
   const { overwriteEmail = false } = options;
 
@@ -232,7 +244,7 @@ export default function CheckoutClient({ settings }) {
       }
 
       const profileRequest = fetch('/api/user/settings', { cache: 'no-store' })
-        .then((res) => (res.ok ? res.json() : null))
+        .then(async (res) => (res.ok ? safeReadJson(res) : null))
         .then((settingsRes) => {
           if (!isMounted || !settingsRes) return;
 

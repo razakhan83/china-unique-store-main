@@ -35,6 +35,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { cn } from '@/lib/utils';
 
+async function safeReadJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Failed to parse settings JSON response', error);
+    return null;
+  }
+}
+
 export default function SettingsClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -66,7 +78,8 @@ export default function SettingsClient() {
     try {
       const response = await fetch('/api/user/settings');
       if (!response.ok) throw new Error('Failed to fetch settings');
-      const data = await response.json();
+      const data = await safeReadJson(response);
+      if (!data) throw new Error('Empty settings response');
       setFormData({
         name: data.name || '',
         email: data.email || '',
