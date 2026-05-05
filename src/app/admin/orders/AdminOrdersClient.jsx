@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import OrderQuickViewDialog from './OrderQuickViewDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1325,43 +1326,50 @@ export default function AdminOrdersClient({
                       </Badge>
                     </td>
                     <td className="px-3 py-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                            <MoreHorizontal />
-                            <span className="sr-only">Order actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
-                                <Eye data-icon="inline-start" />
-                                View details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditingOrder(order);
-                                setIsEditModalOpen(true);
-                              }}
-                            >
-                              <Edit data-icon="inline-start" />
-                              Edit order
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setQuickActionOrder(order._id);
-                                setQuickStatus(order.status);
-                                setQuickTracking(order.trackingNumber || '');
-                                setEditingOrder(order);
-                              }}
-                            >
-                              <Zap data-icon="inline-start" />
-                              Quick update
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <OrderQuickViewDialog
+                          order={order}
+                          triggerLabel="View"
+                          triggerSize="sm"
+                          triggerClassName="h-7 rounded-md px-2.5 text-[11px] font-semibold"
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
+                              <MoreHorizontal />
+                              <span className="sr-only">Order actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
+                                  <Receipt data-icon="inline-start" />
+                                  Order details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditingOrder(order);
+                                  setIsEditModalOpen(true);
+                                }}
+                              >
+                                <Edit data-icon="inline-start" />
+                                Edit order
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setQuickActionOrder(order._id);
+                                  setQuickStatus(order.status);
+                                  setQuickTracking(order.trackingNumber || '');
+                                  setEditingOrder(order);
+                                }}
+                              >
+                                <Zap data-icon="inline-start" />
+                                Quick update
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                   );
@@ -1461,6 +1469,10 @@ export default function AdminOrdersClient({
                               <DropdownMenuItem disabled className="text-[11px]">Weight: {formatWeight(order.weight)}</DropdownMenuItem>
                               <DropdownMenuItem disabled className="text-[11px]">Tracking: {order.trackingNumber || '—'}</DropdownMenuItem>
                               <DropdownMenuSeparator />
+                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
+                                <Receipt data-icon="inline-start" />
+                                Order details
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   setQuickActionOrder(order._id);
@@ -1487,17 +1499,25 @@ export default function AdminOrdersClient({
                       </div>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
                        <span className="text-[12px] font-bold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</span>
-                       <Button
-                          variant="secondary"
-                          size="sm"
-                          render={<Link href={`/admin/orders/${order._id}`} />}
-                          nativeButton={false}
-                          className="h-7 rounded-md px-3 text-[11px] font-semibold"
-                       >
-                          View order
-                       </Button>
+                       <div className="flex items-center gap-1.5">
+                         <OrderQuickViewDialog
+                           order={order}
+                           triggerLabel="View"
+                           triggerSize="sm"
+                           triggerClassName="h-7 rounded-md px-3 text-[11px] font-semibold"
+                         />
+                         <Button
+                            variant="secondary"
+                            size="sm"
+                            render={<Link href={`/admin/orders/${order._id}`} />}
+                            nativeButton={false}
+                            className="h-7 rounded-md px-3 text-[11px] font-semibold"
+                         >
+                            View order
+                         </Button>
+                       </div>
                     </div>
                   </div>
                 </div>
