@@ -26,9 +26,10 @@ import { getProductBySlug, getProductReviewSummary, getRelatedProducts, getStore
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
-const siteUrl = process.env.NEXTAUTH_URL || 'https://china-unique-items.vercel.app';
+const siteUrl = getSiteUrl();
 
 function getProductUrl(product) {
   return `${siteUrl}/products/${product.slug || product._id}`;
@@ -74,7 +75,7 @@ function getShareDescription(product) {
 }
 
 function getPrimaryImage(product) {
-  return product.Images?.[0]?.url || `${siteUrl}/opengraph-image.png`;
+  return product.Images?.[0]?.url || `${siteUrl}/opengraph-image`;
 }
 
 function getProductJsonLd({ product, reviewSummary }) {

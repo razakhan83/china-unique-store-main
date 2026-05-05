@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { getMetadataBase, getSiteUrl } from "@/lib/siteUrl";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,21 +13,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXTAUTH_URL || 'https://china-unique-items.vercel.app';
+const siteUrl = getSiteUrl();
 
 export const metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: getMetadataBase(),
   title: {
     default: 'China Unique Store',
     template: '%s | China Unique Store',
   },
   description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'China Unique Store',
     description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
     type: 'website',
     url: siteUrl,
     siteName: 'China Unique Store',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'China Unique Store',
+    description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
   },
   robots: {
     index: true,

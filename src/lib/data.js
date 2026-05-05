@@ -21,6 +21,7 @@ import {
 } from '@/lib/homePageSections';
 import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
+import { getSiteUrl } from '@/lib/siteUrl';
 import {
   DEFAULT_ORDER_STATUS,
   getOrderStatusQueryValue,
@@ -1214,17 +1215,12 @@ function formatFeedPrice(value) {
 }
 
 function getCatalogSiteUrl() {
-  const configuredUrl = String(process.env.NEXTAUTH_URL || '').trim();
-  if (configuredUrl && !/localhost/i.test(configuredUrl)) {
-    return configuredUrl.replace(/\/$/, '');
-  }
-
-  return 'https://china-unique-items.vercel.app';
+  return getSiteUrl();
 }
 
 function buildCatalogFeedItem(product, siteUrl, storeName) {
   const productUrl = `${siteUrl}/products/${product.slug || product._id}`;
-  const primaryImage = product.Images?.[0]?.url || `${siteUrl}/opengraph-image.png`;
+  const primaryImage = product.Images?.[0]?.url || `${siteUrl}/opengraph-image`;
   const additionalImages = product.Images?.slice(1).map((image) => image.url).filter(Boolean) || [];
   const categoryNames = getProductCategoryNames(product);
   const basePrice = Number(product.Price || 0);
