@@ -8,6 +8,7 @@ import { Heart, LayoutGrid, LogOut, Settings, ShoppingBag, User } from 'lucide-r
 import AuthModal from '@/components/AuthModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,9 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [loadedAvatarSrc, setLoadedAvatarSrc] = useState('');
+  const avatarSrc = session?.user?.image || '';
+  const isAvatarLoaded = !avatarSrc || loadedAvatarSrc === avatarSrc;
 
   if (status === 'loading') {
     return (
@@ -33,7 +37,7 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
           disabled
           aria-label="Loading account"
         >
-          <span className="size-9 rounded-full bg-muted/80" />
+          <Skeleton className="size-9 rounded-full" />
         </Button>
       </div>
     );
@@ -67,7 +71,14 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
             className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
           >
             <Avatar className="size-9">
-              <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
+              {!isAvatarLoaded ? <Skeleton className="absolute inset-0 rounded-full" /> : null}
+              <AvatarImage
+                src={avatarSrc}
+                alt={session.user?.name || 'User'}
+                className={isAvatarLoaded ? 'opacity-100' : 'opacity-0'}
+                onLoad={() => setLoadedAvatarSrc(avatarSrc)}
+                onError={() => setLoadedAvatarSrc(avatarSrc)}
+              />
               <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
             </Avatar>
           </Button>

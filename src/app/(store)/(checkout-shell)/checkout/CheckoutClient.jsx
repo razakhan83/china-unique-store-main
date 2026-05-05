@@ -185,9 +185,10 @@ export default function CheckoutClient({ settings }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { cart, isInitialized } = useCartItems();
-  const { clearCart, replaceCart } = useCartActions();
+  const { clearCart } = useCartActions();
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
+  const [hasCachedProfile, setHasCachedProfile] = useState(false);
   const [isHydratingProfile, setIsHydratingProfile] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -213,6 +214,7 @@ export default function CheckoutClient({ settings }) {
     const cachedProfile = readCachedCheckoutProfile();
     if (cachedProfile) {
       setFormData((prev) => mergeCheckoutProfile(prev, cachedProfile));
+      setHasCachedProfile(true);
     }
 
     setHasHydratedCachedProfile(true);
@@ -224,7 +226,10 @@ export default function CheckoutClient({ settings }) {
     const syncData = async () => {
       if (status !== 'authenticated' || !session?.user) return;
 
-      setIsHydratingProfile(true);
+      const shouldShowLoader = !hasCachedProfile;
+      if (shouldShowLoader) {
+        setIsHydratingProfile(true);
+      }
 
       const profileRequest = fetch('/api/user/settings', { cache: 'no-store' })
         .then((res) => (res.ok ? res.json() : null))
@@ -260,7 +265,9 @@ export default function CheckoutClient({ settings }) {
       } finally {
         if (isMounted) {
           setHasAutoFilled(true);
-          setIsHydratingProfile(false);
+          if (shouldShowLoader) {
+            setIsHydratingProfile(false);
+          }
         }
       }
     };
@@ -271,17 +278,10 @@ export default function CheckoutClient({ settings }) {
       setHasAutoFilled(true);
     }
 
-    function handleFocus() {
-      syncData();
-    }
-
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       isMounted = false;
-      window.removeEventListener('focus', handleFocus);
     };
-  }, [hasAutoFilled, session, status]);
+  }, [hasAutoFilled, hasCachedProfile, session, status]);
 
   useEffect(() => {
     if (!hasHydratedCachedProfile) return;
@@ -486,6 +486,35 @@ export default function CheckoutClient({ settings }) {
     );
   }
 
+  const shouldShowCentralCheckoutLoader =
+    !orderState.orderId &&
+    isInitialized &&
+    cart.length > 0 &&
+    hasHydratedCachedProfile &&
+    status === 'authenticated' &&
+    !hasCachedProfile &&
+    (isHydratingProfile || !hasAutoFilled);
+
+  if (shouldShowCentralCheckoutLoader) {
+    return (
+      <section className="flex min-h-[60vh] items-center justify-center px-4">
+        <Card className="surface-card w-full max-w-lg rounded-[1.5rem] border border-border/80 py-12 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
+          <CardContent className="flex flex-col items-center gap-5 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Loader2 className="size-6 animate-spin" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">Preparing your checkout</h2>
+              <p className="text-sm text-muted-foreground">
+                Loading your saved details and delivery information.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
+
   return (
     <>
       <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
@@ -684,13 +713,6 @@ export default function CheckoutClient({ settings }) {
                     <Alert variant="destructive">
                       <AlertTitle>Unable to place order</AlertTitle>
                       <AlertDescription>{errors.submit}</AlertDescription>
-                    </Alert>
-                  ) : null}
-
-                  {isHydratingProfile ? (
-                    <Alert>
-                      <AlertTitle>Filling your saved details</AlertTitle>
-                      <AlertDescription>Your saved address details are loading in the background.</AlertDescription>
                     </Alert>
                   ) : null}
 
