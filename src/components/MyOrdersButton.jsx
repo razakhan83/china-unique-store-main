@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ClipboardList } from 'lucide-react';
@@ -14,6 +14,12 @@ export default function MyOrdersButton({ className, isMobile = false }) {
   const { setIsSidebarOpen } = useCartActions() || {};
   const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      router.prefetch('/orders');
+    }
+  }, [router, session?.user?.email]);
 
   const handleClick = () => {
     if (session) {

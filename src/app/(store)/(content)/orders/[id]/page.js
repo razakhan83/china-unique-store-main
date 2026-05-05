@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { connection } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -17,7 +16,6 @@ export const metadata = {
 };
 
 export default async function SingleOrderPage({ params, searchParams }) {
-  await connection();
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   

@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import { connection } from 'next/server';
 
 import { authOptions } from '@/lib/auth';
 import { getStoreSettings, getUserOrders } from '@/lib/data';
@@ -23,8 +22,10 @@ export const metadata = {
 };
 
 export default async function OrdersPage() {
-  await connection();
-  const session = await getServerSession(authOptions);
+  const [session, settings] = await Promise.all([
+    getServerSession(authOptions),
+    getStoreSettings(),
+  ]);
 
   if (!session) {
     redirect('/');
@@ -32,7 +33,6 @@ export default async function OrdersPage() {
 
   const rawOrders = await getUserOrders(session.user.email);
   const orders = rawOrders;
-  const settings = await getStoreSettings();
   const invoiceBranding = {
     storeName: settings.storeName,
     supportEmail: settings.supportEmail,

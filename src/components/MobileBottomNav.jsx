@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Heart, LogOut, Home, Search, Settings, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 
 import {
@@ -123,6 +124,7 @@ export default function MobileBottomNav({
   onNavigate,
 }) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const mobileDrawerReservedLane = 'calc(env(safe-area-inset-bottom) + var(--mobile-bottom-nav-offset))';
   const mobileDrawerOverlayClassName =
@@ -134,6 +136,12 @@ export default function MobileBottomNav({
   const mobileDrawerShellClassName =
     'pointer-events-none mx-auto flex w-full max-w-xl flex-col justify-end';
   const accountPanelOpen = session ? accountOpen : isAuthOpen;
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      router.prefetch('/orders');
+    }
+  }, [router, session?.user?.email]);
 
   function closeSearch() {
     onSearchOpenChange?.(false);
