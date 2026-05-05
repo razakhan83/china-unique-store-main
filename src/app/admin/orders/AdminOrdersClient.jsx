@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -120,6 +121,103 @@ function buildHref(pathname, searchParams, updates) {
 
   const query = params.toString();
   return query ? `${pathname}?${query}` : pathname;
+}
+
+function OrdersTablePendingSkeleton() {
+  return (
+    <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
+      <div className="overflow-x-auto">
+        <div className="min-w-[960px]">
+          <div className="grid grid-cols-[40px_120px_1.4fr_90px_110px_90px_120px_90px_100px_120px_70px] gap-0 border-b border-border bg-muted/40 px-3 py-2">
+            {Array.from({ length: 11 }).map((_, index) => (
+              <div key={index} className="px-2 py-1">
+                <Skeleton className="h-3 w-full max-w-[72px] rounded-md" />
+              </div>
+            ))}
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 7 }).map((_, rowIndex) => (
+              <div
+                key={rowIndex}
+                className="grid grid-cols-[40px_120px_1.4fr_90px_110px_90px_120px_90px_100px_120px_70px] items-center px-3 py-3"
+              >
+                <div className="px-2">
+                  <Skeleton className="size-4 rounded-sm" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                </div>
+                <div className="space-y-2 px-2">
+                  <Skeleton className="h-4 w-32 rounded-md" />
+                  <Skeleton className="h-3 w-24 rounded-md" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <div className="space-y-2 px-2">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                  <Skeleton className="h-3 w-16 rounded-md" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="h-4 w-12 rounded-md" />
+                </div>
+                <div className="space-y-2 px-2">
+                  <Skeleton className="h-4 w-24 rounded-md" />
+                  <Skeleton className="h-3 w-16 rounded-md" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="h-4 w-14 rounded-md" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="ml-auto h-4 w-20 rounded-md" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </div>
+                <div className="px-2">
+                  <Skeleton className="ml-auto h-7 w-10 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrdersMobilePendingSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 md:hidden">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="rounded-xl border border-border bg-card p-3">
+          <div className="flex items-start gap-2.5">
+            <Skeleton className="mt-0.5 size-4 rounded-sm" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="h-3 w-24 rounded-md" />
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="size-8 rounded-full" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
+                <Skeleton className="h-4 w-20 rounded-md" />
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                  <Skeleton className="h-7 w-20 rounded-md" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function AdminOrdersClient({
@@ -1027,6 +1125,7 @@ export default function AdminOrdersClient({
             key={tab.id}
             variant={statusFilter === tab.id ? "default" : "ghost"}
             size="sm"
+            disabled={isPending}
             onClick={() => {
               setStatusFilter(tab.id);
               navigate({ status: tab.id, page: null });
@@ -1038,6 +1137,7 @@ export default function AdminOrdersClient({
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
+            {isPending && statusFilter === tab.id ? <Spinner data-icon="inline-start" className="size-3" /> : null}
             {tab.label}
           </Button>
         ))}
@@ -1222,7 +1322,8 @@ export default function AdminOrdersClient({
       )}
 
       {/* ── Desktop Table ── */}
-      <div className={cn("hidden overflow-hidden rounded-lg border border-border bg-card md:block", isPending && "opacity-60")}>
+      {isPending ? <OrdersTablePendingSkeleton /> : (
+      <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px]">
             <thead>
@@ -1379,9 +1480,11 @@ export default function AdminOrdersClient({
           </table>
         </div>
       </div>
+      )}
 
       {/* ── Mobile Cards ── */}
-      <div className={cn("flex flex-col gap-2 md:hidden", isPending && "opacity-60")}>
+      {isPending ? <OrdersMobilePendingSkeleton /> : (
+      <div className="flex flex-col gap-2 md:hidden">
         {displayOrders.length > 0 && (
           <div className="flex items-center justify-between px-1 py-1 mb-0.5">
             <div className="flex items-center gap-2">
@@ -1526,6 +1629,7 @@ export default function AdminOrdersClient({
           })
         )}
       </div>
+      )}
 
       {/* Quick Update Dialog (unified — used by both desktop dropdown and mobile cards) */}
       <Dialog
