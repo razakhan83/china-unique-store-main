@@ -95,6 +95,7 @@ export default function ProductGallery({ images }) {
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
                     alt={`Product Image ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
                     className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
                     {...getBlurPlaceholderProps(image.blurDataURL)}
                     preload={index === 0}
@@ -134,6 +135,8 @@ export default function ProductGallery({ images }) {
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryThumb)}
                     alt={`Thumbnail ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 31vw, 12vw"
+                    loading="lazy"
                     className="object-cover"
                     {...getBlurPlaceholderProps(image.blurDataURL)}
                   />

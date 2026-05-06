@@ -1357,6 +1357,43 @@ export async function getAdminProducts() {
   return serializedProducts.map(toAdminProductRow);
 }
 
+export async function getAdminOrderProductCatalog() {
+  'use cache';
+  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
+  cacheTag('products', 'categories');
+  await mongooseConnect();
+
+  const products = await Product.find({})
+    .select([
+      'Name',
+      'Price',
+      'Images',
+      'Category',
+      'slug',
+      'discountedPrice',
+      'isDiscounted',
+    ].join(' '))
+    .populate(PRODUCT_CATEGORY_POPULATE)
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return products.map((product) => {
+    const serialized = serializeProduct(product);
+
+    return {
+      _id: serialized._id,
+      slug: serialized.slug,
+      Name: serialized.Name,
+      Price: Number(serialized.Price || 0),
+      discountedPrice:
+        serialized.discountedPrice != null ? Number(serialized.discountedPrice) : null,
+      isDiscounted: serialized.isDiscounted === true,
+      Category: serialized.Category,
+      Images: serialized.Images,
+    };
+  });
+}
+
 export async function getOrdersList() {
   await mongooseConnect();
   const orders = await Order.find({}).sort({ createdAt: -1 }).lean();

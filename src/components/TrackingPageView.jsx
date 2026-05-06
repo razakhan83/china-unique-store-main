@@ -12,19 +12,19 @@ function firePageView({ tiktokPixelId }) {
   trackPageViewEvent();
 }
 
-function TrackingPageViewInner({ enabled, facebookPixelId, tiktokPixelId }) {
+function TrackingPageViewInner({ enabled, tiktokPixelId }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const hasTrackedInitialPageView = useRef(false);
 
   useEffect(() => {
-    if (!enabled || !facebookPixelId) return;
+    if (!enabled) return;
     if (!hasTrackedInitialPageView.current) {
       hasTrackedInitialPageView.current = true;
       return;
     }
     firePageView({ tiktokPixelId });
-  }, [enabled, facebookPixelId, pathname, searchParams, tiktokPixelId]);
+  }, [enabled, pathname, searchParams, tiktokPixelId]);
 
   return null;
 }

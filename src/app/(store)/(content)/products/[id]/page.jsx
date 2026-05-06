@@ -209,13 +209,13 @@ export default function ProductPage({ params }) {
     <div className="product-detail-shell min-h-screen bg-background">
       <ProductPageScrollReset />
 
-      <div className="container mx-auto max-w-7xl px-4 pb-2 pt-8 md:pt-10">
+      <div className="container mx-auto max-w-7xl px-4 pb-2 pt-5 md:pt-7">
         <Suspense fallback={<ProductBreadcrumbSkeleton />}>
           <ProductBreadcrumb slugPromise={slugPromise} />
         </Suspense>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-3 md:pb-8 md:pt-5">
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-2 md:pb-8 md:pt-4">
         <Suspense fallback={<ProductHeroSkeleton />}>
           <ProductHeroSection slugPromise={slugPromise} />
         </Suspense>
@@ -305,13 +305,13 @@ async function ProductHeroSection({ slugPromise }) {
         }}
       />
 
-      <div className="flex flex-col gap-6 md:flex-row md:gap-10 lg:gap-14">
+      <div className="flex flex-col gap-5 md:flex-row md:gap-8 lg:gap-10">
         <div className="w-full md:w-[55%] lg:w-[58%]">
           <ProductGallery images={product.Images} />
         </div>
 
         <div className="w-full md:w-[45%] lg:w-[42%]">
-          <div className="flex flex-col gap-5 md:sticky md:top-28">
+          <div className="flex flex-col gap-4 md:sticky md:top-24">
             <div>
               <Badge variant="outline" className={`${colors.badge} text-xs font-bold uppercase tracking-wider`}>
                 {categoryLabel || 'Premium Item'}
@@ -320,7 +320,7 @@ async function ProductHeroSection({ slugPromise }) {
 
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-wrap items-start gap-3">
-                <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl lg:text-4xl">
+                <h1 className="text-xl font-medium tracking-tight text-foreground md:text-2xl lg:text-3xl">
                   {product.Name}
                 </h1>
                 {isOutOfStock ? (
@@ -332,10 +332,10 @@ async function ProductHeroSection({ slugPromise }) {
               <ProductSocialActions product={product} className="md:hidden shrink-0" />
             </div>
 
-            <div className="flex flex-wrap items-baseline gap-3">
+            <div className="flex flex-wrap items-baseline gap-2.5">
               {product.isDiscounted && product.discountPercentage > 0 ? (
                 <>
-                  <span className="text-3xl font-extrabold text-destructive md:text-4xl">
+                  <span className="text-xl font-normal text-black md:text-2xl">
                     {formatPrice(product.discountedPrice != null ? product.discountedPrice : Math.round(product.Price * (1 - product.discountPercentage / 100)))}
                   </span>
                   <span className="text-lg font-medium text-muted-foreground line-through">
@@ -346,7 +346,7 @@ async function ProductHeroSection({ slugPromise }) {
                   </span>
                 </>
               ) : (
-                <span className="text-3xl font-extrabold text-primary md:text-4xl">
+                <span className="text-xl font-normal text-black md:text-2xl">
                   {formatPrice(product.Price)}
                 </span>
               )}
@@ -355,7 +355,7 @@ async function ProductHeroSection({ slugPromise }) {
             <Separator />
             <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
 
-            <div className="mt-2 border-t border-border pt-5">
+            <div className="mt-1 border-t border-border pt-4">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <Card>
                   <CardContent className="flex flex-col items-center gap-2 p-3">
@@ -384,8 +384,8 @@ async function ProductHeroSection({ slugPromise }) {
               </div>
             </div>
 
-            <div className="pt-2">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="pt-1">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Description
               </h2>
               <div className="text-[15px] leading-relaxed text-muted-foreground">
@@ -415,7 +415,7 @@ async function ProductReviewsSection({ slugPromise }) {
   }
 
   return (
-    <div className="mb-4 mt-12">
+    <div className="mb-4 mt-8">
       <ProductReviews productId={pageData.product._id} productName={pageData.product.Name} />
     </div>
   );
@@ -444,7 +444,7 @@ async function RelatedProductsSection({ slugPromise }) {
   }
 
   return (
-    <div className="border-t border-border bg-muted/35 py-10 md:py-14">
+    <div className="border-t border-border bg-muted/35 py-8 md:py-12">
       <div className="container mx-auto max-w-7xl px-4">
         <CategoryProductSlider
           categoryLabel="You May Also Like"
@@ -468,7 +468,7 @@ function ProductBreadcrumbSkeleton() {
 
 function ProductHeroSkeleton() {
   return (
-    <div className="flex flex-col gap-6 md:flex-row md:gap-10 lg:gap-14">
+    <div className="flex flex-col gap-5 md:flex-row md:gap-8 lg:gap-10">
       <div className="w-full md:w-[55%] lg:w-[58%]">
         <Skeleton className="aspect-square w-full rounded-2xl" />
         <div className="mt-3 flex gap-2">
@@ -479,7 +479,7 @@ function ProductHeroSkeleton() {
       </div>
 
       <div className="w-full md:w-[45%] lg:w-[42%]">
-        <div className="flex flex-col gap-5 md:sticky md:top-28">
+        <div className="flex flex-col gap-4 md:sticky md:top-24">
           <Skeleton className="h-7 w-32 rounded-lg" />
           <Skeleton className="h-10 w-3/4 rounded-lg" />
           <Skeleton className="h-12 w-40 rounded-lg" />

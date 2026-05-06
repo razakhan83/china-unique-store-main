@@ -136,7 +136,7 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           <h3
-            className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-[1.15rem] text-primary/80 sm:line-clamp-1 sm:min-h-5 sm:text-[15px] sm:leading-5"
+            className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-[1.15rem] text-primary/80 sm:line-clamp-1 sm:min-h-5 sm:text-base sm:leading-5"
             title={productName}
             draggable={false}
           >
@@ -155,7 +155,7 @@ export default function ProductCard({ product, className = "" }) {
                   {formatPrice(productPrice)}
                 </p>
                 <p
-                  className="text-lg font-semibold leading-none text-foreground tabular-nums sm:text-xl"
+                  className="text-base font-medium leading-none text-black tabular-nums sm:text-[1.125rem]"
                   draggable={false}
                 >
                   {formatPrice(discountedPrice)}
@@ -163,7 +163,7 @@ export default function ProductCard({ product, className = "" }) {
               </div>
             ) : (
               <p
-                className="pb-0.5 text-lg font-semibold leading-none text-foreground tabular-nums sm:pb-0 sm:text-xl"
+                className="pb-0.5 text-base font-medium leading-none text-black tabular-nums sm:pb-0 sm:text-[1.125rem]"
                 draggable={false}
               >
                 {formatPrice(productPrice)}

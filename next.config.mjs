@@ -1,5 +1,5 @@
 const nextConfig = {
-  allowedDevOrigins: ['192.168.1.100'],
+  allowedDevOrigins: ['127.0.0.1', 'localhost', '192.168.1.100'],
   logging: {
     browserToTerminal: true,
   },

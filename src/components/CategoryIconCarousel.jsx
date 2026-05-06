@@ -91,7 +91,7 @@ export default function CategoryIconCarousel({ categories }) {
                           src={categoryImageSrc}
                           alt={category.label}
                           fill
-                          sizes="(max-width: 768px) 80px, 108px"
+                          sizes="(max-width: 768px) 5rem, 6.75rem"
                           loading="lazy"
                           className="object-cover"
                           {...getBlurPlaceholderProps(category.blurDataURL)}

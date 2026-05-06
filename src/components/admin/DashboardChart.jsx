@@ -23,7 +23,7 @@ const chartConfig = {
 export default function DashboardChart({ initialData = [], initialPeriod = 'monthly' }) {
   const [period, setPeriod] = useState(initialPeriod);
   const [data, setData] = useState(Array.isArray(initialData) ? initialData : []);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!(initialPeriod === 'monthly' && Array.isArray(initialData) && initialData.length > 0));
 
   useEffect(() => {
     async function fetchChart() {

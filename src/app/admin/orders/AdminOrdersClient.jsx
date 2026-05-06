@@ -299,6 +299,24 @@ export default function AdminOrdersClient({
 
     return PAKISTAN_CITIES.filter((city) => city.toLowerCase().includes(query)).slice(0, 8);
   }, [draftForm.customerCity]);
+  const availableDraftProducts = useMemo(() => {
+    const selectedProductIds = new Set(draftItems.map((item) => item.productId));
+
+    return (Array.isArray(productCatalog) ? productCatalog : [])
+      .filter((product) => !selectedProductIds.has(String(product?._id || product?.slug || '').trim()))
+      .map((product) => {
+        const categoryNames = getProductCategoryNames(product);
+        const primaryImage = getPrimaryProductImage(product);
+
+        return {
+          product,
+          categoryNames,
+          categorySummary: categoryNames.slice(0, 2),
+          primaryImage,
+          searchValue: [product.Name, product.slug || '', ...categoryNames].filter(Boolean).join(' '),
+        };
+      });
+  }, [draftItems, productCatalog]);
 
   const displayOrders = orders;
 
@@ -1811,16 +1829,11 @@ export default function AdminOrdersClient({
                           <CommandList>
                             <CommandEmpty>No matching product found.</CommandEmpty>
                             <CommandGroup className="max-h-80 overflow-y-auto">
-                              {(Array.isArray(productCatalog) ? productCatalog : [])
-                                .filter((product) => !draftItems.some((item) => item.productId === String(product?._id || product?.slug || '').trim()))
-                                .map((product) => {
-                                  const primaryImage = getPrimaryProductImage(product);
-                                  const categoryNames = getProductCategoryNames(product).slice(0, 2);
-
+                              {availableDraftProducts.map(({ product, primaryImage, categorySummary, searchValue }) => {
                                   return (
                                     <CommandItem
                                       key={product._id}
-                                      value={[product.Name, product.slug || '', ...getProductCategoryNames(product)].filter(Boolean).join(' ')}
+                                      value={searchValue}
                                       onSelect={() => addDraftProduct(product)}
                                       className="px-3 py-3"
                                     >
@@ -1840,7 +1853,7 @@ export default function AdminOrdersClient({
                                         <div className="min-w-0 flex-1">
                                           <p className="truncate text-sm font-semibold text-foreground">{product.Name}</p>
                                           <div className="mt-1 flex flex-wrap gap-1.5">
-                                            {categoryNames.length > 0 ? categoryNames.map((category) => (
+                                            {categorySummary.length > 0 ? categorySummary.map((category) => (
                                               <span key={category} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                                                 {category}
                                               </span>

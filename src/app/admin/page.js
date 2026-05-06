@@ -71,12 +71,14 @@ export default async function AdminDashboardPage() {
 }
 
 async function DashboardContent() {
+  const chartDataPromise = getAdminChartData('monthly');
   const {
     summary,
     recentOrders,
     topVendors,
     hasError = false,
   } = await loadDashboardDataSafely();
+  const initialChartData = await chartDataPromise;
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
@@ -180,7 +182,7 @@ async function DashboardContent() {
           </div>
           
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4">
-             <DashboardChart initialPeriod="monthly" />
+             <DashboardChart initialData={initialChartData} initialPeriod="monthly" />
           </div>
         </div>
 

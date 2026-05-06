@@ -16,13 +16,45 @@ const CartDrawer = dynamic(() => import('@/components/CartDrawer'), {
 function scheduleDeferredMount(callback) {
   if (typeof window === 'undefined') return () => {};
 
+  let cleanedUp = false;
+  let timeoutId = null;
+  let idleId = null;
+
+  const detachListeners = () => {
+    window.removeEventListener('pointerdown', run);
+    window.removeEventListener('keydown', run);
+    window.removeEventListener('focus', run);
+  };
+
+  const run = () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    detachListeners();
+    if (timeoutId != null) window.clearTimeout(timeoutId);
+    if (idleId != null && 'cancelIdleCallback' in window) {
+      window.cancelIdleCallback(idleId);
+    }
+    callback();
+  };
+
+  window.addEventListener('pointerdown', run, { once: true, passive: true });
+  window.addEventListener('keydown', run, { once: true });
+  window.addEventListener('focus', run, { once: true });
+
   if ('requestIdleCallback' in window) {
-    const idleId = window.requestIdleCallback(callback, { timeout: 1200 });
-    return () => window.cancelIdleCallback(idleId);
+    idleId = window.requestIdleCallback(run, { timeout: 1000 });
+  } else {
+    timeoutId = window.setTimeout(run, 500);
   }
 
-  const timeoutId = window.setTimeout(callback, 700);
-  return () => window.clearTimeout(timeoutId);
+  return () => {
+    cleanedUp = true;
+    detachListeners();
+    if (timeoutId != null) window.clearTimeout(timeoutId);
+    if (idleId != null && 'cancelIdleCallback' in window) {
+      window.cancelIdleCallback(idleId);
+    }
+  };
 }
 
 export default function StoreDeferredChrome({ whatsappNumber = '', storeName = 'China Unique Store' }) {

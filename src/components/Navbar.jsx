@@ -207,6 +207,14 @@ function NavbarContent({
     router.push(href);
   }
 
+  function handleDesktopNavigate(href) {
+    setIsSearchOpen(false);
+    setIsAccountDrawerOpen(false);
+    setIsCategoriesOpen(false);
+    setIsSidebarOpen(false);
+    router.push(href, { scroll: true });
+  }
+
   function handleAccountDrawerChange(open) {
     if (open) {
       setIsSearchOpen(false);
@@ -279,12 +287,35 @@ function NavbarContent({
           logoScalePercent={logoScalePercent}
           variant="light-surface"
           priority
+          onClick={(event) => {
+            event.preventDefault();
+            handleDesktopNavigate('/');
+          }}
           className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
         />
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
-          <Link href="/" className={navLinkClass('/')}>Home</Link>
-          <Link href="/products" scroll={true} className={navLinkClass('/products')}>All Products</Link>
+          <Link
+            href="/"
+            className={navLinkClass('/')}
+            onClick={(event) => {
+              event.preventDefault();
+              handleDesktopNavigate('/');
+            }}
+          >
+            Home
+          </Link>
+          <Link
+            href="/products"
+            scroll={true}
+            className={navLinkClass('/products')}
+            onClick={(event) => {
+              event.preventDefault();
+              handleDesktopNavigate('/products');
+            }}
+          >
+            All Products
+          </Link>
           <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
             <div
               onPointerEnter={() => {

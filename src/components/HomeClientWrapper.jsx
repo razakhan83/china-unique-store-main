@@ -26,9 +26,10 @@ export default function HomeClientWrapper({ heroSlides, categories = [] }) {
   useEffect(() => {
     let isActive = true;
     const controller = new AbortController();
+    const normalizedSearch = debouncedSearch.trim();
 
     async function loadSuggestions() {
-      if (!debouncedSearch.trim()) {
+      if (!isFocused || normalizedSearch.length < 2) {
         if (isActive) {
           setSuggestions([]);
           setIsLoadingSuggestions(false);
@@ -38,7 +39,7 @@ export default function HomeClientWrapper({ heroSlides, categories = [] }) {
 
       setIsLoadingSuggestions(true);
       try {
-        const response = await fetch(`/api/search-products?q=${encodeURIComponent(debouncedSearch.trim())}&limit=5`, {
+        const response = await fetch(`/api/search-products?q=${encodeURIComponent(normalizedSearch)}&limit=5`, {
           signal: controller.signal,
         });
         const result = await response.json();
@@ -73,17 +74,19 @@ export default function HomeClientWrapper({ heroSlides, categories = [] }) {
       isActive = false;
       controller.abort();
     };
-  }, [debouncedSearch, router]);
+  }, [debouncedSearch, isFocused, router]);
 
   useEffect(() => {
+    if (!isFocused) return undefined;
+
     const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsFocused(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [isFocused]);
 
   function handleSearchSubmit(event) {
     event?.preventDefault();
