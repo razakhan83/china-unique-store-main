@@ -3,11 +3,6 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
-const FloatingWhatsApp = dynamic(() => import('@/components/FloatingWhatsApp'), {
-  ssr: false,
-  loading: () => null,
-});
-
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), {
   ssr: false,
   loading: () => null,
@@ -70,7 +65,6 @@ export default function StoreDeferredChrome({ whatsappNumber = '', storeName = '
 
   return (
     <>
-      <FloatingWhatsApp whatsappNumber={whatsappNumber} storeName={storeName} />
       <CartDrawer whatsappNumber={whatsappNumber} storeName={storeName} />
     </>
   );
