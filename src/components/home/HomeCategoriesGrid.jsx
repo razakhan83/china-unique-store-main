@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -5,6 +8,8 @@ import {
   Beef,
   Bolt,
   Car,
+  ChevronLeft,
+  ChevronRight,
   Dumbbell,
   Flame,
   Gamepad2,
@@ -41,7 +46,42 @@ function getCategoryIcon(name) {
 }
 
 export default function HomeCategoriesGrid({ title = 'Shop by Category', categories = [] }) {
+  const carouselRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return undefined;
+
+    const updateScrollState = () => {
+      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
+      setCanScrollLeft(carousel.scrollLeft > 8);
+      setCanScrollRight(maxScrollLeft - carousel.scrollLeft > 8);
+    };
+
+    updateScrollState();
+    carousel.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+
+    return () => {
+      carousel.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [categories.length]);
+
   if (!categories.length) return null;
+
+  function scrollCategories(direction) {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const distance = Math.max(carousel.clientWidth * 0.72, 220);
+    carousel.scrollBy({
+      left: direction === 'left' ? -distance : distance,
+      behavior: 'smooth',
+    });
+  }
 
   return (
     <section className="border-b border-border bg-card/70 py-6 md:py-7">
@@ -64,6 +104,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
           />
 
           <div
+            ref={carouselRef}
             className="category-icon-carousel"
             data-interactive={categories.length > 1 ? 'true' : 'false'}
             aria-label="Shop by category"
@@ -113,6 +154,29 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
               );
             })}
           </div>
+
+          {categories.length > 1 ? (
+            <>
+              <button
+                type="button"
+                aria-label="Scroll categories left"
+                onClick={() => scrollCategories('left')}
+                disabled={!canScrollLeft}
+                className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll categories right"
+                onClick={() => scrollCategories('right')}
+                disabled={!canScrollRight}
+                className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
     </section>
