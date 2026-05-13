@@ -156,6 +156,41 @@ export async function PATCH(request, { params }) {
         const { id } = await params;
         const body = await request.json();
 
+        if (body.stockQuantity !== undefined) {
+            const nextQuantity = Math.max(0, Number(body.stockQuantity) || 0);
+            const nextStatus = body.StockStatus === 'In Stock' || body.StockStatus === 'Out of Stock'
+                ? body.StockStatus
+                : nextQuantity > 0
+                    ? 'In Stock'
+                    : 'Out of Stock';
+
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id,
+                { $set: { stockQuantity: nextQuantity, StockStatus: nextStatus } },
+                { new: true, runValidators: false, strict: false }
+            ).lean();
+
+            revalidateTag('products');
+            if (updatedProduct.slug) {
+                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidatePath(`/products/${updatedProduct.slug}`);
+            }
+            revalidateTag('admin-dashboard');
+            revalidateTag('home-sections');
+            revalidatePath('/admin/products');
+            revalidatePath('/products');
+            revalidatePath('/');
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    _id: updatedProduct._id.toString(),
+                    stockQuantity: Number(updatedProduct.stockQuantity || 0),
+                    StockStatus: updatedProduct.StockStatus,
+                },
+            });
+        }
+
         // Handle StockStatus toggle
         if (body.StockStatus !== undefined) {
             const updatedProduct = await Product.findByIdAndUpdate(
@@ -180,6 +215,7 @@ export async function PATCH(request, { params }) {
                 data: {
                     _id: updatedProduct._id.toString(),
                     StockStatus: updatedProduct.StockStatus,
+                    stockQuantity: Number(updatedProduct.stockQuantity || 0),
                 },
             });
         }

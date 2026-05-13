@@ -9,6 +9,7 @@ import {
   Copy,
   ImageIcon,
   MessageSquare,
+  Minus,
   MoreVertical,
   Pencil,
   Plus,
@@ -51,6 +52,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -208,6 +210,94 @@ function DiscountDialog({ open, product, onOpenChange, onSuccess }) {
   );
 }
 
+function StockDialog({ open, product, quantity, onQuantityChange, saving, onOpenChange, onSave }) {
+  const previewQuantity = Math.max(0, Number(quantity) || 0);
+  const previewStatus = previewQuantity > 0 ? "In Stock" : "Out of Stock";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Adjust Stock</DialogTitle>
+          <DialogDescription>
+            Update available quantity for <span className="font-semibold text-foreground">{product?.Name}</span>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <FieldGroup className="gap-4 py-2">
+          <Field>
+            <FieldLabel htmlFor="stock-quantity">Quantity</FieldLabel>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-10 shrink-0"
+                onClick={() => onQuantityChange(String(Math.max(0, previewQuantity - 1)))}
+                disabled={saving}
+              >
+                <Minus />
+                <span className="sr-only">Decrease stock quantity</span>
+              </Button>
+              <Input
+                id="stock-quantity"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={quantity}
+                onChange={(event) => onQuantityChange(event.target.value)}
+                className="h-10 text-center text-sm font-semibold"
+                disabled={saving}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-10 shrink-0"
+                onClick={() => onQuantityChange(String(previewQuantity + 1))}
+                disabled={saving}
+              >
+                <Plus />
+                <span className="sr-only">Increase stock quantity</span>
+              </Button>
+            </div>
+          </Field>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[-10, -5, 5, 10].map((step) => (
+              <Button
+                key={step}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => onQuantityChange(String(Math.max(0, previewQuantity + step)))}
+                disabled={saving}
+              >
+                {step > 0 ? `+${step}` : step}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm">
+            <span className="text-muted-foreground">Status Preview</span>
+            <Badge variant={previewStatus === "In Stock" ? "secondary" : "destructive"}>{previewStatus}</Badge>
+          </div>
+        </FieldGroup>
+
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={onSave} disabled={saving}>
+            {saving ? "Saving..." : "Save Stock"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminProductsClient({
   initialProducts,
   total,
@@ -236,6 +326,9 @@ export default function AdminProductsClient({
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
   const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
   const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
+  const [stockModal, setStockModal] = useState({ open: false, product: null });
+  const [stockQuantityInput, setStockQuantityInput] = useState("0");
+  const [isSavingStock, setIsSavingStock] = useState(false);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -250,6 +343,12 @@ export default function AdminProductsClient({
     setStatusFilter(initialStatusFilter);
     setStockFilter(initialStockFilter);
   }, [initialSortOption, initialStatusFilter, initialStockFilter]);
+
+  useEffect(() => {
+    if (stockModal.open && stockModal.product) {
+      setStockQuantityInput(String(Math.max(0, Number(stockModal.product.stockQuantity) || 0)));
+    }
+  }, [stockModal]);
 
   function navigate(updates) {
     const href = buildHref(pathname, searchParams, updates);
@@ -305,12 +404,16 @@ export default function AdminProductsClient({
   async function handleToggleStock(product) {
     setTogglingStockId(product._id);
     const newStockStatus = product.StockStatus === "In Stock" ? "Out of Stock" : "In Stock";
+    const nextQuantity =
+      newStockStatus === "In Stock" && Number(product.stockQuantity || 0) <= 0
+        ? 1
+        : Number(product.stockQuantity || 0);
     startTransition(async () => {
       try {
         const res = await fetch(`/api/products/${product._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ StockStatus: newStockStatus }),
+          body: JSON.stringify({ StockStatus: newStockStatus, stockQuantity: nextQuantity }),
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -318,9 +421,18 @@ export default function AdminProductsClient({
         }
 
         setProducts((previous) =>
-          previous.map((entry) => (entry._id === product._id ? { ...entry, StockStatus: newStockStatus } : entry)),
+          previous.map((entry) =>
+            entry._id === product._id
+              ? {
+                  ...entry,
+                  StockStatus: json.data?.StockStatus || newStockStatus,
+                  stockQuantity:
+                    typeof json.data?.stockQuantity === "number" ? json.data.stockQuantity : nextQuantity,
+                }
+              : entry,
+          ),
         );
-        toast.success(`"${product.Name}" is now ${newStockStatus}.`);
+        toast.success(`"${product.Name}" is now ${json.data?.StockStatus || newStockStatus}.`);
         router.refresh();
       } catch (error) {
         toast.error(error.message || "Could not update stock status.");
@@ -328,6 +440,50 @@ export default function AdminProductsClient({
         setTogglingStockId(null);
       }
     });
+  }
+
+  function openStockDialog(product) {
+    setStockModal({ open: true, product });
+  }
+
+  async function handleSaveStock() {
+    const product = stockModal.product;
+    if (!product) return;
+
+    const nextQuantity = Math.max(0, Number(stockQuantityInput) || 0);
+    setIsSavingStock(true);
+
+    try {
+      const res = await fetch(`/api/products/${product._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stockQuantity: nextQuantity }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || json.message || "Failed to update stock quantity");
+      }
+
+      setProducts((previous) =>
+        previous.map((entry) =>
+          entry._id === product._id
+            ? {
+                ...entry,
+                stockQuantity: typeof json.data?.stockQuantity === "number" ? json.data.stockQuantity : nextQuantity,
+                StockStatus: json.data?.StockStatus || (nextQuantity > 0 ? "In Stock" : "Out of Stock"),
+              }
+            : entry,
+        ),
+      );
+      toast.success(`Stock updated for "${product.Name}".`);
+      setStockModal({ open: false, product: null });
+      router.refresh();
+    } catch (error) {
+      toast.error(error.message || "Could not update stock quantity.");
+    } finally {
+      setIsSavingStock(false);
+    }
   }
 
   async function toggleProductFlag(productId, flag, currentStatus) {
@@ -618,10 +774,23 @@ export default function AdminProductsClient({
                     </td>
                     <td className="px-4 py-2 text-sm font-medium text-foreground">{formatDate(product.updatedAt || product.createdAt)}</td>
                     <td className="px-4 py-2">
-                      <div className="inline-flex items-center gap-2">
+                      <div className="flex min-w-[176px] items-center gap-2">
                         <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
                           {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                         </Badge>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          Qty {Math.max(0, Number(product.stockQuantity) || 0)}
+                        </Badge>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-[11px] font-medium"
+                          onClick={() => openStockDialog(product)}
+                          disabled={togglingStockId === product._id}
+                        >
+                          Adjust
+                        </Button>
                         {product.isDiscounted && product.discountPercentage > 0 ? (
                           <Badge variant="outline" className="text-[10px] uppercase">
                             {product.discountPercentage}% off
@@ -667,8 +836,11 @@ export default function AdminProductsClient({
                               <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel>Catalog</DropdownMenuLabel>
-                              <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleStock(product)}>
+                              <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
                                 {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => openStockDialog(product)}>
+                                Adjust Stock Quantity
                               </DropdownMenuItem>
                               <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
                                 <Tag className="mr-2 size-4" />
@@ -783,8 +955,11 @@ export default function AdminProductsClient({
                           <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleLive(product)}>
                             {product.isLive ? "Set as Draft" : "Set as Live"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleStock(product)}>
+                          <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
                             {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => openStockDialog(product)}>
+                            Adjust Stock Quantity
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
@@ -813,6 +988,9 @@ export default function AdminProductsClient({
                     <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
                       {product.StockStatus === "In Stock" ? "In Stock" : "Out"}
                     </Badge>
+                    <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider">
+                      Qty {Math.max(0, Number(product.stockQuantity) || 0)}
+                    </Badge>
                     <Badge variant={product.isLive ? "default" : "secondary"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
                       {product.isLive ? "Live" : "Draft"}
                     </Badge>
@@ -822,6 +1000,21 @@ export default function AdminProductsClient({
                     {product.isBestSelling && (
                       <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider text-muted-foreground border-foreground/10 bg-foreground/5">TOP</Badge>
                     )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto h-6 px-1.5 text-[9px] font-medium"
+                      onClick={() => openStockDialog(product)}
+                      disabled={togglingStockId === product._id}
+                    >
+                      Adjust
+                    </Button>
+                  </div>
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    {Array.isArray(product.vendors) && product.vendors.length > 0
+                      ? `${product.vendors.length} vendor${product.vendors.length === 1 ? "" : "s"}`
+                      : "No vendor"}
                   </div>
                 </div>
               </div>
@@ -869,6 +1062,21 @@ export default function AdminProductsClient({
         product={discountModal.product}
         onOpenChange={(open) => setDiscountModal((previous) => ({ ...previous, open }))}
         onSuccess={handleDiscountSuccess}
+      />
+
+      <StockDialog
+        open={stockModal.open}
+        product={stockModal.product}
+        quantity={stockQuantityInput}
+        onQuantityChange={setStockQuantityInput}
+        saving={isSavingStock}
+        onOpenChange={(open) => {
+          setStockModal((previous) => ({ ...previous, open, product: open ? previous.product : null }));
+          if (!open) {
+            setStockQuantityInput("0");
+          }
+        }}
+        onSave={handleSaveStock}
       />
 
       <AdminReviewsDialog

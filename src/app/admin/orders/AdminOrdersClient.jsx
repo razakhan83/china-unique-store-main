@@ -1103,6 +1103,7 @@ export default function AdminOrdersClient({
   };
 
   const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ORDER_STATUS || startDate || endDate;
+  const canApplyFilters = Boolean(searchQuery.trim() || startDate || endDate);
   const appliedFilters = [
     statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter}` : null,
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
@@ -1163,7 +1164,7 @@ export default function AdminOrdersClient({
 
       {/* Filters Bar — Compact */}
       <form
-        className="flex flex-col gap-2"
+        className="admin-filter-shell flex flex-col gap-2.5"
         onSubmit={(event) => {
           event.preventDefault();
           navigate({
@@ -1174,105 +1175,150 @@ export default function AdminOrdersClient({
           });
         }}
       >
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" data-icon />
-          <Input
-            placeholder="Search by Order ID, Name, or Phone..."
-            className="h-8 pl-8 text-[13px] md:h-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        <FieldGroup className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,0.78fr)_minmax(0,0.78fr)]">
+          <Field>
+            <FieldLabel className="text-[11px]">Search</FieldLabel>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" data-icon />
+              <Input
+                placeholder="Order ID, customer, or phone"
+                className="h-9 rounded-xl pl-9 text-[13px] lg:h-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </Field>
 
-        {/* Date Range Filters */}
-        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground">From</span>
+          <Field>
+            <FieldLabel htmlFor="orders-start-date" className="text-[11px]">From</FieldLabel>
             <Input
+              id="orders-start-date"
               type="date"
-              className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1 text-[12px] shadow-none focus-visible:ring-0 sm:w-[120px]"
+              className="h-9 rounded-xl text-[13px] lg:h-10"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
-          </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground">To</span>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="orders-end-date" className="text-[11px]">To</FieldLabel>
             <Input
+              id="orders-end-date"
               type="date"
-              className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1 text-[12px] shadow-none focus-visible:ring-0 sm:w-[120px]"
+              className="h-9 rounded-xl text-[13px] lg:h-10"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGroup>
 
-        <div className="flex flex-wrap items-center gap-1.5 mt-1">
-          {(startDate || endDate) && (
-            <Button type="submit" variant="default" size="sm" className="h-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
-              <Search data-icon="inline-start" className="size-3" />
-              Search Dates
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!canApplyFilters}
+            className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+          >
+            <Search data-icon="inline-start" />
+            Apply
+          </Button>
 
-          {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+          {hasActiveFilters ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={clearFilters}
-              className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              className="h-9 rounded-xl px-3 text-[12px] text-muted-foreground hover:text-foreground"
             >
               <X data-icon="inline-start" />
               Clear
             </Button>
-          )}
+          ) : null}
         </div>
       </form>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {statusFilter === DEFAULT_ORDER_STATUS ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleGenerateSourcingSlip}
-            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
-          >
-            {pendingWorkflowAction === 'sourcing' ? <Spinner data-icon="inline-start" /> : <FileSpreadsheet data-icon="inline-start" />}
-            {pendingWorkflowAction === 'sourcing' ? 'Generating Sourcing Slip...' : `Generate Sourcing Slip${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-          </Button>
-        ) : null}
-        {statusFilter === 'In Process' ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={handleGeneratePackingSlip}
-            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
-          >
-            {pendingWorkflowAction === 'packing' ? <Spinner data-icon="inline-start" /> : <Receipt data-icon="inline-start" />}
-            {pendingWorkflowAction === 'packing' ? 'Generating Packing Slip...' : `Packing Slip${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-          </Button>
-        ) : null}
-        {statusFilter === 'Packed' ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={handleGenerateCourierSheet}
-            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-            className="h-8 rounded-xl px-3 text-[12px] font-semibold"
-          >
-            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
-            {pendingWorkflowAction === 'courier' ? 'Generating Courier Sheet...' : `Generate Courier Sheet${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-          </Button>
-        ) : null}
+      <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,240px)_auto] lg:items-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          {statusFilter === DEFAULT_ORDER_STATUS ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleGenerateSourcingSlip}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+            >
+              {pendingWorkflowAction === 'sourcing' ? <Spinner data-icon="inline-start" /> : <FileSpreadsheet data-icon="inline-start" />}
+              {pendingWorkflowAction === 'sourcing' ? 'Generating...' : `Sourcing${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+            </Button>
+          ) : null}
+          {statusFilter === 'In Process' ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleGeneratePackingSlip}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+            >
+              {pendingWorkflowAction === 'packing' ? <Spinner data-icon="inline-start" /> : <Receipt data-icon="inline-start" />}
+              {pendingWorkflowAction === 'packing' ? 'Generating...' : `Packing${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+            </Button>
+          ) : null}
+          {statusFilter === 'Packed' ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={handleGenerateCourierSheet}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+            >
+              {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
+              {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+            </Button>
+          ) : null}
+          {statusFilter === 'all' ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-xl text-[12px] font-semibold">
+                  <Zap data-icon="inline-start" />
+                  Reports
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end">
+                <div className="flex flex-col gap-1.5">
+                  <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 justify-start gap-1.5 text-[12px] font-medium"
+                    onClick={() => handleExportMonthlySales('excel')}
+                  >
+                    <Download data-icon="inline-start" />
+                    Excel (.xlsx)
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
+                    onClick={() => handleExportMonthlySales('pdf')}
+                  >
+                    <Download data-icon="inline-start" />
+                    PDF (.pdf)
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : null}
+        </div>
+
         <Select value={bulkStatus} onValueChange={setBulkStatus}>
           <SelectTrigger
             disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
-            className="h-8 w-[180px] rounded-xl text-[12px]"
+            className="h-9 w-full rounded-xl text-[12px]"
           >
-            <SelectValue placeholder="Choose status" />
+            <SelectValue placeholder="Move selected to..." />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -1284,49 +1330,17 @@ export default function AdminOrdersClient({
             </SelectGroup>
           </SelectContent>
         </Select>
+
         <Button
           type="button"
           variant="outline"
           onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
           disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
-          className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+          className="h-9 rounded-xl px-3 text-[12px] font-semibold"
         >
           {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
           Move Selected{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
         </Button>
-        {statusFilter === 'all' ? (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-xl text-[12px] font-semibold">
-                <Zap data-icon="inline-start" />
-                Reports
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2" align="end">
-              <div className="flex flex-col gap-1.5">
-                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
-                  onClick={() => handleExportMonthlySales('excel')}
-                >
-                  <Download data-icon="inline-start" />
-                  Excel (.xlsx)
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
-                  onClick={() => handleExportMonthlySales('pdf')}
-                >
-                  <Download data-icon="inline-start" />
-                  PDF (.pdf)
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        ) : null}
       </div>
 
       {appliedFilters.length > 0 && (
