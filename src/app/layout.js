@@ -14,6 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 const siteUrl = getSiteUrl();
+const socialPreviewImage = `${siteUrl}/opengraph-image.png`;
+const socialPreviewAlt = 'China Unique Store social preview image';
 
 export const metadata = {
   metadataBase: getMetadataBase(),
@@ -31,11 +33,25 @@ export const metadata = {
     type: 'website',
     url: siteUrl,
     siteName: 'China Unique Store',
+    images: [
+      {
+        url: socialPreviewImage,
+        width: 1200,
+        height: 630,
+        alt: socialPreviewAlt,
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'China Unique Store',
     description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+    images: [
+      {
+        url: socialPreviewImage,
+        alt: socialPreviewAlt,
+      },
+    ],
   },
   robots: {
     index: true,
