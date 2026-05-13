@@ -34,6 +34,22 @@ function normalizeLogoUrl(value = '') {
     });
 }
 
+function normalizeFaviconSize(value) {
+    return Math.min(256, Math.max(32, Number(value) || 64));
+}
+
+function normalizeFaviconUrl(value = '', size = 64) {
+    const normalizedSize = normalizeFaviconSize(size);
+    return optimizeCloudinaryUrl(String(value || '').trim(), {
+        width: normalizedSize,
+        height: normalizedSize,
+        crop: 'fill',
+        gravity: 'auto',
+        format: 'png',
+        quality: 'auto',
+    });
+}
+
 function serializeSettings(settings) {
     return {
         _id: settings._id.toString(),
@@ -42,6 +58,8 @@ function serializeSettings(settings) {
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
         darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+        faviconSizePx: normalizeFaviconSize(settings.faviconSizePx),
+        faviconUrl: normalizeFaviconUrl(settings.faviconUrl, settings.faviconSizePx),
         logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
         whatsappNumber: settings.whatsappNumber || '',
         facebookPageUrl: settings.facebookPageUrl || '',
@@ -112,6 +130,8 @@ export async function PUT(req) {
             'businessAddress',
             'lightLogoUrl',
             'darkLogoUrl',
+            'faviconUrl',
+            'faviconSizePx',
             'logoScalePercent',
             'whatsappNumber',
             'facebookPageUrl',
@@ -131,6 +151,10 @@ export async function PUT(req) {
             'homepageSectionOrder',
         ];
 
+        const normalizedFaviconSize = body.faviconSizePx !== undefined
+            ? normalizeFaviconSize(body.faviconSizePx)
+            : undefined;
+
         const updates = {};
         for (const key of allowedFields) {
             if (body[key] !== undefined) {
@@ -139,9 +163,24 @@ export async function PUT(req) {
                         ? normalizeAnnouncementMessages(body[key], body.announcementBarText)
                         : key === 'lightLogoUrl' || key === 'darkLogoUrl'
                             ? normalizeLogoUrl(body[key])
+                        : key === 'faviconUrl'
+                            ? normalizeFaviconUrl(body[key], normalizedFaviconSize ?? body.faviconSizePx)
+                        : key === 'faviconSizePx'
+                            ? normalizedFaviconSize
                         : key === 'logoScalePercent'
                             ? Math.min(200, Math.max(60, Number(body[key]) || 100))
                         : body[key];
+            }
+        }
+
+        if (
+            updates.faviconUrl === undefined &&
+            normalizedFaviconSize !== undefined &&
+            body.faviconUrl === undefined
+        ) {
+            const existingSettings = await Settings.findOne({ singletonKey: SINGLETON_KEY }, 'faviconUrl').lean();
+            if (existingSettings?.faviconUrl) {
+                updates.faviconUrl = normalizeFaviconUrl(existingSettings.faviconUrl, normalizedFaviconSize);
             }
         }
 

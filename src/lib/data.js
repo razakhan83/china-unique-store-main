@@ -139,6 +139,22 @@ function normalizeLogoUrl(value = '') {
   });
 }
 
+function normalizeFaviconSize(value) {
+  return Math.min(256, Math.max(32, Number(value) || 64));
+}
+
+function normalizeFaviconUrl(value = '', size = 64) {
+  const normalizedSize = normalizeFaviconSize(size);
+  return optimizeCloudinaryUrl(String(value || '').trim(), {
+    width: normalizedSize,
+    height: normalizedSize,
+    crop: 'fill',
+    gravity: 'auto',
+    format: 'png',
+    quality: 'auto',
+  });
+}
+
 function escapeRegex(value) {
   return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -409,6 +425,8 @@ async function getSettingsRaw() {
     businessAddress: '',
     lightLogoUrl: '',
     darkLogoUrl: '',
+    faviconUrl: '',
+    faviconSizePx: 64,
     logoScalePercent: 100,
     whatsappNumber: '',
     facebookPageUrl: '',
@@ -442,6 +460,8 @@ async function getSettingsRaw() {
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
         darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+        faviconSizePx: normalizeFaviconSize(settings.faviconSizePx),
+        faviconUrl: normalizeFaviconUrl(settings.faviconUrl, settings.faviconSizePx),
         logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
         whatsappNumber: settings.whatsappNumber || '',
         facebookPageUrl: settings.facebookPageUrl || '',
@@ -2149,6 +2169,8 @@ export async function getAdminSettings() {
     businessAddress: settings.businessAddress || '',
     lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
     darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+    faviconSizePx: normalizeFaviconSize(settings.faviconSizePx),
+    faviconUrl: normalizeFaviconUrl(settings.faviconUrl, settings.faviconSizePx),
     logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
     whatsappNumber: settings.whatsappNumber || '',
     facebookPageUrl: settings.facebookPageUrl || '',

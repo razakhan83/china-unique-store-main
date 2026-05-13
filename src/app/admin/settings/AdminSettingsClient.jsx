@@ -65,6 +65,9 @@ function LogoUploadCard({
   hint,
   surfaceClassName,
   imageClassName,
+  imageStyle,
+  emptyMessage = 'Upload a transparent PNG, SVG, or WebP logo.',
+  inputPlaceholder = 'https://res.cloudinary.com/...',
   value,
   onChange,
   uploading,
@@ -115,11 +118,12 @@ function LogoUploadCard({
               height={88}
               sizes="(max-width: 768px) 100vw, 320px"
               className={imageClassName}
+              style={imageStyle}
             />
           ) : (
             <div className="flex max-w-56 flex-col items-center gap-2 px-5 py-8 text-center text-sm text-muted-foreground">
               <ImagePlus className="size-5" />
-              <span>Upload a transparent PNG, SVG, or WebP logo.</span>
+              <span>{emptyMessage}</span>
             </div>
           )}
         </div>
@@ -127,7 +131,7 @@ function LogoUploadCard({
         <Input
           value={value || ''}
           onChange={(event) => onChange(field, event.target.value)}
-          placeholder="https://res.cloudinary.com/..."
+          placeholder={inputPlaceholder}
         />
       </FieldContent>
     </Field>
@@ -319,6 +323,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
   const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
   const [editingAnnouncementText, setEditingAnnouncementText] = useState('');
+  const faviconPreviewSize = Math.min(96, Math.max(32, Number(form.faviconSizePx) || 64));
 
   function handleChange(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -334,7 +339,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
     });
   }
 
-  async function handleLogoUpload(field, event) {
+  async function handleImageUpload(field, event) {
     const file = Array.from(event.target.files || []).find((entry) => entry.type.startsWith('image/'));
     event.target.value = '';
     if (!file) return;
@@ -348,10 +353,16 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
 
       const image = await uploadImageDataUrl(dataUrl, 'kifayatly_branding');
       handleChange(field, image.url);
-      toast.success(`${field === 'lightLogoUrl' ? 'Light' : 'Dark'} logo uploaded.`);
+      toast.success(
+        field === 'lightLogoUrl'
+          ? 'Light logo uploaded.'
+          : field === 'darkLogoUrl'
+            ? 'Dark logo uploaded.'
+            : 'Favicon uploaded.'
+      );
     } catch (error) {
       console.error(`Failed to upload ${field}`, error);
-      toast.error(error.message || 'Failed to upload logo.');
+      toast.error(error.message || 'Failed to upload image.');
     } finally {
       setUploadingField('');
     }
@@ -511,7 +522,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
               value={form.lightLogoUrl}
               onChange={handleChange}
               uploading={uploadingField === 'lightLogoUrl'}
-              onUpload={handleLogoUpload}
+              onUpload={handleImageUpload}
             />
             <LogoUploadCard
               field="darkLogoUrl"
@@ -522,12 +533,51 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
               value={form.darkLogoUrl}
               onChange={handleChange}
               uploading={uploadingField === 'darkLogoUrl'}
-              onUpload={handleLogoUpload}
+              onUpload={handleImageUpload}
             />
           </div>
           <p className="text-xs text-muted-foreground">
             The storefront automatically switches between these two logos based on the background.
           </p>
+        </SettingSection>
+
+        <SettingSection
+          icon={ImagePlus}
+          title="Favicon"
+          description="Upload the icon shown in browser tabs and bookmarks. A square PNG works best."
+        >
+          <div className="max-w-xl">
+            <LogoUploadCard
+              field="faviconUrl"
+              label="Store Favicon"
+              hint="Recommended size is at least 64x64 pixels. You can increase the exported favicon size below for sharper rendering."
+              surfaceClassName="bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(242,246,244,0.98))]"
+              imageClassName="rounded-xl object-contain"
+              imageStyle={{ width: `${faviconPreviewSize}px`, height: `${faviconPreviewSize}px` }}
+              emptyMessage="Upload a square PNG, SVG, or ICO favicon."
+              value={form.faviconUrl}
+              onChange={handleChange}
+              uploading={uploadingField === 'faviconUrl'}
+              onUpload={handleImageUpload}
+            />
+            <Field className="mt-4">
+              <FieldLabel>Favicon Output Size (px)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="32"
+                  max="256"
+                  step="16"
+                  value={form.faviconSizePx ?? 64}
+                  onChange={(event) => handleChange('faviconSizePx', event.target.value)}
+                  placeholder="64"
+                />
+                <FieldDescription className="mt-1.5">
+                  Controls the generated favicon resolution from 32px to 256px. Browsers still choose the on-screen tab size, but larger values can make the icon sharper.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+          </div>
         </SettingSection>
 
         <SettingSection

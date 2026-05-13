@@ -52,6 +52,16 @@ const SettingsSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        faviconUrl: {
+            type: String,
+            default: '',
+        },
+        faviconSizePx: {
+            type: Number,
+            default: 64,
+            min: 32,
+            max: 256,
+        },
         logoScalePercent: {
             type: Number,
             default: 100,
@@ -150,6 +160,8 @@ if (
         !cachedSettings.schema.path('announcementBarMessages') ||
         !cachedSettings.schema.path('lightLogoUrl') ||
         !cachedSettings.schema.path('darkLogoUrl') ||
+        !cachedSettings.schema.path('faviconUrl') ||
+        !cachedSettings.schema.path('faviconSizePx') ||
         !cachedSettings.schema.path('logoScalePercent')
     )
 ) {
