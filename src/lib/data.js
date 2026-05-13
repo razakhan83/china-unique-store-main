@@ -90,6 +90,26 @@ const PRODUCT_ADMIN_PROJECTION = [
   'vendors',
 ].join(' ');
 let hasLoggedSettingsFetchFailure = false;
+const SLOW_DATA_LOG_MS = 700;
+
+async function measureDataAccess(label, loader) {
+  const startedAt = Date.now();
+
+  try {
+    const result = await loader();
+    const duration = Date.now() - startedAt;
+
+    if (duration >= SLOW_DATA_LOG_MS) {
+      console.warn(`[DATA] Slow ${label}: ${duration}ms`);
+    }
+
+    return result;
+  } catch (error) {
+    const duration = Date.now() - startedAt;
+    console.error(`[DATA] Failed ${label} after ${duration}ms:`, error.message);
+    throw error;
+  }
+}
 
 function sanitizeSectionOrder(order, fallbackOrder = []) {
   return Array.from(new Set([...(Array.isArray(order) ? order : []), ...fallbackOrder].filter(Boolean)));
@@ -358,14 +378,16 @@ function toOrderSummaryRow(order) {
 }
 
 async function getLiveProductsRaw() {
-  await mongooseConnect();
+  return measureDataAccess('getLiveProductsRaw', async () => {
+    await mongooseConnect();
 
-  const products = await Product.find({ isLive: true })
-    .select(PRODUCT_CARD_PROJECTION)
-    .populate(PRODUCT_CATEGORY_POPULATE)
-    .sort({ createdAt: -1 })
-    .lean();
-  return products.map(serializeProduct);
+    const products = await Product.find({ isLive: true })
+      .select(PRODUCT_CARD_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
+      .sort({ createdAt: -1 })
+      .lean();
+    return products.map(serializeProduct);
+  });
 }
 
 async function getAllProductsRaw() {
@@ -404,36 +426,38 @@ async function getSettingsRaw() {
   };
 
   try {
-    await mongooseConnect();
+    return await measureDataAccess('getSettingsRaw', async () => {
+      await mongooseConnect();
 
-    let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
-    if (!settings) {
-      settings = await Settings.create({ singletonKey: SETTINGS_KEY });
-      settings = settings.toObject();
-    }
+      let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+      if (!settings) {
+        settings = await Settings.create({ singletonKey: SETTINGS_KEY });
+        settings = settings.toObject();
+      }
 
-    return {
-      _id: settings._id.toString(),
-      storeName: settings.storeName || 'China Unique Store',
-      supportEmail: settings.supportEmail || '',
-      businessAddress: settings.businessAddress || '',
-      lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
-      darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
-      logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
-      whatsappNumber: settings.whatsappNumber || '',
-      facebookPageUrl: settings.facebookPageUrl || '',
-      instagramUrl: settings.instagramUrl || '',
-      trackingEnabled: settings.trackingEnabled === true,
-      facebookPixelId: settings.facebookPixelId || '',
-      tiktokPixelId: settings.tiktokPixelId || '',
-      karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
-      outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
-      freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
-      announcementBarEnabled: settings.announcementBarEnabled ?? true,
-      announcementBarText: settings.announcementBarText || '',
-      announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
-      homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
-    };
+      return {
+        _id: settings._id.toString(),
+        storeName: settings.storeName || 'China Unique Store',
+        supportEmail: settings.supportEmail || '',
+        businessAddress: settings.businessAddress || '',
+        lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+        darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+        logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
+        whatsappNumber: settings.whatsappNumber || '',
+        facebookPageUrl: settings.facebookPageUrl || '',
+        instagramUrl: settings.instagramUrl || '',
+        trackingEnabled: settings.trackingEnabled === true,
+        facebookPixelId: settings.facebookPixelId || '',
+        tiktokPixelId: settings.tiktokPixelId || '',
+        karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
+        outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+        freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
+        announcementBarEnabled: settings.announcementBarEnabled ?? true,
+        announcementBarText: settings.announcementBarText || '',
+        announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
+        homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+      };
+    });
   } catch (error) {
     if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn('[BUILD] MongoDB connection failed during build, returning default settings.');
@@ -1178,28 +1202,30 @@ export async function getProductReviewSummary(productId) {
     };
   }
 
-  await mongooseConnect();
-  const Review = (await import('@/models/Review')).default;
+  return measureDataAccess(`getProductReviewSummary(${safeProductId})`, async () => {
+    await mongooseConnect();
+    const Review = (await import('@/models/Review')).default;
 
-  const queryId = mongoose.Types.ObjectId.isValid(safeProductId)
-    ? new mongoose.Types.ObjectId(safeProductId)
-    : safeProductId;
+    const queryId = mongoose.Types.ObjectId.isValid(safeProductId)
+      ? new mongoose.Types.ObjectId(safeProductId)
+      : safeProductId;
 
-  const [summary] = await Review.aggregate([
-    { $match: { productId: queryId, isApproved: true } },
-    {
-      $group: {
-        _id: null,
-        averageRating: { $avg: '$rating' },
-        reviewCount: { $sum: 1 },
+    const [summary] = await Review.aggregate([
+      { $match: { productId: queryId, isApproved: true } },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          reviewCount: { $sum: 1 },
+        },
       },
-    },
-  ]);
+    ]);
 
-  return {
-    averageRating: Number(summary?.averageRating || 0),
-    reviewCount: Number(summary?.reviewCount || 0),
-  };
+    return {
+      averageRating: Number(summary?.averageRating || 0),
+      reviewCount: Number(summary?.reviewCount || 0),
+    };
+  });
 }
 
 function stripHtml(value) {
@@ -1245,8 +1271,13 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
 }
 
 export async function getProductBySlug(slug) {
+  'use cache';
+  cacheLife('foreverish');
+
   const safeSlug = String(slug || '').trim();
   if (!safeSlug) return null;
+
+  cacheTag('products', `product-${safeSlug}`);
 
   async function getSingleProduct(productSlug) {
     try {
@@ -1274,7 +1305,7 @@ export async function getProductBySlug(slug) {
   }
 
   try {
-    const product = await getSingleProduct(safeSlug);
+    const product = await measureDataAccess(`getProductBySlug(${safeSlug})`, async () => getSingleProduct(safeSlug));
     return product ? toProductDetailView(product) : null;
   } catch (error) {
     console.error(`❌ [DATA] getProductBySlug failed for "${safeSlug}":`, error.message);
@@ -1330,20 +1361,36 @@ export async function getCatalogFeed() {
   cacheLife('hours');
   cacheTag('products', 'settings', 'categories');
 
-  const siteUrl = getCatalogSiteUrl();
-  const [products, settings] = await Promise.all([
-    getLiveProductsRaw(),
-    getSettingsRaw(),
-  ]);
+  try {
+    return await measureDataAccess('getCatalogFeed', async () => {
+      const siteUrl = getCatalogSiteUrl();
+      const [products, settings] = await Promise.all([
+        getLiveProductsRaw(),
+        getSettingsRaw(),
+      ]);
 
-  const items = products.map((product) => buildCatalogFeedItem(product, siteUrl, settings.storeName));
+      const items = products.map((product) => buildCatalogFeedItem(product, siteUrl, settings.storeName));
 
-  return {
-    generatedAt: new Date().toISOString(),
-    storeName: settings.storeName,
-    currency: 'PKR',
-    items,
-  };
+      return {
+        generatedAt: new Date().toISOString(),
+        storeName: settings.storeName,
+        currency: 'PKR',
+        items,
+      };
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn('[BUILD] MongoDB connection failed while building catalog feed, returning an empty feed.');
+      return {
+        generatedAt: new Date().toISOString(),
+        storeName: 'China Unique Store',
+        currency: 'PKR',
+        items: [],
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function getAdminProducts() {

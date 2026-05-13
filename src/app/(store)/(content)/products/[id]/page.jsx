@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { getProductBySlug, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
+import { getProductBySlug, getProductPrerenderParams, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
@@ -30,6 +30,11 @@ import { getSiteUrl } from '@/lib/siteUrl';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 const siteUrl = getSiteUrl();
+const PRODUCT_PRERENDER_LIMIT = 48;
+const EMPTY_REVIEW_SUMMARY = {
+  averageRating: 0,
+  reviewCount: 0,
+};
 
 function getProductUrl(product) {
   return `${siteUrl}/products/${product.slug || product._id}`;
@@ -78,7 +83,7 @@ function getPrimaryImage(product) {
   return product.Images?.[0]?.url || `${siteUrl}/opengraph-image`;
 }
 
-function getProductJsonLd({ product, reviewSummary }) {
+function getProductJsonLd({ product, reviewSummary = null }) {
   const categories = getProductCategories(product);
   const categoryNames = categories.map((category) => category.name).filter(Boolean);
   const keywords = getProductKeywords(product, categories);
@@ -110,7 +115,7 @@ function getProductJsonLd({ product, reviewSummary }) {
     },
   };
 
-  if (reviewSummary.reviewCount > 0) {
+  if (reviewSummary?.reviewCount > 0) {
     jsonLd.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: Number(reviewSummary.averageRating.toFixed(1)),
@@ -125,20 +130,41 @@ async function getProductPageData(slug) {
   const product = await getProductBySlug(slug);
   if (!product) return null;
 
-  const [settings, reviewSummary] = await Promise.all([
-    getStoreSettings(),
-    getProductReviewSummary(product._id),
-  ]);
+  const settings = await getStoreSettings();
 
   return {
     product,
     settings,
-    reviewSummary,
   };
+}
+
+async function getProductReviewSummarySafe(productId) {
+  try {
+    return await getProductReviewSummary(productId);
+  } catch (error) {
+    console.error(`[storefront/product] review summary fallback for ${productId}:`, error.message);
+    return EMPTY_REVIEW_SUMMARY;
+  }
+}
+
+async function getRelatedProductsSafe(input) {
+  try {
+    return await getRelatedProducts(input);
+  } catch (error) {
+    console.error(
+      `[storefront/product] related products fallback for ${input?.excludeSlug || 'unknown-product'}:`,
+      error.message,
+    );
+    return [];
+  }
 }
 
 const getCachedProductPageData = cache(async (slug) => getProductPageData(slug));
 const getCachedProductBySlug = cache(async (slug) => getProductBySlug(slug));
+
+export async function generateStaticParams() {
+  return getProductPrerenderParams(PRODUCT_PRERENDER_LIMIT);
+}
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -150,7 +176,7 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const reviewSummary = await getProductReviewSummary(product._id);
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
   const categories = getProductCategories(product);
   const productTitle = getProductTitle(product);
   const productUrl = getCanonicalUrl(product);
@@ -203,37 +229,35 @@ export async function generateMetadata({ params }) {
 }
 
 export default function ProductPage({ params }) {
-  const slugPromise = params.then(({ id }) => id);
-
   return (
     <div className="product-detail-shell min-h-screen bg-background">
       <ProductPageScrollReset />
 
       <div className="container mx-auto max-w-7xl px-4 pb-2 pt-5 md:pt-7">
         <Suspense fallback={<ProductBreadcrumbSkeleton />}>
-          <ProductBreadcrumb slugPromise={slugPromise} />
+          <ProductBreadcrumb paramsPromise={params} />
         </Suspense>
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-2 md:pb-8 md:pt-4">
         <Suspense fallback={<ProductHeroSkeleton />}>
-          <ProductHeroSection slugPromise={slugPromise} />
+          <ProductHeroSection paramsPromise={params} />
         </Suspense>
 
         <Suspense fallback={<ProductReviewsSkeleton />}>
-          <ProductReviewsSection slugPromise={slugPromise} />
+          <ProductReviewsSection paramsPromise={params} />
         </Suspense>
       </div>
 
       <Suspense fallback={<RelatedProductsSkeleton />}>
-        <RelatedProductsSection slugPromise={slugPromise} />
+        <RelatedProductsSection paramsPromise={params} />
       </Suspense>
     </div>
   );
 }
 
-async function ProductBreadcrumb({ slugPromise }) {
-  const slug = await slugPromise;
+async function ProductBreadcrumb({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
   const pageData = await getCachedProductPageData(slug);
 
   if (!pageData?.product) {
@@ -259,20 +283,20 @@ async function ProductBreadcrumb({ slugPromise }) {
   );
 }
 
-async function ProductHeroSection({ slugPromise }) {
-  const slug = await slugPromise;
+async function ProductHeroSection({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
   const pageData = await getCachedProductPageData(slug);
 
   if (!pageData) {
     notFound();
   }
 
-  const { product, settings, reviewSummary } = pageData;
+  const { product, settings } = pageData;
 
   const primaryCategory = getProductCategories(product)[0];
   const categoryLabel = primaryCategory?.name || '';
   const colors = getCategoryColor(categoryLabel);
-  const productJsonLd = getProductJsonLd({ product, reviewSummary });
+  const productJsonLd = getProductJsonLd({ product });
   const price = Number(product.discountedPrice ?? product.Price ?? 0);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
   const isOutOfStock = product.StockStatus === 'Out of Stock' || product.isLive === false;
@@ -286,8 +310,6 @@ async function ProductHeroSection({ slugPromise }) {
         price={price}
         currency="PKR"
         availability={availability}
-        ratingValue={reviewSummary.averageRating.toFixed(1)}
-        ratingCount={reviewSummary.reviewCount}
       />
       <ProductViewTracking
         enabled={settings.trackingEnabled === true}
@@ -402,27 +424,29 @@ async function ProductHeroSection({ slugPromise }) {
   );
 }
 
-async function ProductReviewsSection({ slugPromise }) {
-  const slug = await slugPromise;
-  const pageData = await getCachedProductPageData(slug);
+async function ProductReviewsSection({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
+  const product = await getCachedProductBySlug(slug);
 
-  if (!pageData?.product) {
+  if (!product) {
     notFound();
   }
 
-  if (pageData.reviewSummary.reviewCount === 0) {
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
+
+  if (reviewSummary.reviewCount === 0) {
     return null;
   }
 
   return (
     <div className="mb-4 mt-8">
-      <ProductReviews productId={pageData.product._id} productName={pageData.product.Name} />
+      <ProductReviews productId={product._id} productName={product.Name} />
     </div>
   );
 }
 
-async function RelatedProductsSection({ slugPromise }) {
-  const slug = await slugPromise;
+async function RelatedProductsSection({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
   const pageData = await getCachedProductPageData(slug);
 
   if (!pageData?.product) {
@@ -433,7 +457,7 @@ async function RelatedProductsSection({ slugPromise }) {
 
   const primaryCategory = getProductCategories(product)[0];
   const categorySlug = primaryCategory?.id || '';
-  const relatedProducts = await getRelatedProducts({
+  const relatedProducts = await getRelatedProductsSafe({
     category: categorySlug,
     excludeSlug: product.slug,
     limit: 8,
