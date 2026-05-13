@@ -1,9 +1,11 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, ShoppingBag, Store, Users } from 'lucide-react';
 
+import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import DashboardChart from '@/components/admin/DashboardChart';
-import { getAdminChartData, getAdminDashboardData } from '@/lib/data';
+import { getAdminDashboardData } from '@/lib/data';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 
@@ -67,18 +69,20 @@ async function loadDashboardDataSafely() {
 export default async function AdminDashboardPage() {
   await requireAdmin();
 
-  return <DashboardContent />;
+  return (
+    <Suspense fallback={<AdminDashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
 }
 
 async function DashboardContent() {
-  const chartDataPromise = getAdminChartData('monthly');
   const {
     summary,
     recentOrders,
     topVendors,
     hasError = false,
   } = await loadDashboardDataSafely();
-  const initialChartData = await chartDataPromise;
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
@@ -182,7 +186,7 @@ async function DashboardContent() {
           </div>
           
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4">
-             <DashboardChart initialData={initialChartData} initialPeriod="monthly" />
+             <DashboardChart initialData={[]} initialPeriod="monthly" />
           </div>
         </div>
 
