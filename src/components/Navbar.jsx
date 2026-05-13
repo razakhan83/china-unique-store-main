@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -166,7 +166,11 @@ function NavbarContent({
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
+  const [isNavbarHidden, setIsNavbarHidden] = useState(false);
   const closeCategoriesTimeoutRef = useRef(null);
+  const isNavbarHiddenRef = useRef(false);
+  const lastScrollYRef = useRef(0);
+  const scrollAnchorYRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -175,6 +179,74 @@ function NavbarContent({
       }
     };
   }, []);
+
+  function revealNavbar() {
+    if (isNavbarHiddenRef.current) {
+      isNavbarHiddenRef.current = false;
+      setIsNavbarHidden(false);
+    }
+
+    scrollAnchorYRef.current = window.scrollY;
+  }
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+    scrollAnchorYRef.current = window.scrollY;
+
+    let frameId = null;
+
+    const updateNavbarVisibility = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollYRef.current;
+
+      if (Math.abs(delta) < 3) {
+        lastScrollYRef.current = currentScrollY;
+        frameId = null;
+        return;
+      }
+
+      const distanceFromAnchor = currentScrollY - scrollAnchorYRef.current;
+
+      if (currentScrollY <= 16) {
+        if (isNavbarHiddenRef.current) {
+          isNavbarHiddenRef.current = false;
+          setIsNavbarHidden(false);
+        }
+        scrollAnchorYRef.current = currentScrollY;
+      } else if (!(isSearchOpen || isSidebarOpen || isAccountDrawerOpen)) {
+        if (!isNavbarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80) {
+          isNavbarHiddenRef.current = true;
+          setIsNavbarHidden(true);
+          scrollAnchorYRef.current = currentScrollY;
+        } else if (isNavbarHiddenRef.current && distanceFromAnchor < -12 && delta < 0) {
+          isNavbarHiddenRef.current = false;
+          setIsNavbarHidden(false);
+          scrollAnchorYRef.current = currentScrollY;
+        } else if (Math.sign(delta) !== Math.sign(distanceFromAnchor) && Math.abs(distanceFromAnchor) > 6) {
+          scrollAnchorYRef.current = lastScrollYRef.current;
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
+      frameId = null;
+    };
+
+    const handleScroll = () => {
+      if (frameId === null) {
+        frameId = window.requestAnimationFrame(updateNavbarVisibility);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isAccountDrawerOpen, isSearchOpen, isSidebarOpen]);
 
   function handleCategoryClick(categoryId) {
     setActiveCategory(categoryId);
@@ -185,6 +257,7 @@ function NavbarContent({
   }
 
   function handleSearchToggle() {
+    revealNavbar();
     setIsSidebarOpen(false);
     setIsAccountDrawerOpen(false);
     setIsSearchOpen((value) => !value);
@@ -194,6 +267,7 @@ function NavbarContent({
     const nextOpen = open === true;
 
     if (nextOpen) {
+      revealNavbar();
       setIsSidebarOpen(false);
       setIsAccountDrawerOpen(false);
     }
@@ -217,10 +291,16 @@ function NavbarContent({
 
   function handleAccountDrawerChange(open) {
     if (open) {
+      revealNavbar();
       setIsSearchOpen(false);
       setIsSidebarOpen(false);
     }
     setIsAccountDrawerOpen(open);
+  }
+
+  function handleSidebarOpen() {
+    revealNavbar();
+    openSidebar();
   }
 
   function navLinkClass(path) {
@@ -275,160 +355,175 @@ function NavbarContent({
         </div>
       ) : null}
 
-      <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
-        <Button variant="ghost" size="icon" onClick={openSidebar} aria-label="Open menu" className="md:hidden">
-          <Menu />
-        </Button>
-
-        <StoreLogo
-          storeName={storeName}
-          lightLogoUrl={lightLogoUrl}
-          darkLogoUrl={darkLogoUrl}
-          logoScalePercent={logoScalePercent}
-          variant="light-surface"
-          priority
-          onClick={(event) => {
-            event.preventDefault();
-            handleDesktopNavigate('/');
-          }}
-          className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
-        />
-
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
-          <Link
-            href="/"
-            className={navLinkClass('/')}
-            onClick={(event) => {
-              event.preventDefault();
-              handleDesktopNavigate('/');
-            }}
-          >
-            Home
-          </Link>
-          <Link
-            href="/products"
-            scroll={true}
-            className={navLinkClass('/products')}
-            onClick={(event) => {
-              event.preventDefault();
-              handleDesktopNavigate('/products');
-            }}
-          >
-            All Products
-          </Link>
-          <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
-            <div
-              onPointerEnter={() => {
-                cancelCategoriesClose();
-                setIsCategoriesOpen(true);
-              }}
-              onPointerLeave={scheduleCategoriesClose}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    desktopNavButtonClass(isCategoriesOpen),
-                    'gap-2'
-                  )}
-                >
-                  Categories
-                  <ChevronDown className={cn('size-4 transition-transform', isCategoriesOpen && 'rotate-180')} />
-                </Button>
-              </DropdownMenuTrigger>
-            </div>
-            <DropdownMenuContent
-              className="w-60 p-1"
-              align="start"
-              sideOffset={8}
-              onPointerEnter={cancelCategoriesClose}
-              onPointerLeave={scheduleCategoriesClose}
-            >
-              <DropdownMenuItem onClick={() => handleCategoryClick('new-arrivals')}>
-                <Sparkles className="text-accent-foreground" />
-                <span>New Arrivals</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleCategoryClick('special-offers')}>
-                <Tag className="text-accent-foreground" />
-                <span>Special Offers</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                <DropdownMenuItem
-                  key={category.id}
-                  onClick={() => handleCategoryClick(category.id)}
-                >
-                  <Tag className="text-muted-foreground" />
-                  <span>{category.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2 self-center">
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            onClick={handleSearchToggle}
-            aria-label="Toggle search"
-            aria-expanded={isSearchOpen}
-            className={cn(
-              `nav-search-toggle hidden overflow-hidden md:inline-flex ${navActionButtonClass}`,
-              isSearchOpen
-                ? 'is-open border-primary/18 bg-background text-primary'
-                : ''
-            )}
-          >
-            <span className="relative flex size-5 items-center justify-center">
-              <Search className={cn('navbar-toggle-icon navbar-toggle-icon-search', isSearchOpen && 'is-hidden')} />
-              <X className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
-            </span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-lg"
-            onClick={openCart}
-            className={`nav-cart-button overflow-visible ${navActionButtonClass}`}
-            aria-label="Open cart"
-          >
-            <span className="relative flex size-5 items-center justify-center">
-              <ShoppingBag className="size-[1.05rem]" />
-            </span>
-            {isCartInitialized ? (
-              cartCount > 0 ? (
-                <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
-                  {cartCount}
-                </span>
-              ) : null
-            ) : (
-              <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
-                <span className="h-2.5 w-2.5 rounded-full bg-primary-foreground/70" />
-              </span>
-            )}
-          </Button>
-
-          <NavbarDesktopAccountControl navActionButtonClass={navActionButtonClass} />
-        </div>
-      </header>
-
       <div
-        data-state={isSearchOpen ? 'open' : 'closed'}
-        aria-hidden={!isSearchOpen}
         className={cn(
-          'navbar-search-shell absolute inset-x-0 top-full z-10 grid border-t bg-background/96 backdrop-blur transition-[grid-template-rows,opacity,border-color] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:bg-background/80',
-          isSearchOpen
-            ? 'md:relative md:inset-auto md:top-auto md:z-auto'
-            : 'md:absolute md:inset-x-0 md:top-full md:z-10',
-          isSearchOpen ? 'grid-rows-[1fr] overflow-visible border-border/70 opacity-100' : 'pointer-events-none grid-rows-[0fr] overflow-hidden border-transparent opacity-0'
+          'relative transition-[height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+          isSearchOpen ? 'overflow-visible' : 'overflow-hidden',
+          isNavbarHidden ? 'h-0' : 'h-16'
         )}
       >
-        <div className="overflow-visible">
-          <div className="navbar-search-inner mx-auto max-w-4xl px-4 py-4">
-            {isSearchOpen ? (
-              <NavbarSearchPanel open={isSearchOpen} onOpenChange={handleSearchOpenChange} />
-            ) : null}
+        <div
+          className={cn(
+            'relative h-16 transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform',
+            isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
+          )}
+        >
+          <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
+            <Button variant="ghost" size="icon" onClick={handleSidebarOpen} aria-label="Open menu" className="md:hidden">
+              <Menu />
+            </Button>
+
+            <StoreLogo
+              storeName={storeName}
+              lightLogoUrl={lightLogoUrl}
+              darkLogoUrl={darkLogoUrl}
+              logoScalePercent={logoScalePercent}
+              variant="light-surface"
+              priority
+              onClick={(event) => {
+                event.preventDefault();
+                handleDesktopNavigate('/');
+              }}
+              className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
+            />
+
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
+              <Link
+                href="/"
+                className={navLinkClass('/')}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleDesktopNavigate('/');
+                }}
+              >
+                Home
+              </Link>
+              <Link
+                href="/products"
+                scroll={true}
+                className={navLinkClass('/products')}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleDesktopNavigate('/products');
+                }}
+              >
+                All Products
+              </Link>
+              <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+                <div
+                  onPointerEnter={() => {
+                    cancelCategoriesClose();
+                    setIsCategoriesOpen(true);
+                  }}
+                  onPointerLeave={scheduleCategoriesClose}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        desktopNavButtonClass(isCategoriesOpen),
+                        'gap-2'
+                      )}
+                    >
+                      Categories
+                      <ChevronDown className={cn('size-4 transition-transform', isCategoriesOpen && 'rotate-180')} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </div>
+                <DropdownMenuContent
+                  className="w-60 p-1"
+                  align="start"
+                  sideOffset={8}
+                  onPointerEnter={cancelCategoriesClose}
+                  onPointerLeave={scheduleCategoriesClose}
+                >
+                  <DropdownMenuItem onClick={() => handleCategoryClick('new-arrivals')}>
+                    <Sparkles className="text-accent-foreground" />
+                    <span>New Arrivals</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('special-offers')}>
+                    <Tag className="text-accent-foreground" />
+                    <span>Special Offers</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      <Tag className="text-muted-foreground" />
+                      <span>{category.label}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </nav>
+
+            <div className="ml-auto flex items-center gap-2 self-center">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                onClick={handleSearchToggle}
+                aria-label="Toggle search"
+                aria-expanded={isSearchOpen}
+                className={cn(
+                  `nav-search-toggle hidden overflow-hidden md:inline-flex ${navActionButtonClass}`,
+                  isSearchOpen
+                    ? 'is-open border-primary/18 bg-background text-primary'
+                    : ''
+                )}
+              >
+                <span className="relative flex size-5 items-center justify-center">
+                  <Search className={cn('navbar-toggle-icon navbar-toggle-icon-search', isSearchOpen && 'is-hidden')} />
+                  <X className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
+                </span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                onClick={openCart}
+                className={`nav-cart-button overflow-visible ${navActionButtonClass}`}
+                aria-label="Open cart"
+              >
+                <span className="relative flex size-5 items-center justify-center">
+                  <ShoppingBag className="size-[1.05rem]" />
+                </span>
+                {isCartInitialized ? (
+                  cartCount > 0 ? (
+                    <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                      {cartCount}
+                    </span>
+                  ) : null
+                ) : (
+                  <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary-foreground/70" />
+                  </span>
+                )}
+              </Button>
+
+              <NavbarDesktopAccountControl navActionButtonClass={navActionButtonClass} />
+            </div>
+          </header>
+
+          <div
+            data-state={isSearchOpen ? 'open' : 'closed'}
+            aria-hidden={!isSearchOpen}
+            className={cn(
+              'navbar-search-shell absolute inset-x-0 top-full z-10 grid border-t bg-background/96 backdrop-blur transition-[grid-template-rows,opacity,border-color] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:bg-background/80',
+              isSearchOpen
+                ? 'md:relative md:inset-auto md:top-auto md:z-auto'
+                : 'md:absolute md:inset-x-0 md:top-full md:z-10',
+              isSearchOpen ? 'grid-rows-[1fr] overflow-visible border-border/70 opacity-100' : 'pointer-events-none grid-rows-[0fr] overflow-hidden border-transparent opacity-0'
+            )}
+          >
+            <div className="overflow-visible">
+              <div className="navbar-search-inner mx-auto max-w-4xl px-4 py-4">
+                {isSearchOpen ? (
+                  <NavbarSearchPanel open={isSearchOpen} onOpenChange={handleSearchOpenChange} />
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>
