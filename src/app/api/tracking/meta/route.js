@@ -34,6 +34,7 @@ export async function POST(request) {
     return NextResponse.json({
       success: result.success,
       skipped: result.skipped === true,
+      reason: result.reason,
       error: result.error,
       response: result.response,
     });

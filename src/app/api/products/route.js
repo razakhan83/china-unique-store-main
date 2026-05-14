@@ -27,7 +27,7 @@ export async function GET() {
     try {
         await mongooseConnect();
         const products = await Product.find({})
-            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
             .populate({ path: 'Category', select: 'name slug' })
             .sort({ createdAt: -1 })
             .lean();
@@ -73,6 +73,7 @@ export async function POST(req) {
             seoKeywords,
             seoCanonicalUrl,
             Price,
+            compareAtPrice,
             discountPercentage,
             stockQuantity,
             Images,
@@ -111,6 +112,9 @@ export async function POST(req) {
         }
 
         const normalizedPrice = Number(Price);
+        const normalizedCompareAtPrice = compareAtPrice === '' || compareAtPrice == null
+            ? null
+            : Number(compareAtPrice);
         const normalizedStockQuantity = Math.max(0, Number(stockQuantity) || 0);
         const normalizedDiscountPercentage = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
         const stockStatus = StockStatus === 'Out of Stock'
@@ -135,6 +139,7 @@ export async function POST(req) {
             seoKeywords: formatSeoKeywords(seoKeywords),
             seoCanonicalUrl: typeof seoCanonicalUrl === 'string' ? seoCanonicalUrl.trim() : '',
             Price: normalizedPrice,
+            compareAtPrice: Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null,
             Images: normalizedImages,
             cloudinary_id,
             Category: categoryArray,

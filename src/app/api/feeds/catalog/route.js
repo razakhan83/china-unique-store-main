@@ -1,7 +1,7 @@
 import { getCatalogFeed } from '@/lib/data';
 
-export async function GET() {
-  const feed = await getCatalogFeed();
+export async function GET(request) {
+  const feed = await getCatalogFeed(request.nextUrl.origin);
 
   return Response.json(feed, {
     headers: {

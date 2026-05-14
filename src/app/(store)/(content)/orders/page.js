@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { authOptions } from '@/lib/auth';
 import { getStoreSettings, getUserOrders } from '@/lib/data';
+import { getSiteUrl } from '@/lib/siteUrl';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -33,12 +34,13 @@ export default async function OrdersPage() {
 
   const rawOrders = await getUserOrders(session.user.email);
   const orders = rawOrders;
+  const siteUrl = getSiteUrl();
   const invoiceBranding = {
     storeName: settings.storeName,
     supportEmail: settings.supportEmail,
     businessAddress: settings.businessAddress,
-    baseUrl: process.env.NEXTAUTH_URL || 'https://chinaunique.pk',
-    returnPolicyUrl: `${process.env.NEXTAUTH_URL || 'https://chinaunique.pk'}/refund-policy`,
+    baseUrl: siteUrl,
+    returnPolicyUrl: `${siteUrl}/refund-policy`,
   };
 
   return (

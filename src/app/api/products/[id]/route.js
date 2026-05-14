@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
+            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
             .populate({ path: 'Category', select: 'name slug' })
             .lean();
 
@@ -86,6 +86,9 @@ export async function PUT(request, { params }) {
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(body.Images));
         const normalizedVendors = await buildProductVendorSnapshots(body.vendors);
         const previousSlug = existingProduct.slug;
+        const normalizedCompareAtPrice = body.compareAtPrice === '' || body.compareAtPrice == null
+            ? null
+            : Number(body.compareAtPrice);
 
         existingProduct.Name = body.Name;
         existingProduct.Description = body.Description;
@@ -94,6 +97,7 @@ export async function PUT(request, { params }) {
         existingProduct.seoKeywords = formatSeoKeywords(body.seoKeywords);
         existingProduct.seoCanonicalUrl = typeof body.seoCanonicalUrl === 'string' ? body.seoCanonicalUrl.trim() : '';
         existingProduct.Price = Number(body.Price);
+        existingProduct.compareAtPrice = Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null;
         existingProduct.Images = normalizedImages;
         existingProduct.Category = categoryArray;
         existingProduct.vendors = normalizedVendors;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { getStoreSettings } from '@/lib/data';
+import { getSiteUrl } from '@/lib/siteUrl';
 import Order from '@/models/Order';
 import OrderDetailsClient from './OrderDetailsClient';
 import { Button } from '@/components/ui/button';
@@ -44,12 +45,13 @@ export default async function SingleOrderPage({ params, searchParams }) {
   }
 
   const settings = await getStoreSettings();
+  const siteUrl = getSiteUrl();
   const invoiceBranding = {
     storeName: settings.storeName,
     supportEmail: settings.supportEmail,
     businessAddress: settings.businessAddress,
-    baseUrl: process.env.NEXTAUTH_URL || 'https://chinaunique.pk',
-    returnPolicyUrl: `${process.env.NEXTAUTH_URL || 'https://chinaunique.pk'}/refund-policy`,
+    baseUrl: siteUrl,
+    returnPolicyUrl: `${siteUrl}/refund-policy`,
   };
 
   return (

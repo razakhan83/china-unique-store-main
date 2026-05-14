@@ -28,14 +28,15 @@ function renderFeedItem(item) {
     </item>`;
 }
 
-export async function GET() {
-  const feed = await getCatalogFeed();
+export async function GET(request) {
+  const feed = await getCatalogFeed(request.nextUrl.origin);
+  const siteUrl = request.nextUrl.origin;
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
     <title>${escapeXml(feed.storeName)}</title>
-    <link>https://china-unique-items.vercel.app</link>
+    <link>${escapeXml(siteUrl)}</link>
     <description>${escapeXml(`${feed.storeName} product catalog feed`)}</description>
 ${feed.items.map(renderFeedItem).join('\n')}
   </channel>

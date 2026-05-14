@@ -49,6 +49,7 @@ export default function AddProduct() {
   const [seoKeywords, setSeoKeywords] = useState("");
   const [seoCanonicalUrl, setSeoCanonicalUrl] = useState("");
   const [Price, setPrice] = useState("");
+  const [compareAtPrice, setCompareAtPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [stockQuantity, setStockQuantity] = useState("1");
   const [stockStatus, setStockStatus] = useState("In Stock");
@@ -244,6 +245,7 @@ export default function AddProduct() {
           seoKeywords,
           seoCanonicalUrl,
           Price: Number(Price),
+          compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,
           stockQuantity: Math.max(0, Number(stockQuantity) || 0),
           StockStatus: stockStatus,
@@ -341,6 +343,7 @@ export default function AddProduct() {
   const seoCompleteCount = seoChecks.filter((item) => item.complete).length;
   const seoReady = seoCompleteCount === seoChecks.length;
   const priceValue = Number(Price) || 0;
+  const compareAtValue = Number(compareAtPrice) || 0;
   const discountValue = Math.min(
     100,
     Math.max(0, Number(discountPercentage) || 0)
@@ -401,6 +404,19 @@ export default function AddProduct() {
             </div>
 
             <div>
+              <Label className="mb-2">Compare at Price (Rs)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={compareAtPrice}
+                onChange={(e) => setCompareAtPrice(e.target.value)}
+                className="h-11 px-4"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            <div>
               <Label className="mb-2">Discount Percentage</Label>
               <Input
                 type="number"
@@ -419,11 +435,17 @@ export default function AddProduct() {
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Pricing Preview
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2 sm:grid-cols-4">
               <p className="text-sm text-muted-foreground">
                 Base price
                 <span className="mt-1 block font-semibold text-foreground">
                   Rs {priceValue || 0}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Compare at
+                <span className="mt-1 block font-semibold text-foreground">
+                  Rs {compareAtValue || 0}
                 </span>
               </p>
               <p className="text-sm text-muted-foreground">

@@ -62,6 +62,7 @@ const PRODUCT_CARD_PROJECTION = [
   'Name',
   'Description',
   'Price',
+  'compareAtPrice',
   'Images',
   'Category',
   'StockStatus',
@@ -202,6 +203,7 @@ function toProductCardItem(product) {
     slug: product.slug,
     Name: product.Name,
     Price: Number(product.Price || 0),
+    compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Description: product.Description || '',
     Category: product.Category,
     Images: product.Images,
@@ -226,6 +228,7 @@ function toProductDetailView(product) {
     Name: product.Name,
     Description: product.Description || '',
     Price: Number(product.Price || 0),
+    compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
@@ -248,6 +251,7 @@ function toAdminProductRow(product) {
     slug: product.slug,
     Name: product.Name,
     Price: Number(product.Price || 0),
+    compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
@@ -1260,8 +1264,9 @@ function formatFeedPrice(value) {
   return `${amount.toFixed(2)} PKR`;
 }
 
-function getCatalogSiteUrl() {
-  return getSiteUrl();
+function getCatalogSiteUrl(siteUrlOverride = '') {
+  const normalizedOverride = String(siteUrlOverride || '').trim();
+  return normalizedOverride || getSiteUrl();
 }
 
 function buildCatalogFeedItem(product, siteUrl, storeName) {
@@ -1376,14 +1381,14 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
     .map(toProductCardItem);
 }
 
-export async function getCatalogFeed() {
+export async function getCatalogFeed(siteUrlOverride = '') {
   'use cache';
   cacheLife('hours');
   cacheTag('products', 'settings', 'categories');
 
   try {
     return await measureDataAccess('getCatalogFeed', async () => {
-      const siteUrl = getCatalogSiteUrl();
+      const siteUrl = getCatalogSiteUrl(siteUrlOverride);
       const [products, settings] = await Promise.all([
         getLiveProductsRaw(),
         getSettingsRaw(),

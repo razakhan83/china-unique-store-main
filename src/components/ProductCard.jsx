@@ -16,6 +16,23 @@ const formatPrice = (raw) => {
   return `Rs. ${Number(cleanNumbers).toLocaleString("en-PK")}`;
 };
 
+function getSellingPrice(product) {
+  const productPrice = Number(product.Price || product.price || 0);
+
+  if (product.isDiscounted && product.discountPercentage > 0) {
+    return product.discountedPrice != null
+      ? Number(product.discountedPrice)
+      : Math.round(productPrice * (1 - product.discountPercentage / 100));
+  }
+
+  return productPrice;
+}
+
+function getVisibleCompareAtPrice(product, sellingPrice) {
+  const compareAtPrice = Number(product.compareAtPrice ?? 0);
+  return compareAtPrice > sellingPrice ? compareAtPrice : null;
+}
+
 function getDiscountBadge(product) {
   if (product.isDiscounted && product.discountPercentage > 0) {
     return `${product.discountPercentage}% OFF`;
@@ -42,6 +59,8 @@ export default function ProductCard({ product, className = "" }) {
     ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.productCard)
     : "";
   const productPrice = product.Price || product.price || 0;
+  const sellingPrice = getSellingPrice(product);
+  const compareAtPrice = getVisibleCompareAtPrice(product, sellingPrice);
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
 
@@ -51,13 +70,6 @@ export default function ProductCard({ product, className = "" }) {
   const averageRating = Number(product.averageRating || 0);
   const ratingLabel = reviewCount > 0 && averageRating > 0 ? averageRating.toFixed(1) : "";
   const isUnavailable = product.StockStatus === "Out of Stock" || product.isLive === false;
-
-  const hasRealDiscount = Boolean(product.isDiscounted && product.discountPercentage > 0);
-  const discountedPrice = hasRealDiscount
-    ? (product.discountedPrice != null
-        ? product.discountedPrice
-        : Math.round(productPrice * (1 - product.discountPercentage / 100)))
-    : null;
 
   return (
     <Card
@@ -146,27 +158,27 @@ export default function ProductCard({ product, className = "" }) {
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
           <div className="flex min-w-0 min-h-[2.4rem] flex-col justify-end gap-0.5 sm:min-h-[2.75rem]">
-            {hasRealDiscount ? (
-              <div className="flex flex-col items-start justify-end gap-1">
+            {compareAtPrice ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <p
+                  className="text-base font-bold leading-none text-black tabular-nums sm:text-[1.125rem]"
+                  draggable={false}
+                >
+                  {formatPrice(sellingPrice)}
+                </p>
                 <p
                   className="text-xs font-medium leading-none text-muted-foreground/75 line-through sm:text-sm"
                   draggable={false}
                 >
-                  {formatPrice(productPrice)}
-                </p>
-                <p
-                  className="text-base font-medium leading-none text-black tabular-nums sm:text-[1.125rem]"
-                  draggable={false}
-                >
-                  {formatPrice(discountedPrice)}
+                  {formatPrice(compareAtPrice)}
                 </p>
               </div>
             ) : (
               <p
-                className="pb-0.5 text-base font-medium leading-none text-black tabular-nums sm:pb-0 sm:text-[1.125rem]"
+                className="pb-0.5 text-base font-bold leading-none text-black tabular-nums sm:pb-0 sm:text-[1.125rem]"
                 draggable={false}
               >
-                {formatPrice(productPrice)}
+                {formatPrice(sellingPrice)}
               </p>
             )}
           </div>

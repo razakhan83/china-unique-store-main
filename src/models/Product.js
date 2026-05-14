@@ -114,6 +114,11 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Please provide a price.'],
         },
+        compareAtPrice: {
+            type: Number,
+            default: null,
+            min: 0,
+        },
         Images: {
             type: [ProductImageSchema],
             default: []
@@ -190,6 +195,7 @@ const cachedProduct = mongoose.models.Product;
 if (
     cachedProduct &&
     (
+        !cachedProduct.schema.path('compareAtPrice') ||
         !cachedProduct.schema.path('vendors') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorProductName') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorPrice') ||

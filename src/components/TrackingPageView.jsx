@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { trackPageViewEvent } from '@/lib/clientTracking';
 
@@ -15,14 +15,9 @@ function firePageView({ tiktokPixelId }) {
 function TrackingPageViewInner({ enabled, tiktokPixelId }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const hasTrackedInitialPageView = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
-    if (!hasTrackedInitialPageView.current) {
-      hasTrackedInitialPageView.current = true;
-      return;
-    }
     firePageView({ tiktokPixelId });
   }, [enabled, pathname, searchParams, tiktokPixelId]);
 

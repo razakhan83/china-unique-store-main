@@ -19,6 +19,25 @@ function isLocalhostUrl(value) {
   return /localhost|127\.0\.0\.1/i.test(String(value || ''));
 }
 
+function normalizeRequestOrigin(value) {
+  const normalized = normalizeUrl(value);
+  return normalized || '';
+}
+
+export function getSiteUrlFromHeaders(headersList) {
+  const forwardedProto = headersList?.get?.('x-forwarded-proto') || 'https';
+  const forwardedHost = headersList?.get?.('x-forwarded-host');
+  const host = forwardedHost || headersList?.get?.('host');
+  const requestOrigin = host ? `${forwardedProto}://${host}` : '';
+  const normalizedRequestOrigin = normalizeRequestOrigin(requestOrigin);
+
+  if (normalizedRequestOrigin) {
+    return normalizedRequestOrigin;
+  }
+
+  return getSiteUrl();
+}
+
 export function getSiteUrl() {
   const candidates = [
     process.env.NEXT_PUBLIC_SITE_URL,

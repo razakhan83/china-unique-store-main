@@ -1,12 +1,13 @@
 import 'server-only';
 
 import mongooseConnect from '@/lib/mongooseConnect';
+import { getSiteUrl } from '@/lib/siteUrl';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import Settings from '@/models/Settings';
 
 const SETTINGS_KEY = 'site-settings';
-const DEFAULT_BASE_URL = process.env.NEXTAUTH_URL || 'https://chinaunique.pk';
+const DEFAULT_BASE_URL = getSiteUrl();
 
 const DEFAULT_BRANDING = {
   baseUrl: DEFAULT_BASE_URL,

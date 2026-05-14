@@ -67,6 +67,10 @@ export default function ProductsPageHeader({
   const [pendingCategoryId, setPendingCategoryId] = useState(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [isProductsBarHidden, setIsProductsBarHidden] = useState(false);
+  const isProductsBarHiddenRef = useRef(false);
+  const lastScrollYRef = useRef(0);
+  const scrollAnchorYRef = useRef(0);
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search},
     { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
@@ -111,6 +115,65 @@ export default function ProductsPageHeader({
     });
   }, [activeCategory]);
 
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+    scrollAnchorYRef.current = window.scrollY;
+
+    let frameId = null;
+
+    const updateBarVisibility = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollYRef.current;
+
+      if (Math.abs(delta) < 3) {
+        lastScrollYRef.current = currentScrollY;
+        frameId = null;
+        return;
+      }
+
+      const distanceFromAnchor = currentScrollY - scrollAnchorYRef.current;
+
+      if (currentScrollY <= 16) {
+        if (isProductsBarHiddenRef.current) {
+          isProductsBarHiddenRef.current = false;
+          setIsProductsBarHidden(false);
+        }
+        scrollAnchorYRef.current = currentScrollY;
+      } else {
+        if (!isProductsBarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80) {
+          isProductsBarHiddenRef.current = true;
+          setIsProductsBarHidden(true);
+          scrollAnchorYRef.current = currentScrollY;
+        } else if (isProductsBarHiddenRef.current && distanceFromAnchor < -12 && delta < 0) {
+          isProductsBarHiddenRef.current = false;
+          setIsProductsBarHidden(false);
+          scrollAnchorYRef.current = currentScrollY;
+        } else if (Math.sign(delta) !== Math.sign(distanceFromAnchor) && Math.abs(distanceFromAnchor) > 6) {
+          scrollAnchorYRef.current = lastScrollYRef.current;
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
+      frameId = null;
+    };
+
+    const handleScroll = () => {
+      if (frameId === null) {
+        frameId = window.requestAnimationFrame(updateBarVisibility);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, []);
+
   function centerCategoryPill(target) {
     const nav = categoryNavRef.current;
     if (!nav || !(target instanceof HTMLElement)) return;
@@ -143,7 +206,12 @@ export default function ProductsPageHeader({
 
   return (
     <div>
-      <div className="products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl">
+      <div
+        className={cn(
+          "products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
+          isProductsBarHidden ? "-translate-y-full" : "translate-y-0"
+        )}
+      >
         <div className="relative mx-auto max-w-7xl px-4">
           <div className="pointer-events-none absolute inset-y-0 left-4 z-10 hidden items-center md:flex">
             <button

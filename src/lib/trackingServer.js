@@ -4,11 +4,12 @@ import crypto from 'node:crypto';
 import { cookies } from 'next/headers';
 
 import mongooseConnect from '@/lib/mongooseConnect';
+import { getSiteUrl } from '@/lib/siteUrl';
 import Settings from '@/models/Settings';
 
 const SETTINGS_KEY = 'site-settings';
-const STORE_URL = 'https://china-unique-items.vercel.app';
 const META_GRAPH_VERSION = 'v20.0';
+const META_MISSING_CONFIG_REASON = 'missing_meta_config';
 
 function sha256(value) {
   return crypto.createHash('sha256').update(String(value || '').trim().toLowerCase()).digest('hex');
@@ -40,6 +41,10 @@ function buildContents(items) {
   }));
 }
 
+function resolveTrackingSiteUrl(siteUrl = '') {
+  return String(siteUrl || '').trim() || getSiteUrl();
+}
+
 async function getTrackingSettings() {
   await mongooseConnect();
 
@@ -63,7 +68,10 @@ async function sendMetaEvent({
   settings,
 }) {
   if (!settings.facebookPixelId || !settings.facebookConversionsApiToken) {
-    return;
+    return {
+      skipped: true,
+      reason: META_MISSING_CONFIG_REASON,
+    };
   }
 
   const payload = {
@@ -73,7 +81,7 @@ async function sendMetaEvent({
         event_time: Math.floor(Date.now() / 1000),
         event_id: eventId,
         action_source: 'website',
-        event_source_url: eventSourceUrl || STORE_URL,
+        event_source_url: eventSourceUrl || getSiteUrl(),
         user_data: sanitizeUserData(userData),
         custom_data: customData,
       },
@@ -100,12 +108,15 @@ async function sendMetaEvent({
   return response.json().catch(() => ({ success: true }));
 }
 
-async function sendMetaPurchaseEvent({ order, items, settings }) {
+async function sendMetaPurchaseEventWithUserData({ order, items, settings, userData, siteUrl }) {
+  const resolvedSiteUrl = resolveTrackingSiteUrl(siteUrl);
+
   return sendMetaEvent({
     eventName: 'Purchase',
     eventId: order.orderId,
-    eventSourceUrl: `${STORE_URL}/checkout`,
+    eventSourceUrl: `${resolvedSiteUrl}/checkout`,
     userData: {
+      ...userData,
       email: order.customerEmail,
       phone: order.customerPhone,
       externalId: order.orderId,
@@ -121,10 +132,12 @@ async function sendMetaPurchaseEvent({ order, items, settings }) {
   });
 }
 
-async function sendTikTokPurchaseEvent({ order, items, settings }) {
+async function sendTikTokPurchaseEvent({ order, items, settings, siteUrl }) {
   if (!settings.tiktokPixelId || !settings.tiktokAccessToken) {
     return;
   }
+
+  const resolvedSiteUrl = resolveTrackingSiteUrl(siteUrl);
 
   const payload = {
     event_source: 'web',
@@ -135,7 +148,7 @@ async function sendTikTokPurchaseEvent({ order, items, settings }) {
         event_time: Math.floor(Date.now() / 1000),
         event_id: order.orderId,
         page: {
-          url: `${STORE_URL}/checkout`,
+          url: `${resolvedSiteUrl}/checkout`,
         },
         user: {
           email: order.customerEmail ? sha256(order.customerEmail) : undefined,
@@ -169,14 +182,14 @@ async function sendTikTokPurchaseEvent({ order, items, settings }) {
   }
 }
 
-export async function sendPurchaseTrackingEvents({ order, items }) {
+export async function sendPurchaseTrackingEvents({ order, items, userData = {}, siteUrl = '' }) {
   try {
     const settings = await getTrackingSettings();
     if (!settings.trackingEnabled) return;
 
     await Promise.allSettled([
-      sendMetaPurchaseEvent({ order, items, settings }),
-      sendTikTokPurchaseEvent({ order, items, settings }),
+      sendMetaPurchaseEventWithUserData({ order, items, settings, userData, siteUrl }),
+      sendTikTokPurchaseEvent({ order, items, settings, siteUrl }),
     ]);
   } catch (error) {
     console.error('Tracking dispatch failed:', error);
@@ -210,6 +223,14 @@ export async function sendMetaCustomTrackingEvent({
       customData,
       settings,
     });
+
+    if (response?.skipped) {
+      return {
+        success: false,
+        skipped: true,
+        reason: response.reason,
+      };
+    }
 
     return { success: true, response };
   } catch (error) {

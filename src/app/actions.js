@@ -2,6 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { updateTag } from 'next/cache';
+import { cookies, headers } from 'next/headers';
 import { after } from 'next/server';
 
 import { getConfiguredAdminEmails, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
@@ -11,6 +12,7 @@ import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderT
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import { getStoreSettings } from '@/lib/data';
 import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
+import { getSiteUrlFromHeaders } from '@/lib/siteUrl';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -251,6 +253,16 @@ export async function submitOrderAction(input) {
     const totalAmount = Number(input?.totalAmount || 0);
     const notes = String(input?.notes || '').trim();
     const whatsappNumber = String(input?.whatsappNumber || '').trim();
+    const cookieStore = await cookies();
+    const requestHeaders = await headers();
+    const clientIp =
+      requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      requestHeaders.get('x-real-ip') ||
+      undefined;
+    const clientUserAgent = requestHeaders.get('user-agent') || undefined;
+    const siteUrl = getSiteUrlFromHeaders(requestHeaders);
+    const fbp = cookieStore.get('_fbp')?.value;
+    const fbc = cookieStore.get('_fbc')?.value;
 
     // Simplified fields from Phase 13
     const landmark = String(input?.landmark || '').trim();
@@ -310,7 +322,17 @@ export async function submitOrderAction(input) {
     after(async () => {
       const backgroundTasks = [
         sendOrderEmails({ order, customerName, userEmail }),
-        sendPurchaseTrackingEvents({ order, items: normalizedItems }),
+        sendPurchaseTrackingEvents({
+          order,
+          items: normalizedItems,
+          userData: {
+            clientIp,
+            clientUserAgent,
+            fbp,
+            fbc,
+          },
+          siteUrl,
+        }),
       ];
 
       if (userEmail) {

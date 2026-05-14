@@ -29,6 +29,14 @@ import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
+const getSellingPrice = (product) =>
+  Number(product.discountedPrice ?? product.Price ?? 0);
+const getVisibleCompareAtPrice = (product) => {
+  const compareAtPrice = Number(product.compareAtPrice ?? 0);
+  const sellingPrice = getSellingPrice(product);
+
+  return compareAtPrice > sellingPrice ? compareAtPrice : null;
+};
 const siteUrl = getSiteUrl();
 const PRODUCT_PRERENDER_LIMIT = 48;
 const EMPTY_REVIEW_SUMMARY = {
@@ -75,7 +83,7 @@ function getProductKeywords(product, categories) {
 }
 
 function getShareDescription(product) {
-  const price = product.discountedPrice ?? product.Price ?? 0;
+  const price = getSellingPrice(product);
   return `Price: ${formatPrice(price)}. ${getProductDescription(product)}`;
 }
 
@@ -87,7 +95,7 @@ function getProductJsonLd({ product, reviewSummary = null }) {
   const categories = getProductCategories(product);
   const categoryNames = categories.map((category) => category.name).filter(Boolean);
   const keywords = getProductKeywords(product, categories);
-  const price = Number(product.discountedPrice ?? product.Price ?? 0);
+  const price = getSellingPrice(product);
   const productTitle = getProductTitle(product);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -297,9 +305,10 @@ async function ProductHeroSection({ paramsPromise }) {
   const categoryLabel = primaryCategory?.name || '';
   const colors = getCategoryColor(categoryLabel);
   const productJsonLd = getProductJsonLd({ product });
-  const price = Number(product.discountedPrice ?? product.Price ?? 0);
+  const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
   const isOutOfStock = product.StockStatus === 'Out of Stock' || product.isLive === false;
+  const compareAtPrice = getVisibleCompareAtPrice(product);
   const descriptionHtml =
     formatRichTextDescriptionHtml(product.Description) ||
     'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
@@ -354,24 +363,20 @@ async function ProductHeroSection({ paramsPromise }) {
               <ProductSocialActions product={product} className="md:hidden shrink-0" />
             </div>
 
-            <div className="flex flex-wrap items-baseline gap-2.5">
-              {product.isDiscounted && product.discountPercentage > 0 ? (
-                <>
-                  <span className="text-xl font-normal text-black md:text-2xl">
-                    {formatPrice(product.discountedPrice != null ? product.discountedPrice : Math.round(product.Price * (1 - product.discountPercentage / 100)))}
-                  </span>
-                  <span className="text-lg font-medium text-muted-foreground line-through">
-                    {formatPrice(product.Price)}
-                  </span>
-                  <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
-                    {product.discountPercentage}% OFF
-                  </span>
-                </>
-              ) : (
-                <span className="text-xl font-normal text-black md:text-2xl">
-                  {formatPrice(product.Price)}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-2xl font-bold tracking-tight text-red-600 md:text-3xl">
+                {formatPrice(price)}
+              </span>
+              {compareAtPrice ? (
+                <span className="text-lg font-semibold text-muted-foreground line-through md:text-xl">
+                  {formatPrice(compareAtPrice)}
                 </span>
-              )}
+              ) : null}
+              {!isOutOfStock ? (
+                <span className="text-sm font-medium text-muted-foreground md:text-base">
+                  Available In Stock
+                </span>
+              ) : null}
             </div>
 
             <Separator />

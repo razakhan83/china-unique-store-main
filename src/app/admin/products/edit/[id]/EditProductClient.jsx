@@ -41,6 +41,7 @@ export default function EditProduct({ id }) {
   const [seoKeywords, setSeoKeywords] = useState('');
   const [seoCanonicalUrl, setSeoCanonicalUrl] = useState('');
   const [Price, setPrice] = useState('');
+  const [compareAtPrice, setCompareAtPrice] = useState('');
   const [Categories, setCategories] = useState([]); // array of selected category ids
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
@@ -101,6 +102,7 @@ export default function EditProduct({ id }) {
           setSeoKeywords(p.seoKeywords || '');
           setSeoCanonicalUrl(p.seoCanonicalUrl || '');
           setPrice(p.Price || '');
+          setCompareAtPrice(p.compareAtPrice ?? '');
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
           setVendorAssignments(
             Array.isArray(p.vendors)
@@ -290,6 +292,7 @@ export default function EditProduct({ id }) {
           seoKeywords,
           seoCanonicalUrl,
           Price: Number(Price),
+          compareAtPrice: compareAtPrice === '' ? null : Number(compareAtPrice),
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
@@ -385,6 +388,7 @@ export default function EditProduct({ id }) {
   const trimmedSeoKeywords = seoKeywords.trim();
   const trimmedSeoCanonicalUrl = seoCanonicalUrl.trim();
   const plainDescription = stripHtmlTags(Description);
+  const compareAtPreviewValue = Number(compareAtPrice) || 0;
   const fallbackSlug = Name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const seoPreviewTitle = trimmedSeoTitle || Name || 'Product title preview';
   const seoPreviewDescription =
@@ -437,17 +441,57 @@ export default function EditProduct({ id }) {
           </div>
 
           {/* Price */}
-          <div>
-            <Label className="mb-2">Price (Rs)</Label>
-            <Input
-              type="number"
-              value={Price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="h-11 px-4"
-              placeholder="0.00"
-              step="0.01"
-              required
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label className="mb-2">Price (Rs)</Label>
+              <Input
+                type="number"
+                value={Price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="h-11 px-4"
+                placeholder="0.00"
+                step="0.01"
+                required
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Compare at Price (Rs)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={compareAtPrice}
+                onChange={(e) => setCompareAtPrice(e.target.value)}
+                className="h-11 px-4"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/35 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Pricing Preview
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <p className="text-sm text-muted-foreground">
+                Base price
+                <span className="mt-1 block font-semibold text-foreground">
+                  Rs {Number(Price) || 0}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Compare at
+                <span className="mt-1 block font-semibold text-foreground">
+                  Rs {compareAtPreviewValue || 0}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Visible strike-through
+                <span className="mt-1 block font-semibold text-foreground">
+                  {compareAtPreviewValue > (Number(Price) || 0) ? 'Yes' : 'No'}
+                </span>
+              </p>
+            </div>
           </div>
 
           {/* Category - Multi-select */}
