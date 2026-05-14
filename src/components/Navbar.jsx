@@ -478,6 +478,14 @@ function NavbarContent({
                   <X className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
                 </span>
               </Button>
+              <MyOrdersButton
+                iconOnly
+                className={`hidden md:inline-flex ${navActionButtonClass}`}
+              />
+              <MyWishlistButton
+                iconOnly
+                className={`hidden md:inline-flex ${navActionButtonClass}`}
+              />
               <Button
                 type="button"
                 variant="ghost"

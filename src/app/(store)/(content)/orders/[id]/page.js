@@ -71,7 +71,7 @@ export default async function SingleOrderPage({ params, searchParams }) {
           </div>
           
           <div className="flex items-center gap-3">
-             <Button variant="outline" render={<Link href="/" />}>Continue Shopping</Button>
+             <Button variant="outline" render={<Link href="/" />} nativeButton={false}>Continue Shopping</Button>
           </div>
         </div>
 

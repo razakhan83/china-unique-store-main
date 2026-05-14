@@ -15,13 +15,9 @@ export async function proxy(request) {
     }
   }
 
-  if (pathname === "/orders" && !token) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/((?!login).*)", "/orders"],
+  matcher: ["/admin", "/admin/((?!login).*)"],
 };

@@ -527,6 +527,42 @@ export async function linkOrdersAction(phone) {
   }
 }
 
+export async function trackGuestOrderAction(input = {}) {
+  const safeOrderId = String(input?.orderId || '').trim().toUpperCase();
+  const normalizedPhone = String(input?.phone || '').trim();
+
+  if (!safeOrderId || !normalizedPhone) {
+    return { success: false, message: 'Order ID and phone number are required.' };
+  }
+
+  await mongooseConnect();
+
+  const phoneRegex = getPhoneRegex(normalizedPhone);
+  if (!phoneRegex) {
+    return { success: false, message: 'Enter a valid phone number.' };
+  }
+
+  const order = await Order.findOne({
+    orderId: safeOrderId,
+    customerPhone: { $regex: phoneRegex },
+  }).select('_id secureToken').lean();
+
+  if (!order?._id) {
+    return { success: false, message: 'We could not find an order matching those details.' };
+  }
+
+  let secureToken = String(order.secureToken || '').trim();
+  if (!secureToken) {
+    secureToken = crypto.randomUUID();
+    await Order.updateOne({ _id: order._id }, { $set: { secureToken } });
+  }
+
+  return {
+    success: true,
+    redirectUrl: `/orders/${order._id.toString()}?token=${encodeURIComponent(secureToken)}`,
+  };
+}
+
 export async function createDraftOrderAction(input = {}) {
   await assertAdmin();
   await mongooseConnect();

@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
 
 import { useCartActions } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export default function MyWishlistButton({ className, isMobile = false }) {
+export default function MyWishlistButton({ className, isMobile = false, iconOnly = false }) {
   const { setIsSidebarOpen } = useCartActions() || {};
+  const { wishlistCount = 0, isLoading = false } = useWishlist() || {};
   const router = useRouter();
 
   function handleClick() {
@@ -31,6 +33,31 @@ export default function MyWishlistButton({ className, isMobile = false }) {
       >
         <Heart className="size-4" />
         Wishlist
+        {!isLoading && wishlistCount > 0 ? (
+          <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+            {wishlistCount > 99 ? '99+' : wishlistCount}
+          </span>
+        ) : null}
+      </Button>
+    );
+  }
+
+  if (iconOnly) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-lg"
+        onClick={handleClick}
+        aria-label="Open wishlist"
+        className={cn('relative overflow-visible', className)}
+      >
+        <Heart className="size-5" />
+        {!isLoading && wishlistCount > 0 ? (
+          <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+            {wishlistCount > 99 ? '99+' : wishlistCount}
+          </span>
+        ) : null}
       </Button>
     );
   }
@@ -43,6 +70,11 @@ export default function MyWishlistButton({ className, isMobile = false }) {
     >
       <Heart className="size-4" />
       Wishlist
+      {!isLoading && wishlistCount > 0 ? (
+        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+          {wishlistCount > 99 ? '99+' : wishlistCount}
+        </span>
+      ) : null}
     </Button>
   );
 }
