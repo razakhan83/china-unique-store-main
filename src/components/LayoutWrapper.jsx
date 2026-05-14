@@ -112,7 +112,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     <MapPin className="mt-0.5 size-4" />
                     <div>
                       <span className="block font-semibold text-foreground">Location</span>
-                      <span>Karachi, Pakistan</span>
+                      <span>Shop No B-41, Gul Tijarah Mall, Karachi, Pakistan</span>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
