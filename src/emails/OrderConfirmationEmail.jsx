@@ -152,7 +152,7 @@ export default function OrderConfirmationEmail({ order, branding }) {
   const orderUrl = buildOrderUrl(order, branding?.baseUrl);
   const items = getItems(order);
   const pricing = getPricing(order, items);
-  const logoUrl = getText(branding?.lightLogoUrl || branding?.darkLogoUrl);
+  const logoUrl = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
   const supportEmail = getText(branding?.supportEmail);
   const whatsappUrl = createWhatsAppUrl(branding?.whatsappNumber);
   const shippingAddress = getText(order?.customerAddress, 'Will be confirmed.');
@@ -179,7 +179,7 @@ export default function OrderConfirmationEmail({ order, branding }) {
             {/* ─── Logo ──────────────────────────────────────── */}
             {logoUrl ? (
               <Section style={s.logoWrap}>
-                <Img src={logoUrl} alt={branding?.storeName || 'Store'} width="140" style={s.logo} />
+                <Img src={logoUrl} alt={branding?.storeName || 'Store'} width="280" style={s.logo} />
               </Section>
             ) : null}
 
@@ -323,8 +323,17 @@ const s = {
   },
 
   // Logo
-  logoWrap: { padding: '24px 20px 0', textAlign: 'center' },
-  logo: { margin: '0 auto', width: '140px', height: 'auto' },
+  logoWrap: {
+    padding: '24px 20px 4px',
+    textAlign: 'center',
+  },
+  logo: {
+    margin: '0 auto',
+    width: '280px',
+    maxWidth: '280px',
+    maxHeight: '96px',
+    height: 'auto',
+  },
 
   // Hero
   hero: { padding: '20px 20px 8px', textAlign: 'center' },

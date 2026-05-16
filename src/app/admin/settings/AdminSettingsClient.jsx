@@ -504,6 +504,40 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
                 </FieldDescription>
               </FieldContent>
             </Field>
+            <Field>
+              <FieldLabel>Email Logo Size (%)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="40"
+                  max="200"
+                  step="5"
+                  value={form.emailLogoScalePercent ?? 100}
+                  onChange={(event) => handleChange('emailLogoScalePercent', event.target.value)}
+                  placeholder="100"
+                />
+                <FieldDescription className="mt-1.5">
+                  Controls the logo size in order emails. Default is 100%.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>Invoice Logo Size (%)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="40"
+                  max="200"
+                  step="5"
+                  value={form.invoiceLogoScalePercent ?? 100}
+                  onChange={(event) => handleChange('invoiceLogoScalePercent', event.target.value)}
+                  placeholder="100"
+                />
+                <FieldDescription className="mt-1.5">
+                  Controls the logo size in downloaded invoices. Default is 100%.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
           </FieldGroup>
         </SettingSection>
 

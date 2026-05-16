@@ -66,20 +66,68 @@ async function loadImageDataUrl(url) {
       image.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          const width = Math.max(1, image.naturalWidth || image.width || 1);
-          const height = Math.max(1, image.naturalHeight || image.height || 1);
-          canvas.width = width;
-          canvas.height = height;
+          const sourceWidth = Math.max(1, image.naturalWidth || image.width || 1);
+          const sourceHeight = Math.max(1, image.naturalHeight || image.height || 1);
+          canvas.width = sourceWidth;
+          canvas.height = sourceHeight;
 
           const context = canvas.getContext('2d');
           if (!context) {
             throw new Error('Unable to create image canvas.');
           }
 
-          context.drawImage(image, 0, 0, width, height);
-          const pngDataUrl = canvas.toDataURL('image/png');
+          context.drawImage(image, 0, 0, sourceWidth, sourceHeight);
+
+          const imageData = context.getImageData(0, 0, sourceWidth, sourceHeight);
+          const { data } = imageData;
+          let minX = sourceWidth;
+          let minY = sourceHeight;
+          let maxX = -1;
+          let maxY = -1;
+
+          for (let y = 0; y < sourceHeight; y += 1) {
+            for (let x = 0; x < sourceWidth; x += 1) {
+              const alpha = data[(y * sourceWidth + x) * 4 + 3];
+              if (alpha > 0) {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+
+          const hasVisiblePixels = maxX >= minX && maxY >= minY;
+          const width = hasVisiblePixels ? maxX - minX + 1 : sourceWidth;
+          const height = hasVisiblePixels ? maxY - minY + 1 : sourceHeight;
+          const outputCanvas = document.createElement('canvas');
+          outputCanvas.width = width;
+          outputCanvas.height = height;
+
+          const outputContext = outputCanvas.getContext('2d');
+          if (!outputContext) {
+            throw new Error('Unable to create cropped image canvas.');
+          }
+
+          outputContext.drawImage(
+            canvas,
+            hasVisiblePixels ? minX : 0,
+            hasVisiblePixels ? minY : 0,
+            width,
+            height,
+            0,
+            0,
+            width,
+            height,
+          );
+
+          const pngDataUrl = outputCanvas.toDataURL('image/png');
           URL.revokeObjectURL(objectUrl);
-          resolve(pngDataUrl);
+          resolve({
+            dataUrl: pngDataUrl,
+            width,
+            height,
+          });
         } catch (error) {
           URL.revokeObjectURL(objectUrl);
           reject(error);
@@ -98,7 +146,7 @@ async function loadImageDataUrl(url) {
   }
 }
 
-// ─── Color Palette ──────────────────────────────────────────────────────────
+// --- Color Palette ---------------------------------------------------------
 const PALETTE = {
   text: [23, 23, 23],
   muted: [115, 115, 115],
@@ -107,16 +155,16 @@ const PALETTE = {
   lineSoft: [243, 243, 243],
   soft: [250, 250, 250],
   white: [255, 255, 255],
-  accent: [15, 118, 110],       // teal-700
-  accentLight: [204, 251, 241], // teal-100
-  accentDark: [13, 87, 80],     // teal-800
+  accent: [15, 118, 110],
+  accentLight: [204, 251, 241],
+  accentDark: [13, 87, 80],
   statusPaid: [22, 101, 52],
   statusPaidBg: [220, 252, 231],
   statusUnpaid: [146, 64, 14],
   statusUnpaidBg: [254, 243, 199],
 };
 
-// ─── Drawing Helpers ────────────────────────────────────────────────────────
+// --- Drawing Helpers -------------------------------------------------------
 
 function drawRoundedRect(doc, x, y, w, h, r, fillColor) {
   doc.setFillColor(...fillColor);
@@ -144,7 +192,10 @@ function drawText(doc, text, x, y, opts = {}) {
 
   const drawOpts = { align };
   if (maxWidth) drawOpts.maxWidth = maxWidth;
-  doc.text(String(text), x, y, drawOpts);
+  const content = Array.isArray(text)
+    ? text.flat(Infinity).map((line) => String(line ?? ''))
+    : String(text ?? '');
+  doc.text(content, x, y, drawOpts);
 }
 
 function drawPill(doc, text, x, y, bgColor, textColor) {
@@ -156,25 +207,25 @@ function drawPill(doc, text, x, y, bgColor, textColor) {
 }
 
 function drawInfoSection(doc, { title, lines, x, y, width }) {
-  drawText(doc, title, x, y, { size: 8, color: PALETTE.light, weight: 'bold' });
+  drawText(doc, title, x, y, { size: 7.5, color: PALETTE.light, weight: 'bold' });
 
-  let currentY = y + 16;
+  let currentY = y + 12;
   const safeLines = Array.isArray(lines) && lines.length > 0 ? lines : ['Not provided'];
 
   safeLines.forEach((line, index) => {
     const wrapped = doc.splitTextToSize(getText(line, 'Not provided'), width);
     drawText(doc, wrapped, x, currentY, {
-      size: index === 0 ? 10 : 9,
+      size: index === 0 ? 9.5 : 8.5,
       weight: index === 0 ? 'bold' : 'normal',
       color: index === 0 ? PALETTE.text : PALETTE.muted,
     });
-    currentY += wrapped.length * 13 + 3;
+    currentY += wrapped.length * 11 + 2;
   });
 
   return currentY;
 }
 
-// ─── Main Generator ─────────────────────────────────────────────────────────
+// --- Main Generator --------------------------------------------------------
 
 export const generateInvoice = async (order, branding = {}) => {
   const { jsPDF } = await import('jspdf');
@@ -182,7 +233,7 @@ export const generateInvoice = async (order, branding = {}) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 44;
+  const margin = 40;
   const contentWidth = pageWidth - margin * 2;
 
   const items = normalizeItems(order?.items);
@@ -191,311 +242,227 @@ export const generateInvoice = async (order, branding = {}) => {
   const shipping = Math.max(total - subtotal, 0);
 
   const paymentMethod = getText(order?.paymentStatus, 'COD');
-  const paymentStatus = paymentMethod === 'Online' ? 'Paid' : 'Unpaid';
   const invoiceNumber = getText(order?.orderId, 'Draft');
-  const storeName = getText(branding?.storeName || order?.storeName, 'Aam Samaan');
+  const storeName = getText(branding?.storeName || order?.storeName, 'China Unique Store');
   const supportEmail = getText(branding?.supportEmail);
   const businessAddress = getText(branding?.businessAddress, 'Business address not available');
+  const customerName = getText(order?.customerName, 'Customer');
+  const customerPhone = getText(order?.customerPhone);
+  const customerEmail = getText(order?.customerEmail);
+  const customerAddress = getText(order?.customerAddress, 'Address not provided');
+  const customerCity = getText(order?.customerCity);
+  const landmark = getText(order?.landmark);
+  const notes = getText(order?.notes);
   const baseUrl = getText(
     branding?.baseUrl,
     typeof window !== 'undefined' ? window.location.origin : 'https://chinaunique.pk',
   );
-  const returnPolicyUrl = getText(branding?.returnPolicyUrl, `${baseUrl}/refund-policy`);
-  const logoUrl = getText(branding?.lightLogoUrl || branding?.darkLogoUrl);
+  const logoUrl = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
+  const invoiceLogoScalePercent = Math.min(200, Math.max(40, getNumber(branding?.invoiceLogoScalePercent, 100)));
+  const invoiceLogoScale = invoiceLogoScalePercent / 100;
+  const issueDate = formatDate(order?.createdAt);
+  const dueDate = formatDate(order?.dueDate || order?.createdAt);
 
-  // ─── Page Background ───────────────────────────────────────────────────
   doc.setFillColor(...PALETTE.white);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-  // ─── Header Bar ─────────────────────────────────────────────────────────
-  const headerTop = margin;
+  const recipientLines = [
+    customerName,
+    ...splitLines(doc, customerAddress, 240),
+    customerCity,
+    landmark ? `Landmark: ${landmark}` : '',
+    customerPhone ? `Phone: ${customerPhone}` : '',
+    customerEmail ? `Email: ${customerEmail}` : '',
+  ].filter(Boolean);
 
-  // Logo or store name
+  function drawTableHeader(y) {
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, y, contentWidth, 24, 'F');
+    drawLine(doc, margin, y, pageWidth - margin, y, PALETTE.line);
+    drawLine(doc, margin, y + 24, pageWidth - margin, y + 24, PALETTE.line);
+
+    drawText(doc, '#', margin + 6, y + 16, { size: 9, weight: 'bold' });
+    drawText(doc, 'Description', margin + 34, y + 16, { size: 9, weight: 'bold' });
+    drawText(doc, 'Qty', pageWidth - margin - 170, y + 16, { size: 9, weight: 'bold', align: 'right' });
+    drawText(doc, 'Unit Price', pageWidth - margin - 90, y + 16, { size: 9, weight: 'bold', align: 'right' });
+    drawText(doc, 'Amount', pageWidth - margin - 6, y + 16, { size: 9, weight: 'bold', align: 'right' });
+  }
+
+  function startNewPage() {
+    doc.addPage();
+    doc.setFillColor(...PALETTE.white);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  }
+
+  let y = margin;
+
   const logoDataUrl = await loadImageDataUrl(logoUrl);
-  if (logoDataUrl) {
-    doc.addImage(logoDataUrl, 'PNG', margin, headerTop - 4, 110, 36, undefined, 'FAST');
-  } else {
-    drawText(doc, storeName, margin, headerTop + 18, {
-      size: 18, weight: 'bold', color: PALETTE.text,
-    });
+  let logoHeight = 0;
+  if (logoDataUrl?.dataUrl) {
+    const maxLogoWidth = 92 * invoiceLogoScale;
+    const maxLogoHeight = 30 * invoiceLogoScale;
+    const widthRatio = maxLogoWidth / Math.max(1, logoDataUrl.width || maxLogoWidth);
+    const heightRatio = maxLogoHeight / Math.max(1, logoDataUrl.height || maxLogoHeight);
+    const scale = Math.min(widthRatio, heightRatio, 1);
+    const renderWidth = Math.max(46, (logoDataUrl.width || maxLogoWidth) * scale);
+    const renderHeight = Math.max(15, (logoDataUrl.height || maxLogoHeight) * scale);
+    logoHeight = renderHeight;
+
+    doc.addImage(
+      logoDataUrl.dataUrl,
+      'PNG',
+      margin,
+      y,
+      renderWidth,
+      renderHeight,
+      undefined,
+      'FAST',
+    );
   }
 
-  // Right side: INVOICE title + accent underline
-  drawText(doc, 'INVOICE', pageWidth - margin, headerTop + 8, {
-    size: 26, weight: 'bold', color: PALETTE.accent, align: 'right',
+  drawText(doc, 'Invoice', pageWidth - margin, y + 14, {
+    size: 24,
+    weight: 'bold',
+    color: PALETTE.text,
+    align: 'right',
   });
-  // Accent underline below INVOICE
-  const invoiceTextWidth = 95;
-  doc.setFillColor(...PALETTE.accent);
-  doc.rect(pageWidth - margin - invoiceTextWidth, headerTop + 14, invoiceTextWidth, 2.5, 'F');
-
-  // Invoice meta
-  drawText(doc, `#${invoiceNumber}`, pageWidth - margin, headerTop + 32, {
-    size: 10, color: PALETTE.muted, weight: 'bold', align: 'right',
+  drawText(doc, `Invoice No.: ${invoiceNumber}`, pageWidth - margin, y + 36, {
+    size: 10,
+    color: PALETTE.text,
+    align: 'right',
   });
-  drawText(doc, formatDate(order?.createdAt), pageWidth - margin, headerTop + 46, {
-    size: 9, color: PALETTE.muted, align: 'right',
+  drawText(doc, `Date: ${issueDate}`, pageWidth - margin, y + 52, {
+    size: 10,
+    color: PALETTE.text,
+    align: 'right',
+  });
+  drawText(doc, `Due Date: ${dueDate}`, pageWidth - margin, y + 68, {
+    size: 10,
+    color: PALETTE.text,
+    align: 'right',
   });
 
-  // Divider
-  const dividerY = headerTop + 64;
-  drawLine(doc, margin, dividerY, pageWidth - margin, dividerY, PALETTE.line);
+  y = y + 108;
+  drawText(doc, 'Recipient:', margin, y, {
+    size: 10,
+    weight: 'bold',
+    color: PALETTE.text,
+  });
+  drawText(doc, recipientLines, margin, y + 16, {
+    size: 9.5,
+    color: PALETTE.text,
+    maxWidth: contentWidth * 0.55,
+  });
 
-  // ─── From / Ship To Sections ────────────────────────────────────────────
-  const sectionY = dividerY + 24;
-  const gap = 32;
-  const colWidth = (contentWidth - gap) / 2;
+  y += 16 + recipientLines.length * 12 + 20;
 
-  const leftBottom = drawInfoSection(doc, {
-    title: 'FROM',
-    lines: [
+  drawTableHeader(y);
+  y += 24;
+
+  if (!items.length) {
+    drawLine(doc, margin, y + 22, pageWidth - margin, y + 22, PALETTE.line);
+    drawText(doc, 'No items found', margin + 34, y + 15, {
+      size: 10,
+      color: PALETTE.muted,
+    });
+    y += 24;
+  }
+
+  items.forEach((item, index) => {
+    const descriptionLines = doc.splitTextToSize(
+      [item.name, item.variant].filter(Boolean).join(item.variant ? ' - ' : ''),
+      contentWidth - 220,
+    );
+    const rowHeight = Math.max(24, descriptionLines.length * 12 + 8);
+
+    if (y + rowHeight + 170 > pageHeight) {
+      startNewPage();
+      y = margin;
+      drawTableHeader(y);
+      y += 24;
+    }
+
+    drawLine(doc, margin, y + rowHeight, pageWidth - margin, y + rowHeight, PALETTE.line);
+    drawText(doc, String(index + 1), margin + 6, y + 15, {
+      size: 9.5,
+      color: PALETTE.text,
+    });
+    drawText(doc, descriptionLines, margin + 34, y + 15, {
+      size: 9.5,
+      color: PALETTE.text,
+      maxWidth: contentWidth - 220,
+    });
+    drawText(doc, String(item.quantity), pageWidth - margin - 170, y + 15, {
+      size: 9.5,
+      color: PALETTE.text,
+      align: 'right',
+    });
+    drawText(doc, formatCurrency(item.unitPrice), pageWidth - margin - 90, y + 15, {
+      size: 9.5,
+      color: PALETTE.text,
+      align: 'right',
+    });
+    drawText(doc, formatCurrency(item.total), pageWidth - margin - 6, y + 15, {
+      size: 9.5,
+      color: PALETTE.text,
+      align: 'right',
+    });
+
+    y += rowHeight;
+  });
+
+  y += 24;
+
+  const totalsWidth = 210;
+  const totalsX = pageWidth - margin - totalsWidth;
+  drawLine(doc, totalsX, y, pageWidth - margin, y, PALETTE.line);
+  drawText(doc, 'Subtotal:', totalsX, y + 16, { size: 10, color: PALETTE.text });
+  drawText(doc, formatCurrency(subtotal), pageWidth - margin, y + 16, {
+    size: 10,
+    color: PALETTE.text,
+    align: 'right',
+  });
+  drawText(doc, 'Delivery Charges:', totalsX, y + 34, { size: 10, color: PALETTE.text });
+  drawText(doc, formatCurrency(shipping), pageWidth - margin, y + 34, {
+    size: 10,
+    color: PALETTE.text,
+    align: 'right',
+  });
+  drawLine(doc, totalsX, y + 42, pageWidth - margin, y + 42, PALETTE.line);
+  drawText(doc, 'Total:', totalsX, y + 60, { size: 11, weight: 'bold', color: PALETTE.text });
+  drawText(doc, formatCurrency(total), pageWidth - margin, y + 60, {
+    size: 11,
+    weight: 'bold',
+    color: PALETTE.text,
+    align: 'right',
+  });
+
+  y += 96;
+
+  drawText(doc, notes || 'It was a pleasure doing business with you.', margin, y, {
+    size: 10,
+    color: PALETTE.muted,
+    maxWidth: contentWidth * 0.8,
+  });
+
+  y += 42;
+  drawText(
+    doc,
+    [
       storeName,
-      businessAddress,
+      ...splitLines(doc, businessAddress, contentWidth * 0.5),
+      customerPhone ? `Phone: ${customerPhone}` : '',
       supportEmail ? `Email: ${supportEmail}` : '',
+      `Payment: ${paymentMethod}`,
     ].filter(Boolean),
-    x: margin,
-    y: sectionY,
-    width: colWidth,
-  });
-
-  const rightBottom = drawInfoSection(doc, {
-    title: 'SHIP TO',
-    lines: [
-      getText(order?.customerName, 'Customer'),
-      getText(order?.customerPhone) ? `Phone: ${getText(order?.customerPhone)}` : '',
-      getText(order?.customerEmail) ? `Email: ${getText(order?.customerEmail)}` : '',
-      getText(order?.customerAddress, 'Address not provided'),
-      getText(order?.customerCity) ? `City: ${getText(order?.customerCity)}` : '',
-      getText(order?.landmark) ? `Landmark: ${getText(order?.landmark)}` : '',
-    ].filter(Boolean),
-    x: margin + colWidth + gap,
-    y: sectionY,
-    width: colWidth,
-  });
-
-  // ─── Payment Status Bar ─────────────────────────────────────────────────
-  const metaY = Math.max(leftBottom, rightBottom) + 12;
-
-  drawRoundedRect(doc, margin, metaY, contentWidth, 36, 6, PALETTE.soft);
-
-  drawText(doc, 'Payment:', margin + 14, metaY + 22, {
-    size: 9, color: PALETTE.muted, weight: 'bold',
-  });
-  drawText(doc, paymentMethod, margin + 68, metaY + 22, {
-    size: 9, color: PALETTE.text, weight: 'bold',
-  });
-
-  // Draw status pill
-  const isPaid = paymentStatus === 'Paid';
-  const pillBg = isPaid ? PALETTE.statusPaidBg : PALETTE.statusUnpaidBg;
-  const pillText = isPaid ? PALETTE.statusPaid : PALETTE.statusUnpaid;
-  drawPill(doc, paymentStatus.toUpperCase(), pageWidth - margin - 80, metaY + 22, pillBg, pillText);
-
-  // ─── Product Table ──────────────────────────────────────────────────────
-  const tableStartY = metaY + 56;
-
-  // Table header
-  drawRoundedRect(doc, margin, tableStartY, contentWidth, 30, 6, PALETTE.accent);
-  const colProduct = margin + 14;
-  const colQty = margin + contentWidth * 0.55;
-  const colPrice = margin + contentWidth * 0.70;
-  const colTotal = pageWidth - margin - 14;
-
-  drawText(doc, 'Product', colProduct, tableStartY + 19, {
-    size: 9, color: PALETTE.white, weight: 'bold',
-  });
-  drawText(doc, 'Qty', colQty, tableStartY + 19, {
-    size: 9, color: PALETTE.white, weight: 'bold', align: 'center',
-  });
-  drawText(doc, 'Price', colPrice, tableStartY + 19, {
-    size: 9, color: PALETTE.white, weight: 'bold', align: 'right',
-  });
-  drawText(doc, 'Total', colTotal, tableStartY + 19, {
-    size: 9, color: PALETTE.white, weight: 'bold', align: 'right',
-  });
-
-  // Load product images in parallel
-  const imagePromises = items.map((item) => loadImageDataUrl(item.image));
-  const imageDataUrls = await Promise.all(imagePromises);
-
-  // Product rows
-  let rowY = tableStartY + 30;
-  const imgSize = 36;
-  const rowPadding = 14;
-  const minRowHeight = imgSize + rowPadding * 2;
-
-  if (items.length === 0) {
-    drawRoundedRect(doc, margin, rowY, contentWidth, 40, 0, PALETTE.white);
-    drawLine(doc, margin, rowY + 40, pageWidth - margin, rowY + 40);
-    drawText(doc, 'No products found', margin + contentWidth / 2, rowY + 25, {
-      size: 10, color: PALETTE.muted, align: 'center',
-    });
-    rowY += 40;
-  } else {
-    items.forEach((item, index) => {
-      // Check if we need a new page
-      if (rowY + minRowHeight > pageHeight - 100) {
-        doc.addPage();
-        doc.setFillColor(...PALETTE.white);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
-        rowY = margin;
-      }
-
-      const isEven = index % 2 === 0;
-      const rowBg = isEven ? PALETTE.white : PALETTE.soft;
-      const nameLines = doc.splitTextToSize(item.name, contentWidth * 0.38);
-      const actualRowHeight = Math.max(minRowHeight, nameLines.length * 14 + rowPadding * 2 + 8);
-
-      // Row background
-      drawRoundedRect(doc, margin, rowY, contentWidth, actualRowHeight, 0, rowBg);
-
-      // Bottom border
-      drawLine(doc, margin, rowY + actualRowHeight, pageWidth - margin, rowY + actualRowHeight, PALETTE.lineSoft);
-
-      const centerY = rowY + actualRowHeight / 2;
-
-      // Product image
-      const imgX = colProduct;
-      const imgY = centerY - imgSize / 2;
-      const imgDataUrl = imageDataUrls[index];
-
-      if (imgDataUrl) {
-        // Draw image border/background
-        doc.setFillColor(...PALETTE.soft);
-        doc.roundedRect(imgX, imgY, imgSize, imgSize, 4, 4, 'F');
-        doc.addImage(imgDataUrl, 'PNG', imgX + 1, imgY + 1, imgSize - 2, imgSize - 2, `prod-${index}`, 'FAST');
-        // Border
-        doc.setDrawColor(...PALETTE.line);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(imgX, imgY, imgSize, imgSize, 4, 4, 'S');
-      } else {
-        // Placeholder square
-        drawRoundedRect(doc, imgX, imgY, imgSize, imgSize, 4, PALETTE.lineSoft);
-        drawText(doc, 'N/A', imgX + imgSize / 2, centerY + 3, {
-          size: 7, color: PALETTE.light, weight: 'bold', align: 'center',
-        });
-      }
-
-      // Product name + variant
-      const textX = imgX + imgSize + 10;
-      const nameY = nameLines.length > 1 ? centerY - 6 : centerY + 1;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9.5);
-      doc.setTextColor(...PALETTE.text);
-      doc.text(nameLines, textX, nameY);
-
-      if (item.variant) {
-        drawText(doc, item.variant, textX, nameY + nameLines.length * 13, {
-          size: 8, color: PALETTE.muted,
-        });
-      }
-
-      // Quantity
-      drawText(doc, String(item.quantity), colQty, centerY + 3, {
-        size: 10, color: PALETTE.text, weight: 'bold', align: 'center',
-      });
-
-      // Unit price
-      drawText(doc, formatCurrency(item.unitPrice), colPrice, centerY + 3, {
-        size: 9, color: PALETTE.muted, align: 'right',
-      });
-
-      // Line total
-      drawText(doc, formatCurrency(item.total), colTotal, centerY + 3, {
-        size: 10, color: PALETTE.text, weight: 'bold', align: 'right',
-      });
-
-      rowY += actualRowHeight;
-    });
-  }
-
-  // ─── Notes + Summary ────────────────────────────────────────────────────
-  const summaryY = rowY + 20;
-  const summaryWidth = 200;
-  const summaryX = pageWidth - margin - summaryWidth;
-
-  // Check page overflow
-  if (summaryY + 120 > pageHeight - 60) {
-    doc.addPage();
-    doc.setFillColor(...PALETTE.white);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-  }
-
-  const finalSummaryY = (summaryY + 120 > pageHeight - 60) ? margin : summaryY;
-
-  // Notes (left side)
-  if (getText(order?.notes)) {
-    drawText(doc, 'ORDER NOTES', margin, finalSummaryY + 10, {
-      size: 8, color: PALETTE.light, weight: 'bold',
-    });
-    const noteLines = splitLines(doc, order.notes, contentWidth - summaryWidth - 28);
-    drawText(doc, noteLines, margin, finalSummaryY + 26, {
-      size: 9, color: PALETTE.muted,
-    });
-  }
-
-  // Summary box (right side)
-  drawRoundedRect(doc, summaryX, finalSummaryY, summaryWidth, 92, 8, PALETTE.soft);
-
-  // Border
-  doc.setDrawColor(...PALETTE.line);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(summaryX, finalSummaryY, summaryWidth, 92, 8, 8, 'S');
-
-  const summaryPad = 14;
-  let sumY = finalSummaryY + 22;
-
-  // Subtotal
-  drawText(doc, 'Subtotal', summaryX + summaryPad, sumY, { size: 9, color: PALETTE.muted });
-  drawText(doc, formatCurrency(subtotal), summaryX + summaryWidth - summaryPad, sumY, {
-    size: 9, color: PALETTE.text, align: 'right',
-  });
-
-  // Shipping
-  sumY += 18;
-  drawText(doc, 'Shipping', summaryX + summaryPad, sumY, { size: 9, color: PALETTE.muted });
-  drawText(doc, formatCurrency(shipping), summaryX + summaryWidth - summaryPad, sumY, {
-    size: 9, color: PALETTE.text, align: 'right',
-  });
-
-  // Divider
-  sumY += 12;
-  drawLine(doc, summaryX + summaryPad, sumY, summaryX + summaryWidth - summaryPad, sumY, PALETTE.line);
-
-  // Grand total with accent
-  sumY += 18;
-  drawText(doc, 'Total', summaryX + summaryPad, sumY, {
-    size: 11, color: PALETTE.accent, weight: 'bold',
-  });
-  drawText(doc, formatCurrency(total), summaryX + summaryWidth - summaryPad, sumY, {
-    size: 11, color: PALETTE.accent, weight: 'bold', align: 'right',
-  });
-
-  // ─── Footer ────────────────────────────────────────────────────────────
-  let footerY = finalSummaryY + 118;
-  if (footerY > pageHeight - 68) {
-    doc.addPage();
-    doc.setFillColor(...PALETTE.white);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-    footerY = margin;
-  }
-
-  // Footer accent line
-  doc.setFillColor(...PALETTE.accent);
-  doc.rect(margin, footerY, contentWidth, 2, 'F');
-
-  drawText(doc, 'Thank you for your order!', margin, footerY + 20, {
-    size: 10, color: PALETTE.text, weight: 'bold',
-  });
-
-  drawText(doc, `Return Policy: ${returnPolicyUrl}`, margin, footerY + 36, {
-    size: 8, color: PALETTE.muted, maxWidth: contentWidth,
-  });
-
-  drawText(doc, `${storeName} • Generated on ${new Date().toLocaleDateString('en-PK', { dateStyle: 'medium' })}`, margin, footerY + 50, {
-    size: 7, color: PALETTE.light,
-  });
+    margin,
+    y,
+    {
+      size: 9.5,
+      color: PALETTE.text,
+      maxWidth: contentWidth * 0.5,
+    },
+  );
 
   doc.save(`Invoice_${invoiceNumber}.pdf`);
 };

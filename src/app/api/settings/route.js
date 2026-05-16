@@ -50,6 +50,10 @@ function normalizeFaviconUrl(value = '', size = 64) {
     });
 }
 
+function normalizeLogoScalePercent(value, fallback = 100) {
+    return Math.min(200, Math.max(40, Number(value) || fallback));
+}
+
 function serializeSettings(settings) {
     return {
         _id: settings._id.toString(),
@@ -61,6 +65,8 @@ function serializeSettings(settings) {
         faviconSizePx: normalizeFaviconSize(settings.faviconSizePx),
         faviconUrl: normalizeFaviconUrl(settings.faviconUrl, settings.faviconSizePx),
         logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
+        emailLogoScalePercent: normalizeLogoScalePercent(settings.emailLogoScalePercent, 100),
+        invoiceLogoScalePercent: normalizeLogoScalePercent(settings.invoiceLogoScalePercent, 100),
         whatsappNumber: settings.whatsappNumber || '',
         facebookPageUrl: settings.facebookPageUrl || '',
         instagramUrl: settings.instagramUrl || '',
@@ -133,6 +139,8 @@ export async function PUT(req) {
             'faviconUrl',
             'faviconSizePx',
             'logoScalePercent',
+            'emailLogoScalePercent',
+            'invoiceLogoScalePercent',
             'whatsappNumber',
             'facebookPageUrl',
             'instagramUrl',
@@ -169,6 +177,8 @@ export async function PUT(req) {
                             ? normalizedFaviconSize
                         : key === 'logoScalePercent'
                             ? Math.min(200, Math.max(60, Number(body[key]) || 100))
+                        : key === 'emailLogoScalePercent' || key === 'invoiceLogoScalePercent'
+                            ? normalizeLogoScalePercent(body[key], 100)
                         : body[key];
             }
         }

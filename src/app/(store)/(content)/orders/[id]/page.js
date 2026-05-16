@@ -50,6 +50,9 @@ export default async function SingleOrderPage({ params, searchParams }) {
     storeName: settings.storeName,
     supportEmail: settings.supportEmail,
     businessAddress: settings.businessAddress,
+    lightLogoUrl: settings.lightLogoUrl,
+    darkLogoUrl: settings.darkLogoUrl,
+    invoiceLogoScalePercent: settings.invoiceLogoScalePercent,
     baseUrl: siteUrl,
     returnPolicyUrl: `${siteUrl}/refund-policy`,
   };

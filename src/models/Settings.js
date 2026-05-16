@@ -68,6 +68,18 @@ const SettingsSchema = new mongoose.Schema(
             min: 60,
             max: 200,
         },
+        emailLogoScalePercent: {
+            type: Number,
+            default: 100,
+            min: 40,
+            max: 200,
+        },
+        invoiceLogoScalePercent: {
+            type: Number,
+            default: 100,
+            min: 40,
+            max: 200,
+        },
 
         // WhatsApp
         whatsappNumber: {
@@ -162,7 +174,9 @@ if (
         !cachedSettings.schema.path('darkLogoUrl') ||
         !cachedSettings.schema.path('faviconUrl') ||
         !cachedSettings.schema.path('faviconSizePx') ||
-        !cachedSettings.schema.path('logoScalePercent')
+        !cachedSettings.schema.path('logoScalePercent') ||
+        !cachedSettings.schema.path('emailLogoScalePercent') ||
+        !cachedSettings.schema.path('invoiceLogoScalePercent')
     )
 ) {
     delete mongoose.models.Settings;
