@@ -1433,6 +1433,20 @@ export async function getAdminProducts() {
   return serializedProducts.map(toAdminProductRow);
 }
 
+export async function getAdminProductCategoryOptions() {
+  'use cache';
+  cacheLife({ stale: 60, revalidate: 300, expire: 1800 });
+  cacheTag('categories');
+
+  const categories = await getCategoriesRaw();
+
+  return categories.map((category) => ({
+    _id: String(category._id || ''),
+    id: String(category.id || ''),
+    label: String(category.label || ''),
+  }));
+}
+
 export async function getAdminOrderProductCatalog() {
   'use cache';
   cacheLife({ stale: 20, revalidate: 45, expire: 180 });
@@ -1480,6 +1494,7 @@ export async function getAdminProductsPage({
   search = '',
   status = 'all',
   stock = 'all',
+  category = 'all',
   sort = 'newest',
   page = 1,
   limit = 12,
@@ -1492,6 +1507,7 @@ export async function getAdminProductsPage({
   const safeSearch = String(search || '').trim();
   const safeStatus = String(status || 'all').trim() || 'all';
   const safeStock = String(stock || 'all').trim() || 'all';
+  const safeCategory = String(category || 'all').trim() || 'all';
   const safeSort = String(sort || 'newest').trim() || 'newest';
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.max(1, Number(limit) || 12);
@@ -1503,6 +1519,38 @@ export async function getAdminProductsPage({
 
   if (safeStock === 'in-stock') query.StockStatus = 'In Stock';
   if (safeStock === 'out-of-stock') query.StockStatus = { $ne: 'In Stock' };
+
+  if (safeCategory === 'special-offers') {
+    query.isDiscounted = true;
+  } else if (safeCategory !== 'all') {
+    const categories = await getCategoriesRaw();
+    const matchedCategory = categories.find(
+      (entry) => entry.id === safeCategory || entry._id === safeCategory,
+    );
+
+    if (!matchedCategory?._id) {
+      return {
+        items: [],
+        total: 0,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: 0,
+        hasMore: false,
+        searchTerm: safeSearch,
+        status: safeStatus,
+        stock: safeStock,
+        category: safeCategory,
+        sort: safeSort,
+        summary: {
+          totalProducts: 0,
+          liveProducts: 0,
+          draftProducts: 0,
+        },
+      };
+    }
+
+    query.Category = matchedCategory._id;
+  }
 
   if (safeSearch) {
     const searchRegex = new RegExp(escapeRegex(safeSearch), 'i');
@@ -1564,6 +1612,7 @@ export async function getAdminProductsPage({
     searchTerm: safeSearch,
     status: safeStatus,
     stock: safeStock,
+    category: safeCategory,
     sort: safeSort,
     summary: {
       totalProducts,

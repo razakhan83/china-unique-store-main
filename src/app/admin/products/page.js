@@ -1,4 +1,4 @@
-import { getAdminProductsPage } from '@/lib/data';
+import { getAdminProductCategoryOptions, getAdminProductsPage } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
 
 import AdminProductsClient from './AdminProductsClient';
@@ -10,9 +10,13 @@ export default async function AdminProductsPage({ searchParams }) {
   const search = String(params?.search || '').trim();
   const status = String(params?.status || 'all').trim() || 'all';
   const stock = String(params?.stock || 'all').trim() || 'all';
+  const category = String(params?.category || 'all').trim() || 'all';
   const sort = String(params?.sort || 'newest').trim() || 'newest';
   const page = Math.max(1, Number(params?.page) || 1);
-  const result = await getAdminProductsPage({ search, status, stock, sort, page, limit: 12 });
+  const [result, categoryOptions] = await Promise.all([
+    getAdminProductsPage({ search, status, stock, category, sort, page, limit: 12 }),
+    getAdminProductCategoryOptions(),
+  ]);
 
   return (
     <AdminProductsClient
@@ -24,7 +28,9 @@ export default async function AdminProductsPage({ searchParams }) {
       initialSearchQuery={result.searchTerm}
       initialStatusFilter={result.status}
       initialStockFilter={result.stock}
+      initialCategoryFilter={result.category}
       initialSortOption={result.sort}
+      categoryOptions={categoryOptions}
       summary={result.summary}
     />
   );

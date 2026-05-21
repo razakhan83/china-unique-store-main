@@ -307,7 +307,9 @@ export default function AdminProductsClient({
   initialSearchQuery,
   initialStatusFilter,
   initialStockFilter,
+  initialCategoryFilter,
   initialSortOption,
+  categoryOptions,
   summary,
 }) {
   const router = useRouter();
@@ -319,6 +321,7 @@ export default function AdminProductsClient({
   const [sortOption, setSortOption] = useState(initialSortOption);
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [stockFilter, setStockFilter] = useState(initialStockFilter);
+  const [categoryFilter, setCategoryFilter] = useState(initialCategoryFilter);
   const [deleteModal, setDeleteModal] = useState({ open: false, product: null });
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
@@ -342,7 +345,8 @@ export default function AdminProductsClient({
     setSortOption(initialSortOption);
     setStatusFilter(initialStatusFilter);
     setStockFilter(initialStockFilter);
-  }, [initialSortOption, initialStatusFilter, initialStockFilter]);
+    setCategoryFilter(initialCategoryFilter);
+  }, [initialSortOption, initialStatusFilter, initialStockFilter, initialCategoryFilter]);
 
   useEffect(() => {
     if (stockModal.open && stockModal.product) {
@@ -362,7 +366,8 @@ export default function AdminProductsClient({
     setSortOption("newest");
     setStatusFilter("all");
     setStockFilter("all");
-    navigate({ search: null, sort: null, status: null, stock: null, page: null });
+    setCategoryFilter("all");
+    navigate({ search: null, sort: null, status: null, stock: null, category: null, page: null });
   }
 
   async function handleDelete() {
@@ -551,13 +556,29 @@ export default function AdminProductsClient({
     }
   }
 
+  const selectedCategoryLabel =
+    categoryFilter === "all"
+      ? "All Categories"
+      : categoryOptions.find((category) => category.id === categoryFilter || category._id === categoryFilter)?.label ||
+        categoryFilter;
   const hasActiveFilters =
-    searchQuery || statusFilter !== "all" || stockFilter !== "all" || sortOption !== "newest";
+    searchQuery ||
+    statusFilter !== "all" ||
+    stockFilter !== "all" ||
+    categoryFilter !== "all" ||
+    sortOption !== "newest";
   const appliedFilters = [
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
     initialStatusFilter !== "all" ? `Status: ${initialStatusFilter}` : null,
     initialStockFilter !== "all"
       ? `Stock: ${initialStockFilter === "in-stock" ? "In Stock" : "Out of Stock"}`
+      : null,
+    initialCategoryFilter !== "all"
+      ? `Category: ${
+          categoryOptions.find(
+            (category) => category.id === initialCategoryFilter || category._id === initialCategoryFilter,
+          )?.label || initialCategoryFilter
+        }`
       : null,
     initialSortOption !== "newest"
       ? `Sort: ${
@@ -666,6 +687,25 @@ export default function AdminProductsClient({
               <SelectItem value="all">All Stock</SelectItem>
               <SelectItem value="in-stock">In Stock</SelectItem>
               <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => {
+              setCategoryFilter(value);
+              navigate({ category: value, page: null });
+            }}
+          >
+            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[180px]">
+              <SelectValue placeholder="Category">{selectedCategoryLabel}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categoryOptions.map((category) => (
+                <SelectItem key={category._id || category.id} value={category.id}>
+                  {category.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {hasActiveFilters && (
