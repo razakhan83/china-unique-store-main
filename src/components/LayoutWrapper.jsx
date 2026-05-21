@@ -24,6 +24,9 @@ export default function LayoutWrapper({ children, categories, settings }) {
     { href: instagramUrl, label: 'Instagram', icon: InstagramIcon },
     { href: whatsappLink, label: 'WhatsApp', icon: WhatsAppIcon },
   ];
+  const quickLinks = Array.isArray(settings.customPages)
+    ? settings.customPages.filter((page) => page?.isEnabled !== false && page?.showInFooter !== false)
+    : [];
 
   return (
     <>
@@ -81,16 +84,11 @@ export default function LayoutWrapper({ children, categories, settings }) {
               <div>
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Links</h3>
                 <ul className="flex flex-col gap-3 text-muted-foreground">
-                  {[
-                    { href: '/about-us', label: 'About Us' },
-                    { href: '/refund-policy', label: 'Refund Policy' },
-                    { href: '/privacy-policy', label: 'Privacy Policy' },
-                    { href: '/shipping-policy', label: 'Shipping Policy' },
-                  ].map((item) => (
-                    <li key={item.href}>
-                      <Link href={item.href} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                  {quickLinks.map((item) => (
+                    <li key={item.slug}>
+                      <Link href={`/${item.slug}`} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                         <ChevronRight className="size-4" />
-                        {item.label}
+                        {item.label || item.title}
                       </Link>
                     </li>
                   ))}
@@ -112,7 +110,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     <MapPin className="mt-0.5 size-4" />
                     <div>
                       <span className="block font-semibold text-foreground">Location</span>
-                      <span>Shop No B-41, Gul Tijarah Mall, Karachi, Pakistan</span>
+                      <span>{settings.businessAddress || 'Shop No B-41, Gul Tijarah Mall, Karachi, Pakistan'}</span>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">

@@ -35,6 +35,7 @@ import {
   normalizeCategoryId,
 } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
+import { DEFAULT_CUSTOM_PAGES, getCustomPageBySlug as findCustomPageBySlug, mergeCustomPages } from '@/lib/customPages';
 
 const SETTINGS_KEY = 'site-settings';
 const COVER_PHOTOS_KEY = 'home-cover-photos';
@@ -447,6 +448,7 @@ async function getSettingsRaw() {
     announcementBarText: '',
     announcementBarMessages: [],
     homepageSectionOrder: [],
+    customPages: DEFAULT_CUSTOM_PAGES,
   };
 
   try {
@@ -484,6 +486,7 @@ async function getSettingsRaw() {
         announcementBarText: settings.announcementBarText || '',
         announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+        customPages: mergeCustomPages(settings.customPages),
       };
     });
   } catch (error) {
@@ -784,6 +787,15 @@ export async function getStoreSettings() {
   cacheLife('foreverish');
   cacheTag('settings');
   return getSettingsRaw();
+}
+
+export async function getStoreCustomPageBySlug(slug = '') {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('settings');
+
+  const settings = await getSettingsRaw();
+  return findCustomPageBySlug(settings.customPages, slug);
 }
 
 export async function getAdminCoverPhotos() {
@@ -2248,5 +2260,6 @@ export async function getAdminSettings() {
     announcementBarText: settings.announcementBarText || '',
     announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
     homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+    customPages: mergeCustomPages(settings.customPages),
   };
 }

@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PanelsTopLeft,
+  FileText,
   Settings,
   ShoppingCart,
   Store,
@@ -69,9 +70,11 @@ const salesNavItems = [
 const secondaryNavItems = [
   { href: '/admin/users', label: 'Users / Customers', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
+  { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
   { href: '/admin/home-page', label: 'Home Layout Settings', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
   { href: '/admin/cover-photos', label: 'Cover Photos', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
   { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
+  { href: '/admin/custom-pages', label: 'Custom Pages', icon: FileText, match: (pathname) => pathname.startsWith('/admin/custom-pages') },
 ];
 
 const compactDesktopNavItems = [
@@ -89,8 +92,10 @@ const compactDesktopNavItems = [
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
   { href: '/admin/users', label: 'Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
+  { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
   { href: '/admin/home-page', label: 'Home Layout', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
   { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
+  { href: '/admin/custom-pages', label: 'Pages', icon: FileText, match: (pathname) => pathname.startsWith('/admin/custom-pages') },
 ];
 
 const mobileBottomNavItems = [
@@ -115,9 +120,11 @@ function getPageMeta(pathname) {
   if (pathname.startsWith('/admin/reviews')) return { title: 'Reviews' };
   if (pathname.startsWith('/admin/users')) return { title: 'Users' };
   if (pathname.startsWith('/admin/shipping')) return { title: 'Shipping' };
+  if (pathname.startsWith('/admin/store-setup')) return { title: 'Store Setup' };
   if (pathname.startsWith('/admin/home-page')) return { title: 'Home Layout Settings' };
   if (pathname.startsWith('/admin/cover-photos')) return { title: 'Cover Photos' };
   if (pathname.startsWith('/admin/settings')) return { title: 'Settings' };
+  if (pathname.startsWith('/admin/custom-pages')) return { title: 'Custom Pages' };
 
   return { title: 'Dashboard' };
 }

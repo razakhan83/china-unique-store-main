@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, ShoppingBag, Store, Users } from 'lucide-react';
+import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users } from 'lucide-react';
 
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,8 @@ const quickActions = [
   { href: '/admin/products/add', title: 'Add Product', icon: Box },
   { href: '/admin/categories', title: 'Categories', icon: LayoutGrid },
   { href: '/admin/cover-photos', title: 'Cover Photos', icon: Images },
-  { href: '/admin/settings', title: 'Settings', icon: null },
+  { href: '/admin/store-setup', title: 'Store Setup', icon: Store },
+  { href: '/admin/settings', title: 'Settings', icon: Settings },
   { href: '/', title: 'View Store', icon: ExternalLink },
 ];
 

@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 
 import mongooseConnect from '@/lib/mongooseConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { mergeCustomPages } from '@/lib/customPages';
 import Settings from '@/models/Settings';
 
 const SINGLETON_KEY = 'site-settings';
@@ -83,6 +84,7 @@ function serializeSettings(settings) {
             settings.announcementBarText
         ),
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+        customPages: mergeCustomPages(settings.customPages),
     };
 }
 
@@ -157,6 +159,7 @@ export async function PUT(req) {
             'announcementBarText',
             'announcementBarMessages',
             'homepageSectionOrder',
+            'customPages',
         ];
 
         const normalizedFaviconSize = body.faviconSizePx !== undefined
@@ -169,6 +172,8 @@ export async function PUT(req) {
                 updates[key] =
                     key === 'announcementBarMessages'
                         ? normalizeAnnouncementMessages(body[key], body.announcementBarText)
+                        : key === 'customPages'
+                            ? mergeCustomPages(body[key])
                         : key === 'lightLogoUrl' || key === 'darkLogoUrl'
                             ? normalizeLogoUrl(body[key])
                         : key === 'faviconUrl'

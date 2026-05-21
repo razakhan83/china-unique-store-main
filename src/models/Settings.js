@@ -22,6 +22,61 @@ const AnnouncementMessageSchema = new mongoose.Schema(
     }
 );
 
+const CustomPageSchema = new mongoose.Schema(
+    {
+        slug: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        title: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        label: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        description: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        content: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        seoTitle: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        seoDescription: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        isEnabled: {
+            type: Boolean,
+            default: true,
+        },
+        showInFooter: {
+            type: Boolean,
+            default: true,
+        },
+        sortOrder: {
+            type: Number,
+            default: 0,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
 const SettingsSchema = new mongoose.Schema(
     {
         // Use a singleton pattern: there's only one settings doc, identified by this key
@@ -158,6 +213,10 @@ const SettingsSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+        customPages: {
+            type: [CustomPageSchema],
+            default: [],
+        },
     },
     {
         timestamps: true,
@@ -176,7 +235,8 @@ if (
         !cachedSettings.schema.path('faviconSizePx') ||
         !cachedSettings.schema.path('logoScalePercent') ||
         !cachedSettings.schema.path('emailLogoScalePercent') ||
-        !cachedSettings.schema.path('invoiceLogoScalePercent')
+        !cachedSettings.schema.path('invoiceLogoScalePercent') ||
+        !cachedSettings.schema.path('customPages')
     )
 ) {
     delete mongoose.models.Settings;

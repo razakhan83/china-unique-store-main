@@ -1,142 +1,15 @@
 // @ts-nocheck
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BellRing, ExternalLink, ImagePlus, LayoutGrid, Loader2, Pencil, Plus, RadioTower, Save, ShieldCheck, Store, Trash2, Upload, UserPlus, X } from 'lucide-react';
+import { Loader2, RadioTower, Save, ShieldCheck, Store, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
-
-function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
-  const rawMessages = Array.isArray(messages) && messages.length > 0
-    ? messages
-    : String(fallbackText || '')
-        .split(/\r?\n|[|•]+/)
-        .map((text, index) => ({ id: `announcement-${index + 1}`, text, isActive: true }));
-
-  return rawMessages
-    .map((entry, index) => ({
-      id: String(entry?.id || `announcement-${index + 1}`).trim(),
-      text: String(entry?.text || '').trim(),
-      isActive: entry?.isActive !== false,
-    }))
-    .filter((entry) => entry.text);
-}
-
-function SettingSection({ icon: Icon, title, description, children }) {
-  return (
-    <section className="surface-card rounded-xl p-5 md:p-6">
-      <div className="mb-5 flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
-          <Icon className="size-4" />
-        </div>
-        <div>
-          <h3 className="font-semibold text-foreground">{title}</h3>
-          {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
-        </div>
-      </div>
-      <div className="flex flex-col gap-4">{children}</div>
-    </section>
-  );
-}
-
-function ToggleField({ checked, onCheckedChange, title, description }) {
-  return (
-    <Field orientation="horizontal" className="items-start justify-between rounded-lg border border-border bg-muted/35 px-4 py-3">
-      <FieldContent>
-        <FieldLabel>{title}</FieldLabel>
-        <FieldDescription>{description}</FieldDescription>
-      </FieldContent>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </Field>
-  );
-}
-
-function LogoUploadCard({
-  field,
-  label,
-  hint,
-  surfaceClassName,
-  imageClassName,
-  imageStyle,
-  emptyMessage = 'Upload a transparent PNG, SVG, or WebP logo.',
-  inputPlaceholder = 'https://res.cloudinary.com/...',
-  value,
-  onChange,
-  uploading,
-  onUpload,
-}) {
-  return (
-    <Field className="rounded-2xl border border-border bg-background/75 p-4">
-      <FieldContent className="gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <FieldLabel>{label}</FieldLabel>
-            <FieldDescription>{hint}</FieldDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {value ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                onClick={() => onChange(field, '')}
-                disabled={uploading}
-              >
-                <X data-icon="inline-start" />
-                Remove
-              </Button>
-            ) : null}
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted">
-              {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
-              {uploading ? 'Uploading' : 'Upload'}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploading}
-                onChange={(event) => onUpload(field, event)}
-              />
-            </label>
-          </div>
-        </div>
-
-        <div className={`relative flex min-h-36 items-center justify-center overflow-hidden rounded-2xl border border-border ${surfaceClassName}`}>
-          {value ? (
-            <Image
-              src={value}
-              alt={`${label} preview`}
-              width={280}
-              height={88}
-              sizes="(max-width: 768px) 100vw, 320px"
-              className={imageClassName}
-              style={imageStyle}
-            />
-          ) : (
-            <div className="flex max-w-56 flex-col items-center gap-2 px-5 py-8 text-center text-sm text-muted-foreground">
-              <ImagePlus className="size-5" />
-              <span>{emptyMessage}</span>
-            </div>
-          )}
-        </div>
-
-        <Input
-          value={value || ''}
-          onChange={(event) => onChange(field, event.target.value)}
-          placeholder={inputPlaceholder}
-        />
-      </FieldContent>
-    </Field>
-  );
-}
+import { SettingSection, ToggleField } from './settingsShared';
 
 function AdminAccessSection() {
   const [configuredAdmins, setConfiguredAdmins] = useState([]);
@@ -161,6 +34,7 @@ function AdminAccessSection() {
         setLoadingList(false);
       }
     }
+
     fetchAdmins();
   }, []);
 
@@ -217,9 +91,9 @@ function AdminAccessSection() {
         <Input
           type="email"
           value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
+          onChange={(event) => setNewEmail(event.target.value)}
           placeholder="admin@example.com"
-          className="rounded-md border-slate-300 flex-1"
+          className="flex-1 rounded-md border-slate-300"
           required
         />
         <Button
@@ -235,8 +109,8 @@ function AdminAccessSection() {
 
       {loadingList ? (
         <div className="space-y-2 pt-2">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-11 animate-pulse rounded-lg bg-muted/50" />
+          {[1, 2].map((item) => (
+            <div key={item} className="h-11 animate-pulse rounded-lg bg-muted/50" />
           ))}
         </div>
       ) : (
@@ -255,10 +129,10 @@ function AdminAccessSection() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/35 px-4 py-2.5"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                  <ShieldCheck className="size-4 shrink-0 text-foreground" />
+                      <ShieldCheck className="size-4 shrink-0 text-foreground" />
                       <span className="truncate text-sm font-medium text-foreground">{email}</span>
                     </div>
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                    <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                       Protected
                     </span>
                   </li>
@@ -281,23 +155,19 @@ function AdminAccessSection() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/35 px-4 py-2.5"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                  <ShieldCheck className="size-4 shrink-0 text-foreground" />
+                      <ShieldCheck className="size-4 shrink-0 text-foreground" />
                       <span className="truncate text-sm font-medium text-foreground">{email}</span>
                     </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
+                      className="shrink-0 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleRemoveAdmin(email)}
                       disabled={removingEmail === email}
                       title={`Remove ${email}`}
                     >
-                      {removingEmail === email ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="size-4" />
-                      )}
+                      {removingEmail === email ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
                     </Button>
                   </li>
                 ))}
@@ -313,111 +183,13 @@ function AdminAccessSection() {
 export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [uploadingField, setUploadingField] = useState('');
   const [form, setForm] = useState({
     ...initialSettings,
-    announcementBarMessages: normalizeAnnouncementMessages(
-      initialSettings?.announcementBarMessages,
-      initialSettings?.announcementBarText
-    ),
   });
-  const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
-  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
-  const [editingAnnouncementText, setEditingAnnouncementText] = useState('');
-  const faviconPreviewSize = Math.min(96, Math.max(32, Number(form.faviconSizePx) || 64));
 
   function handleChange(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
     setSaved(false);
-  }
-
-  async function readFileAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => resolve(event.target?.result || '');
-      reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function handleImageUpload(field, event) {
-    const file = Array.from(event.target.files || []).find((entry) => entry.type.startsWith('image/'));
-    event.target.value = '';
-    if (!file) return;
-
-    setUploadingField(field);
-    setSaved(false);
-
-    try {
-      const dataUrl = await readFileAsDataUrl(file);
-      if (!dataUrl) return;
-
-      const image = await uploadImageDataUrl(dataUrl, 'kifayatly_branding');
-      handleChange(field, image.url);
-      toast.success(
-        field === 'lightLogoUrl'
-          ? 'Light logo uploaded.'
-          : field === 'darkLogoUrl'
-            ? 'Dark logo uploaded.'
-            : 'Favicon uploaded.'
-      );
-    } catch (error) {
-      console.error(`Failed to upload ${field}`, error);
-      toast.error(error.message || 'Failed to upload image.');
-    } finally {
-      setUploadingField('');
-    }
-  }
-
-  function handleAddAnnouncementMessage() {
-    const trimmed = newAnnouncementMessage.trim();
-    if (!trimmed) return;
-
-    handleChange('announcementBarMessages', [
-      ...form.announcementBarMessages,
-      {
-        id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-          ? crypto.randomUUID()
-          : `announcement-${Date.now()}`,
-        text: trimmed,
-        isActive: true,
-      },
-    ]);
-    setNewAnnouncementMessage('');
-  }
-
-  function handleEditAnnouncementStart(message) {
-    setEditingAnnouncementId(message.id);
-    setEditingAnnouncementText(message.text);
-  }
-
-  function handleEditAnnouncementSave() {
-    const trimmed = editingAnnouncementText.trim();
-    if (!trimmed || !editingAnnouncementId) return;
-
-    handleChange(
-      'announcementBarMessages',
-      form.announcementBarMessages.map((message) =>
-        message.id === editingAnnouncementId ? { ...message, text: trimmed } : message
-      )
-    );
-    setEditingAnnouncementId(null);
-    setEditingAnnouncementText('');
-  }
-
-  function handleEditAnnouncementCancel() {
-    setEditingAnnouncementId(null);
-    setEditingAnnouncementText('');
-  }
-
-  function handleDeleteAnnouncementMessage(id) {
-    handleChange(
-      'announcementBarMessages',
-      form.announcementBarMessages.filter((message) => message.id !== id)
-    );
-    if (editingAnnouncementId === id) {
-      handleEditAnnouncementCancel();
-    }
   }
 
   async function handleSave() {
@@ -451,16 +223,20 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
   }
 
   return (
-      <div className="w-full">
+    <div className="w-full">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Store Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Settings</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure store details, delivery rules, and customer communication.
+          Manage store details, customer contact channels, tracking credentials, and admin access.
         </p>
       </div>
 
       <div className="space-y-6">
-        <SettingSection icon={Store} title="General Information">
+        <SettingSection
+          icon={Store}
+          title="General Information"
+          description="Core store details used in email communication, invoices, and customer support."
+        >
           <FieldGroup>
             <Field>
               <FieldLabel>Store Name</FieldLabel>
@@ -487,23 +263,6 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
                 placeholder="Shop #12, Block A, Gulshan..."
                 rows={3}
               />
-            </Field>
-            <Field>
-              <FieldLabel>Navbar & Footer Logo Size (%)</FieldLabel>
-              <FieldContent>
-                <Input
-                  type="number"
-                  min="60"
-                  max="200"
-                  step="5"
-                  value={form.logoScalePercent ?? 100}
-                  onChange={(event) => handleChange('logoScalePercent', event.target.value)}
-                  placeholder="100"
-                />
-                <FieldDescription className="mt-1.5">
-                  Controls the storefront logo size in both the navbar and footer. Default is 100%.
-                </FieldDescription>
-              </FieldContent>
             </Field>
             <Field>
               <FieldLabel>Email Logo Size (%)</FieldLabel>
@@ -543,79 +302,6 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
         </SettingSection>
 
         <SettingSection
-          icon={ImagePlus}
-          title="Logo Configuration"
-          description="Upload both storefront logo variants. Saved Cloudinary URLs are optimized and reused across light and dark surfaces."
-        >
-          <div className="grid gap-4 lg:grid-cols-2">
-            <LogoUploadCard
-              field="lightLogoUrl"
-              label="Light Mode Logo"
-              hint="Used on dark backgrounds like the footer and dark brand surfaces."
-              surfaceClassName="bg-[#082118]"
-              imageClassName="h-auto max-h-16 w-auto object-contain"
-              value={form.lightLogoUrl}
-              onChange={handleChange}
-              uploading={uploadingField === 'lightLogoUrl'}
-              onUpload={handleImageUpload}
-            />
-            <LogoUploadCard
-              field="darkLogoUrl"
-              label="Dark Mode Logo"
-              hint="Used on light backgrounds like the navbar and admin previews."
-              surfaceClassName="bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(242,246,244,0.98))]"
-              imageClassName="h-auto max-h-16 w-auto object-contain"
-              value={form.darkLogoUrl}
-              onChange={handleChange}
-              uploading={uploadingField === 'darkLogoUrl'}
-              onUpload={handleImageUpload}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            The storefront automatically switches between these two logos based on the background.
-          </p>
-        </SettingSection>
-
-        <SettingSection
-          icon={ImagePlus}
-          title="Favicon"
-          description="Upload the icon shown in browser tabs and bookmarks. A square PNG works best."
-        >
-          <div className="max-w-xl">
-            <LogoUploadCard
-              field="faviconUrl"
-              label="Store Favicon"
-              hint="Recommended size is at least 64x64 pixels. You can increase the exported favicon size below for sharper rendering."
-              surfaceClassName="bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(242,246,244,0.98))]"
-              imageClassName="rounded-xl object-contain"
-              imageStyle={{ width: `${faviconPreviewSize}px`, height: `${faviconPreviewSize}px` }}
-              emptyMessage="Upload a square PNG, SVG, or ICO favicon."
-              value={form.faviconUrl}
-              onChange={handleChange}
-              uploading={uploadingField === 'faviconUrl'}
-              onUpload={handleImageUpload}
-            />
-            <Field className="mt-4">
-              <FieldLabel>Favicon Output Size (px)</FieldLabel>
-              <FieldContent>
-                <Input
-                  type="number"
-                  min="32"
-                  max="256"
-                  step="16"
-                  value={form.faviconSizePx ?? 64}
-                  onChange={(event) => handleChange('faviconSizePx', event.target.value)}
-                  placeholder="64"
-                />
-                <FieldDescription className="mt-1.5">
-                  Controls the generated favicon resolution from 32px to 256px. Browsers still choose the on-screen tab size, but larger values can make the icon sharper.
-                </FieldDescription>
-              </FieldContent>
-            </Field>
-          </div>
-        </SettingSection>
-
-        <SettingSection
           icon={RadioTower}
           title="Social & Tracking"
           description="Manage customer contact links, social destinations, and tracking credentials in one place."
@@ -624,14 +310,14 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             <Field className="md:col-span-2">
               <FieldLabel>WhatsApp Number</FieldLabel>
               <FieldContent>
-              <Input
-                value={form.whatsappNumber}
-                onChange={(event) => handleChange('whatsappNumber', event.target.value)}
-                placeholder="923001234567"
-              />
-              <FieldDescription className="mt-1.5">
-                Used by the floating contact button, footer CTA, and checkout handoff. Format: country code + number without spaces.
-              </FieldDescription>
+                <Input
+                  value={form.whatsappNumber}
+                  onChange={(event) => handleChange('whatsappNumber', event.target.value)}
+                  placeholder="923001234567"
+                />
+                <FieldDescription className="mt-1.5">
+                  Used by the floating contact button, footer CTA, and checkout handoff. Format: country code + number without spaces.
+                </FieldDescription>
               </FieldContent>
             </Field>
 
@@ -709,132 +395,8 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
           </FieldGroup>
         </SettingSection>
 
-        <SettingSection icon={BellRing} title="Announcement Bar">
-          <ToggleField
-            checked={!!form.announcementBarEnabled}
-            onCheckedChange={(value) => handleChange('announcementBarEnabled', value)}
-            title="Show top banner"
-            description="Display a promotional banner across the storefront."
-          />
-
-          <div className="space-y-3">
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <FieldLabel>Add Announcement Message</FieldLabel>
-                <Input
-                  value={newAnnouncementMessage}
-                  onChange={(event) => setNewAnnouncementMessage(event.target.value)}
-                  placeholder="Free delivery on orders above Rs. 3000!"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddAnnouncementMessage}
-                disabled={!newAnnouncementMessage.trim()}
-                className="shrink-0"
-              >
-                <Plus data-icon="inline-start" />
-                Add
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <FieldLabel>Message List</FieldLabel>
-              {form.announcementBarMessages.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-                  No announcement messages yet. Add one above.
-                </div>
-              ) : (
-                form.announcementBarMessages.map((message, index) => {
-                  const isEditing = editingAnnouncementId === message.id;
-
-                  return (
-                    <div
-                      key={message.id}
-                      className="rounded-lg border border-border bg-muted/20 px-4 py-3"
-                    >
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Message {index + 1}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => (isEditing ? handleEditAnnouncementSave() : handleEditAnnouncementStart(message))}
-                          >
-                            <Pencil data-icon="inline-start" />
-                            {isEditing ? 'Save' : 'Edit'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            onClick={() => handleDeleteAnnouncementMessage(message.id)}
-                          >
-                            <Trash2 data-icon="inline-start" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={editingAnnouncementText}
-                            onChange={(event) => setEditingAnnouncementText(event.target.value)}
-                            placeholder="Edit announcement message"
-                          />
-                          <div className="flex items-center gap-2">
-                            <Button type="button" size="sm" onClick={handleEditAnnouncementSave} disabled={!editingAnnouncementText.trim()}>
-                              Save Changes
-                            </Button>
-                            <Button type="button" variant="outline" size="sm" onClick={handleEditAnnouncementCancel}>
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-foreground">{message.text}</p>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Active messages are joined into one slow-moving marquee with large spacing between each item.
-            </p>
-          </div>
-        </SettingSection>
-
-        <SettingSection
-          icon={LayoutGrid}
-          title="Home Page Settings"
-          description="Manage the storefront section order, hero slides, banners, and category product blocks from the dedicated home page builder."
-        >
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Open Home Page Builder</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Add, reorder, and save homepage sections without touching storefront code.
-              </p>
-            </div>
-            <Link href="/admin/home-page" className="shrink-0">
-              <Button type="button" variant="outline" size="sm" className="admin-cta-button w-full md:w-auto">
-                <ExternalLink data-icon="inline-start" />
-                Home Page Builder
-              </Button>
-            </Link>
-          </div>
-        </SettingSection>
-
         <div className="flex items-center gap-4 pb-4">
-          <Button onClick={handleSave} disabled={saving || Boolean(uploadingField)} size="sm" className="admin-cta-button">
+          <Button onClick={handleSave} disabled={saving} size="sm" className="admin-cta-button">
             {saving ? (
               <Loader2 className="animate-spin" data-icon="inline-start" />
             ) : (
@@ -842,13 +404,10 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             )}
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </Button>
-          {saved ? (
-              <span className="text-sm font-medium text-foreground">Settings updated successfully.</span>
-          ) : null}
+          {saved ? <span className="text-sm font-medium text-foreground">Settings updated successfully.</span> : null}
         </div>
 
-        {/* Admin Access Management */}
-        {isConfiguredAdmin && <AdminAccessSection />}
+        {isConfiguredAdmin ? <AdminAccessSection /> : null}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
+import { mergeCustomPages } from '@/lib/customPages';
 import { getStoreSettings } from '@/lib/data';
 import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
 import { getSiteUrlFromHeaders } from '@/lib/siteUrl';
@@ -214,12 +215,18 @@ export async function saveStoreSettingsAction(nextSettings) {
     'announcementBarEnabled',
     'announcementBarText',
     'coverImages',
+    'customPages',
   ];
 
   const updates = {};
   for (const field of allowedFields) {
     if (nextSettings[field] !== undefined) {
-      updates[field] = field === 'coverImages' ? normalizeCoverImages(nextSettings[field]) : nextSettings[field];
+      updates[field] =
+        field === 'coverImages'
+          ? normalizeCoverImages(nextSettings[field])
+          : field === 'customPages'
+            ? mergeCustomPages(nextSettings[field])
+            : nextSettings[field];
     }
   }
 
