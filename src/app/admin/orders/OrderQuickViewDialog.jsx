@@ -42,7 +42,7 @@ export default function OrderQuickViewDialog({
           />
         }
       >
-        <Eye className="mr-2 size-4" />
+        <Eye data-icon="inline-start" />
         {triggerLabel}
       </DialogTrigger>
 

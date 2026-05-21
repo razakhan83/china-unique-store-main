@@ -136,14 +136,15 @@ export default function OrderDetailActions({ order }) {
         </div>
 
         <Button 
-          className="w-full mt-4" 
+          size="sm"
+          className="admin-cta-button mt-4 w-full" 
           onClick={handleSave} 
           disabled={saving || !isChanged}
         >
           {saving ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
+            <Loader2 className="animate-spin" data-icon="inline-start" />
           ) : (
-            <Save className="mr-2 size-4" />
+            <Save data-icon="inline-start" />
           )}
           Save Updates
         </Button>

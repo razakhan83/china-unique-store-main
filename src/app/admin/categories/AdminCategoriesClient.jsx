@@ -442,8 +442,8 @@ export default function AdminCategoriesClient() {
           </div>
 
           <div className="flex items-end">
-            <Button type="submit" disabled={adding || !newName.trim()} className="w-full rounded-xl md:w-auto">
-              {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            <Button type="submit" disabled={adding || !newName.trim()} className="admin-cta-button w-full md:w-auto">
+              {adding ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Plus data-icon="inline-start" />}
               Add Category
             </Button>
           </div>

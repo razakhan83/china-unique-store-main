@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Trash2, Printer } from 'lucide-react';
+import { Calendar, Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Trash2, Printer } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1649,7 +1649,7 @@ export default function AdminOrdersClient({
           type="button"
           size="sm"
           onClick={() => setIsCreateModalOpen(true)}
-          className="h-8 rounded-xl px-3 text-[12px] font-semibold"
+          className="admin-cta-button"
         >
           <Plus data-icon="inline-start" />
           Create Order
@@ -1693,7 +1693,7 @@ export default function AdminOrdersClient({
 
       {/* Filters Bar — Compact */}
       <form
-        className="admin-filter-shell flex flex-col gap-2.5"
+        className="admin-filter-shell flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between"
         onSubmit={(event) => {
           event.preventDefault();
           navigate({
@@ -1704,49 +1704,54 @@ export default function AdminOrdersClient({
           });
         }}
       >
-        <FieldGroup className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,0.78fr)_minmax(0,0.78fr)]">
-          <Field>
-            <FieldLabel className="text-[11px]">Search</FieldLabel>
+        <FieldGroup className="flex flex-col gap-2 md:min-w-0 md:flex-1 md:flex-row md:items-center">
+          <div className="flex items-center gap-2 md:shrink-0">
+            <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background px-2.5 py-1.5">
+              <Calendar className="size-3.5 shrink-0 text-muted-foreground" />
+              <Field>
+                <FieldLabel htmlFor="orders-start-date" className="sr-only">From date</FieldLabel>
+                <Input
+                  id="orders-start-date"
+                  type="date"
+                  className="h-6 min-w-0 border-0 bg-transparent px-0 text-[12px] shadow-none"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </Field>
+              <span className="text-[11px] text-muted-foreground">to</span>
+              <Field>
+                <FieldLabel htmlFor="orders-end-date" className="sr-only">To date</FieldLabel>
+                <Input
+                  id="orders-end-date"
+                  type="date"
+                  className="h-6 min-w-0 border-0 bg-transparent px-0 text-[12px] shadow-none"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <Field className="md:min-w-0 md:flex-1">
+            <FieldLabel className="sr-only">Search orders</FieldLabel>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" data-icon />
               <Input
-                placeholder="Order ID, customer, or phone"
-                className="h-9 rounded-xl pl-9 text-[13px] lg:h-10"
+                placeholder="Search orders"
+                className="h-9 rounded-xl border-border/70 bg-background pl-9 text-[13px] shadow-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </Field>
-
-          <Field>
-            <FieldLabel htmlFor="orders-start-date" className="text-[11px]">From</FieldLabel>
-            <Input
-              id="orders-start-date"
-              type="date"
-              className="h-9 rounded-xl text-[13px] lg:h-10"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="orders-end-date" className="text-[11px]">To</FieldLabel>
-            <Input
-              id="orders-end-date"
-              type="date"
-              className="h-9 rounded-xl text-[13px] lg:h-10"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </Field>
         </FieldGroup>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:shrink-0">
           <Button
             type="submit"
             size="sm"
             disabled={!canApplyFilters}
-            className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+            className="admin-cta-button"
           >
             <Search data-icon="inline-start" />
             Apply
@@ -1758,7 +1763,7 @@ export default function AdminOrdersClient({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-9 rounded-xl px-3 text-[12px] text-muted-foreground hover:text-foreground"
+              className="admin-cta-button text-muted-foreground hover:text-foreground"
             >
               <X data-icon="inline-start" />
               Clear
@@ -1776,7 +1781,7 @@ export default function AdminOrdersClient({
                 size="sm"
                 onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'sourcing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
@@ -1787,7 +1792,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handlePrintSourcingSlip({ moveToNextStep: false })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'sourcing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'sourcing-print' ? 'Opening...' : 'Print'}
@@ -1798,7 +1803,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handleGenerateSourcingSlip({ moveToNextStep: true })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'sourcing-move' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
                 {pendingWorkflowAction === 'sourcing-move' ? 'Generating...' : 'Download & Move'}
@@ -1809,7 +1814,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handleGenerateSourcingSlip({ moveToNextStep: false })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'sourcing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
                 {pendingWorkflowAction === 'sourcing-download' ? 'Generating...' : 'Download'}
@@ -1823,7 +1828,7 @@ export default function AdminOrdersClient({
                 size="sm"
                 onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'packing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
@@ -1834,7 +1839,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handlePrintPackingSlip({ moveToNextStep: false })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'packing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'packing-print' ? 'Opening...' : 'Print'}
@@ -1845,7 +1850,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handleGeneratePackingSlip({ moveToNextStep: true })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'packing-move' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
                 {pendingWorkflowAction === 'packing-move' ? 'Generating...' : 'Download & Move'}
@@ -1856,7 +1861,7 @@ export default function AdminOrdersClient({
                 variant="outline"
                 onClick={() => handleGeneratePackingSlip({ moveToNextStep: false })}
                 disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+                className="admin-cta-button"
               >
                 {pendingWorkflowAction === 'packing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
                 {pendingWorkflowAction === 'packing-download' ? 'Generating...' : 'Download'}
@@ -1870,7 +1875,7 @@ export default function AdminOrdersClient({
               variant="secondary"
               onClick={handleGenerateCourierSheet}
               disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+              className="admin-cta-button"
             >
               {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
               {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
@@ -1879,7 +1884,7 @@ export default function AdminOrdersClient({
           {statusFilter === 'all' ? (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-xl text-[12px] font-semibold">
+                <Button variant="outline" size="sm" className="admin-cta-button">
                   <Zap data-icon="inline-start" />
                   Reports
                 </Button>
@@ -1934,7 +1939,7 @@ export default function AdminOrdersClient({
           variant="outline"
           onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
           disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
-          className="h-9 rounded-xl px-3 text-[12px] font-semibold"
+          className="admin-cta-button"
         >
           {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
           Move Selected{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
@@ -1985,7 +1990,7 @@ export default function AdminOrdersClient({
                     <p className="text-sm font-medium text-foreground">No orders found</p>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
                     {hasActiveFilters && (
-                      <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 h-7 text-[12px]">
+                      <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3">
                         Clear all filters
                       </Button>
                     )}
@@ -2062,7 +2067,7 @@ export default function AdminOrdersClient({
                           order={order}
                           triggerLabel="View"
                           triggerSize="sm"
-                          triggerClassName="h-7 rounded-md px-2.5 text-[11px] font-semibold"
+                          triggerClassName="admin-cta-button"
                         />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -2137,7 +2142,7 @@ export default function AdminOrdersClient({
             <p className="text-sm font-medium text-foreground">No orders found</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3 h-8 text-[12px]">
+              <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3">
                 Clear all filters
               </Button>
             )}
@@ -2239,14 +2244,14 @@ export default function AdminOrdersClient({
                            order={order}
                            triggerLabel="View"
                            triggerSize="sm"
-                           triggerClassName="h-7 rounded-md px-3 text-[11px] font-semibold"
+                           triggerClassName="admin-cta-button"
                          />
                          <Button
                             variant="secondary"
                             size="sm"
                             render={<Link href={`/admin/orders/${order._id}`} />}
                             nativeButton={false}
-                            className="h-7 rounded-md px-3 text-[11px] font-semibold"
+                            className="admin-cta-button"
                          >
                             View order
                          </Button>
@@ -2594,10 +2599,10 @@ export default function AdminOrdersClient({
             </div>
 
             <DialogFooter className="gap-1.5 sm:gap-0">
-              <Button type="button" variant="ghost" size="sm" onClick={() => { setIsCreateModalOpen(false); resetDraftComposer(); }} className="h-8 text-[12px]">
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setIsCreateModalOpen(false); resetDraftComposer(); }} className="admin-cta-button">
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={isCreatingDraft} className="h-8 min-w-[120px] text-[12px]">
+              <Button type="submit" size="sm" disabled={isCreatingDraft} className="admin-cta-button min-w-[120px]">
                 {isCreatingDraft ? <Spinner data-icon="inline-start" /> : null}
                 {isCreatingDraft ? 'Creating...' : 'Create Draft'}
               </Button>
@@ -2756,8 +2761,8 @@ export default function AdminOrdersClient({
               </div>
 
               <DialogFooter className="gap-1.5 sm:gap-0">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)} className="h-8 text-[12px]">Cancel</Button>
-                <Button type="submit" size="sm" disabled={isUpdating} className="h-8 min-w-[100px] text-[12px]">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)} className="admin-cta-button">Cancel</Button>
+                <Button type="submit" size="sm" disabled={isUpdating} className="admin-cta-button min-w-[100px]">
                   {isUpdating ? <Spinner data-icon="inline-start" /> : null}
                   {isUpdating ? 'Saving...' : 'Save Changes'}
                 </Button>

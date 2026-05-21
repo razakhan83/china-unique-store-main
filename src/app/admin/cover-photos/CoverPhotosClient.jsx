@@ -406,7 +406,7 @@ export default function CoverPhotosClient({ initialSlides }) {
               </p>
             </div>
           </div>
-          <Button type="button" variant="outline" className="rounded-xl" onClick={handleAddSlide}>
+          <Button type="button" variant="outline" size="sm" className="admin-cta-button" onClick={handleAddSlide}>
             <Plus data-icon="inline-start" />
             Add Cover
           </Button>

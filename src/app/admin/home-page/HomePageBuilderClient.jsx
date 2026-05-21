@@ -838,7 +838,7 @@ function SaveHomePageButton({ saving, saved, uploadingKey, onSave, className }) 
       onClick={onSave}
       disabled={saving || Boolean(uploadingKey)}
       size="sm"
-      className={cn('rounded-full', className)}
+      className={cn('admin-cta-button', className)}
     >
       {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Save data-icon="inline-start" />}
       {saving ? 'Saving...' : saved ? 'Saved' : 'Save Home Page'}
@@ -850,7 +850,7 @@ function AddSectionDropdown({ isTemplateAlreadyUsed, onAddSection }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="rounded-full">
+        <Button type="button" variant="outline" size="sm" className="admin-cta-button">
           <Plus data-icon="inline-start" />
           Add Section
           <ChevronDown data-icon="inline-end" />

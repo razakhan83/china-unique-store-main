@@ -225,9 +225,10 @@ function AdminAccessSection() {
         <Button
           type="submit"
           disabled={adding || !newEmail.trim()}
-          className="rounded-md shrink-0"
+          size="sm"
+          className="admin-cta-button shrink-0"
         >
-          {adding ? <Loader2 className="mr-2 size-4 animate-spin" /> : <UserPlus className="mr-2 size-4" />}
+          {adding ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <UserPlus data-icon="inline-start" />}
           Add Admin
         </Button>
       </form>
@@ -824,7 +825,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
               </p>
             </div>
             <Link href="/admin/home-page" className="shrink-0">
-              <Button type="button" variant="outline" className="w-full rounded-xl md:w-auto">
+              <Button type="button" variant="outline" size="sm" className="admin-cta-button w-full md:w-auto">
                 <ExternalLink data-icon="inline-start" />
                 Home Page Builder
               </Button>
@@ -833,7 +834,7 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
         </SettingSection>
 
         <div className="flex items-center gap-4 pb-4">
-          <Button onClick={handleSave} disabled={saving || Boolean(uploadingField)}>
+          <Button onClick={handleSave} disabled={saving || Boolean(uploadingField)} size="sm" className="admin-cta-button">
             {saving ? (
               <Loader2 className="animate-spin" data-icon="inline-start" />
             ) : (

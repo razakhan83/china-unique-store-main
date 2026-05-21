@@ -507,14 +507,14 @@ export default function AdminVendorsSection() {
           type="button"
           variant="default"
           size="sm"
-          className="h-8 gap-1.5 text-[12px] font-semibold"
+          className="admin-cta-button"
           onClick={() => {
             setVendorForm(emptyVendorForm);
             setEditingVendorId('');
             setIsVendorDialogOpen(true);
           }}
         >
-          <Plus className="size-3.5" />
+          <Plus data-icon="inline-start" />
           Add Vendor
         </Button>
       </div>
@@ -1047,8 +1047,8 @@ export default function AdminVendorsSection() {
               <Button type="button" variant="outline" onClick={resetVendorForm}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+              <Button type="submit" disabled={saving} size="sm" className="admin-cta-button">
+                {saving ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
                 {editingVendorId ? 'Update Vendor' : 'Add Vendor'}
               </Button>
             </div>
