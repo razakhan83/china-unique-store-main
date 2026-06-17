@@ -467,16 +467,11 @@ export default function AddProduct() {
 
           <div>
             <Label className="mb-2">Short Description</Label>
-            <Textarea
+            <ProductRichTextEditor
               value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
-              className="min-h-20 px-4 py-3 rounded-xl"
+              onChange={setShortDescription}
               placeholder="A brief summary displayed right below the price on the product page..."
-              maxLength={500}
             />
-            <p className="mt-1 text-[11px] text-muted-foreground text-right font-mono">
-              {shortDescription.length}/500 characters
-            </p>
           </div>
 
           <div>

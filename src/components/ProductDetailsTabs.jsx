@@ -4,24 +4,25 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 
 export default function ProductDetailsTabs({ reviewCount, descriptionContent, reviewsContent }) {
   return (
-    <div className="mt-8 md:mt-12 w-full max-w-4xl mx-auto px-4 md:px-0">
-      <Accordion type="single" defaultValue="description" className="space-y-3">
+    <div className="mt-10 md:mt-16 w-full max-w-4xl mx-auto px-4 md:px-0">
+      <Accordion type="single" defaultValue="description" className="border-t border-border/60">
         {/* Description Accordion Item */}
-        <AccordionItem value="description" className="border border-border rounded-xl bg-card overflow-hidden">
-          <AccordionTrigger className="w-full flex items-center justify-between px-5 py-4 text-base font-bold text-foreground hover:bg-muted/30 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-border">
+        <AccordionItem value="description" className="border-b border-border/60">
+
+          <AccordionTrigger className="w-full flex items-center justify-between py-4 md:py-5 text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors hover:no-underline">
             Description
           </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5 pt-4">
+          <AccordionContent className="pb-5 pt-2 text-muted-foreground">
             {descriptionContent}
           </AccordionContent>
         </AccordionItem>
 
         {/* Reviews Accordion Item */}
-        <AccordionItem value="reviews" className="border border-border rounded-xl bg-card overflow-hidden">
-          <AccordionTrigger className="w-full flex items-center justify-between px-5 py-4 text-base font-bold text-foreground hover:bg-muted/30 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-border">
+        <AccordionItem value="reviews" className="border-b border-border/60">
+          <AccordionTrigger className="w-full flex items-center justify-between py-4 md:py-5 text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors hover:no-underline">
             Reviews ({reviewCount})
           </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5 pt-4">
+          <AccordionContent className="pb-5 pt-2">
             {reviewsContent}
           </AccordionContent>
         </AccordionItem>
@@ -29,3 +30,5 @@ export default function ProductDetailsTabs({ reviewCount, descriptionContent, re
     </div>
   );
 }
+
+

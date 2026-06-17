@@ -395,9 +395,10 @@ async function ProductHeroSection({ paramsPromise }) {
             </div>
 
             {product.shortDescription ? (
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {product.shortDescription}
-              </p>
+              <div
+                className="mt-1 text-sm leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1"
+                dangerouslySetInnerHTML={{ __html: product.shortDescription }}
+              />
             ) : null}
 
             <Separator />
