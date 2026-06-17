@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 const HERO_AUTOPLAY_DELAY_MS = 5000;
@@ -140,6 +140,7 @@ export default function HeroSlider({ slides = [] }) {
             className={`hero-fade-slide ${safeActiveIndex === index ? 'is-active' : ''}`}
             aria-hidden={safeActiveIndex !== index}
           >
+            {/* Slide images */}
             <SlideFrame href={slide.link}>
               <div className="block h-full w-full md:hidden">
                 <Image
@@ -184,7 +185,31 @@ export default function HeroSlider({ slides = [] }) {
               </div>
             </SlideFrame>
 
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.16))]" />
+            {/* Gradient scrim for legibility */}
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.18)_50%,rgba(0,0,0,0.04)_100%)]" />
+
+            {/* Text + CTA overlay */}
+            {(slide.title || slide.subtitle || slide.link) ? (
+              <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-start gap-2 px-5 pb-14 md:px-10 md:pb-12 lg:px-16 lg:pb-14">
+                {slide.title ? (
+                  <h2 className="max-w-lg text-balance text-xl font-bold leading-tight text-white drop-shadow-lg md:text-3xl lg:text-4xl">
+                    {slide.title}
+                  </h2>
+                ) : null}
+                {slide.subtitle ? (
+                  <p className="max-w-sm text-sm text-white/85 drop-shadow md:text-base">
+                    {slide.subtitle}
+                  </p>
+                ) : null}
+                <Link
+                  href={slide.link || '/products'}
+                  className="mt-1 inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition-[background-color,transform] duration-300 hover:bg-white/28 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Shop Now
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            ) : null}
           </div>
         ))}
 
@@ -218,8 +243,8 @@ export default function HeroSlider({ slides = [] }) {
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={safeActiveIndex === index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-[width,background-color] duration-300 ${
-                  safeActiveIndex === index ? 'w-5 bg-white' : 'w-2 bg-white/50'
+                className={`h-2.5 rounded-full shadow-md transition-[width,background-color] duration-300 ${
+                  safeActiveIndex === index ? 'w-6 bg-white' : 'w-2.5 bg-white/55 hover:bg-white/80'
                 }`}
               />
             ))}

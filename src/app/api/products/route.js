@@ -27,7 +27,7 @@ export async function GET() {
     try {
         await mongooseConnect();
         const products = await Product.find({})
-            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
             .populate({ path: 'Category', select: 'name slug' })
             .sort({ createdAt: -1 })
             .lean();
@@ -68,6 +68,7 @@ export async function POST(req) {
         let {
             Name,
             Description,
+            shortDescription,
             seoTitle,
             seoDescription,
             seoKeywords,
@@ -134,6 +135,7 @@ export async function POST(req) {
         const product = await Product.create({
             Name,
             Description,
+            shortDescription: typeof shortDescription === 'string' ? shortDescription.trim() : '',
             seoTitle: typeof seoTitle === 'string' ? seoTitle.trim() : '',
             seoDescription: typeof seoDescription === 'string' ? seoDescription.trim() : '',
             seoKeywords: formatSeoKeywords(seoKeywords),

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { Suspense, useEffect, useState, useTransition } from 'react';
 import { ArrowDownWideNarrow, Loader2, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ProductsFilterSheet from '@/components/ProductsFilterSheet';
 
 export default function ProductsToolbar({
   initialSearch = '',
@@ -76,7 +77,13 @@ export default function ProductsToolbar({
         onSubmit={(event) => handleSubmit(event, pendingAction)}
         className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-card/70 p-2 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur md:p-2.5 lg:flex-row lg:items-center"
       >
-        <div className="min-w-0 flex-1">
+        <Suspense fallback={null}>
+            <ProductsFilterSheet
+              activeCategory={activeCategory}
+              currentSort={sortValue}
+            />
+          </Suspense>
+          <div className="min-w-0 flex-1">
           <label htmlFor="products-search" className="sr-only">
             Search products
           </label>

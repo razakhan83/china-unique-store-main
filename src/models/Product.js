@@ -87,6 +87,11 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        shortDescription: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         seoTitle: {
             type: String,
             trim: true,
@@ -196,6 +201,7 @@ if (
     cachedProduct &&
     (
         !cachedProduct.schema.path('compareAtPrice') ||
+        !cachedProduct.schema.path('shortDescription') ||
         !cachedProduct.schema.path('vendors') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorProductName') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorPrice') ||

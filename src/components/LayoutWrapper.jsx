@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ChevronRight, CreditCard, MapPin, Truck } from 'lucide-react';
+import { BadgeCheck, ChevronRight, CreditCard, MapPin, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
 
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
@@ -14,6 +14,13 @@ import { createWhatsAppUrl } from '@/lib/whatsapp';
 function NavbarFallback() {
   return <div className="sticky top-0 z-40 h-[100px] bg-card" aria-hidden="true" />;
 }
+
+const TRUST_BADGES = [
+  { icon: ShieldCheck, title: 'Secure Payment', sub: '100% encrypted checkout' },
+  { icon: Truck, title: 'Fast Delivery', sub: 'Nationwide shipping' },
+  { icon: RefreshCcw, title: 'Easy Returns', sub: 'Hassle-free process' },
+  { icon: BadgeCheck, title: '100% Authentic', sub: 'Verified quality items' },
+];
 
 export default function LayoutWrapper({ children, categories, settings }) {
   const whatsappLink = createWhatsAppUrl(settings.whatsappNumber);
@@ -48,6 +55,23 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
         <footer className="mt-auto border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] md:pb-6">
           <div className="container mx-auto max-w-7xl px-4">
+
+            {/* ── Trust Badge Strip ── */}
+            <div className="mb-10 grid grid-cols-2 gap-5 border-b border-border/60 pb-10 md:grid-cols-4 md:gap-6">
+              {TRUST_BADGES.map(({ icon: Icon, title, sub }) => (
+                <div key={title} className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">{title}</p>
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Main Footer Columns ── */}
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div>
                 <div className="mb-5 w-fit origin-left scale-110 sm:scale-125">
@@ -72,7 +96,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                       rel={href ? 'noopener noreferrer' : undefined}
                       aria-label={label}
                       aria-disabled={!href}
-                      className={`inline-flex size-10 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-muted-foreground transition-[transform,border-color,background-color,color,opacity] duration-300 ${
+                      className={`inline-flex size-11 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-muted-foreground transition-[transform,border-color,background-color,color,opacity] duration-300 ${
                         href ? 'hover:-translate-y-1 hover:border-primary/18 hover:bg-background hover:text-foreground' : 'cursor-not-allowed opacity-45'
                       }`}
                     >
@@ -84,14 +108,37 @@ export default function LayoutWrapper({ children, categories, settings }) {
               <div>
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Links</h3>
                 <ul className="flex flex-col gap-3 text-muted-foreground">
-                  {quickLinks.map((item) => (
-                    <li key={item.slug}>
-                      <Link href={`/${item.slug}`} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
-                        <ChevronRight className="size-4" />
-                        {item.label || item.title}
-                      </Link>
-                    </li>
-                  ))}
+                  {quickLinks.length > 0 ? (
+                    quickLinks.map((item) => (
+                      <li key={item.slug}>
+                        <Link href={`/${item.slug}`} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <ChevronRight className="size-4" />
+                          {item.label || item.title}
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li>
+                        <Link href="/products" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <ChevronRight className="size-4" />
+                          All Products
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/products?category=new-arrivals" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <ChevronRight className="size-4" />
+                          New Arrivals
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/products?category=special-offers" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <ChevronRight className="size-4" />
+                          Special Offers
+                        </Link>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
               <div>
@@ -123,6 +170,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                 </ul>
               </div>
             </div>
+
             <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 text-xs text-muted-foreground md:flex-row">
               <p>&copy; China Unique Store. All rights reserved.</p>
               <div className="flex items-center gap-3">

@@ -62,6 +62,7 @@ const PRODUCT_CATEGORY_POPULATE = { path: 'Category', select: 'name slug' };
 const PRODUCT_CARD_PROJECTION = [
   'Name',
   'Description',
+  'shortDescription',
   'Price',
   'compareAtPrice',
   'Images',
@@ -206,6 +207,7 @@ function toProductCardItem(product) {
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Description: product.Description || '',
+    shortDescription: product.shortDescription || '',
     Category: product.Category,
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
@@ -228,6 +230,7 @@ function toProductDetailView(product) {
     slug: product.slug,
     Name: product.Name,
     Description: product.Description || '',
+    shortDescription: product.shortDescription || '',
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,

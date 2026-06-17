@@ -35,60 +35,53 @@ function MobileNavButton({
   href,
   iconSwap,
 }) {
-  const [isPressed, setIsPressed] = useState(false);
-
   const content = (
-    <>
-      <span
+    <div className="relative flex flex-col items-center gap-1.5">
+
+      <div
         className={cn(
-          'flex items-center justify-center text-[color:inherit] transition-[color,transform] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)]',
-          isPressed && 'scale-[1.12]'
+          'flex size-[2.4rem] items-center justify-center rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+          active ? 'bg-primary/10' : 'bg-transparent'
         )}
       >
-        {iconSwap ? iconSwap : <Icon className="size-[1.2rem]" strokeWidth={3} />}
-      </span>
+        <span
+          className={cn(
+            'transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+            active ? 'scale-110' : 'scale-100'
+          )}
+        >
+          {iconSwap ? (
+            iconSwap
+          ) : (
+            <Icon
+              className={cn('size-[1.3rem] transition-all duration-300', active ? 'stroke-[2.5]' : 'stroke-[1.75]')}
+            />
+          )}
+        </span>
+      </div>
       <span
         className={cn(
-          'text-[0.76rem] font-semibold tracking-[0.01em] transition-colors duration-200'
+          'text-[0.65rem] font-bold transition-colors duration-200',
+          active ? 'text-primary' : 'text-muted-foreground'
         )}
       >
         {label}
       </span>
-    </>
+    </div>
   );
+
+  const baseClassName = 'relative flex flex-1 flex-col items-center justify-center pt-2 pb-1 outline-none';
 
   if (href) {
     return (
-      <Link
-        href={href}
-        aria-current={active ? 'page' : undefined}
-        onClick={onClick}
-        onPointerDown={() => setIsPressed(true)}
-        onPointerUp={() => setIsPressed(false)}
-        onPointerLeave={() => setIsPressed(false)}
-        className={cn(
-          'group flex min-w-0 flex-1 flex-col items-center gap-1 text-muted-foreground transition-colors duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:text-foreground active:text-primary',
-          active && 'text-primary'
-        )}
-      >
+      <Link href={href} aria-current={active ? 'page' : undefined} onClick={onClick} className={baseClassName}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      onPointerDown={() => setIsPressed(true)}
-      onPointerUp={() => setIsPressed(false)}
-      onPointerLeave={() => setIsPressed(false)}
-      className={cn(
-        'group flex min-w-0 flex-1 flex-col items-center gap-1 text-muted-foreground transition-colors duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:text-foreground active:text-primary',
-        active && 'text-primary'
-      )}
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className={baseClassName}>
       {content}
     </button>
   );
@@ -176,7 +169,7 @@ export default function MobileBottomNav({
         <div className="pointer-events-auto relative z-[1] mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
-            className="grid grid-cols-4 items-center gap-1 border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-2.5 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
+            className="grid grid-cols-4 items-stretch gap-1 overflow-visible border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-1 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
           >
             <MobileNavButton
               icon={Home}

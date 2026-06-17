@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductCard from '@/components/ProductCard';
 import ProductActions, { ProductSocialActions } from '@/components/ProductActions';
+import ProductDescription from '@/components/ProductDescription';
+import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductGallery from '@/components/ProductGallery';
 import ProductViewTracking from '@/components/ProductViewTracking';
 import ProductPageScrollReset from '@/components/ProductPageScrollReset';
@@ -252,8 +254,8 @@ export default function ProductPage({ params }) {
           <ProductHeroSection paramsPromise={params} />
         </Suspense>
 
-        <Suspense fallback={<ProductReviewsSkeleton />}>
-          <ProductReviewsSection paramsPromise={params} />
+        <Suspense fallback={<div className="mt-10 h-64 w-full animate-pulse rounded-xl bg-muted md:mt-16" />}>
+          <ProductTabsWrapper paramsPromise={params} />
         </Suspense>
       </div>
 
@@ -272,6 +274,9 @@ async function ProductBreadcrumb({ paramsPromise }) {
     notFound();
   }
 
+  const product = pageData.product;
+  const primaryCategory = getProductCategories(product)[0];
+
   return (
     <Breadcrumb className="overflow-x-auto">
       <BreadcrumbList>
@@ -282,6 +287,16 @@ async function ProductBreadcrumb({ paramsPromise }) {
         <BreadcrumbItem>
           <BreadcrumbLink href="/products">Products</BreadcrumbLink>
         </BreadcrumbItem>
+        {primaryCategory ? (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`/products?category=${primaryCategory.id}`}>
+                {primaryCategory.name}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </>
+        ) : null}
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>{pageData.product.Name}</BreadcrumbPage>
@@ -336,12 +351,12 @@ async function ProductHeroSection({ paramsPromise }) {
         }}
       />
 
-      <div className="flex flex-col gap-5 md:flex-row md:gap-8 lg:gap-10">
-        <div className="w-full md:w-[55%] lg:w-[58%]">
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8 lg:gap-10">
+        <div className="w-full md:w-[45%] lg:w-[42%]">
           <ProductGallery images={product.Images} />
         </div>
 
-        <div className="w-full md:w-[45%] lg:w-[42%]">
+        <div className="w-full md:w-[55%] lg:w-[58%]">
           <div className="flex flex-col gap-4 md:sticky md:top-24">
             <div>
               <Badge variant="outline" className={`${colors.badge} text-xs font-bold uppercase tracking-wider`}>
@@ -379,6 +394,12 @@ async function ProductHeroSection({ paramsPromise }) {
               ) : null}
             </div>
 
+            {product.shortDescription ? (
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {product.shortDescription}
+              </p>
+            ) : null}
+
             <Separator />
             <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
 
@@ -410,18 +431,6 @@ async function ProductHeroSection({ paramsPromise }) {
                 </Card>
               </div>
             </div>
-
-            <div className="pt-1">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Description
-              </h2>
-              <div className="text-[15px] leading-relaxed text-muted-foreground">
-                <div
-                  className="[&_a]:text-primary [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_h1]:my-3 [&_h1]:text-2xl [&_h1]:font-black [&_h2]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_img]:my-4 [&_img]:max-w-full [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-2xl [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:my-4 [&_video]:max-w-full"
-                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -429,24 +438,26 @@ async function ProductHeroSection({ paramsPromise }) {
   );
 }
 
-async function ProductReviewsSection({ paramsPromise }) {
+async function ProductTabsWrapper({ paramsPromise }) {
   const { id: slug } = await paramsPromise;
-  const product = await getCachedProductBySlug(slug);
+  const pageData = await getCachedProductPageData(slug);
 
-  if (!product) {
-    notFound();
-  }
-
-  const reviewSummary = await getProductReviewSummarySafe(product._id);
-
-  if (reviewSummary.reviewCount === 0) {
+  if (!pageData?.product) {
     return null;
   }
 
+  const product = pageData.product;
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
+  const descriptionHtml =
+    formatRichTextDescriptionHtml(product.Description) ||
+    'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
+
   return (
-    <div className="mb-4 mt-8">
-      <ProductReviews productId={product._id} productName={product.Name} />
-    </div>
+    <ProductDetailsTabs
+      reviewCount={reviewSummary.reviewCount}
+      descriptionContent={<ProductDescription html={descriptionHtml} />}
+      reviewsContent={<ProductReviews productId={product._id} productName={product.Name} />}
+    />
   );
 }
 
@@ -473,10 +484,12 @@ async function RelatedProductsSection({ paramsPromise }) {
   }
 
   return (
-    <div className="border-t border-border bg-muted/35 py-8 md:py-12">
+    <div className="border-t border-border bg-primary/5 py-8 md:py-12">
       <div className="container mx-auto max-w-7xl px-4">
         <CategoryProductSlider
           categoryLabel="You May Also Like"
+          kicker="More to Explore"
+          viewAllHref={primaryCategory ? `/products?category=${primaryCategory.id}` : '/products'}
         >
           {relatedProducts.map((product, index) => (
             <ProductCard

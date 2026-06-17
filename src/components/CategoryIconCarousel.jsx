@@ -48,6 +48,12 @@ export default function CategoryIconCarousel({ categories }) {
   return (
     <section className="border-b border-border bg-card/70 py-4 md:py-5">
       <div className="mx-auto max-w-7xl px-4">
+          <div className="mb-4 flex items-end justify-between md:mb-5">
+            <div>
+              <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.18em] text-primary/70">Browse By</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-[1.75rem]">Shop by Category</h2>
+            </div>
+          </div>
         <div className="relative overflow-hidden">
           <div
             className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 md:w-10"

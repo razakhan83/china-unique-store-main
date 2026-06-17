@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
             .populate({ path: 'Category', select: 'name slug' })
             .lean();
 
@@ -92,6 +92,7 @@ export async function PUT(request, { params }) {
 
         existingProduct.Name = body.Name;
         existingProduct.Description = body.Description;
+        existingProduct.shortDescription = typeof body.shortDescription === 'string' ? body.shortDescription.trim() : '';
         existingProduct.seoTitle = typeof body.seoTitle === 'string' ? body.seoTitle.trim() : '';
         existingProduct.seoDescription = typeof body.seoDescription === 'string' ? body.seoDescription.trim() : '';
         existingProduct.seoKeywords = formatSeoKeywords(body.seoKeywords);

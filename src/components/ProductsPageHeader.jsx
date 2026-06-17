@@ -285,7 +285,7 @@ export default function ProductsPageHeader({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <h1 className="products-page-heading text-[1.8rem] font-semibold tracking-tight text-foreground [text-wrap:balance] md:text-3xl">
+        <h1 className="products-page-heading text-[1.8rem] font-bold tracking-tight text-foreground [text-wrap:balance] md:text-3xl">
           {pageTitle}
         </h1>
       </div>
