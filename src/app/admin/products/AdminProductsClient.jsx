@@ -17,6 +17,7 @@ import {
   Store,
   Tag,
   Trash2,
+  TrendingUp,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -605,12 +606,16 @@ export default function AdminProductsClient({
             {summary.totalProducts} total | {summary.liveProducts} live | {summary.draftProducts} draft
           </p>
         </div>
-        <Link href="/admin/products/add">
-          <Button variant="default" size="sm" className="admin-cta-button">
-            <Plus data-icon="inline-start" />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <Link href="/admin/top-performing-products" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "admin-cta-button flex-1 bg-background px-2 sm:flex-none sm:px-3")}>
+            <TrendingUp className="mr-1.5 size-4" />
+            Top Products
+          </Link>
+          <Link href="/admin/products/add" className={cn(buttonVariants({ variant: "default", size: "sm" }), "admin-cta-button flex-1 px-2 sm:flex-none sm:px-3")}>
+            <Plus className="mr-1.5 size-4" />
             Add Product
-          </Button>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       <div className="admin-filter-shell flex flex-col gap-3">
