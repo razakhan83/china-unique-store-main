@@ -417,18 +417,12 @@ function NavbarContent({
                   }}
                   onPointerLeave={scheduleCategoriesClose}
                 >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        desktopNavButtonClass(isCategoriesOpen),
-                        'gap-2'
-                      )}
-                    >
+                  <DropdownMenuTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
+
                       Categories
                       <ChevronDown className={cn('size-4 transition-transform', isCategoriesOpen && 'rotate-180')} />
-                    </Button>
-                  </DropdownMenuTrigger>
+                    
+</DropdownMenuTrigger>
                 </div>
                 <DropdownMenuContent
                   className="w-60 p-1"

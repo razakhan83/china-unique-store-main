@@ -1,4 +1,6 @@
-import { Suspense } from 'react';
+const fs = require('fs');
+
+const content = `import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare } from 'lucide-react';
@@ -83,10 +85,10 @@ async function DashboardContent() {
   } = await loadDashboardDataSafely();
 
   const stats = [
-    { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
-    { value: `Rs. ${summary.totalRevenue.toLocaleString('en-PK')}`, change: 'All-time' },
-    { value: `${summary.totalProducts}`, change: `${summary.liveProducts} live` },
-    { value: `${summary.totalCustomers}`, change: 'Total reach' },
+    { value: \`\${summary.totalOrders}\`, change: \`\${summary.pendingOrders} order confirmed\` },
+    { value: \`Rs. \${summary.totalRevenue.toLocaleString('en-PK')}\`, change: 'All-time' },
+    { value: \`\${summary.totalProducts}\`, change: \`\${summary.liveProducts} live\` },
+    { value: \`\${summary.totalCustomers}\`, change: 'Total reach' },
   ];
 
   return (
@@ -163,7 +165,7 @@ async function DashboardContent() {
               {recentOrders.length ? (
                 <div className="flex flex-col divide-y divide-border/60">
                   {recentOrders.map((order) => (
-                    <Link key={order._id} href={`/admin/orders/${order._id}`} className="flex items-center justify-between gap-2 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-md">
+                    <Link key={order._id} href={\`/admin/orders/\${order._id}\`} className="flex items-center justify-between gap-2 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-md">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-[13px] font-medium text-foreground truncate">{order.customerName}</p>
@@ -198,9 +200,14 @@ async function DashboardContent() {
 
         <div className="flex flex-col gap-4">
           <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
-            <div className="mb-4 flex items-center gap-2">
-              <Trophy className="size-4 text-muted-foreground" />
-              <h2 className="text-[13px] font-semibold text-foreground">Top Performing Products</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trophy className="size-4 text-muted-foreground" />
+                <h2 className="text-[13px] font-semibold text-foreground">Top Performing Products</h2>
+              </div>
+              <Link href="/admin/products/top-performing" className="text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline">
+                View All
+              </Link>
             </div>
             {topProducts?.length > 0 ? (
               <div className="flex flex-col divide-y divide-border/60">
@@ -231,12 +238,6 @@ async function DashboardContent() {
                 No product data available yet.
               </div>
             )}
-            {topProducts?.length > 0 && (
-              <Link href="/admin/top-performing-products" className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                View All Products
-                <ArrowRight className="size-3" />
-              </Link>
-            )}
           </div>
         </div>
       </section>
@@ -264,7 +265,7 @@ async function DashboardContent() {
             {topVendors.length > 0 ? (
               <div className="flex flex-col divide-y divide-border/60">
                 {topVendors.map((vendor) => (
-                  <div key={`${vendor.vendorId || vendor.name}`} className="flex items-center justify-between py-2">
+                  <div key={\`\${vendor.vendorId || vendor.name}\`} className="flex items-center justify-between py-2">
                     <p className="text-[13px] font-medium text-foreground">{vendor.name}</p>
                     <p className="text-[12px] text-muted-foreground">
                        <span className="font-medium text-foreground">{vendor.totalLiveItems}</span> Items
@@ -277,12 +278,6 @@ async function DashboardContent() {
                 No vendors yet.
               </div>
             )}
-            {topVendors?.length > 0 && (
-              <Link href="/admin/vendors" className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                View All Vendors
-                <ArrowRight className="size-3" />
-              </Link>
-            )}
           </div>
         </div>
       </section>
@@ -291,9 +286,14 @@ async function DashboardContent() {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr]">
         <div className="flex flex-col gap-4">
           <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
-            <div className="mb-4 flex items-center gap-2">
-              <MessageSquare className="size-4 text-muted-foreground" />
-              <h2 className="text-[13px] font-semibold text-foreground">Recent Reviews</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="size-4 text-muted-foreground" />
+                <h2 className="text-[13px] font-semibold text-foreground">Recent Reviews</h2>
+              </div>
+              <Link href="/admin/reviews" className="text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline">
+                View All
+              </Link>
             </div>
             {recentReviews?.length > 0 ? (
               <div className="flex flex-col divide-y divide-border/60">
@@ -306,7 +306,7 @@ async function DashboardContent() {
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0 text-yellow-500">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`size-3 ${i < review.rating ? 'fill-current' : 'fill-transparent text-muted-foreground/30'}`} />
+                          <Star key={i} className={\`size-3 \${i < review.rating ? 'fill-current' : 'fill-transparent text-muted-foreground/30'}\`} />
                         ))}
                       </div>
                     </div>
@@ -321,20 +321,19 @@ async function DashboardContent() {
                 No recent reviews found.
               </div>
             )}
-            {recentReviews?.length > 0 && (
-              <Link href="/admin/reviews" className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                View All Reviews
-                <ArrowRight className="size-3" />
-              </Link>
-            )}
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
-            <div className="mb-4 flex items-center gap-2">
-              <Users className="size-4 text-muted-foreground" />
-              <h2 className="text-[13px] font-semibold text-foreground">Top Customers</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="size-4 text-muted-foreground" />
+                <h2 className="text-[13px] font-semibold text-foreground">Top Customers</h2>
+              </div>
+              <Link href="/admin/users" className="text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline">
+                View All
+              </Link>
             </div>
             {topCustomers?.length > 0 ? (
               <div className="flex flex-col divide-y divide-border/60">
@@ -356,12 +355,6 @@ async function DashboardContent() {
                 No customer data available yet.
               </div>
             )}
-            {topCustomers?.length > 0 && (
-              <Link href="/admin/users" className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                View All Customers
-                <ArrowRight className="size-3" />
-              </Link>
-            )}
           </div>
         </div>
       </section>
@@ -369,3 +362,7 @@ async function DashboardContent() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/app/admin/page.js', content);
+console.log('Update complete');

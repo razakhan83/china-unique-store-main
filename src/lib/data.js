@@ -12,6 +12,7 @@ import OrderLog from '@/models/OrderLog';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
+import Review from '@/models/Review';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import {
@@ -2016,7 +2017,7 @@ export async function getAdminDashboardData() {
   const startOfTomorrow = new Date(startOfToday);
   startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-  const [orderDashboardAgg, productDashboardAgg] = await Promise.all([
+  const [orderDashboardAgg, productDashboardAgg, recentReviewsAgg] = await Promise.all([
     Order.aggregate([
       {
         $match: {
@@ -2069,6 +2070,45 @@ export async function getAdminDashboardData() {
             },
             { $count: 'count' },
           ],
+          topProducts: [
+            { $unwind: '$items' },
+            {
+              $group: {
+                _id: '$items.productId',
+                name: { $first: '$items.name' },
+                image: { $first: '$items.image' },
+                totalSold: { $sum: '$items.quantity' },
+              },
+            },
+            { $sort: { totalSold: -1 } },
+            { $limit: 5 },
+          ],
+          topCustomers: [
+            {
+              $group: {
+                _id: {
+                  $cond: [
+                    { $ne: [{ $ifNull: ['$customerPhone', ''] }, ''] },
+                    { $ifNull: ['$customerPhone', ''] },
+                    {
+                      $cond: [
+                        { $ne: [{ $ifNull: ['$customerEmail', ''] }, ''] },
+                        { $ifNull: ['$customerEmail', ''] },
+                        { $toString: '$_id' },
+                      ],
+                    },
+                  ],
+                },
+                name: { $first: '$customerName' },
+                phone: { $first: '$customerPhone' },
+                email: { $first: '$customerEmail' },
+                totalSpent: { $sum: '$totalAmount' },
+                ordersCount: { $sum: 1 },
+              },
+            },
+            { $sort: { totalSpent: -1 } },
+            { $limit: 5 },
+          ],
         },
       },
     ]),
@@ -2107,6 +2147,7 @@ export async function getAdminDashboardData() {
         },
       },
     ]),
+    Review.find().sort({ createdAt: -1 }).limit(5).populate('productId', 'Name images').lean()
   ]);
 
   const orderDashboard = orderDashboardAgg?.[0] || {};
@@ -2127,12 +2168,24 @@ export async function getAdminDashboardData() {
       dailyConfirmedOrders: Number(orderDashboard.dailyConfirmedOrders?.[0]?.count || 0),
     },
     recentOrders: recentOrders.map(toOrderSummaryRow),
+    topProducts: Array.isArray(orderDashboard.topProducts) ? orderDashboard.topProducts : [],
     topVendors: topVendorsAgg.map((entry) => ({
       vendorId: entry?._id?.vendorId?.toString?.() || '',
       name: String(entry?._id?.name || '').trim(),
       shopNumber: String(entry?._id?.shopNumber || '').trim(),
       totalLiveItems: Number(entry?.totalLiveItems || 0),
     })).filter((entry) => entry.name),
+    topCustomers: Array.isArray(orderDashboard.topCustomers) ? orderDashboard.topCustomers : [],
+    recentReviews: (recentReviewsAgg || []).map(r => ({
+      _id: r._id?.toString(),
+      rating: r.rating,
+      comment: r.comment,
+      userName: r.userName,
+      createdAt: r.createdAt?.toISOString(),
+      productName: r.productId?.Name || 'Unknown Product',
+      productImage: r.productId?.images?.[0] || null,
+      productId: r.productId?._id?.toString() || null,
+    })),
   };
 }
 
@@ -2264,5 +2317,89 @@ export async function getAdminSettings() {
     announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
     homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
     customPages: mergeCustomPages(settings.customPages),
+  };
+}
+
+export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
+  'use cache';
+  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
+  cacheTag('orders', 'products');
+  await mongooseConnect();
+
+  const skip = (Math.max(1, Number(page)) - 1) * limit;
+  const limitNumber = Math.max(1, Number(limit));
+
+  const [aggregationResult] = await Order.aggregate([
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: '$items.productId',
+        name: { $first: '$items.name' },
+        image: { $first: '$items.image' },
+        totalSold: { $sum: '$items.quantity' },
+        revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+      },
+    },
+    {
+      $facet: {
+        items: [
+          { $sort: { totalSold: -1 } },
+          { $skip: skip },
+          { $limit: limitNumber },
+        ],
+        totalCount: [
+          { $count: 'count' }
+        ]
+      }
+    }
+  ]);
+
+  const items = aggregationResult?.items || [];
+  const total = aggregationResult?.totalCount?.[0]?.count || 0;
+
+  if (items.length > 0) {
+    const productIds = items.map(item => item._id);
+    const objectIds = [];
+    const slugs = [];
+    for (const id of productIds) {
+      if (id && id.length === 24 && /^[0-9a-fA-F]{24}$/.test(id)) {
+        objectIds.push(id);
+      } else if (id) {
+        slugs.push(id);
+      }
+    }
+    
+    const query = [];
+    if (objectIds.length > 0) query.push({ _id: { $in: objectIds } });
+    if (slugs.length > 0) query.push({ slug: { $in: slugs } });
+
+    const products = query.length > 0 
+      ? await Product.find({ $or: query }).select('isLive StockStatus Price slug').lean() 
+      : [];
+      
+    const productMap = products.reduce((acc, p) => {
+      acc[p._id.toString()] = p;
+      if (p.slug) acc[p.slug] = p;
+      return acc;
+    }, {});
+
+    for (const item of items) {
+      const p = productMap[item._id?.toString()];
+      item.isLive = p ? p.isLive : false;
+      item.StockStatus = p ? p.StockStatus : 'Unknown';
+      item.currentPrice = p ? p.Price : 0;
+      item.actualProductId = p ? p._id.toString() : item._id?.toString();
+    }
+  }
+
+  return {
+    items: items.map(item => ({
+      ...item,
+      _id: item._id?.toString()
+    })),
+    total,
+    page: Math.max(1, Number(page)),
+    limit: limitNumber,
+    totalPages: Math.ceil(total / limitNumber),
   };
 }

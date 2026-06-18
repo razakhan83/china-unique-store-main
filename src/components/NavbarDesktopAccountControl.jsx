@@ -64,12 +64,8 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
   return (
     <div className="hidden md:block">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
-          >
+        <DropdownMenuTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
+
             <Avatar className="size-9">
               {!isAvatarLoaded ? <Skeleton className="absolute inset-0 rounded-full" /> : null}
               <AvatarImage
@@ -81,8 +77,8 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
               />
               <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
             </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
+          
+</DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
           <DropdownMenuGroup>
             <DropdownMenuLabel className="font-normal">

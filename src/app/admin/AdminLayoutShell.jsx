@@ -24,6 +24,7 @@ import {
   Store,
   Truck,
   Users,
+  Search,
 } from 'lucide-react';
 
 import AdminNotificationCenter from '@/components/AdminNotificationCenter';
@@ -331,9 +332,25 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                 >
                   {desktopSidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
                 </Button>
-                <div>
+                <div className="hidden lg:block">
                   <p className="text-[13px] font-semibold leading-tight text-foreground md:text-sm">{pageMeta.title}</p>
                 </div>
+              </div>
+
+              <div className="flex-1 max-w-md px-2 sm:px-4">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const q = new FormData(e.currentTarget).get('q')?.toString().trim();
+                  if (q) router.push(`/admin/orders?search=${encodeURIComponent(q)}`);
+                }} className="relative group flex items-center w-full">
+                  <Search className="absolute left-2.5 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <input
+                    name="q"
+                    type="search"
+                    placeholder="Search orders, customers..."
+                    className="w-full h-9 rounded-md border border-border bg-muted/40 pl-9 pr-3 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </form>
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2">

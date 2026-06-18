@@ -224,16 +224,16 @@ export default function AdminNotificationCenter() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative group rounded-full border border-border/70 bg-background hover:bg-muted/50 shadow-sm">
+      <PopoverTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground size-8 relative group rounded-full border border-border/70 bg-background hover:bg-muted/50 shadow-sm">
+
           <Bell className={cn("size-5 transition-transform group-hover:rotate-12", unreadCount > 0 ? "text-foreground" : "text-muted-foreground")} />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-background">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-        </Button>
-      </PopoverTrigger>
+        
+</PopoverTrigger>
       <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-[380px]" align="end" sideOffset={8}>
         <div className="flex flex-col px-3 py-2.5 sm:px-4 sm:py-3">
           <div className="flex items-center justify-between pb-2 border-b border-border/40">

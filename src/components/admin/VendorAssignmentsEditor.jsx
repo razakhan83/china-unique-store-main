@@ -79,12 +79,8 @@ export default function VendorAssignmentsEditor({
       </div>
 
       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-auto min-h-11 w-full justify-between rounded-xl px-4 py-3 text-left"
-          >
+        <PopoverTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground size-8 h-auto min-h-11 w-full justify-between rounded-xl px-4 py-3 text-left">
+
             <span className="flex min-w-0 items-center gap-2">
               <Store className="size-4 shrink-0 text-muted-foreground" />
               <span className="truncate text-sm font-medium">
@@ -94,8 +90,8 @@ export default function VendorAssignmentsEditor({
               </span>
             </span>
             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
-          </Button>
-        </PopoverTrigger>
+          
+</PopoverTrigger>
         <PopoverContent align="start" className="w-[min(92vw,24rem)] p-0">
           <PopoverHeader className="border-b border-border px-3 py-3">
             <PopoverTitle>Assign Vendors</PopoverTitle>
