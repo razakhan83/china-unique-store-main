@@ -148,7 +148,7 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="100vw"
-                  preload={index === 0}
+                  priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
@@ -162,7 +162,7 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
-                  preload={index === 0}
+                  priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
@@ -176,7 +176,7 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="(min-width: 1024px) 100vw, 100vw"
-                  preload={index === 0}
+                  priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
