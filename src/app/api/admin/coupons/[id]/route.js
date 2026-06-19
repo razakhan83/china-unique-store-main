@@ -30,10 +30,10 @@ export async function PUT(req, { params }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
     if (session?.user?.isDemo) {
       return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
-    }, { status: 401 });
     }
 
     await mongooseConnect();
@@ -75,10 +75,10 @@ export async function DELETE(req, { params }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
     if (session?.user?.isDemo) {
       return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
-    }, { status: 401 });
     }
 
     await mongooseConnect();
