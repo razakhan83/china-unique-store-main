@@ -17,7 +17,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { getLastOrderDetailsAction, submitOrderAction } from '@/app/actions';
+import { getLastOrderDetailsAction, submitOrderAction, validateCouponAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -220,6 +220,11 @@ export default function CheckoutClient({ settings }) {
   const [citySearch, setCitySearch] = useState('');
   const submissionLockRef = useRef(false);
 
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
 
@@ -347,8 +352,9 @@ export default function CheckoutClient({ settings }) {
     subtotal,
     city: formData.city,
     settings,
+    appliedCoupon,
   });
-  const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi } = pricing;
+  const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi, discountAmount } = pricing;
   const shippingStatusLabel = isFreeShipping
     ? 'Free delivery unlocked'
     : `Delivery estimate ${formatPriceLabel(shipping)}`;
@@ -380,6 +386,42 @@ export default function CheckoutClient({ settings }) {
     if (!formData.address.trim()) nextErrors.address = 'Complete Address is required.';
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  }
+
+  async function handleApplyCoupon(e) {
+    e.preventDefault();
+    if (!couponCodeInput.trim()) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    
+    setCouponLoading(true);
+    setCouponError('');
+    
+    try {
+      const res = await validateCouponAction(
+        couponCodeInput,
+        subtotal,
+        formData.email || session?.user?.email || '',
+        formData.phone || ''
+      );
+      
+      if (res.success) {
+        setAppliedCoupon(res.coupon);
+        setCouponCodeInput('');
+      } else {
+        setCouponError(res.message || 'Invalid coupon.');
+      }
+    } catch (error) {
+      setCouponError('Error validating coupon.');
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponError('');
   }
 
   function copyToClipboard() {
@@ -429,6 +471,7 @@ export default function CheckoutClient({ settings }) {
           updateProfile: true,
           totalAmount: total,
           whatsappNumber: settings.whatsappNumber,
+          couponCode: appliedCoupon?.code,
           items: cart.map((item) => ({
             productId: item.id || item._id || item.slug,
             name: item.Name || item.name,
@@ -839,11 +882,60 @@ export default function CheckoutClient({ settings }) {
 
                 <Separator className="mb-4" />
 
+                <div className="mb-6 space-y-4">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm">
+                      <div>
+                        <p className="font-semibold text-success flex items-center gap-2">
+                          <CheckCircle2 className="size-4" />
+                          Coupon Applied
+                        </p>
+                        <p className="font-mono text-muted-foreground mt-0.5">{appliedCoupon.code}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={handleRemoveCoupon} className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <FieldLabel htmlFor="coupon-code">Have a coupon?</FieldLabel>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="coupon-code" 
+                          placeholder="Enter coupon code" 
+                          value={couponCodeInput}
+                          onChange={(e) => {
+                            setCouponCodeInput(e.target.value.toUpperCase());
+                            setCouponError('');
+                          }}
+                          className={couponError ? 'border-destructive' : ''}
+                        />
+                        <Button 
+                          variant="secondary" 
+                          onClick={handleApplyCoupon} 
+                          disabled={!couponCodeInput.trim() || couponLoading}
+                        >
+                          {couponLoading ? <Loader2 className="size-4 animate-spin" /> : 'Apply'}
+                        </Button>
+                      </div>
+                      {couponError && <p className="text-xs text-destructive">{couponError}</p>}
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="mb-4" />
+
                 <div className={cn('mb-6 space-y-3', styles.totalsPanel)}>
                   <div className={cn('flex justify-between text-sm text-muted-foreground', styles.totalRow)}>
                     <span>Subtotal</span>
                     <span className="font-semibold text-foreground">Rs. {subtotal.toLocaleString('en-PK')}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className={cn('flex justify-between text-sm text-success', styles.totalRow)}>
+                      <span>Discount ({appliedCoupon?.code})</span>
+                      <span className="font-semibold">-Rs. {discountAmount.toLocaleString('en-PK')}</span>
+                    </div>
+                  )}
                   <div className={cn('flex justify-between text-sm text-muted-foreground', styles.totalRow)}>
                     <span>Shipping Estimate</span>
                     <span className="font-semibold text-foreground">{isFreeShipping ? 'FREE' : `Rs. ${shipping.toLocaleString('en-PK')}`}</span>

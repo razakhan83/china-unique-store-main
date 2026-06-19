@@ -16,6 +16,7 @@ import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, isValidOrderStatus, nor
 import { getSiteUrlFromHeaders } from '@/lib/siteUrl';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
 import Order from '@/models/Order';
+import Coupon from '@/models/Coupon';
 import OrderLog from '@/models/OrderLog';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
@@ -250,6 +251,7 @@ export async function saveStoreSettingsAction(nextSettings) {
 
 export async function submitOrderAction(input) {
   try {
+    const Coupon = (await import('@/models/Coupon')).default;
     await mongooseConnect();
 
     const customerName = String(input?.customerName || '').trim();
@@ -260,6 +262,7 @@ export async function submitOrderAction(input) {
     const totalAmount = Number(input?.totalAmount || 0);
     const notes = String(input?.notes || '').trim();
     const whatsappNumber = String(input?.whatsappNumber || '').trim();
+    const couponCodeInput = String(input?.couponCode || '').trim();
     const cookieStore = await cookies();
     const requestHeaders = await headers();
     const clientIp =
@@ -288,17 +291,25 @@ export async function submitOrderAction(input) {
       return { success: false, error: 'Unable to calculate a valid order total.' };
     }
 
-    const pricing = calculateCheckoutPricing({
-      subtotal: canonicalSubtotalAmount,
-      city: customerCity,
-      settings,
-    });
-  
-    // Robust email capture:
     const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
     const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
     const userEmail = sessionEmail || inputEmail || null;
 
+    let appliedCoupon = null;
+    if (couponCodeInput) {
+      const validationResult = await validateCouponLogic(couponCodeInput, canonicalSubtotalAmount, userEmail, customerPhone);
+      if (validationResult.success) {
+        appliedCoupon = validationResult.coupon;
+      }
+    }
+
+    const pricing = calculateCheckoutPricing({
+      subtotal: canonicalSubtotalAmount,
+      city: customerCity,
+      settings,
+      appliedCoupon,
+    });
+  
     // STRICT VALIDATION
     if (session?.user && !userEmail) {
       return { success: false, error: 'Unable to capture user email.' };
@@ -318,7 +329,13 @@ export async function submitOrderAction(input) {
       totalAmount: pricing.total,
       status: DEFAULT_ORDER_STATUS,
       notes,
+      couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+      discountAmount: pricing.discountAmount || 0,
     });
+
+    if (appliedCoupon) {
+      await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
+    }
 
     await applyInventoryAdjustments(normalizedItems);
 
@@ -486,11 +503,73 @@ export async function syncCartPricingAction(items) {
   }
 }
 
-export async function linkOrdersAction(phone) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    return { success: false, message: 'Please sign in first.' };
+// Extracted logic so submitOrderAction and validateCouponAction can share it
+async function validateCouponLogic(code, subtotal, email, phone) {
+  const Coupon = (await import('@/models/Coupon')).default;
+  if (!code) return { success: false, message: 'Coupon code is required.' };
+  
+  const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+  if (!coupon) return { success: false, message: 'Invalid coupon code.' };
+  if (!coupon.isActive) return { success: false, message: 'This coupon is no longer active.' };
+  
+  const now = new Date();
+  if (coupon.startDate && now < coupon.startDate) return { success: false, message: 'This coupon is not valid yet.' };
+  if (coupon.endDate && now > coupon.endDate) return { success: false, message: 'This coupon has expired.' };
+  if (coupon.minOrderAmount > 0 && subtotal < coupon.minOrderAmount) return { success: false, message: `Minimum order amount of Rs. ${coupon.minOrderAmount} required.` };
+  if (coupon.usageLimitPerCoupon && coupon.usedCount >= coupon.usageLimitPerCoupon) return { success: false, message: 'This coupon has reached its usage limit.' };
+
+  // Check per-user limit
+  if (coupon.usageLimitPerUser) {
+    if (!email && !phone) {
+      return { success: false, message: 'Please enter your email or phone number in the checkout form to use this coupon.' };
+    }
+    
+    const query = { couponCode: coupon.code, status: { $ne: 'Cancelled' }, isDraft: { $ne: true } };
+    if (email && phone) {
+      query.$or = [{ customerEmail: email }, { customerPhone: phone }];
+    } else if (email) {
+      query.customerEmail = email;
+    } else {
+      query.customerPhone = phone;
+    }
+    
+    const pastUses = await Order.countDocuments(query);
+    if (pastUses >= coupon.usageLimitPerUser) {
+      return { success: false, message: `You have already used this coupon the maximum number of times (${coupon.usageLimitPerUser}).` };
+    }
   }
+
+  return { success: true, coupon: coupon.toObject() };
+}
+
+export async function validateCouponAction(code, subtotal, customerEmail, customerPhone) {
+  try {
+    await mongooseConnect();
+    const result = await validateCouponLogic(code, subtotal, normalizeEmail(customerEmail || ''), String(customerPhone || '').trim());
+    
+    if (!result.success) {
+      return result;
+    }
+    
+    return {
+      success: true,
+      coupon: {
+        code: result.coupon.code,
+        discountType: result.coupon.discountType,
+        discountValue: result.coupon.discountValue,
+        minOrderAmount: result.coupon.minOrderAmount,
+      }
+    };
+  } catch (error) {
+    console.error('validateCouponAction failed:', error);
+    return {
+      success: false,
+      message: 'Unable to validate coupon right now.',
+    };
+  }
+}
+
+export async function linkOrdersAction(phone) {
 
   const userEmail = normalizeEmail(session.user.email);
   const normalizedPhone = String(phone || '').trim();

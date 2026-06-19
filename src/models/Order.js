@@ -112,6 +112,14 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        couponCode: {
+            type: String,
+            required: false,
+        },
+        discountAmount: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,
@@ -140,8 +148,10 @@ if (cachedOrder) {
     const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
     const hasIsDraft = !!cachedOrder.schema.paths.isDraft;
     const hasSourceTag = !!cachedOrder.schema.paths.sourceTag;
+    const hasCouponCode = !!cachedOrder.schema.paths.couponCode;
+    const hasDiscountAmount = !!cachedOrder.schema.paths.discountAmount;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag) {
+    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount) {
         delete mongoose.models.Order;
     }
 }
