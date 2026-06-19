@@ -217,6 +217,10 @@ const SettingsSchema = new mongoose.Schema(
             type: [CustomPageSchema],
             default: [],
         },
+        guestModeEnabled: {
+            type: Boolean,
+            default: true,
+        },
     },
     {
         timestamps: true,
@@ -236,7 +240,8 @@ if (
         !cachedSettings.schema.path('logoScalePercent') ||
         !cachedSettings.schema.path('emailLogoScalePercent') ||
         !cachedSettings.schema.path('invoiceLogoScalePercent') ||
-        !cachedSettings.schema.path('customPages')
+        !cachedSettings.schema.path('customPages') ||
+        !cachedSettings.schema.path('guestModeEnabled')
     )
 ) {
     delete mongoose.models.Settings;

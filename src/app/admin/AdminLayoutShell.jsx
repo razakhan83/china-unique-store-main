@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Activity,
   Bell,
@@ -198,6 +199,59 @@ export default function AdminLayoutShell({ children, sessionUser }) {
       document.body.classList.remove('admin-theme');
     };
   }, []);
+
+  // Global Frontend Interceptor for Demo Mode
+  useEffect(() => {
+    if (!sessionUser?.isDemo) return;
+
+    const showDemoAlert = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toast.error("Demo Mode: Actions are disabled. You have read-only access.", {
+        id: "demo-lock-toast"
+      });
+    };
+
+    const handleAction = (e) => {
+      const target = e.target.closest('button, input[type="submit"], input[type="button"], [role="menuitem"]');
+      if (!target) return;
+      
+      // Allow navigation links disguised as buttons
+      if (target.closest('a')) return;
+      
+      // Explicitly allowed buttons (e.g., sidebar toggles, theme toggles, dropdown triggers)
+      if (target.hasAttribute('data-demo-allow') || target.hasAttribute('aria-haspopup') || target.hasAttribute('aria-expanded')) return;
+      
+      // Allow common navigation menu items
+      if (target.getAttribute('role') === 'menuitem' && (target.textContent?.toLowerCase().includes('logout') || target.textContent?.toLowerCase().includes('back'))) {
+         return;
+      }
+
+      const text = target.textContent?.toLowerCase() || '';
+      const isMutation = 
+        target.type === 'submit' ||
+        target.getAttribute('role') === 'menuitem' ||
+        ['save', 'delete', 'update', 'add ', 'create ', 'submit', 'remove', 'confirm', 'apply'].some(k => text.includes(k));
+
+      if (isMutation) {
+        showDemoAlert(e);
+      }
+    };
+
+    const handleSubmit = (e) => {
+      // Allow search forms to submit by checking if it's a GET method or has a specific class
+      if (e.target.method?.toLowerCase() === 'get' || e.target.querySelector('input[type="search"]')) return;
+      showDemoAlert(e);
+    };
+
+    window.addEventListener('click', handleAction, true);
+    window.addEventListener('submit', handleSubmit, true);
+
+    return () => {
+      window.removeEventListener('click', handleAction, true);
+      window.removeEventListener('submit', handleSubmit, true);
+    };
+  }, [sessionUser?.isDemo]);
 
   if (pathname === '/admin/login') return <>{children}</>;
 
@@ -492,10 +546,10 @@ export default function AdminLayoutShell({ children, sessionUser }) {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative size-8 rounded-full p-0">
-                      <Avatar className="size-7 border border-border">
+                    <Button variant="ghost" className="relative size-8 md:size-10 rounded-full p-0">
+                      <Avatar className="size-7 md:size-9 border border-border">
                         <AvatarImage src={sessionUser?.image} alt={sessionUser?.name || 'Admin'} />
-                        <AvatarFallback className="bg-muted text-[11px] text-foreground">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-muted text-[11px] md:text-sm text-foreground">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>

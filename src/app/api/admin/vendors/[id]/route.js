@@ -22,6 +22,9 @@ export async function PUT(request, { params }) {
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ success: false, error: 'Unauthorized Access' }, { status: 401 });
     }
+    if (session?.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.', error: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
+    }
     await mongooseConnect();
 
     const { id } = await params;
@@ -98,6 +101,9 @@ export async function DELETE(_request, { params }) {
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ success: false, error: 'Unauthorized Access' }, { status: 401 });
+    }
+    if (session?.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.', error: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
     }
     await mongooseConnect();
 

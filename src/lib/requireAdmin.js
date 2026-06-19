@@ -18,3 +18,11 @@ export async function requireAdmin() {
 
   return session;
 }
+
+export async function requireMutationAccess() {
+  const session = await requireAdmin();
+  if (session.user?.isDemo) {
+    throw new Error("Demo Mode: Actions are disabled. You have read-only access.");
+  }
+  return session;
+}

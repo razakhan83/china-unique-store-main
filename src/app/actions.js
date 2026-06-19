@@ -84,10 +84,13 @@ function normalizeSourceTag(value) {
   return String(value || '').trim();
 }
 
-async function assertAdmin() {
+async function assertAdmin(isMutation = true) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.isAdmin) {
     throw new Error('Unauthorized access');
+  }
+  if (isMutation && session.user?.isDemo) {
+    throw new Error('Demo Mode: Actions are disabled. You have read-only access.');
   }
   return session;
 }

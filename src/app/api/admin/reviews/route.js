@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireAdmin, requireMutationAccess } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Review from '@/models/Review';
 
@@ -34,7 +34,7 @@ export async function GET() {
 
 export async function DELETE(req) {
   try {
-    await requireAdmin();
+    await requireMutationAccess();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

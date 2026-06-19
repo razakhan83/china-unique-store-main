@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireAdmin, requireMutationAccess } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import OrderLog from '@/models/OrderLog';
@@ -10,7 +10,7 @@ import { isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
 
 export async function PATCH(req, { params }) {
   try {
-    await requireAdmin();
+    await requireMutationAccess();
     const { id } = await params;
     const body = await req.json();
     

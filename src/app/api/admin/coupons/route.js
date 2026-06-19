@@ -12,6 +12,9 @@ export async function POST(req) {
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
+    if (session?.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.', error: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
+    }
 
     const body = await req.json();
 

@@ -40,6 +40,9 @@ export async function POST(request) {
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ success: false, error: 'Unauthorized Access' }, { status: 401 });
     }
+    if (session?.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.', error: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
+    }
     await mongooseConnect();
 
     const body = await readJsonSafely(request);

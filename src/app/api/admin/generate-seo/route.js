@@ -181,6 +181,9 @@ export async function POST(request) {
         { status: 401 }
       );
     }
+    if (session?.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.', error: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
+    }
 
     const apiKey = String(process.env.GEMINI_API_KEY ?? "").trim();
 

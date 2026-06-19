@@ -50,10 +50,13 @@ function serializeProduct(product, activeVendor, vendorId) {
   };
 }
 
-async function requireAdminSession() {
+async function requireAdminSession(allowDemo = false) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.isAdmin) {
     return NextResponse.json({ success: false, error: 'Unauthorized Access' }, { status: 401 });
+  }
+  if (!allowDemo && session.user?.isDemo) {
+    return NextResponse.json({ success: false, error: 'Demo Mode: Actions are disabled.' }, { status: 403 });
   }
 
   return null;
@@ -61,7 +64,7 @@ async function requireAdminSession() {
 
 export async function GET(request, { params }) {
   try {
-    const authError = await requireAdminSession();
+    const authError = await requireAdminSession(true);
     if (authError) return authError;
     await mongooseConnect();
 

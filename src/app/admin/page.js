@@ -34,6 +34,13 @@ function formatAdminTimestamp(value) {
   }).format(new Date(value));
 }
 
+function getGreeting() {
+  const hour = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Karachi', hour: 'numeric', hourCycle: 'h23' }));
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 const emptySummary = {
   totalOrders: 0,
   pendingOrders: 0,
@@ -62,16 +69,16 @@ async function loadDashboardDataSafely() {
 }
 
 export default async function AdminDashboardPage() {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   return (
     <Suspense fallback={<AdminDashboardSkeleton />}>
-      <DashboardContent />
+      <DashboardContent session={session} />
     </Suspense>
   );
 }
 
-async function DashboardContent() {
+async function DashboardContent({ session }) {
   const {
     summary,
     recentOrders,
@@ -91,10 +98,13 @@ async function DashboardContent() {
 
   return (
     <div className="admin-page-stack w-full gap-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-[-0.04em] text-foreground md:text-[1.75rem]">
-          Dashboard
-        </h1>
+      <div className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-[-0.04em] text-foreground md:text-[1.75rem]">
+            {getGreeting()}, {session?.user?.name?.split(' ')[0] || 'Admin'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening with your store today.</p>
+        </div>
         <div className="flex items-center gap-2">
           <Link href="/admin/orders" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
             <Plus className="size-3.5" />

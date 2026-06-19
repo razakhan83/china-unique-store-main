@@ -13,13 +13,26 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
+      id: "credentials",
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        isGuest: { label: "Guest", type: "text" }
       },
       async authorize(credentials) {
+        if (credentials.isGuest === "true") {
+          await mongooseConnect();
+          const Settings = (await import('@/models/Settings')).default;
+          const settings = await Settings.findOne({ singletonKey: 'site-settings' }).lean();
+          if (settings && settings.guestModeEnabled === false) {
+             return null;
+          }
+          return { id: "guest", name: "Demo Guest", email: "guest@demo.com", isDemo: true };
+        }
         if (
+          credentials.email &&
+          credentials.password &&
           isAdminEmail(credentials.email) &&
           credentials.password === process.env.ADMIN_PASSWORD
         ) {
@@ -75,12 +88,18 @@ export const authOptions = {
       return true;
     },
     async jwt({ token, user, trigger, session }) {
+      if (user?.isDemo) {
+        token.isDemo = true;
+        token.isAdmin = true;
+      }
+
       const email = user?.email || token?.email;
       
       if (email) {
         token.email = normalizeEmail(email);
+        
         // Check env-configured admins first
-        let isAdmin = isAdminEmail(email);
+        let isAdmin = isAdminEmail(email) || token.isDemo;
         
         // Also check dynamically managed admin emails stored in DB
         if (!isAdmin) {
@@ -99,6 +118,8 @@ export const authOptions = {
 
         // Phase 2: Strict Session Validation
         // Avoid DB check for static admin if possible, but for regular users we must check status
+        if (token.isDemo) return token;
+
         try {
           // We only need to check DB if it's not the initial sign in (where user is provided)
           // or if we want to enforce "immediate" logout on every request/refresh
@@ -133,6 +154,8 @@ export const authOptions = {
         session.user.email = normalizeEmail(session.user.email || token?.email);
         // @ts-ignore - isAdmin is custom
         session.user.isAdmin = Boolean(token?.isAdmin);
+        // @ts-ignore - isDemo is custom
+        session.user.isDemo = Boolean(token?.isDemo);
       }
       return session;
     },

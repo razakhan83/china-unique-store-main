@@ -6,15 +6,19 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { SettingSection } from '@/app/admin/settings/settingsShared';
+import { toggleGuestModeAction } from './actions';
 
-export default function AdminAccessSectionClient({ isConfiguredAdmin }) {
+export default function AdminAccessSectionClient({ isConfiguredAdmin, initialGuestMode }) {
   const [configuredAdmins, setConfiguredAdmins] = useState([]);
   const [dynamicAdmins, setDynamicAdmins] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [newEmail, setNewEmail] = useState('');
   const [adding, setAdding] = useState(false);
   const [removingEmail, setRemovingEmail] = useState(null);
+  const [guestMode, setGuestMode] = useState(initialGuestMode);
+  const [togglingGuestMode, setTogglingGuestMode] = useState(false);
 
   useEffect(() => {
     async function fetchAdmins() {
@@ -81,6 +85,22 @@ export default function AdminAccessSectionClient({ isConfiguredAdmin }) {
       setRemovingEmail(null);
     }
   }
+
+  async function handleToggleGuestMode(checked) {
+    setTogglingGuestMode(true);
+    setGuestMode(checked);
+    try {
+      const res = await toggleGuestModeAction(checked);
+      if (!res.success) throw new Error('Failed to toggle guest mode');
+      toast.success(`Guest Mode is now ${checked ? 'ON' : 'OFF'}.`);
+    } catch (error) {
+      setGuestMode(!checked);
+      toast.error(error.message || 'Failed to update setting.');
+    } finally {
+      setTogglingGuestMode(false);
+    }
+  }
+
 
   if (!isConfiguredAdmin) {
     return (
@@ -198,6 +218,28 @@ export default function AdminAccessSectionClient({ isConfiguredAdmin }) {
               </div>
             </div>
           )}
+        </SettingSection>
+
+        <SettingSection
+          icon={ShieldCheck}
+          title="Live Demo / Guest Mode"
+          description="Allow prospective clients or users to explore the admin panel as a guest. All database mutations (saving, deleting) are strictly blocked in Demo Mode."
+        >
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium text-foreground">
+                Enable "Explore as Guest"
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Displays the guest login button on the admin login page.
+              </div>
+            </div>
+            <Switch
+              checked={guestMode}
+              onCheckedChange={handleToggleGuestMode}
+              disabled={togglingGuestMode}
+            />
+          </div>
         </SettingSection>
       </div>
     </div>

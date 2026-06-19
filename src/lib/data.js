@@ -491,6 +491,7 @@ async function getSettingsRaw() {
         announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
         customPages: mergeCustomPages(settings.customPages),
+        guestModeEnabled: settings.guestModeEnabled !== false,
       };
     });
   } catch (error) {
