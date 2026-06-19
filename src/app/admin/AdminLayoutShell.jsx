@@ -5,26 +5,36 @@ import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Activity,
+  Bell,
   Box,
   ChartColumn,
   CirclePlus,
+  CreditCard,
   ExternalLink,
+  Globe,
   House,
   Images,
   LayoutGrid,
   LogOut,
+  Megaphone,
   Menu,
   MessageSquare,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   PanelsTopLeft,
   FileText,
+  Search,
   Settings,
+  Shield,
+  Smartphone,
   ShoppingCart,
   Store,
+  Tags,
+  TrendingUp,
   Truck,
   Users,
-  Search,
 } from 'lucide-react';
 
 import AdminNotificationCenter from '@/components/AdminNotificationCenter';
@@ -47,56 +57,89 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
+// 1. Dashboard
 const primaryNavItems = [
   { href: '/admin', label: 'Dashboard', icon: ChartColumn, match: (pathname) => pathname === '/admin' },
 ];
 
+// 2. Products Management
 const productNavItems = [
-  {
-    href: '/admin/products',
-    label: 'Product List',
-    icon: Box,
-    match: (pathname) => pathname.startsWith('/admin/products') && !pathname.startsWith('/admin/products/add'),
-  },
+  { href: '/admin/products', label: 'Product List', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') && !pathname.startsWith('/admin/products/add') },
   { href: '/admin/products/add', label: 'Add Product', icon: CirclePlus, match: (pathname) => pathname.startsWith('/admin/products/add') },
   { href: '/admin/vendors', label: 'Vendors', icon: Store, match: (pathname) => pathname.startsWith('/admin/vendors') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/reviews') },
+  { href: '/admin/stock', label: 'Stock Management', icon: Box, match: (pathname) => pathname.startsWith('/admin/stock') },
 ];
 
-const salesNavItems = [
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
+// 3. Orders Management
+const ordersNavItems = [
+  { href: '/admin/orders', label: 'View All Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
 ];
 
-const secondaryNavItems = [
-  { href: '/admin/users', label: 'Users / Customers', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
-  { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
-  { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
+// 4. Customers
+const customersNavItems = [
+  { href: '/admin/users', label: 'Customer List / Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
+];
+
+// 5. Marketing
+const marketingNavItems = [
+  { href: '/admin/marketing/coupons', label: 'Coupon Codes', icon: Tags, match: (pathname) => pathname.startsWith('/admin/marketing/coupons') },
+  { href: '/admin/marketing/campaigns', label: 'Discount Campaigns', icon: Megaphone, match: (pathname) => pathname.startsWith('/admin/marketing/campaigns') },
+  { href: '/admin/marketing/banners', label: 'Banner Management', icon: Images, match: (pathname) => pathname.startsWith('/admin/marketing/banners') },
+  { href: '/admin/marketing/featured', label: 'Featured Products', icon: Box, match: (pathname) => pathname.startsWith('/admin/marketing/featured') },
+  { href: '/admin/marketing/social', label: 'Social & Tracking', icon: Globe, match: (pathname) => pathname.startsWith('/admin/marketing/social') },
+];
+
+// 6. Analytics
+const analyticsNavItems = [
+  { href: '/admin/analytics/sales', label: 'Sales Reports', icon: ChartColumn, match: (pathname) => pathname.startsWith('/admin/analytics/sales') },
+  { href: '/admin/analytics/best-selling', label: 'Best Selling Products', icon: TrendingUp, match: (pathname) => pathname.startsWith('/admin/analytics/best-selling') },
+  { href: '/admin/analytics/revenue', label: 'Revenue Charts', icon: ChartColumn, match: (pathname) => pathname.startsWith('/admin/analytics/revenue') },
+  { href: '/admin/analytics/growth', label: 'Customer Growth', icon: Users, match: (pathname) => pathname.startsWith('/admin/analytics/growth') },
+];
+
+// 7. Website Management
+const websiteNavItems = [
+  { href: '/admin/website/general', label: 'General Information', icon: FileText, match: (pathname) => pathname.startsWith('/admin/website/general') },
   { href: '/admin/home-page', label: 'Home Layout Settings', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
-  { href: '/admin/cover-photos', label: 'Cover Photos', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
-  { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
+  { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
+  { href: '/admin/cover-photos', label: 'Cover photo/Banner', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
+];
+
+// 8. Pages Management
+const pagesNavItems = [
+  { href: '/admin/pages/seo', label: 'SEO Settings', icon: Search, match: (pathname) => pathname.startsWith('/admin/pages/seo') },
   { href: '/admin/custom-pages', label: 'Custom Pages', icon: FileText, match: (pathname) => pathname.startsWith('/admin/custom-pages') },
+];
+
+// 9. Settings
+const settingsNavItems = [
+  { href: '/admin/settings/payment', label: 'Payment Methods', icon: CreditCard, match: (pathname) => pathname.startsWith('/admin/settings/payment') },
+  { href: '/admin/shipping', label: 'Shipping Settings', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
+  { href: '/admin/settings/whatsapp', label: 'WhatsApp Order Notifications', icon: Smartphone, match: (pathname) => pathname.startsWith('/admin/settings/whatsapp') },
+  { href: '/admin/settings/email', label: 'Email Notifications', icon: Bell, match: (pathname) => pathname.startsWith('/admin/settings/email') },
+  { href: '/admin/settings/dark-mode', label: 'Dark Mode', icon: Moon, match: (pathname) => pathname.startsWith('/admin/settings/dark-mode') },
+  { href: '/admin/settings/activity-logs', label: 'Activity Logs', icon: Activity, match: (pathname) => pathname.startsWith('/admin/settings/activity-logs') },
+];
+
+// 10. User Roles & Permissions / Access Management
+const accessNavItems = [
+  { href: '/admin/roles/access', label: 'Access Management', icon: Shield, match: (pathname) => pathname.startsWith('/admin/roles/access') },
+  { href: '/admin/roles/permissions', label: 'User Roles & Permissions', icon: Users, match: (pathname) => pathname.startsWith('/admin/roles/permissions') },
 ];
 
 const compactDesktopNavItems = [
   ...primaryNavItems,
-  {
-    href: '/admin/products',
-    label: 'Products',
-    icon: Box,
-    match: (pathname) =>
-      pathname.startsWith('/admin/products') ||
-      pathname.startsWith('/admin/vendors') ||
-      pathname.startsWith('/admin/categories') ||
-      pathname.startsWith('/admin/reviews'),
-  },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
-  { href: '/admin/users', label: 'Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
-  { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
-  { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
-  { href: '/admin/home-page', label: 'Home Layout', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
-  { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
-  { href: '/admin/custom-pages', label: 'Pages', icon: FileText, match: (pathname) => pathname.startsWith('/admin/custom-pages') },
+  { href: '/admin/products', label: 'Products', icon: Box, match: (pathname) => productNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => ordersNavItems.some(i => i.match(pathname)) },
+  ...customersNavItems,
+  { href: '/admin/marketing/coupons', label: 'Marketing', icon: Megaphone, match: (pathname) => marketingNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/analytics/sales', label: 'Analytics', icon: ChartColumn, match: (pathname) => analyticsNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/home-page', label: 'Website', icon: Globe, match: (pathname) => websiteNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/custom-pages', label: 'Pages', icon: FileText, match: (pathname) => pagesNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/settings/payment', label: 'Settings', icon: Settings, match: (pathname) => settingsNavItems.some(i => i.match(pathname)) },
+  { href: '/admin/roles/access', label: 'Access', icon: Shield, match: (pathname) => accessNavItems.some(i => i.match(pathname)) },
 ];
 
 const mobileBottomNavItems = [
@@ -109,7 +152,13 @@ const mobileBottomNavItems = [
 function getOpenSections(pathname) {
   return [
     productNavItems.some((item) => item.match(pathname)) ? 'products' : null,
-    salesNavItems.some((item) => item.match(pathname)) ? 'sales' : null,
+    ordersNavItems.some((item) => item.match(pathname)) ? 'orders' : null,
+    marketingNavItems.some((item) => item.match(pathname)) ? 'marketing' : null,
+    analyticsNavItems.some((item) => item.match(pathname)) ? 'analytics' : null,
+    websiteNavItems.some((item) => item.match(pathname)) ? 'website' : null,
+    pagesNavItems.some((item) => item.match(pathname)) ? 'pages' : null,
+    settingsNavItems.some((item) => item.match(pathname)) ? 'settings' : null,
+    accessNavItems.some((item) => item.match(pathname)) ? 'access' : null,
   ].filter(Boolean);
 }
 
@@ -119,13 +168,19 @@ function getPageMeta(pathname) {
   if (pathname.startsWith('/admin/vendors')) return { title: 'Vendors' };
   if (pathname.startsWith('/admin/categories')) return { title: 'Categories' };
   if (pathname.startsWith('/admin/reviews')) return { title: 'Reviews' };
-  if (pathname.startsWith('/admin/users')) return { title: 'Users' };
-  if (pathname.startsWith('/admin/shipping')) return { title: 'Shipping' };
+  if (pathname.startsWith('/admin/stock')) return { title: 'Stock Management' };
+  if (pathname.startsWith('/admin/users')) return { title: 'Customers / Users' };
+  if (pathname.startsWith('/admin/shipping')) return { title: 'Shipping Settings' };
   if (pathname.startsWith('/admin/store-setup')) return { title: 'Store Setup' };
   if (pathname.startsWith('/admin/home-page')) return { title: 'Home Layout Settings' };
   if (pathname.startsWith('/admin/cover-photos')) return { title: 'Cover Photos' };
-  if (pathname.startsWith('/admin/settings')) return { title: 'Settings' };
   if (pathname.startsWith('/admin/custom-pages')) return { title: 'Custom Pages' };
+  if (pathname.startsWith('/admin/marketing')) return { title: 'Marketing' };
+  if (pathname.startsWith('/admin/analytics')) return { title: 'Analytics' };
+  if (pathname.startsWith('/admin/website')) return { title: 'Website Management' };
+  if (pathname.startsWith('/admin/pages')) return { title: 'Pages Management' };
+  if (pathname.startsWith('/admin/settings')) return { title: 'Settings' };
+  if (pathname.startsWith('/admin/roles')) return { title: 'Access Management' };
 
   return { title: 'Dashboard' };
 }
@@ -195,9 +250,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   }
 
   function renderSectionTrigger({ icon: Icon, label, value }) {
-    const active = value === 'products'
-      ? productNavItems.some((item) => item.match(pathname))
-      : salesNavItems.some((item) => item.match(pathname));
+    let active = false;
+    if (value === 'products') active = productNavItems.some((item) => item.match(pathname));
+    else if (value === 'orders') active = ordersNavItems.some((item) => item.match(pathname));
+    else if (value === 'marketing') active = marketingNavItems.some((item) => item.match(pathname));
+    else if (value === 'analytics') active = analyticsNavItems.some((item) => item.match(pathname));
+    else if (value === 'website') active = websiteNavItems.some((item) => item.match(pathname));
+    else if (value === 'pages') active = pagesNavItems.some((item) => item.match(pathname));
+    else if (value === 'settings') active = settingsNavItems.some((item) => item.match(pathname));
+    else if (value === 'access') active = accessNavItems.some((item) => item.match(pathname));
 
     return (
       <AccordionTrigger
@@ -217,7 +278,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-3 bg-white px-2.5 py-2.5 text-foreground md:px-3 md:py-3">
+    <div className="flex h-full flex-col gap-3 bg-white px-2.5 py-2.5 text-foreground md:px-3 md:py-3 overflow-y-auto">
       <div className={cn('flex items-center gap-2 px-0.5 py-0.5', desktopSidebarCollapsed && 'justify-center')}>
         <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/45">
           <PanelsTopLeft className="size-3.5 text-foreground" />
@@ -242,7 +303,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
               className="flex w-full flex-col gap-1.5"
             >
               <AccordionItem value="products" className="border-none">
-                {renderSectionTrigger({ icon: Box, label: 'Products', value: 'products' })}
+                {renderSectionTrigger({ icon: Box, label: 'Products Management', value: 'products' })}
                 <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
                   <div className="ml-5 flex flex-col gap-1">
                     {productNavItems.map((item) => renderNestedNavLink(item))}
@@ -250,17 +311,78 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="sales" className="border-none">
-                {renderSectionTrigger({ icon: ShoppingCart, label: 'Sales', value: 'sales' })}
+              <AccordionItem value="orders" className="border-none">
+                {renderSectionTrigger({ icon: ShoppingCart, label: 'Orders Management', value: 'orders' })}
                 <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
                   <div className="ml-5 flex flex-col gap-1">
-                    {salesNavItems.map((item) => renderNestedNavLink(item))}
+                    {ordersNavItems.map((item) => renderNestedNavLink(item))}
                   </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
 
-            {secondaryNavItems.map((item) => renderPrimaryNavLink(item))}
+            {customersNavItems.map((item) => renderPrimaryNavLink(item))}
+
+            <Accordion
+              key={pathname + "-2"}
+              multiple
+              defaultValue={getOpenSections(pathname)}
+              className="flex w-full flex-col gap-1.5 mt-1.5"
+            >
+              <AccordionItem value="marketing" className="border-none">
+                {renderSectionTrigger({ icon: Megaphone, label: 'Marketing', value: 'marketing' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {marketingNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="analytics" className="border-none">
+                {renderSectionTrigger({ icon: ChartColumn, label: 'Analytics', value: 'analytics' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {analyticsNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="website" className="border-none">
+                {renderSectionTrigger({ icon: Globe, label: 'Website Management', value: 'website' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {websiteNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="pages" className="border-none">
+                {renderSectionTrigger({ icon: FileText, label: 'Pages Management', value: 'pages' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {pagesNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="settings" className="border-none">
+                {renderSectionTrigger({ icon: Settings, label: 'Settings', value: 'settings' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {settingsNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="access" className="border-none">
+                {renderSectionTrigger({ icon: Shield, label: 'User Roles & Permissions', value: 'access' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {accessNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </>
         )}
       </div>
@@ -448,3 +570,4 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     </div>
   );
 }
+

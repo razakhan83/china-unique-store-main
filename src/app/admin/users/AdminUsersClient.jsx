@@ -18,6 +18,10 @@ import {
   Users as UsersIcon,
   X,
   LogOut,
+  History,
+  Package,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +41,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -82,6 +94,9 @@ export default function AdminUsersClient({
   const [typeFilter, setTypeFilter] = useState(initialTypeFilter);
   const [loadingId, setLoadingId] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
+  const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState(null);
+  const [customerOrders, setCustomerOrders] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const isCustomersView = typeFilter === 'customers';
 
   useEffect(() => {
@@ -167,6 +182,27 @@ export default function AdminUsersClient({
       toast.error('An error occurred during user action');
     } finally {
       setLoadingId(null);
+    }
+  }
+
+  async function handleViewHistory(user) {
+    setSelectedCustomerForHistory(user);
+    setIsLoadingOrders(true);
+    setCustomerOrders([]);
+    
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(user._id)}/orders`);
+      const data = await res.json();
+      
+      if (data.success) {
+        setCustomerOrders(data.data || []);
+      } else {
+        toast.error(data.error || 'Failed to fetch order history');
+      }
+    } catch (error) {
+      toast.error('An error occurred while fetching order history');
+    } finally {
+      setIsLoadingOrders(false);
     }
   }
 
@@ -303,7 +339,7 @@ export default function AdminUsersClient({
               <TableHead>Email</TableHead>
               <TableHead>{isCustomersView ? 'Profile' : 'Joining Date'}</TableHead>
               <TableHead>{isCustomersView ? 'Orders' : 'Status'}</TableHead>
-              <TableHead className="text-right">{isCustomersView ? 'Last Order' : 'Actions'}</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -387,9 +423,23 @@ export default function AdminUsersClient({
                   </TableCell>
                   <TableCell className="text-right">
                     {isCustomersView ? (
-                      <span className="text-sm text-muted-foreground" suppressHydrationWarning>
-                        {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}
-                      </span>
+                      <div className="flex items-center justify-end gap-3">
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs font-medium text-foreground">Last Order:</span>
+                          <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                            {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 gap-1.5 shrink-0"
+                          onClick={() => handleViewHistory(user)}
+                        >
+                          <History className="size-3.5" />
+                          History
+                        </Button>
+                      </div>
                     ) : (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -471,6 +521,70 @@ export default function AdminUsersClient({
           </div>
         </div>
       ) : null}
+
+      <Sheet open={!!selectedCustomerForHistory} onOpenChange={(open) => !open && setSelectedCustomerForHistory(null)}>
+        <SheetContent className="flex w-full flex-col sm:max-w-md p-0">
+          <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30">
+            <SheetTitle className="flex items-center gap-2">
+              <History className="size-5 text-muted-foreground" />
+              Order History
+            </SheetTitle>
+            <SheetDescription>
+              {selectedCustomerForHistory?.name}'s past orders
+            </SheetDescription>
+          </SheetHeader>
+          
+          <ScrollArea className="flex-1 p-6">
+            {isLoadingOrders ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+                <Loader2 className="size-8 animate-spin" />
+                <p className="text-sm font-medium">Fetching orders...</p>
+              </div>
+            ) : customerOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground text-center">
+                <div className="p-4 bg-muted rounded-full">
+                  <Package className="size-8" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">No Orders Found</p>
+                  <p className="text-sm">This customer hasn't placed any orders yet.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {customerOrders.map((order) => (
+                  <div key={order._id} className="relative group rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm hover:border-border/80">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <Link href={`/admin/orders?search=${order.orderId}`} className="font-semibold text-foreground hover:underline flex items-center gap-1.5">
+                          {order.orderId}
+                          <ExternalLink className="size-3 text-muted-foreground" />
+                        </Link>
+                        <p className="text-xs text-muted-foreground mt-0.5" suppressHydrationWarning>
+                          {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className={cn(
+                        'capitalize font-medium',
+                        order.status === 'delivered' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      )}>
+                        {order.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <span className="text-sm font-medium text-muted-foreground">{order.orderQuantity} Item{order.orderQuantity === 1 ? '' : 's'}</span>
+                      <span className="font-bold text-foreground">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
