@@ -370,7 +370,7 @@ async function ProductHeroSection({ paramsPromise }) {
                   {product.Name}
                 </h1>
                 {isOutOfStock ? (
-                  <Badge variant="destructive" className="rounded-full px-3 py-1.5 text-xs uppercase tracking-[0.14em]">
+                  <Badge variant="outline" className="rounded-full border-rose-200/80 bg-rose-50/80 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-rose-600 shadow-sm">
                     Out of Stock
                   </Badge>
                 ) : null}

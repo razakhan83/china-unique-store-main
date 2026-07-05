@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 
 function BannerFrame({ item, className = '', sizes }) {
   if (!item?.image?.url) return null;
@@ -38,8 +39,9 @@ export default function HomeProductBanner({
   if (desktopImages.length < 2 || !mobileImage?.image?.url) return null;
 
   return (
-    <section className="bg-white py-8 md:py-10">
-      <div className="mx-auto max-w-7xl px-4">
+    <section className="relative bg-white py-8 md:py-10">
+      <SectionDoodleBackground categoryLabel={title} />
+      <div className="relative z-10 mx-auto max-w-7xl px-4">
         {(title || description) ? (
           <div className="mb-4 max-w-2xl">
             {title ? (

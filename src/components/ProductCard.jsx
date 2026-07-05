@@ -108,6 +108,16 @@ export default function ProductCard({ product, className = "" }) {
               {discountLabel}
             </Badge>
           )}
+
+          {isUnavailable && (
+            <Badge
+              className={cn(
+                "pointer-events-auto rounded-full border-transparent bg-zinc-900/90 px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-[0.1em] shadow-sm backdrop-blur-md"
+              )}
+            >
+              Out of Stock
+            </Badge>
+          )}
         </div>
 
         <ProductCardWishlistSlot product={product} />

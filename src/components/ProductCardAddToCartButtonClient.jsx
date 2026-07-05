@@ -61,30 +61,27 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
     }
   }
 
-  if (isOutOfStock) {
-    return (
-      <span className="inline-flex min-h-8 items-center justify-center rounded-md border border-border bg-muted/35 px-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-        Out of Stock
-      </span>
-    );
-  }
-
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      disabled={isBusy}
+      disabled={isBusy || isOutOfStock}
       onClick={handleAddToCart}
       data-state={animationState}
       aria-busy={isBusy}
-      className="add-to-cart-button product-card-add-to-cart-button relative translate-y-0.5 size-9 cursor-pointer touch-manipulation rounded-md bg-transparent p-0 text-primary shadow-none transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:bg-primary/10 hover:text-primary active:scale-[0.96] active:bg-primary/10 active:text-primary disabled:pointer-events-none after:absolute after:-inset-2 after:content-[''] sm:size-8 sm:translate-y-0"
+      className={cn(
+        "add-to-cart-button product-card-add-to-cart-button relative translate-y-0.5 size-9 rounded-md p-0 shadow-none transition-[transform,background-color,color,box-shadow,opacity] duration-200 ease-out sm:size-8 sm:translate-y-0",
+        isOutOfStock
+          ? "cursor-not-allowed text-muted-foreground opacity-40 bg-transparent"
+          : "cursor-pointer touch-manipulation bg-transparent text-primary hover:bg-primary/10 hover:text-primary active:scale-[0.96] active:bg-primary/10 active:text-primary disabled:pointer-events-none after:absolute after:-inset-2 after:content-['']"
+      )}
       aria-label="Add to cart"
     >
       <span className="relative inline-flex size-[1.25rem] items-center justify-center sm:size-[1.125rem]">
         <span
           className={cn(
-            'add-to-cart-icon absolute inline-flex size-[1.25rem] items-center justify-center text-primary sm:size-[1.125rem]',
+            'add-to-cart-icon absolute inline-flex size-[1.25rem] items-center justify-center text-inherit sm:size-[1.125rem]',
             isLoading ? 'is-visible' : ''
           )}
           aria-hidden="true"
@@ -94,7 +91,7 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
         </span>
         <ShoppingCart
           className={cn(
-            'add-to-cart-icon absolute size-[1.25rem] text-primary sm:size-[1.125rem]',
+            'add-to-cart-icon absolute size-[1.25rem] text-inherit sm:size-[1.125rem]',
             !isLoading ? 'is-visible' : ''
           )}
           aria-hidden="true"

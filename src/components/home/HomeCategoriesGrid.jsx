@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import {
   Armchair,
   Beef,
@@ -84,8 +85,9 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
   }
 
   return (
-    <section className="border-b border-border bg-card/70 py-6 md:py-7">
-      <div className="mx-auto max-w-7xl px-4">
+    <section className="relative border-b border-border bg-card/70 py-6 md:py-7">
+      <SectionDoodleBackground categoryLabel={title} />
+      <div className="relative z-10 mx-auto max-w-7xl px-4">
         <div className="mb-5">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Browse</p>
           <h2 className="mt-2 text-[1.65rem] font-bold tracking-[-0.04em] text-primary md:text-[2.1rem]">
@@ -124,7 +126,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                     className="group flex w-full min-w-0 flex-col items-center gap-3 px-1 py-1 text-center"
                   >
                     <span
-                      className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] transition-transform duration-300 group-hover:scale-[1.04] md:h-[6.75rem] md:w-[6.75rem]"
+                      className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] transition-transform duration-300 group-hover:scale-[1.04] md:h-[8.5rem] md:w-[8.5rem]"
                       style={{
                         background: `radial-gradient(circle at 30% 25%, white, ${colors.hex})`,
                       }}
@@ -134,14 +136,14 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                           src={imageSrc}
                           alt={category.label}
                           fill
-                          sizes="(max-width: 768px) 80px, 108px"
+                          sizes="(max-width: 768px) 96px, 136px"
                           loading="lazy"
                           className="object-cover"
                           {...getBlurPlaceholderProps(category.blurDataURL)}
                         />
                       ) : (
                         <span className={`flex size-full items-center justify-center rounded-full ${colors.bg}`}>
-                          <Icon className={`${colors.text} size-7 md:size-9`} />
+                          <Icon className={`${colors.text} size-8 md:size-12`} />
                         </span>
                       )}
                     </span>

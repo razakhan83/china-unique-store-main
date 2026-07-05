@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 
 function ScrollableBannerCard({ banner, index }) {
   if (!banner?.image?.url) return null;
@@ -83,8 +84,9 @@ export default function HomeScrollableBannerCarousel({
   }
 
   return (
-    <section className="bg-white py-8 md:py-10">
-      <div className="mx-auto max-w-7xl px-4">
+    <section className="relative bg-white py-8 md:py-10">
+      <SectionDoodleBackground categoryLabel={title} />
+      <div className="relative z-10 mx-auto max-w-7xl px-4">
         {(title || description) ? (
           <div className="mb-4 max-w-2xl">
             {title ? (

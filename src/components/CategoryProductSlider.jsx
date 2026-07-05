@@ -1,10 +1,9 @@
-import { Children } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function CategoryProductSlider({ categoryLabel, children, viewAllHref }) {
-  const slides = Children.toArray(children);
+  const slides = Array.isArray(children) ? children.flat().filter(Boolean) : (children ? [children] : []);
   const slideCount = slides.length;
 
   if (slideCount === 0) return null;
