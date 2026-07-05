@@ -16,7 +16,7 @@ import {
 import { ProductsGridSkeleton } from '@/components/ProductsPageSkeleton';
 import { getProductsList, getStoreCategories } from '@/lib/data';
 
-const PRODUCTS_PAGE_SIZE = 12;
+const PRODUCTS_PAGE_SIZE = 24;
 
 function buildSuspenseKey(searchParams) {
   return JSON.stringify({
@@ -77,9 +77,12 @@ export default async function ProductsPage({ searchParams }) {
           initialSort={resolvedSearchParams.sort || 'newest'}
           activeCategory={resolvedSearchParams.category || 'all'}
         />
-        <section className="mx-auto max-w-7xl px-4 py-6">
+        <section className="mx-auto max-w-7xl px-4 py-2">
           <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
-            <ProductsResultsContent productsPromise={productsPromise} />
+            <ProductsResultsContent 
+              productsPromise={productsPromise} 
+              layout={resolvedSearchParams.layout || 'grid3'} 
+            />
           </Suspense>
           <Suspense fallback={null}>
             <ProductsPaginationContent productsPromise={productsPromise} />
@@ -90,25 +93,26 @@ export default async function ProductsPage({ searchParams }) {
   );
 }
 
-async function ProductsResultsContent({ productsPromise }) {
+async function ProductsResultsContent({ productsPromise, layout }) {
   const data = await productsPromise;
   const placeholderCount = Math.max(PRODUCTS_PAGE_SIZE - data.items.length, 0);
+
+  // Define grid layout based on user selection: 1/2 for mobile, 5/7 for PC
+  const gridClassName = layout === 'grid3'
+    ? "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7"
+    : "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
   return (
     <>
       <ProductsPendingResults>
-        <div className="products-page-results-meta mb-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground tabular-nums">
-            Showing{' '}
-            <span className="font-semibold text-foreground">{data.items.length}</span>
-            {' '}of{' '}
-            <span className="font-semibold text-foreground">{data.total}</span>
-            {' '}products
+        <div className="products-page-results-meta mb-4 flex items-center justify-between gap-3 px-1">
+          <p className="text-sm font-medium text-muted-foreground">
+            {data.total} items
           </p>
         </div>
 
         {data.items.length ? (
-          <div className="grid auto-rows-max grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+          <div className={gridClassName}>
             {data.items.map((product, index) => (
               <div
                 key={`${product.slug || product._id || product.id || 'product'}-${index}`}
@@ -125,8 +129,8 @@ async function ProductsResultsContent({ productsPromise }) {
             ))}
           </div>
         ) : (
-          <div className="products-page-empty relative">
-            <div aria-hidden="true" className="grid auto-rows-max grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+          <div className="products-page-empty relative mt-8">
+            <div aria-hidden="true" className={gridClassName}>
               {Array.from({ length: PRODUCTS_PAGE_SIZE }).map((_, index) => (
                 <ProductCardPlaceholder key={`empty-placeholder-${index}`} index={index} />
               ))}

@@ -74,7 +74,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "product-card-surface group relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 md:hover:shadow-md",
+        "@container product-card-surface group relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 md:hover:shadow-md",
         "py-0",
         className
       )}
@@ -150,7 +150,7 @@ export default function ProductCard({ product, className = "" }) {
         </Link>
       </div>
 
-      <CardContent className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 sm:gap-2 sm:p-4 sm:pt-4">
+      <CardContent className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 @max-[220px]:p-2.5 @max-[220px]:gap-1.5 sm:p-4">
         <Link
           href={productHref}
           scroll={true}
@@ -158,7 +158,7 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           <h3
-            className="line-clamp-2 text-[13px] font-semibold leading-[1.15rem] text-foreground/90 sm:line-clamp-1 sm:text-base sm:leading-5"
+            className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:line-clamp-1 @min-[260px]:text-[15px]"
             title={productName}
             draggable={false}
           >
@@ -166,18 +166,18 @@ export default function ProductCard({ product, className = "" }) {
           </h3>
         </Link>
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-2 pt-1 @max-[220px]:flex-col @max-[220px]:items-start @max-[220px]:gap-1.5">
           <div className="flex min-w-0 flex-col justify-end gap-0.5">
             {compareAtPrice ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <p
-                  className="text-base font-bold leading-none text-black tabular-nums sm:text-[1.125rem]"
+                  className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
                   draggable={false}
                 >
                   {formatPrice(sellingPrice)}
                 </p>
                 <p
-                  className="text-xs font-medium leading-none text-muted-foreground/75 line-through sm:text-sm"
+                  className="text-[11px] font-medium leading-none text-muted-foreground/75 line-through @min-[260px]:text-[13px]"
                   draggable={false}
                 >
                   {formatPrice(compareAtPrice)}
@@ -185,7 +185,7 @@ export default function ProductCard({ product, className = "" }) {
               </div>
             ) : (
               <p
-                className="pb-0.5 text-base font-bold leading-none text-black tabular-nums sm:pb-0 sm:text-[1.125rem]"
+                className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
                 draggable={false}
               >
                 {formatPrice(sellingPrice)}
