@@ -84,14 +84,13 @@ function ProductsGridSkeletonContent() {
             className="products-grid-skeleton-card overflow-hidden rounded-xl border border-border bg-card"
           >
             <Skeleton className="aspect-square w-full rounded-none" />
-            <div className="flex flex-col gap-1.5 bg-card p-3 pt-3">
-              <Skeleton className="h-4 w-[78%] rounded-md" />
-              <Skeleton className="h-3 w-full rounded-md" />
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <div className="flex flex-col gap-1">
-                  <Skeleton className="h-5 w-20 rounded-md" />
+            <div className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 sm:gap-2 sm:p-4 sm:pt-4">
+              <Skeleton className="h-[13px] sm:h-4 w-[78%] rounded-md" />
+              <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
+                <div className="flex min-w-0 flex-col justify-end gap-0.5">
+                  <Skeleton className="h-4 sm:h-[1.125rem] w-20 rounded-md" />
                 </div>
-                <Skeleton className="size-10 rounded-lg" />
+                <Skeleton className="size-9 sm:size-8 rounded-md" />
               </div>
             </div>
           </div>

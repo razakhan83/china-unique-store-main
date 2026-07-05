@@ -204,6 +204,16 @@ const SettingsSchema = new mongoose.Schema(
             default: [],
         },
 
+        // Payment Methods
+        bankDepositEnabled: {
+            type: Boolean,
+            default: false,
+        },
+        bankDepositAccountDetails: {
+            type: String,
+            default: '',
+        },
+
         // Dynamically managed admin emails (in addition to ADMIN_EMAIL / ADMIN_EMAILS env vars)
         adminEmails: {
             type: [String],
@@ -241,7 +251,9 @@ if (
         !cachedSettings.schema.path('emailLogoScalePercent') ||
         !cachedSettings.schema.path('invoiceLogoScalePercent') ||
         !cachedSettings.schema.path('customPages') ||
-        !cachedSettings.schema.path('guestModeEnabled')
+        !cachedSettings.schema.path('guestModeEnabled') ||
+        !cachedSettings.schema.path('bankDepositEnabled') ||
+        !cachedSettings.schema.path('bankDepositAccountDetails')
     )
 ) {
     delete mongoose.models.Settings;

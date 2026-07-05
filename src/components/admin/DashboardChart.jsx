@@ -95,7 +95,7 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
         )}
 
         <ChartContainer config={chartConfig} className="h-full w-full">
-          <AreaChart data={data} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8} />
@@ -106,12 +106,13 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
                 <stop offset="95%" stopColor="var(--color-orders)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} />
+            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={1} />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={10}
+              minTickGap={25}
               tickFormatter={(value) => value}
               className="text-[10px] fill-muted-foreground"
             />
@@ -119,8 +120,14 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
               yAxisId="left"
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `Rs ${value.toLocaleString()}`}
-              className="text-[10px] fill-muted-foreground w-[70px]"
+              tickMargin={8}
+              width={35}
+              tickFormatter={(value) => {
+                if (value === 0) return '0';
+                if (value >= 1000) return `${value / 1000}k`;
+                return `${value}`;
+              }}
+              className="text-[10px] fill-muted-foreground"
             />
             {/* Secondary YAxis strictly for Orders volume (scales independently over right side) */}
             <YAxis
@@ -128,8 +135,8 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
               orientation="right"
               tickLine={false}
               axisLine={false}
-              tickMargin={10}
-              width={20}
+              tickMargin={8}
+              width={35}
               className="text-[10px] fill-muted-foreground"
             />
             <Tooltip

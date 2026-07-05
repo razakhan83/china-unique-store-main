@@ -48,6 +48,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
@@ -536,9 +537,25 @@ export default function AdminUsersClient({
           
           <ScrollArea className="flex-1 p-6">
             {isLoadingOrders ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
-                <Loader2 className="size-8 animate-spin" />
-                <p className="text-sm font-medium">Fetching orders...</p>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border border-border bg-card p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <Skeleton className="h-5 w-24 rounded-md" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-16 rounded-md" />
+                        <Skeleton className="h-4 w-20 rounded-md" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-16 rounded-md" />
+                        <Skeleton className="h-4 w-24 rounded-md" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : customerOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground text-center">

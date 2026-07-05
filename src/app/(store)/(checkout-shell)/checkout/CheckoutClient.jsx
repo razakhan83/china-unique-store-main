@@ -15,6 +15,7 @@ import {
   MapPin,
   Truck,
   Wallet,
+  Banknote,
 } from 'lucide-react';
 
 import { getLastOrderDetailsAction, submitOrderAction, validateCouponAction } from '@/app/actions';
@@ -224,6 +225,7 @@ export default function CheckoutClient({ settings }) {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
@@ -777,51 +779,65 @@ export default function CheckoutClient({ settings }) {
           </Card>
 
           <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '150ms' }}>
-              <CardHeader className={styles.sectionHeader}>
-                <span className={styles.sectionKicker}>Payment</span>
-                <CardTitle className={cn('flex items-center gap-2 text-xl', styles.sectionTitle)}>
-                  <Wallet className="size-5 text-primary" />
-                  Payment Method
-                </CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Payment</CardTitle>
+                <CardDescription>All transactions are secure and encrypted.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className={styles.paymentGrid}>
-                  <section className={styles.paymentCardPrimary} aria-label="Cash on delivery available">
-                    <div className={styles.paymentCardTop}>
-                      <div className={styles.paymentIconWrap}>
-                        <Wallet className="size-5" />
+                <div className="rounded-xl border border-border bg-background overflow-hidden">
+                  {/* Debit / Credit Card - Coming Soon */}
+                  <label className="flex items-center justify-between p-4 opacity-50 bg-muted/20 cursor-not-allowed">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-4 items-center justify-center rounded-full border-[1.5px] border-muted-foreground/40 bg-transparent transition-colors">
                       </div>
-                      <span className={styles.paymentBadgeActive}>
-                        <CheckCircle2 className="size-3.5" />
-                        Selected
-                      </span>
+                      <span className="text-sm font-medium">Debit - Credit Card</span>
+                      <span className="ml-2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Coming soon</span>
                     </div>
-                    <div className={styles.paymentCopy}>
-                      <div>
-                        <h3 className={styles.paymentTitle}>Cash on Delivery</h3>
-                        <p className={styles.paymentDescription}>
-                          Pay when your order arrives.
-                        </p>
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      <Image src="/VISA-logo.png" alt="Visa" width={36} height={24} className="h-6 w-auto object-contain rounded-sm" />
+                      <Image src="/Mastercard-Logo.png" alt="Mastercard" width={36} height={24} className="h-6 w-auto object-contain rounded-sm" />
                     </div>
-                  </section>
+                  </label>
 
-                  <section className={styles.paymentCardSecondary} data-state="coming-soon" aria-label="Online payment coming soon">
-                    <div className={styles.paymentCardTop}>
-                      <div className={cn(styles.paymentIconWrap, styles.paymentIconMuted)}>
-                        <CreditCard className="size-5" />
-                      </div>
-                      <span className={styles.paymentBadgeSoon}>Coming soon</span>
+                  {/* COD */}
+                  <div className={cn("flex flex-col transition-colors", paymentMethod === 'cod' ? "bg-[color:color-mix(in_oklab,var(--color-primary)_4%,white)] border-y border-primary" : "border-t border-border")}>
+                      <label className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setPaymentMethod('cod')}>
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "flex size-4 items-center justify-center rounded-full border-[1.5px] transition-colors",
+                            paymentMethod === 'cod' ? "border-primary bg-white" : "border-muted-foreground/40 bg-transparent"
+                          )}>
+                            {paymentMethod === 'cod' && <div className="size-2 rounded-full bg-primary" />}
+                          </div>
+                          <span className="text-sm font-medium">Cash on Delivery (COD)</span>
+                        </div>
+                        <Banknote className="size-5 text-muted-foreground" />
+                      </label>
+                  </div>
+
+                  {/* Bank Deposit */}
+                  {settings?.bankDepositEnabled && (
+                    <div className={cn("flex flex-col transition-colors", paymentMethod === 'cod' ? "" : "border-t border-border", paymentMethod === 'bank' ? "bg-[color:color-mix(in_oklab,var(--color-primary)_4%,white)] border-y border-primary" : "")}>
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setPaymentMethod('bank')}>
+                        <div className={cn(
+                          "flex size-4 items-center justify-center rounded-full border-[1.5px] transition-colors",
+                          paymentMethod === 'bank' ? "border-primary bg-white" : "border-muted-foreground/40 bg-transparent"
+                        )}>
+                          {paymentMethod === 'bank' && <div className="size-2 rounded-full bg-primary" />}
+                        </div>
+                        <span className="text-sm font-medium">Bank Deposit</span>
+                      </label>
+                      
+                      {paymentMethod === 'bank' && (
+                        <div className="bg-[color:color-mix(in_oklab,var(--color-muted)_50%,white)] p-4 text-sm text-foreground/80 border-t border-border/80">
+                          <p className="font-semibold mb-2">Please share whatsapp slip on this number: <a href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{settings?.whatsappNumber}</a></p>
+                          <div className="whitespace-pre-wrap font-mono text-xs text-muted-foreground bg-background border border-border p-3 rounded-md">
+                            {settings?.bankDepositAccountDetails || "Account details will appear here."}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className={styles.paymentCopy}>
-                      <div>
-                        <h3 className={styles.paymentTitle}>Online Payment</h3>
-                        <p className={styles.paymentDescription}>
-                          Card and wallet checkout will be available soon.
-                        </p>
-                      </div>
-                    </div>
-                  </section>
+                  )}
                 </div>
               </CardContent>
           </Card>

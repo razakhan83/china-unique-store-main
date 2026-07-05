@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import ProductRichTextEditor from '@/components/admin/ProductRichTextEditor';
 import VendorAssignmentsEditor from '@/components/admin/VendorAssignmentsEditor';
+import { AdminEditProductSkeleton } from '@/components/AdminDashboardSkeleton';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { getProductCategories } from '@/lib/productCategories';
 import { moveProductImageToFront, normalizeProductImages } from '@/lib/productImages';
@@ -376,14 +377,7 @@ export default function EditProduct({ id }) {
   };
 
   if (loading) {
-    return (
-      <div className="w-full pb-10 flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="mx-auto mb-4 size-10 animate-spin text-foreground" />
-          <p className="font-medium text-muted-foreground">Loading product...</p>
-        </div>
-      </div>
-    );
+    return <AdminEditProductSkeleton />;
   }
 
   const trimmedSeoTitle = seoTitle.trim();

@@ -371,107 +371,191 @@ function ProductEditorSkeletonContent({ edit = false }) {
 
 export function AdminDashboardSkeleton() {
   return (
-    <div className="w-full">
-      <div className="flex flex-col gap-6">
-        <section className="admin-panel overflow-hidden rounded-[1.6rem] px-6 py-6 md:px-8 md:py-7">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(17rem,0.8fr)] xl:items-start">
-            <div className="flex min-h-full flex-col justify-between gap-8">
-              <div className="flex max-w-3xl flex-col gap-3">
-                <Skeleton className="h-3 w-24 rounded-md" />
-                <Skeleton className="h-11 w-72 rounded-xl" />
+    <div className="admin-page-stack w-full gap-4">
+      {/* Header */}
+      <div className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-64 rounded-md" />
+          <Skeleton className="h-4 w-48 rounded-md mt-0.5" />
+        </div>
+        <div className="flex items-center gap-2">
+           <Skeleton className="h-9 w-28 sm:w-32 rounded-md" />
+           <Skeleton className="h-9 w-28 sm:w-32 rounded-md" />
+        </div>
+      </div>
+
+      {/* Top Level Stats */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-3 w-16 sm:w-20 rounded-md" />
+                <Skeleton className="h-6 sm:h-8 w-24 rounded-md mt-0.5" />
               </div>
-              <PillRowSkeleton count={2} />
-            </div>
-            <div className="admin-surface rounded-[1.35rem] p-4">
-              <div className="mb-3">
-                <Skeleton className="h-3 w-24 rounded-md" />
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="flex items-center justify-between gap-3 rounded-[1rem] border border-border/80 bg-white px-4 py-3">
-                    <Skeleton className="h-4 w-28 rounded-md" />
-                    <Skeleton className="size-4 rounded-full" />
-                  </div>
-                ))}
-              </div>
+              <Skeleton className="size-6 sm:size-8 rounded-md shrink-0 ml-2" />
             </div>
           </div>
-        </section>
+        ))}
+      </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <MetricCardSkeleton key={index} />
-          ))}
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-          <div className="grid gap-5">
-            <div className="admin-surface rounded-[1.5rem] p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <Skeleton className="size-10 rounded-xl" />
-                <Skeleton className="h-5 w-20 rounded-md" />
+      {/* Row 2: Recent Orders & Top Products */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr] mb-4">
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface rounded-[0.5rem] p-4 flex flex-col h-full">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="size-4 rounded-md" />
+                <Skeleton className="h-4 w-28 rounded-md" />
               </div>
-              <div className="flex h-[260px] flex-col justify-between rounded-[1.3rem] border border-border/80 p-6">
-                <Skeleton className="h-16 w-32 rounded-xl" />
-                <Skeleton className="h-4 w-32 rounded-md" />
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end gap-1.5">
+                    <Skeleton className="h-4 w-8 rounded-md" />
+                    <Skeleton className="h-2 w-12 rounded-md" />
+                </div>
+                <div className="h-6 w-px bg-border/80"></div>
+                <div className="flex flex-col items-end gap-1.5">
+                    <Skeleton className="h-4 w-8 rounded-md" />
+                    <Skeleton className="h-2 w-16 rounded-md" />
+                </div>
               </div>
             </div>
-            <div className="admin-surface rounded-[1.5rem] p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <Skeleton className="size-10 rounded-xl" />
-                <Skeleton className="h-5 w-32 rounded-md" />
-              </div>
-              <div className="flex flex-col gap-3">
+
+            <div className="flex-1">
+              <div className="flex flex-col divide-y divide-border/60">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="rounded-[1.2rem] border border-border/80 bg-background p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-col gap-2">
+                  <div key={index} className="flex items-center justify-between gap-2 py-2.5 -mx-2 px-2">
+                    <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
                         <Skeleton className="h-4 w-32 rounded-md" />
-                        <Skeleton className="h-3 w-20 rounded-md" />
+                        <Skeleton className="h-4 w-16 rounded-full" />
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <Skeleton className="h-4 w-20 rounded-md" />
-                        <Skeleton className="h-3 w-16 rounded-md" />
-                      </div>
+                      <Skeleton className="h-3 w-20 rounded-md" />
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <Skeleton className="h-4 w-20 rounded-md" />
+                      <Skeleton className="h-3 w-16 rounded-md" />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+            <Skeleton className="mt-3 h-9 w-full rounded-md" />
           </div>
+        </div>
 
-          <div className="grid gap-5">
-            <div className="admin-surface rounded-[1.5rem] p-5">
-              <div className="mb-4 flex items-center gap-3">
-                <Skeleton className="size-10 rounded-xl" />
-                <Skeleton className="h-5 w-24 rounded-md" />
-              </div>
-              <div className="rounded-[1.3rem] border border-border/80 p-6">
-                <Skeleton className="h-12 w-40 rounded-xl" />
-                <Skeleton className="mt-3 h-4 w-28 rounded-md" />
-              </div>
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
+            <div className="mb-4 flex items-center gap-2">
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 w-40 rounded-md" />
             </div>
-            <div className="admin-surface rounded-[1.5rem] p-5">
-              <div className="mb-4">
-                <Skeleton className="h-5 w-24 rounded-md" />
-              </div>
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="rounded-[1.15rem] border border-border/80 bg-background px-4 py-3">
-                    <Skeleton className="h-4 w-24 rounded-md" />
-                    <Skeleton className="mt-2 h-4 w-28 rounded-md" />
+            <div className="flex flex-col divide-y divide-border/60">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-between py-3 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Skeleton className="size-10 rounded-md shrink-0" />
+                    <div className="flex flex-col gap-1.5">
+                      <Skeleton className="h-4 w-36 rounded-md" />
+                      <Skeleton className="h-3 w-12 rounded-md" />
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <Skeleton className="h-4 w-12 rounded-md" />
+                    <Skeleton className="h-2 w-8 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Skeleton className="mt-3 h-9 w-full rounded-md" />
+          </div>
+        </div>
+      </section>
+
+      {/* Row 3: Mini Performance Chart & Top Vendors */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr] mb-4">
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface flex flex-col rounded-[0.5rem] p-4 h-full">
+            <div className="mb-4 flex items-center gap-2">
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 w-40 rounded-md" />
+            </div>
+            <div className="h-56 w-full mt-2">
+              <Skeleton className="h-full w-full rounded-md" />
             </div>
           </div>
-        </section>
+        </div>
 
-        <section className="admin-surface flex flex-col gap-4 rounded-[1.5rem] p-5 md:flex-row md:items-center md:justify-between">
-          <Skeleton className="h-5 w-24 rounded-md" />
-          <Skeleton className="h-10 w-32 rounded-xl" />
-        </section>
-      </div>
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
+            <div className="mb-4 flex items-center gap-2">
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 w-24 rounded-md" />
+            </div>
+            <div className="flex flex-col divide-y divide-border/60">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-between py-2">
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="h-3 w-16 rounded-md" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="mt-3 h-9 w-full rounded-md" />
+          </div>
+        </div>
+      </section>
+
+      {/* Row 4: Recent Reviews & Top Customers */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr]">
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
+            <div className="mb-4 flex items-center gap-2">
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 w-32 rounded-md" />
+            </div>
+            <div className="flex flex-col divide-y divide-border/60">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex flex-col justify-center py-3 gap-1">
+                  <div className="flex items-center justify-between min-w-0 mb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Skeleton className="h-4 w-24 rounded-md" />
+                      <Skeleton className="h-3 w-32 rounded-md hidden sm:block" />
+                    </div>
+                    <Skeleton className="h-3 w-16 rounded-md shrink-0" />
+                  </div>
+                  <Skeleton className="h-3 w-full rounded-md mt-1" />
+                  <Skeleton className="h-3 w-4/5 rounded-md mt-1" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="mt-3 h-9 w-full rounded-md" />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="admin-surface rounded-[0.5rem] p-4 flex-1 h-full">
+            <div className="mb-4 flex items-center gap-2">
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 w-32 rounded-md" />
+            </div>
+            <div className="flex flex-col divide-y divide-border/60">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-between py-3 gap-3">
+                  <div className="min-w-0 flex flex-col gap-1.5">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-3 w-40 rounded-md" />
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                    <Skeleton className="h-2 w-12 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Skeleton className="mt-3 h-9 w-full rounded-md" />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

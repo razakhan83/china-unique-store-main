@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -54,12 +55,12 @@ import { cn } from '@/lib/utils';
 
 const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), {
   ssr: false,
-  loading: () => <div className="min-h-10 rounded-xl bg-sidebar-accent/25" aria-hidden="true" />,
+  loading: () => <Skeleton className="min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
 });
 
 const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), {
   ssr: false,
-  loading: () => <div className="min-h-10 rounded-xl bg-sidebar-accent/25" aria-hidden="true" />,
+  loading: () => <Skeleton className="min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
 });
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), {
@@ -68,17 +69,17 @@ const AuthModal = dynamic(() => import('@/components/AuthModal'), {
 });
 
 const NavbarSearchPanel = dynamic(() => import('@/components/NavbarSearchPanel'), {
-  loading: () => <div className="min-h-12 rounded-xl border border-border/70 bg-card/95" aria-hidden="true" />,
+  loading: () => <Skeleton className="min-h-12 w-full rounded-xl" aria-hidden="true" />,
 });
 
 const NavbarDesktopAccountControl = dynamic(() => import('@/components/NavbarDesktopAccountControl'), {
   ssr: false,
-  loading: () => <div className="hidden md:block md:size-11 md:rounded-2xl md:bg-muted/45" aria-hidden="true" />,
+  loading: () => <Skeleton className="hidden md:block md:size-11 md:rounded-2xl" aria-hidden="true" />,
 });
 
 const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFooter'), {
   ssr: false,
-  loading: () => <div className="min-h-10 w-full rounded-xl bg-muted/45" aria-hidden="true" />,
+  loading: () => <Skeleton className="min-h-10 w-full rounded-xl" aria-hidden="true" />,
 });
 
 const MobileBottomNav = dynamic(() => import('@/components/MobileBottomNav'), {

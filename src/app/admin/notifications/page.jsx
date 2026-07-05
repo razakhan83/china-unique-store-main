@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP = {
@@ -93,8 +94,16 @@ export default function NotificationsPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            <div className="flex flex-col divide-y divide-border/40">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-4 p-4 sm:p-6">
+                  <Skeleton className="size-10 shrink-0 rounded-xl" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Skeleton className="h-4 w-3/4 rounded-md" />
+                    <Skeleton className="h-3 w-1/4 rounded-md" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : notifications.length > 0 ? (
             <div className="flex flex-col divide-y divide-border/40">

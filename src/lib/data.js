@@ -451,6 +451,8 @@ async function getSettingsRaw() {
     announcementBarEnabled: true,
     announcementBarText: '',
     announcementBarMessages: [],
+    bankDepositEnabled: false,
+    bankDepositAccountDetails: '',
     homepageSectionOrder: [],
     customPages: DEFAULT_CUSTOM_PAGES,
   };
@@ -489,6 +491,8 @@ async function getSettingsRaw() {
         announcementBarEnabled: settings.announcementBarEnabled ?? true,
         announcementBarText: settings.announcementBarText || '',
         announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
+        bankDepositEnabled: settings.bankDepositEnabled === true,
+        bankDepositAccountDetails: settings.bankDepositAccountDetails || '',
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
         customPages: mergeCustomPages(settings.customPages),
         guestModeEnabled: settings.guestModeEnabled !== false,

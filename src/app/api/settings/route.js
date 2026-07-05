@@ -79,6 +79,8 @@ function serializeSettings(settings) {
         freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
         announcementBarEnabled: settings.announcementBarEnabled ?? true,
         announcementBarText: settings.announcementBarText || '',
+        bankDepositEnabled: settings.bankDepositEnabled === true,
+        bankDepositAccountDetails: settings.bankDepositAccountDetails || '',
         announcementBarMessages: normalizeAnnouncementMessages(
             settings.announcementBarMessages,
             settings.announcementBarText
@@ -158,6 +160,8 @@ export async function PUT(req) {
             'announcementBarEnabled',
             'announcementBarText',
             'announcementBarMessages',
+            'bankDepositEnabled',
+            'bankDepositAccountDetails',
             'homepageSectionOrder',
             'customPages',
         ];
