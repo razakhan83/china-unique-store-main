@@ -183,11 +183,11 @@ const SettingsSchema = new mongoose.Schema(
         },
         outsideKarachiDeliveryFee: {
             type: Number,
-            default: 0,
+            default: 300,
         },
         freeShippingThreshold: {
             type: Number,
-            default: 5000,
+            default: 500,
         },
 
         // Banner / Notice
