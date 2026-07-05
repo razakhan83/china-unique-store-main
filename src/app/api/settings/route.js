@@ -76,7 +76,7 @@ function serializeSettings(settings) {
         tiktokPixelId: settings.tiktokPixelId || '',
         karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
         outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 300),
-        freeShippingThreshold: Number(settings.freeShippingThreshold || 500),
+        freeShippingThreshold: Number(settings.freeShippingThreshold || 5000),
         announcementBarEnabled: settings.announcementBarEnabled ?? true,
         announcementBarText: settings.announcementBarText || '',
         bankDepositEnabled: settings.bankDepositEnabled === true,

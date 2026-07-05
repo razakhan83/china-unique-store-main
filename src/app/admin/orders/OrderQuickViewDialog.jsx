@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { Camera, Eye, MapPin, Package, Phone, User } from 'lucide-react';
 
@@ -112,33 +113,36 @@ export default function OrderQuickViewDialog({
       </DialogTrigger>
 
       <DialogContent className="max-h-[92vh] w-[calc(100%-1rem)] max-w-xl overflow-hidden p-0 sm:max-w-2xl" showCloseButton>
-        {/* Sticky header with actions */}
-        <DialogHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
-          <div>
-            <DialogTitle className="text-sm font-bold text-foreground">
-              {order?.orderId}
-            </DialogTitle>
-            <p className="text-[11px] text-muted-foreground">{formatDate(order?.createdAt)}</p>
-          </div>
+        <DialogHeader className="flex flex-row items-center justify-between border-b border-border pl-4 pr-12 py-3 sm:pl-5 sm:pr-12">
+          <DialogTitle className="text-[14px] font-bold text-foreground">
+            Order Quick View
+          </DialogTitle>
           <div className="flex items-center gap-2">
-            <Badge className={cn('border text-[10px] font-semibold', statusClass)}>
-              {statusLabel}
-            </Badge>
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-[11px]"
+              className="h-8 text-[12px]"
               disabled={isSaving}
               onClick={handleSaveAsImage}
             >
               {isSaving ? <Spinner className="mr-1 size-3" /> : <Camera className="mr-1 size-3" />}
-              {isSaving ? 'Saving...' : 'Save Image'}
+              <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save Image'}</span>
+              <span className="sm:hidden">{isSaving ? '...' : 'Save'}</span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 text-[12px]"
+              render={<Link href={`/admin/orders/${order?._id}`} />}
+              nativeButton={false}
+            >
+              View Details
             </Button>
           </div>
         </DialogHeader>
 
         {/* Scrollable body */}
-        <div className="max-h-[calc(92vh-58px)] overflow-y-auto">
+        <div className="max-h-[calc(92vh-64px)] overflow-y-auto">
           {/* The ref'd card — this is what gets captured */}
           <div ref={cardRef} className="bg-white p-4 sm:p-5">
             {/* Order meta */}
@@ -271,8 +275,25 @@ export default function OrderQuickViewDialog({
                   <span>Items total</span>
                   <span className="tabular-nums">{formatPrice(itemsTotal)}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-[12px] font-bold text-foreground">COD Amount</span>
+                {order?.shippingAmount != null ? (
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Delivery Charges</span>
+                    <span className="tabular-nums">{formatPrice(order.shippingAmount)}</span>
+                  </div>
+                ) : (
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Delivery Charges</span>
+                    <span className="tabular-nums">{formatPrice(Math.max(0, codAmount - itemsTotal))}</span>
+                  </div>
+                )}
+                {order?.discountAmount > 0 && (
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-green-600 dark:text-green-400">
+                    <span>Discount</span>
+                    <span className="tabular-nums">-{formatPrice(order.discountAmount)}</span>
+                  </div>
+                )}
+                <div className="mt-1 flex items-center justify-between border-t border-border/50 pt-1.5">
+                  <span className="text-[12px] font-bold text-foreground">Total Amount</span>
                   <span className="text-[14px] font-bold tabular-nums text-foreground">{formatPrice(codAmount)}</span>
                 </div>
               </div>

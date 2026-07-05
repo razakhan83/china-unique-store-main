@@ -151,6 +151,20 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
                 <span className="font-semibold text-foreground">Cash on Delivery</span>
               </div>
               <div className="flex items-center justify-between pt-2">
+                <span className="text-sm font-semibold text-foreground">Items Subtotal:</span>
+                <span className="text-sm font-semibold text-foreground">Rs. {order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0).toLocaleString('en-PK')}</span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground text-sm">
+                <span>Delivery Charges:</span>
+                <span>Rs. {order.shippingAmount != null ? order.shippingAmount.toLocaleString('en-PK') : Math.max(0, order.totalAmount - order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0)).toLocaleString('en-PK')}</span>
+              </div>
+              {order.discountAmount > 0 && (
+                <div className="flex items-center justify-between text-green-600 dark:text-green-400 text-sm">
+                  <span>Discount:</span>
+                  <span>-Rs. {order.discountAmount.toLocaleString('en-PK')}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 border-t border-border">
                 <span className="text-lg font-bold text-foreground">Total Paid:</span>
                 <span className="text-2xl font-black text-primary">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
               </div>

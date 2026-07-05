@@ -334,6 +334,7 @@ export async function submitOrderAction(input) {
       notes,
       couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       discountAmount: pricing.discountAmount || 0,
+      shippingAmount: pricing.shipping || 0,
     });
 
     if (appliedCoupon) {

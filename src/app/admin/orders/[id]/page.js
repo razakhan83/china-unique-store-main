@@ -64,6 +64,9 @@ async function OrderDetailContent({ id }) {
             <p className="flex items-center gap-1.5"><span className="font-medium text-foreground">Status:</span> <Badge variant={statusVariant[normalizedStatus] || 'secondary'}>{normalizedStatus}</Badge></p>
             {order.sourceTag ? <p><span className="font-medium text-foreground">Source:</span> {order.sourceTag}</p> : null}
             <p><span className="font-medium text-foreground">Total:</span> Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
+            {order.shippingAmount != null ? (
+              <p><span className="font-medium text-foreground">Delivery:</span> Rs. {order.shippingAmount.toLocaleString('en-PK')}</p>
+            ) : null}
             {order.notes ? <p className="break-words mt-3 rounded-lg bg-muted/30 p-3 italic text-muted-foreground"><span className="font-medium text-foreground not-italic block mb-1">Notes:</span> {order.notes}</p> : null}
           </div>
         </section>

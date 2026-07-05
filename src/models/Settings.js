@@ -179,7 +179,7 @@ const SettingsSchema = new mongoose.Schema(
         // Shipping Rates
         karachiDeliveryFee: {
             type: Number,
-            default: 0,
+            default: 200,
         },
         outsideKarachiDeliveryFee: {
             type: Number,
@@ -187,7 +187,7 @@ const SettingsSchema = new mongoose.Schema(
         },
         freeShippingThreshold: {
             type: Number,
-            default: 500,
+            default: 5000,
         },
 
         // Banner / Notice
