@@ -440,209 +440,14 @@ async function getSettingsRaw() {
     emailLogoScalePercent: 100,
     invoiceLogoScalePercent: 100,
     whatsappNumber: '',
-    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
-  };
-}
-
-function toAdminProductRow(product) {
-  return {
-    id: product.id,
-    _id: product._id,
-    slug: product.slug,
-    Name: product.Name,
-    Price: Number(product.Price || 0),
-    compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
-    Category: product.Category,
-    Images: product.Images,
-    StockStatus: product.StockStatus || 'Out of Stock',
-    stockQuantity: Number(product.stockQuantity || 0),
-    isLive: product.isLive !== false,
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
-    isNewArrival: product.isNewArrival === true,
-    isBestSelling: product.isBestSelling === true,
-    vendors: Array.isArray(product.vendors)
-      ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
-      : [],
-    discountPercentage: Number(product.discountPercentage || 0),
-    isDiscounted: product.isDiscounted === true,
-    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
-  };
-}
-
-function buildCustomerAggregationPipeline({ search = '', skip = 0, limit = 12 } = {}) {
-  const safeSearch = String(search || '').trim();
-  const searchRegex = safeSearch ? new RegExp(escapeRegex(safeSearch), 'i') : null;
-
-  const pipeline = [];
-
-  if (searchRegex) {
-    pipeline.push({
-      $match: {
-        $or: [
-          { customerName: searchRegex },
-          { customerEmail: searchRegex },
-          { customerPhone: searchRegex },
-          { customerCity: searchRegex },
-          { customerAddress: searchRegex },
-          { orderId: searchRegex },
-        ],
-      },
-    });
-  }
-
-  pipeline.push(
-    { $sort: { createdAt: -1 } },
-    {
-      $group: {
-        _id: {
-          $cond: [
-            { $ne: [{ $ifNull: ['$customerEmail', ''] }, ''] },
-            { $ifNull: ['$customerEmail', ''] },
-            {
-              $cond: [
-                { $ne: [{ $ifNull: ['$customerPhone', ''] }, ''] },
-                { $ifNull: ['$customerPhone', ''] },
-                { $toString: '$_id' },
-              ],
-            },
-          ],
-        },
-        name: { $first: '$customerName' },
-        email: { $first: { $ifNull: ['$customerEmail', ''] } },
-        phone: { $first: '$customerPhone' },
-        city: { $first: '$customerCity' },
-        address: { $first: '$customerAddress' },
-        landmark: { $first: '$landmark' },
-        lastOrderAt: { $max: '$createdAt' },
-        firstOrderAt: { $min: '$createdAt' },
-        ordersCount: { $sum: 1 },
-        totalSpent: { $sum: '$totalAmount' },
-      },
-    },
-    { $sort: { lastOrderAt: -1 } },
-    {
-      $facet: {
-        items: [
-          { $skip: skip },
-          { $limit: limit },
-        ],
-        totalCount: [{ $count: 'count' }],
-        summary: [
-          {
-            $group: {
-              _id: null,
-              totalCustomers: { $sum: 1 },
-              withEmail: {
-                $sum: {
-                  $cond: [{ $ne: ['$email', ''] }, 1, 0],
-                },
-              },
-              withPhone: {
-                $sum: {
-                  $cond: [{ $ne: ['$phone', ''] }, 1, 0],
-                },
-              },
-              withAddress: {
-                $sum: {
-                  $cond: [{ $ne: ['$address', ''] }, 1, 0],
-                },
-              },
-            },
-          },
-        ],
-      },
-    },
-  );
-
-  return pipeline;
-}
-
-function toOrderSummaryRow(order) {
-  return {
-    _id: order._id.toString(),
-    orderId: order.orderId,
-    isDraft: order.isDraft === true,
-    sourceTag: order.sourceTag || '',
-    customerName: order.customerName,
-    customerEmail: order.customerEmail || '',
-    customerPhone: order.customerPhone || '',
-    customerAddress: order.customerAddress || '',
-    customerCity: order.customerCity || '',
-    landmark: order.landmark || '',
-    paymentStatus: order.paymentStatus || 'COD',
-    weight: Number(order.weight ?? 2),
-    manualCodAmount: order.manualCodAmount,
-    itemType: order.itemType || 'Mix',
-    orderQuantity: Number(order.orderQuantity || 1),
-    totalAmount: Number(order.totalAmount || 0),
-    status: normalizeOrderStatus(order.status),
-    notes: order.notes || '',
-    courierName: order.courierName || '',
-    trackingNumber: order.trackingNumber || '',
-    items: Array.isArray(order.items)
-      ? order.items.map((item) => ({
-          ...item,
-          _id: item._id?.toString(),
-          productId: item.productId?.toString() || item.productId,
-          sourcingVendors: Array.isArray(item.sourcingVendors)
-            ? item.sourcingVendors
-                .map((vendor) => normalizeVendorSnapshot(vendor))
-                .filter(Boolean)
-            : [],
-        }))
-      : [],
-    createdAt: order.createdAt ? new Date(order.createdAt).toISOString() : null,
-    updatedAt: order.updatedAt ? new Date(order.updatedAt).toISOString() : null,
-  };
-}
-
-async function getLiveProductsRaw() {
-  return measureDataAccess('getLiveProductsRaw', async () => {
-    await mongooseConnect();
-
-    const products = await Product.find({ isLive: true })
-      .select(PRODUCT_CARD_PROJECTION)
-      .populate(PRODUCT_CATEGORY_POPULATE)
-      .sort({ createdAt: -1 })
-      .lean();
-    return products.map(serializeProduct);
-  });
-}
-
-async function getAllProductsRaw() {
-  await mongooseConnect();
-
-  const products = await Product.find({})
-    .select(PRODUCT_ADMIN_PROJECTION)
-    .populate(PRODUCT_CATEGORY_POPULATE)
-    .sort({ createdAt: -1 })
-    .lean();
-  return products.map(serializeProduct);
-}
-
-async function getSettingsRaw() {
-  const defaultSettings = {
-    _id: 'default',
-    storeName: 'China Unique Store',
-    supportEmail: '',
-    businessAddress: '',
-    lightLogoUrl: '',
-    darkLogoUrl: '',
-    faviconUrl: '',
-    faviconSizePx: 64,
-    logoScalePercent: 100,
-    emailLogoScalePercent: 100,
-    invoiceLogoScalePercent: 100,
-    whatsappNumber: '',
     facebookPageUrl: '',
     instagramUrl: '',
     trackingEnabled: false,
     facebookPixelId: '',
     tiktokPixelId: '',
     karachiDeliveryFee: 200,
-    outsideKarachiDeliveryFee: 300,
-    freeShippingThreshold: 500,
+    outsideKarachiDeliveryFee: 250,
+    freeShippingThreshold: 3000,
     announcementBarEnabled: true,
     announcementBarText: '',
     announcementBarMessages: [],
@@ -681,8 +486,8 @@ async function getSettingsRaw() {
         facebookPixelId: settings.facebookPixelId || '',
         tiktokPixelId: settings.tiktokPixelId || '',
         karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
-        outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 300),
-        freeShippingThreshold: Number(settings.freeShippingThreshold || 500),
+        outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+        freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
         announcementBarEnabled: settings.announcementBarEnabled ?? true,
         announcementBarText: settings.announcementBarText || '',
         announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
@@ -2413,6 +2218,137 @@ export async function getAdminDashboardData() {
       productImage: r.productId?.images?.[0] || null,
       productId: r.productId?._id?.toString() || null,
     })),
+  };
+}
+
+export async function getAdminChartData(period = 'monthly') {
+  'use cache';
+  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
+  cacheTag('admin-dashboard', 'orders');
+  await mongooseConnect();
+
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+
+  const safePeriod = ['weekly', 'monthly', 'yearly'].includes(String(period)) ? String(period) : 'monthly';
+  const startDate = new Date(now);
+  const labels = [];
+  let groupByFormat = '%Y-%m-%d';
+
+  if (safePeriod === 'weekly') {
+    startDate.setDate(now.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  } else if (safePeriod === 'yearly') {
+    startDate.setMonth(now.getMonth() - 11);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+    groupByFormat = '%Y-%m';
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setMonth(now.getMonth() - i);
+      labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+  } else {
+    startDate.setDate(now.getDate() - 29);
+    startDate.setHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i -= 1) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  }
+
+  const results = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: startDate, $lte: now },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: groupByFormat, date: '$createdAt' },
+        },
+        revenue: { $sum: '$totalAmount' },
+        orders: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  const dataMap = new Map(
+    (Array.isArray(results) ? results : []).map((row) => [row._id, { revenue: Number(row.revenue || 0), orders: Number(row.orders || 0) }])
+  );
+
+  return labels.map((dateLabel) => {
+    const data = dataMap.get(dateLabel) || { revenue: 0, orders: 0 };
+    let displayLabel = dateLabel;
+
+    if (safePeriod === 'weekly') {
+      displayLabel = new Date(dateLabel).toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (safePeriod === 'monthly') {
+      displayLabel = new Date(dateLabel).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (safePeriod === 'yearly') {
+      const [year, month] = dateLabel.split('-');
+      const d = new Date(Number(year), Number(month) - 1, 1);
+      displayLabel = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    }
+
+    return {
+      rawDate: dateLabel,
+      date: displayLabel,
+      revenue: data.revenue,
+      orders: data.orders,
+    };
+  });
+}
+
+export async function getAdminSettings() {
+  'use cache';
+  cacheLife({ stale: 30, revalidate: 60, expire: 300 });
+  cacheTag('settings');
+  await mongooseConnect();
+
+  let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+  if (!settings) {
+    settings = await Settings.create({ singletonKey: SETTINGS_KEY });
+    settings = settings.toObject();
+  }
+
+  return {
+    _id: settings._id.toString(),
+    storeName: settings.storeName || 'China Unique Store',
+    supportEmail: settings.supportEmail || '',
+    businessAddress: settings.businessAddress || '',
+    lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
+    darkLogoUrl: normalizeLogoUrl(settings.darkLogoUrl),
+    faviconSizePx: normalizeFaviconSize(settings.faviconSizePx),
+    faviconUrl: normalizeFaviconUrl(settings.faviconUrl, settings.faviconSizePx),
+    logoScalePercent: Math.min(200, Math.max(60, Number(settings.logoScalePercent || 100))),
+    emailLogoScalePercent: Math.min(200, Math.max(40, Number(settings.emailLogoScalePercent || 100))),
+    invoiceLogoScalePercent: Math.min(200, Math.max(40, Number(settings.invoiceLogoScalePercent || 100))),
+    whatsappNumber: settings.whatsappNumber || '',
+    facebookPageUrl: settings.facebookPageUrl || '',
+    instagramUrl: settings.instagramUrl || '',
+    trackingEnabled: settings.trackingEnabled === true,
+    facebookPixelId: settings.facebookPixelId || '',
+    facebookConversionsApiToken: settings.facebookConversionsApiToken || '',
+    facebookTestEventCode: settings.facebookTestEventCode || '',
+    tiktokPixelId: settings.tiktokPixelId || '',
+    tiktokAccessToken: settings.tiktokAccessToken || '',
+    karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
+    outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+    freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
+    announcementBarEnabled: settings.announcementBarEnabled ?? true,
+    announcementBarText: settings.announcementBarText || '',
+    announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
+    homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
+    customPages: mergeCustomPages(settings.customPages),
   };
 }
 
