@@ -28,6 +28,8 @@
     "embla-carousel-autoplay": "^9.0.0-rc01",
     "embla-carousel-react": "^9.0.0-rc01",
     "exceljs": "^4.4.0",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.0.1",

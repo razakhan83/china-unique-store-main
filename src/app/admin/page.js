@@ -106,7 +106,7 @@ async function DashboardContent({ session }) {
           <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening with your store today.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/admin/orders" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+          <Link href="/admin/orders?createOrder=1" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
             <Plus className="size-3.5" />
             <span className="hidden sm:inline">Create Order</span>
             <span className="sm:hidden">Order</span>

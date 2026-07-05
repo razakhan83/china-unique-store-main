@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Eye, Receipt, Search, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Trash2, Printer } from 'lucide-react';
+import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,7 +39,7 @@ import { getPrimaryProductImage } from '@/lib/productImages';
 import { getProductCategoryNames } from '@/lib/productCategories';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
-import { bulkUpdateOrderStatusAction, createDraftOrderAction, updateOrderAction } from '@/app/actions';
+import { bulkUpdateOrderStatusAction, createDraftOrderAction, deleteOrderAction, emptyTrashAction, hardDeleteOrderAction, restoreOrderAction, updateOrderAction } from '@/app/actions';
 import { DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
 import { toast } from 'sonner';
 
@@ -55,6 +55,7 @@ const statusVariant = {
 
 const BULK_STATUS_OPTIONS = ORDER_STATUSES;
 const DRAFT_TAB_ID = 'draft';
+const TRASH_TAB_ID = 'trash';
 const DRAFT_SOURCE_OPTIONS = [
   { value: 'WhatsApp', label: 'WhatsApp' },
   { value: 'Instagram', label: 'Instagram' },
@@ -64,7 +65,36 @@ const DRAFT_SOURCE_OPTIONS = [
   { value: 'Walk In', label: 'Walk In' },
 ];
 
-const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
+// Deterministic city → pastel color mapping for visual scanning
+const CITY_COLOR_PALETTE = [
+  'bg-sky-100 text-sky-800 border-sky-200',
+  'bg-violet-100 text-violet-800 border-violet-200',
+  'bg-amber-100 text-amber-800 border-amber-200',
+  'bg-emerald-100 text-emerald-800 border-emerald-200',
+  'bg-rose-100 text-rose-800 border-rose-200',
+  'bg-orange-100 text-orange-800 border-orange-200',
+  'bg-teal-100 text-teal-800 border-teal-200',
+  'bg-pink-100 text-pink-800 border-pink-200',
+];
+
+function getCityColorClass(city) {
+  if (!city) return 'bg-slate-100 text-slate-600 border-slate-200';
+  let hash = 0;
+  for (let i = 0; i < city.length; i++) {
+    hash = city.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return CITY_COLOR_PALETTE[Math.abs(hash) % CITY_COLOR_PALETTE.length];
+}
+
+const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString('en-PK')}`;
+
+const getCodAmount = (order) => {
+  if (order?.manualCodAmount != null && order.manualCodAmount !== '') {
+    return Number(order.manualCodAmount);
+  }
+  return Number(order?.totalAmount || 0);
+};
+
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
@@ -370,6 +400,8 @@ export default function AdminOrdersClient({
   initialStartDate,
   initialEndDate,
   summary,
+  initialTrashOrders = [],
+  initialCreateOrder = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -400,6 +432,9 @@ export default function AdminOrdersClient({
     itemType: 'Mix',
     weight: '2',
     notes: '',
+    manualCodAmount: '',
+    customItemName: '',
+    customItemPrice: '',
   });
   const [draftItems, setDraftItems] = useState([]);
   
@@ -416,6 +451,20 @@ export default function AdminOrdersClient({
   
   const [cityOpen, setCityOpen] = useState(false);
 
+  // Trash & Delete State
+  const [trashOrders, setTrashOrders] = useState(initialTrashOrders);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, orderId, label }
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEmptyingTrash, setIsEmptyingTrash] = useState(false);
+  const [emptyTrashConfirm, setEmptyTrashConfirm] = useState(false);
+
+  // Auto-open create modal if navigated from admin home with ?createOrder=1
+  useEffect(() => {
+    if (initialCreateOrder) {
+      setIsCreateModalOpen(true);
+    }
+  }, [initialCreateOrder]);
+
   useEffect(() => {
     setOrders(initialOrders);
     setSelectedOrders([]);
@@ -427,6 +476,10 @@ export default function AdminOrdersClient({
     setStartDate(initialStartDate);
     setEndDate(initialEndDate);
   }, [initialSearchQuery, initialStatusFilter, initialStartDate, initialEndDate]);
+
+  useEffect(() => {
+    setTrashOrders(initialTrashOrders);
+  }, [initialTrashOrders]);
 
   const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
   const filteredDraftCities = useMemo(() => {
@@ -454,6 +507,14 @@ export default function AdminOrdersClient({
           searchValue: [product.Name, product.slug || '', ...categoryNames].filter(Boolean).join(' '),
         };
       });
+  }, [draftItems, productCatalog]);
+
+  // Quick Add: first 3 products from catalog not already in draft
+  const quickAddProducts = useMemo(() => {
+    const selectedProductIds = new Set(draftItems.map((item) => item.productId));
+    return (Array.isArray(productCatalog) ? productCatalog : [])
+      .filter((p) => !selectedProductIds.has(String(p?._id || p?.slug || '').trim()))
+      .slice(0, 3);
   }, [draftItems, productCatalog]);
 
   const displayOrders = orders;
@@ -510,6 +571,9 @@ export default function AdminOrdersClient({
       itemType: 'Mix',
       weight: '2',
       notes: '',
+      manualCodAmount: '',
+      customItemName: '',
+      customItemPrice: '',
     });
     setDraftItems([]);
     setCreateSourceOpen(false);
@@ -565,6 +629,87 @@ export default function AdminOrdersClient({
 
   const removeDraftItem = (productId) => {
     setDraftItems((current) => current.filter((item) => item.productId !== productId));
+  };
+
+  const addCustomItemToDraft = () => {
+    const name = String(draftForm.customItemName || '').trim();
+    const price = Number(draftForm.customItemPrice) || 0;
+    if (!name) { toast.error('Enter a custom item name first.'); return; }
+    const customId = `custom-${Date.now()}`;
+    setDraftItems((current) => [
+      ...current,
+      { productId: customId, name, price, image: '', quantity: 1 },
+    ]);
+    updateDraftField('customItemName', '');
+    updateDraftField('customItemPrice', '');
+  };
+
+  const handleDeleteOrder = (order) => {
+    setDeleteConfirm({ id: order._id, orderId: order.orderId, label: order.customerName });
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!deleteConfirm) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteOrderAction(deleteConfirm.id);
+      if (res.success) {
+        toast.success(`Order ${deleteConfirm.orderId} moved to Trash.`);
+        setOrders((prev) => prev.filter((o) => o._id !== deleteConfirm.id));
+        setTrashOrders((prev) => [{
+          _id: deleteConfirm.id,
+          orderId: deleteConfirm.orderId,
+          customerName: deleteConfirm.label,
+          customerPhone: '',
+          totalAmount: 0,
+          deletedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+        }, ...prev]);
+        setDeleteConfirm(null);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Failed to delete order.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRestoreOrder = async (id, orderId) => {
+    const res = await restoreOrderAction(id);
+    if (res.success) {
+      toast.success(`Order ${orderId} restored.`);
+      setTrashOrders((prev) => prev.filter((o) => o._id !== id));
+      router.refresh();
+    } else {
+      toast.error(res.error || 'Failed to restore order.');
+    }
+  };
+
+  const handleHardDeleteOrder = async (id, orderId) => {
+    const res = await hardDeleteOrderAction(id);
+    if (res.success) {
+      toast.success(`Order ${orderId} permanently deleted.`);
+      setTrashOrders((prev) => prev.filter((o) => o._id !== id));
+    } else {
+      toast.error(res.error || 'Failed to delete order.');
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    setIsEmptyingTrash(true);
+    try {
+      const res = await emptyTrashAction();
+      if (res.success) {
+        toast.success(`Trash emptied — ${res.deletedCount} order${res.deletedCount === 1 ? '' : 's'} permanently deleted.`);
+        setTrashOrders([]);
+        setEmptyTrashConfirm(false);
+      } else {
+        toast.error(res.error || 'Failed to empty trash.');
+      }
+    } finally {
+      setIsEmptyingTrash(false);
+    }
   };
 
   const validateSelectedOrders = (expectedStatus, actionLabel) => {
@@ -1100,7 +1245,7 @@ export default function AdminOrdersClient({
         } else if (order.paymentStatus === 'Online') {
           codAmount = 0;
         } else {
-          codAmount = order.totalAmount;
+          codAmount = getCodAmount(order);
         }
 
         const cleanAddress = [order.customerAddress, order.landmark]
@@ -1608,10 +1753,22 @@ export default function AdminOrdersClient({
     setIsCreatingDraft(true);
     try {
       const result = await createDraftOrderAction({
-        ...draftForm,
+        customerName: draftForm.customerName,
+        customerEmail: draftForm.customerEmail,
+        customerPhone: draftForm.customerPhone,
+        customerAddress: draftForm.customerAddress,
+        customerCity: draftForm.customerCity,
+        landmark: draftForm.landmark,
+        sourceTag: draftForm.sourceTag,
+        itemType: draftForm.itemType,
+        weight: draftForm.weight,
+        notes: draftForm.notes,
+        manualCodAmount: draftForm.manualCodAmount,
         items: draftItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
+          name: item.name,
+          price: item.price,
         })),
       });
 
@@ -1634,12 +1791,13 @@ export default function AdminOrdersClient({
   const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ORDER_STATUS || startDate || endDate;
   const canApplyFilters = Boolean(searchQuery.trim() || startDate || endDate);
   const appliedFilters = [
-    statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter}` : null,
+    statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter === TRASH_TAB_ID ? 'Trash' : statusFilter}` : null,
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
     initialStartDate || initialEndDate
       ? `Date: ${initialStartDate || 'Any'} - ${initialEndDate || 'Any'}`
       : null,
   ].filter(Boolean);
+  const isTrashView = statusFilter === TRASH_TAB_ID;
 
   return (
     <div className="flex flex-col gap-4">
@@ -1689,7 +1847,130 @@ export default function AdminOrdersClient({
             {tab.label}
           </Button>
         ))}
+        {/* Trash tab — separated with a divider */}
+        <div className="mx-1 h-4 w-px bg-border/60" />
+        <Button
+          variant={statusFilter === TRASH_TAB_ID ? 'destructive' : 'ghost'}
+          size="sm"
+          disabled={isPending}
+          onClick={() => {
+            setStatusFilter(TRASH_TAB_ID);
+            navigate({ status: TRASH_TAB_ID, page: null });
+          }}
+          className={cn(
+            'h-7 rounded-md px-2.5 text-[11px] font-medium transition-colors md:h-7',
+            statusFilter !== TRASH_TAB_ID && 'text-destructive/70 hover:text-destructive'
+          )}
+        >
+          <Trash2 className="mr-1 size-3" />
+          Trash ({summary.trashCount || trashOrders.length})
+        </Button>
       </div>
+
+      {/* ── Trash Panel ── */}
+      {isTrashView && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+            <div className="flex items-center gap-2 text-destructive">
+              <Trash2 className="size-4" />
+              <p className="text-[13px] font-semibold">Trash</p>
+              <span className="text-[11px] text-destructive/70">— Orders are auto-purged after 50 days</span>
+            </div>
+            {trashOrders.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setEmptyTrashConfirm(true)}
+                className="admin-cta-button text-[12px]"
+              >
+                <Trash2 data-icon="inline-start" />
+                Empty Trash ({trashOrders.length})
+              </Button>
+            )}
+          </div>
+
+          {trashOrders.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card px-4 py-12 text-center">
+              <Trash2 className="mx-auto mb-2 size-8 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-foreground">Trash is empty</p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">Deleted orders will appear here for 50 days.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="px-3 py-2">Order</th>
+                    <th className="px-3 py-2">Customer</th>
+                    <th className="px-3 py-2 text-right">Amount</th>
+                    <th className="px-3 py-2">Deleted</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {trashOrders.map((o) => (
+                    <tr key={o._id} className="hover:bg-muted/20">
+                      <td className="px-3 py-2.5 text-[13px] font-semibold tabular-nums text-foreground">{o.orderId}</td>
+                      <td className="px-3 py-2.5">
+                        <p className="text-[13px] font-medium text-foreground">{o.customerName}</p>
+                        {o.isDraft && <span className="text-[10px] text-muted-foreground">Draft</span>}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-[12px] tabular-nums text-foreground">{formatPrice(o.totalAmount)}</td>
+                      <td className="px-3 py-2.5 text-[11px] text-muted-foreground">
+                        {o.deletedAt ? formatDistanceToNow(new Date(o.deletedAt), { addSuffix: true }) : '—'}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="admin-cta-button h-7 text-[11px]"
+                            onClick={() => handleRestoreOrder(o._id, o.orderId)}
+                          >
+                            <RotateCcw className="mr-1 size-3" />
+                            Restore
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="admin-cta-button h-7 text-[11px] text-destructive hover:text-destructive"
+                            onClick={() => handleHardDeleteOrder(o._id, o.orderId)}
+                          >
+                            <Trash2 className="mr-1 size-3" />
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty Trash Confirm Dialog */}
+      <Dialog open={emptyTrashConfirm} onOpenChange={setEmptyTrashConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive text-sm">
+              <AlertTriangle className="size-4" />
+              Empty Trash?
+            </DialogTitle>
+            <DialogDescription className="text-[13px]">
+              This will permanently delete all {trashOrders.length} order{trashOrders.length === 1 ? '' : 's'} in the trash. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-1.5 sm:gap-0">
+            <Button variant="ghost" size="sm" onClick={() => setEmptyTrashConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" disabled={isEmptyingTrash} onClick={handleEmptyTrash} className="min-w-[100px]">
+              {isEmptyingTrash ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+              {isEmptyingTrash ? 'Emptying...' : 'Empty Trash'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters Bar — Compact */}
       <form
@@ -2034,7 +2315,7 @@ export default function AdminOrdersClient({
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      <Badge variant="secondary" className="text-[10px] font-medium">
+                      <Badge className={cn('text-[10px] font-medium border', getCityColorClass(order.customerCity))}>
                         {order.customerCity || 'N/A'}
                       </Badge>
                     </td>
@@ -2052,7 +2333,7 @@ export default function AdminOrdersClient({
                       </div>
                     </td>
                     <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
-                    <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</td>
+                    <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</td>
                     <td className="px-3 py-2">
                       <Badge
                         variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
@@ -2103,6 +2384,14 @@ export default function AdminOrdersClient({
                                 Quick update
                               </DropdownMenuItem>
                             </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteOrder(order)}
+                            >
+                              <Trash2 data-icon="inline-start" />
+                              Move to Trash
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -2181,9 +2470,15 @@ export default function AdminOrdersClient({
                             ) : null}
                           </div>
                         ) : null}
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
-                        </p>
+                        {/* Mobile info strip — visible inline, no hunting in dropdown */}
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <Badge className={cn('text-[10px] font-medium border', getCityColorClass(order.customerCity))}>
+                            {order.customerCity || 'N/A'}
+                          </Badge>
+                          <span className="text-[11px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</span>
+                          <span className="text-[10px] text-muted-foreground">{order.paymentStatus || 'COD'} · {formatWeight(order.weight)}</span>
+                          {order.trackingNumber && <span className="text-[10px] text-muted-foreground">📦 {order.trackingNumber}</span>}
+                        </div>
                       </div>
                       <div className="flex items-start gap-1.5">
                         <Badge
@@ -2202,7 +2497,7 @@ export default function AdminOrdersClient({
                           <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuGroup>
                               <DropdownMenuItem disabled className="text-[11px]">City: {order.customerCity || 'N/A'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled className="text-[11px]">Total: {formatPrice(order.totalAmount)}</DropdownMenuItem>
+                              <DropdownMenuItem disabled className="text-[11px]">Total: {formatPrice(getCodAmount(order))}</DropdownMenuItem>
                               <DropdownMenuItem disabled className="text-[11px]">Payment: {order.paymentStatus || 'COD'}</DropdownMenuItem>
                               <DropdownMenuItem disabled className="text-[11px]">Weight: {formatWeight(order.weight)}</DropdownMenuItem>
                               <DropdownMenuItem disabled className="text-[11px]">Tracking: {order.trackingNumber || '—'}</DropdownMenuItem>
@@ -2232,13 +2527,21 @@ export default function AdminOrdersClient({
                                 Edit Order
                               </DropdownMenuItem>
                             </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteOrder(order)}
+                            >
+                              <Trash2 data-icon="inline-start" />
+                              Move to Trash
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
 
                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
-                       <span className="text-[12px] font-bold tabular-nums text-foreground">{formatPrice(order.totalAmount)}</span>
+                       <span className="text-[12px] font-bold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</span>
                        <div className="flex items-center gap-1.5">
                          <OrderQuickViewDialog
                            order={order}
@@ -2266,7 +2569,29 @@ export default function AdminOrdersClient({
       </div>
       )}
 
-      {/* Quick Update Dialog (unified — used by both desktop dropdown and mobile cards) */}
+      {/* Delete Confirm Dialog */}
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive text-sm">
+              <AlertTriangle className="size-4" />
+              Move to Trash?
+            </DialogTitle>
+            <DialogDescription className="text-[13px]">
+              Order <strong>{deleteConfirm?.orderId}</strong> ({deleteConfirm?.label}) will be moved to Trash. You can restore it within 50 days.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-1.5 sm:gap-0">
+            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={confirmDeleteOrder} className="min-w-[100px]">
+              {isDeleting ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+              {isDeleting ? 'Deleting...' : 'Move to Trash'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Draft Order Dialog */}
       <Dialog
         open={isCreateModalOpen}
         onOpenChange={(open) => {
@@ -2281,6 +2606,8 @@ export default function AdminOrdersClient({
             <DialogTitle className="text-base font-semibold">Create Draft Order</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-3 py-1 sm:gap-4">
+            {/* Field legend */}
+            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-destructive">*</span> Required fields &nbsp;&middot;&nbsp; <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span> fields are shown with a badge.</p>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:items-start lg:gap-4">
               <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -2292,19 +2619,29 @@ export default function AdminOrdersClient({
 
                 <FieldGroup className="grid gap-3 md:grid-cols-2">
                   <Field>
-                    <FieldLabel className="text-[12px]">Full Name</FieldLabel>
-                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerName} onChange={(event) => updateDraftField('customerName', event.target.value)} required />
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Full Name <span className="text-destructive">*</span></FieldLabel>
+                    <Input
+                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerName && 'ring-1 ring-destructive/25')}
+                      value={draftForm.customerName}
+                      onChange={(event) => updateDraftField('customerName', event.target.value)}
+                      required
+                    />
                   </Field>
                   <Field>
-                    <FieldLabel className="text-[12px]">Phone</FieldLabel>
-                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerPhone} onChange={(event) => updateDraftField('customerPhone', event.target.value)} required />
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Phone <span className="text-destructive">*</span></FieldLabel>
+                    <Input
+                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerPhone && 'ring-1 ring-destructive/25')}
+                      value={draftForm.customerPhone}
+                      onChange={(event) => updateDraftField('customerPhone', event.target.value)}
+                      required
+                    />
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel className="text-[12px]">Email</FieldLabel>
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Email <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
                     <Input type="email" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerEmail} onChange={(event) => updateDraftField('customerEmail', event.target.value)} />
                   </Field>
                   <Field>
-                    <FieldLabel className="text-[12px]">City</FieldLabel>
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">City <span className="text-destructive">*</span></FieldLabel>
                     <div className="relative">
                       <Input
                         className="h-9 rounded-xl px-3 text-[13px]"
@@ -2342,16 +2679,21 @@ export default function AdminOrdersClient({
                     </div>
                   </Field>
                   <Field>
-                    <FieldLabel className="text-[12px]">Landmark</FieldLabel>
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Landmark <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
                     <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} />
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel className="text-[12px]">Full Address</FieldLabel>
-                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerAddress} onChange={(event) => updateDraftField('customerAddress', event.target.value)} required />
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Full Address <span className="text-destructive">*</span></FieldLabel>
+                    <Input
+                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerAddress && 'ring-1 ring-destructive/25')}
+                      value={draftForm.customerAddress}
+                      onChange={(event) => updateDraftField('customerAddress', event.target.value)}
+                      required
+                    />
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel className="text-[12px]">Notes</FieldLabel>
-                    <Textarea rows={3} className="min-h-24 rounded-xl px-3 py-2 text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Optional internal note" />
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Notes <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
+                    <Textarea rows={3} className="min-h-24 rounded-xl px-3 py-2 text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Internal note" />
                   </Field>
                 </FieldGroup>
               </div>
@@ -2365,7 +2707,7 @@ export default function AdminOrdersClient({
 
                   <FieldGroup className="grid gap-3">
                     <Field>
-                      <FieldLabel className="text-[12px]">Source Tag</FieldLabel>
+                      <FieldLabel className="flex items-center gap-1.5 text-[12px]">Source Tag <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
                       <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                         <Popover open={createSourceOpen} onOpenChange={setCreateSourceOpen}>
                           <PopoverTrigger asChild>
@@ -2409,14 +2751,31 @@ export default function AdminOrdersClient({
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field>
-                        <FieldLabel className="text-[12px]">Item Type</FieldLabel>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Item Type <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
                         <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.itemType} onChange={(event) => updateDraftField('itemType', event.target.value)} />
                       </Field>
                       <Field>
-                        <FieldLabel className="text-[12px]">Weight (kg)</FieldLabel>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Weight (kg) <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
                         <Input type="number" step="0.5" min="0.5" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.weight} onChange={(event) => updateDraftField('weight', event.target.value)} />
                       </Field>
                     </div>
+                    <Field>
+                      <FieldLabel className="flex items-center gap-1.5 text-[12px]">COD Amount <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
+                      <Input
+                        type="number"
+                        min="0"
+                        className="h-9 rounded-xl px-3 text-[13px]"
+                        value={draftForm.manualCodAmount}
+                        onChange={(event) => updateDraftField('manualCodAmount', event.target.value)}
+                        placeholder={`Auto (= ${formatPrice(draftTotalAmount || 0)})`}
+                      />
+                      <FieldDescription className="mt-1 text-[11px] text-muted-foreground">
+                        {draftForm.manualCodAmount
+                          ? `COD will be: ${formatPrice(draftForm.manualCodAmount)}`
+                          : `Auto-calculate: COD = ${formatPrice(draftTotalAmount || 0)}`
+                        }
+                      </FieldDescription>
+                    </Field>
                   </FieldGroup>
                 </div>
 
@@ -2432,7 +2791,7 @@ export default function AdminOrdersClient({
                   </div>
 
                   <Field className="mb-3">
-                    <FieldLabel className="text-[12px]">Search & Add Items</FieldLabel>
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Search & Add Items <span className="text-destructive">*</span></FieldLabel>
                       <Popover open={productPickerOpen} onOpenChange={setProductPickerOpen}>
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="h-9 w-full justify-between rounded-xl px-3 text-[13px] font-normal">
@@ -2494,6 +2853,57 @@ export default function AdminOrdersClient({
                       </PopoverContent>
                     </Popover>
                   </Field>
+
+                  {/* Quick Add chips */}
+                  {quickAddProducts.length > 0 && (
+                    <div className="mb-3">
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Quick Add</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {quickAddProducts.map((product) => {
+                          const img = getPrimaryProductImage(product);
+                          return (
+                            <button
+                              key={product._id}
+                              type="button"
+                              onClick={() => addDraftProduct(product)}
+                              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5 text-left text-[12px] hover:border-primary/40 hover:bg-muted/40 transition-colors"
+                            >
+                              {img?.url ? (
+                                <div className="relative size-7 shrink-0 overflow-hidden rounded-lg">
+                                  <Image src={img.url} alt={product.Name} fill sizes="28px" className="object-cover" />
+                                </div>
+                              ) : <div className="size-7 shrink-0 rounded-lg bg-muted" />}
+                              <span className="max-w-[120px] truncate font-medium text-foreground">{product.Name}</span>
+                              <span className="shrink-0 text-[10px] text-muted-foreground">{formatPrice(product.discountedPrice ?? product.Price ?? 0)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Item */}
+                  <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/20 p-2.5">
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Custom Item</p>
+                    <div className="flex gap-2">
+                      <Input
+                        className="h-8 flex-1 rounded-xl px-2.5 text-[12px]"
+                        placeholder="Item name"
+                        value={draftForm.customItemName}
+                        onChange={(e) => updateDraftField('customItemName', e.target.value)}
+                      />
+                      <Input
+                        type="number"
+                        className="h-8 w-24 rounded-xl px-2.5 text-[12px]"
+                        placeholder="Price"
+                        value={draftForm.customItemPrice}
+                        onChange={(e) => updateDraftField('customItemPrice', e.target.value)}
+                      />
+                      <Button type="button" size="sm" variant="secondary" className="h-8 rounded-xl text-[12px]" onClick={addCustomItemToDraft}>
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
 
                   {draftItems.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-[12px] text-muted-foreground">
@@ -2754,7 +3164,7 @@ export default function AdminOrdersClient({
                     <FieldLabel htmlFor="manualCodAmount" className="text-[12px]">COD Amount (Override)</FieldLabel>
                     <Input id="manualCodAmount" name="manualCodAmount" type="number" className="h-8 text-[13px]" placeholder="Blank = auto" defaultValue={editingOrder.manualCodAmount ?? ''} />
                     <FieldDescription className="text-[10px]">
-                      If blank, COD = {formatPrice(editingOrder.totalAmount || 0)}
+                      If blank, COD = {formatPrice(editinggetCodAmount(order) || 0)}
                     </FieldDescription>
                   </Field>
                 </FieldGroup>

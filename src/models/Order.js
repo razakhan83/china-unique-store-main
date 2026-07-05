@@ -120,6 +120,15 @@ const OrderSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        deletedAt: {
+            type: Date,
+            default: null,
+        },
     },
     {
         timestamps: true,
@@ -131,6 +140,8 @@ OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ customerEmail: 1, createdAt: -1 });
 OrderSchema.index({ secureToken: 1 });
 OrderSchema.index({ status: 1, customerEmail: 1, 'items.productId': 1, createdAt: -1 });
+// TTL index: auto-purge trashed orders 50 days after deletion
+OrderSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 50 * 24 * 60 * 60, partialFilterExpression: { isDeleted: true } });
 
 // Next.js hot reloading can keep old models in memory. 
 // If the cached Order model doesn't have the updated status enum or missing fields, we must delete it to force re-registration.
@@ -150,8 +161,9 @@ if (cachedOrder) {
     const hasSourceTag = !!cachedOrder.schema.paths.sourceTag;
     const hasCouponCode = !!cachedOrder.schema.paths.couponCode;
     const hasDiscountAmount = !!cachedOrder.schema.paths.discountAmount;
+    const hasIsDeleted = !!cachedOrder.schema.paths.isDeleted;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount) {
+    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted) {
         delete mongoose.models.Order;
     }
 }

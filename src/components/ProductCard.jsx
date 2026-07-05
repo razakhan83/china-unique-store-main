@@ -140,7 +140,7 @@ export default function ProductCard({ product, className = "" }) {
         </Link>
       </div>
 
-      <CardContent className="flex min-h-[6.25rem] flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 sm:min-h-0 sm:gap-2 sm:p-4 sm:pt-4">
+      <CardContent className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 sm:gap-2 sm:p-4 sm:pt-4">
         <Link
           href={productHref}
           scroll={true}
@@ -148,7 +148,7 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           <h3
-            className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-[1.15rem] text-primary/80 sm:line-clamp-1 sm:min-h-5 sm:text-base sm:leading-5"
+            className="line-clamp-2 text-[13px] font-semibold leading-[1.15rem] text-foreground/90 sm:line-clamp-1 sm:text-base sm:leading-5"
             title={productName}
             draggable={false}
           >
@@ -157,7 +157,7 @@ export default function ProductCard({ product, className = "" }) {
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1 sm:gap-3 sm:pt-0">
-          <div className="flex min-w-0 min-h-[2.4rem] flex-col justify-end gap-0.5 sm:min-h-[2.75rem]">
+          <div className="flex min-w-0 flex-col justify-end gap-0.5">
             {compareAtPrice ? (
               <div className="flex flex-wrap items-center gap-2">
                 <p

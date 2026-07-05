@@ -1659,7 +1659,7 @@ export async function getAdminOrdersPage({
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.max(1, Number(limit) || 12);
 
-  const query = {};
+  const query = { isDeleted: { $ne: true } };
 
   if (safeStatus === 'draft') {
     query.isDraft = true;
@@ -1693,13 +1693,14 @@ export async function getAdminOrdersPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, statusCounts, draftCount] = await Promise.all([
+  const [items, total, statusCounts, draftCount, trashCount] = await Promise.all([
     Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
     Order.aggregate([
       {
         $match: {
           isDraft: { $ne: true },
+          isDeleted: { $ne: true },
         },
       },
       {
@@ -1709,7 +1710,8 @@ export async function getAdminOrdersPage({
         },
       },
     ]),
-    Order.countDocuments({ isDraft: true }),
+    Order.countDocuments({ isDraft: true, isDeleted: { $ne: true } }),
+    Order.countDocuments({ isDeleted: true }),
   ]);
 
   const statusCountMap = new Map(
@@ -1731,9 +1733,34 @@ export async function getAdminOrdersPage({
     summary: {
       ...summaryCounts,
       draftCount,
+      trashCount,
       allCount: summaryCounts.allCount + draftCount,
     },
   };
+}
+
+export async function getAdminTrashOrders() {
+  'use cache';
+  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
+  cacheTag('orders');
+  await mongooseConnect();
+
+  const items = await Order.find({ isDeleted: true })
+    .sort({ deletedAt: -1 })
+    .select('orderId customerName customerPhone totalAmount isDraft deletedAt createdAt')
+    .limit(500)
+    .lean();
+
+  return items.map((o) => ({
+    _id: String(o._id),
+    orderId: o.orderId || '',
+    customerName: o.customerName || '',
+    customerPhone: o.customerPhone || '',
+    totalAmount: Number(o.totalAmount || 0),
+    isDraft: o.isDraft === true,
+    deletedAt: o.deletedAt ? o.deletedAt.toISOString() : null,
+    createdAt: o.createdAt ? o.createdAt.toISOString() : null,
+  }));
 }
 
 export async function getAdminUsersPage({

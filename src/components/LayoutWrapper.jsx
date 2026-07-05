@@ -85,7 +85,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   />
                 </div>
                 <p className="max-w-sm leading-relaxed text-muted-foreground">
-                  A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.
+                  {settings.storeDescription || 'A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.'}
                 </p>
                 <div className="mt-5 flex gap-3">
                   {socialLinks.map(({ href, label, icon: Icon }) => (

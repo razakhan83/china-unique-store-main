@@ -688,6 +688,10 @@ export async function createDraftOrderAction(input = {}) {
       0
     );
 
+    // manualCodAmount: if provided, use it; otherwise leave undefined (= auto = totalAmount)
+    const rawCod = input?.manualCodAmount;
+    const manualCodAmount = (rawCod !== undefined && rawCod !== null && rawCod !== '') ? Number(rawCod) : undefined;
+
     const order = await Order.create({
       orderId: makeOrderId(),
       secureToken: crypto.randomUUID(),
@@ -706,6 +710,7 @@ export async function createDraftOrderAction(input = {}) {
       itemType,
       orderQuantity,
       weight,
+      ...(manualCodAmount !== undefined && { manualCodAmount }),
     });
 
     const session = await getServerSession(authOptions);
@@ -930,6 +935,100 @@ export async function bulkUpdateOrderStatusAction({
     };
   } catch (error) {
     console.error('Failed to bulk update orders:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteOrderAction(id) {
+  await assertAdmin();
+  await mongooseConnect();
+  try {
+    const order = await Order.findById(id);
+    if (!order) return { success: false, error: 'Order not found.' };
+    if (order.isDeleted) return { success: false, error: 'Order is already in trash.' };
+
+    order.isDeleted = true;
+    order.deletedAt = new Date();
+    await order.save();
+
+    const session = await getServerSession(authOptions);
+    await OrderLog.create({
+      orderId: order._id,
+      action: 'DELETE',
+      details: `Order moved to trash`,
+      adminName: session?.user?.name,
+      adminEmail: session?.user?.email,
+    });
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete order:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function restoreOrderAction(id) {
+  await assertAdmin();
+  await mongooseConnect();
+  try {
+    const order = await Order.findById(id);
+    if (!order) return { success: false, error: 'Order not found.' };
+
+    order.isDeleted = false;
+    order.deletedAt = null;
+    await order.save();
+
+    const session = await getServerSession(authOptions);
+    await OrderLog.create({
+      orderId: order._id,
+      action: 'RESTORE',
+      details: `Order restored from trash`,
+      adminName: session?.user?.name,
+      adminEmail: session?.user?.email,
+    });
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to restore order:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function hardDeleteOrderAction(id) {
+  await assertAdmin();
+  await mongooseConnect();
+  try {
+    const order = await Order.findById(id);
+    if (!order) return { success: false, error: 'Order not found.' };
+    await Order.deleteOne({ _id: id });
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to permanently delete order:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function emptyTrashAction() {
+  await assertAdmin();
+  await mongooseConnect();
+  try {
+    const result = await Order.deleteMany({ isDeleted: true });
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+    return { success: true, deletedCount: result.deletedCount || 0 };
+  } catch (error) {
+    console.error('Failed to empty trash:', error);
     return { success: false, error: error.message };
   }
 }
