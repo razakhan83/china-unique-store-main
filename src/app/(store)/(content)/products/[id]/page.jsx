@@ -322,7 +322,7 @@ async function ProductHeroSection({ paramsPromise }) {
   const productJsonLd = getProductJsonLd({ product });
   const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
-  const isOutOfStock = product.StockStatus === 'Out of Stock' || product.isLive === false;
+  const isOutOfStock = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
   const compareAtPrice = getVisibleCompareAtPrice(product);
   const descriptionHtml =
     formatRichTextDescriptionHtml(product.Description) ||
@@ -357,80 +357,56 @@ async function ProductHeroSection({ paramsPromise }) {
         </div>
 
         <div className="w-full md:w-[55%] lg:w-[58%]">
-          <div className="flex flex-col gap-4 md:sticky md:top-24">
-            <div>
-              <Badge variant="outline" className={`${colors.badge} text-xs font-bold uppercase tracking-wider`}>
-                {categoryLabel || 'Premium Item'}
-              </Badge>
-            </div>
-
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-wrap items-start gap-3">
-                <h1 className="text-xl font-medium tracking-tight text-foreground md:text-2xl lg:text-3xl">
-                  {product.Name}
-                </h1>
+          <div className="flex flex-col gap-6 md:sticky md:top-24">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Badge variant="secondary" className="text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {categoryLabel || 'Premium Item'}
+                </Badge>
                 {isOutOfStock ? (
-                  <Badge variant="outline" className="rounded-full border-rose-200/80 bg-rose-50/80 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-rose-600 shadow-sm">
+                  <Badge variant="destructive" className="text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-none">
                     Out of Stock
                   </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 rounded-full border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
+                    In Stock
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-start justify-between gap-4">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl leading-tight">
+                  {product.Name}
+                </h1>
+                <ProductSocialActions product={product} className="md:hidden shrink-0 mt-1" />
+              </div>
+
+              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                <span className="text-3xl font-bold tracking-tight text-foreground">
+                  {formatPrice(price)}
+                </span>
+                {compareAtPrice ? (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg font-medium text-muted-foreground line-through">
+                      {formatPrice(compareAtPrice)}
+                    </span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 shadow-none font-semibold">
+                      Save {formatPrice(compareAtPrice - price)}
+                    </Badge>
+                  </div>
                 ) : null}
               </div>
-              <ProductSocialActions product={product} className="md:hidden shrink-0" />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-2xl font-bold tracking-tight text-red-600 md:text-3xl">
-                {formatPrice(price)}
-              </span>
-              {compareAtPrice ? (
-                <span className="text-lg font-semibold text-muted-foreground line-through md:text-xl">
-                  {formatPrice(compareAtPrice)}
-                </span>
-              ) : null}
-              {!isOutOfStock ? (
-                <span className="text-sm font-medium text-muted-foreground md:text-base">
-                  Available In Stock
-                </span>
-              ) : null}
             </div>
 
             {product.shortDescription ? (
               <div
-                className="mt-1 text-sm leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1"
+                className="text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 border-y border-border py-6"
                 dangerouslySetInnerHTML={{ __html: product.shortDescription }}
               />
-            ) : null}
+            ) : <Separator className="my-2" />}
 
-            <Separator />
-            <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
-
-            <div className="mt-1 border-t border-border pt-4">
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <Card>
-                  <CardContent className="flex flex-col items-center gap-2 p-3">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <PackageCheck className="size-4" />
-                    </div>
-                    <span className="text-xs font-semibold text-muted-foreground">Purchased</span>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="flex flex-col items-center gap-2 p-3">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Truck className="size-4" />
-                    </div>
-                    <span className="text-xs font-semibold text-muted-foreground">Dispatch</span>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="flex flex-col items-center gap-2 p-3">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <BadgeCheck className="size-4" />
-                    </div>
-                    <span className="text-xs font-semibold text-muted-foreground">Delivered</span>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="pt-2">
+              <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
             </div>
           </div>
         </div>

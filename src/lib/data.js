@@ -70,7 +70,7 @@ const PRODUCT_CARD_PROJECTION = [
   'Category',
   'StockStatus',
   'slug',
-  'isLive',
+  'showOnStore',
   'createdAt',
   'updatedAt',
   'discountPercentage',
@@ -213,7 +213,7 @@ function toProductCardItem(product) {
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
     createdAt: product.createdAt,
-    isLive: product.isLive !== false,
+    showOnStore: product.showOnStore !== false,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
     averageRating: Number(product.averageRating || 0),
@@ -237,7 +237,7 @@ function toProductDetailView(product) {
     Category: product.Category,
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
-    isLive: product.isLive !== false,
+    showOnStore: product.showOnStore !== false,
     stockQuantity: Number(product.stockQuantity || 0),
     createdAt: product.createdAt,
     vendors: Array.isArray(product.vendors)
@@ -261,7 +261,7 @@ function toAdminProductRow(product) {
     Images: product.Images,
     StockStatus: product.StockStatus || 'Out of Stock',
     stockQuantity: Number(product.stockQuantity || 0),
-    isLive: product.isLive !== false,
+    showOnStore: product.showOnStore !== false,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
     isNewArrival: product.isNewArrival === true,
@@ -408,7 +408,7 @@ async function getLiveProductsRaw() {
   return measureDataAccess('getLiveProductsRaw', async () => {
     await mongooseConnect();
 
-    const products = await Product.find({ isLive: true })
+    const products = await Product.find({ showOnStore: true })
       .select(PRODUCT_CARD_PROJECTION)
       .populate(PRODUCT_CATEGORY_POPULATE)
       .sort({ createdAt: -1 })
@@ -691,7 +691,7 @@ async function getProductsForHomeCategorySectionsRaw(categoryIds = []) {
   await mongooseConnect();
 
   const products = await Product.find({
-    isLive: true,
+    showOnStore: true,
     Category: { $in: uniqueIds },
   })
     .select(PRODUCT_CARD_PROJECTION)
@@ -715,7 +715,7 @@ async function getProductsForHomeCollectionSectionsRaw(collectionKeys = [], limi
   const fetchFlaggedProducts = async (filter, sort, collectionKey) => {
     const requestedLimit = Math.max(1, Number(limitByCollection.get(collectionKey) || 8));
     const products = await Product.find({
-      isLive: true,
+      showOnStore: true,
       ...filter,
     })
       .select(PRODUCT_CARD_PROJECTION)
@@ -759,7 +759,7 @@ async function getProductsForHomeCollectionSectionsRaw(collectionKeys = [], limi
     const topRatedProducts = productIds.length > 0
       ? await Product.find({
           _id: { $in: productIds },
-          isLive: true,
+          showOnStore: true,
         })
           .select(PRODUCT_CARD_PROJECTION)
           .populate(PRODUCT_CATEGORY_POPULATE)
@@ -1128,7 +1128,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.max(1, Number(limit) || 12);
 
-  const query = { isLive: true };
+  const query = { showOnStore: true };
 
   if (safeCategory === 'new-arrivals') {
     query.isNewArrival = true;
@@ -1336,14 +1336,14 @@ export async function getProductBySlug(slug) {
       await mongooseConnect();
       
       // 1. Try finding by slug first (vanity URL)
-      let product = await Product.findOne({ slug: productSlug, isLive: true })
+      let product = await Product.findOne({ slug: productSlug, showOnStore: true })
         .select(PRODUCT_DETAIL_PROJECTION)
         .populate(PRODUCT_CATEGORY_POPULATE)
         .lean();
       
       // 2. If not found, and it looks like a Mongo ID, try finding by ID
       if (!product && mongoose.Types.ObjectId.isValid(productSlug)) {
-        product = await Product.findOne({ _id: productSlug, isLive: true })
+        product = await Product.findOne({ _id: productSlug, showOnStore: true })
           .select(PRODUCT_DETAIL_PROJECTION)
           .populate(PRODUCT_CATEGORY_POPULATE)
           .lean();
@@ -1374,7 +1374,7 @@ export async function getProductPrerenderParams(limit = 1) {
 
   try {
     await mongooseConnect();
-  const products = await Product.find({ isLive: true })
+  const products = await Product.find({ showOnStore: true })
     .sort({ createdAt: -1 })
     .select('slug')
       .limit(safeLimit)
@@ -1471,9 +1471,6 @@ export async function getAdminProductCategoryOptions() {
 }
 
 export async function getAdminOrderProductCatalog() {
-  'use cache';
-  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
-  cacheTag('products', 'categories');
   await mongooseConnect();
 
   const products = await Product.find({})
@@ -1522,9 +1519,6 @@ export async function getAdminProductsPage({
   page = 1,
   limit = 12,
 } = {}) {
-  'use cache';
-  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
-  cacheTag('products', 'categories');
   await mongooseConnect();
 
   const safeSearch = String(search || '').trim();
@@ -1537,8 +1531,8 @@ export async function getAdminProductsPage({
 
   const query = {};
 
-  if (safeStatus === 'live') query.isLive = true;
-  if (safeStatus === 'draft') query.isLive = false;
+  if (safeStatus === 'live') query.showOnStore = true;
+  if (safeStatus === 'draft') query.showOnStore = false;
 
   if (safeStock === 'in-stock') query.StockStatus = 'In Stock';
   if (safeStock === 'out-of-stock') query.StockStatus = { $ne: 'In Stock' };
@@ -1622,7 +1616,7 @@ export async function getAdminProductsPage({
       .then((products) => products.map(serializeProduct).map(toAdminProductRow)),
     Product.countDocuments(query),
     Product.countDocuments(),
-    Product.countDocuments({ isLive: true }),
+    Product.countDocuments({ showOnStore: true }),
   ]);
 
   return {
@@ -2156,14 +2150,14 @@ export async function getAdminDashboardData() {
                 totalProducts: { $sum: 1 },
                 liveProducts: {
                   $sum: {
-                    $cond: [{ $eq: ['$isLive', true] }, 1, 0],
+                    $cond: [{ $eq: ['$showOnStore', true] }, 1, 0],
                   },
                 },
               },
             },
           ],
           topVendors: [
-            { $match: { isLive: true, vendors: { $exists: true, $ne: [] } } },
+            { $match: { showOnStore: true, vendors: { $exists: true, $ne: [] } } },
             { $unwind: '$vendors' },
             {
               $group: {
@@ -2408,7 +2402,7 @@ export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
     if (slugs.length > 0) query.push({ slug: { $in: slugs } });
 
     const products = query.length > 0 
-      ? await Product.find({ $or: query }).select('isLive StockStatus Price slug').lean() 
+      ? await Product.find({ $or: query }).select('showOnStore StockStatus Price slug').lean() 
       : [];
       
     const productMap = products.reduce((acc, p) => {
@@ -2419,7 +2413,7 @@ export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
 
     for (const item of items) {
       const p = productMap[item._id?.toString()];
-      item.isLive = p ? p.isLive : false;
+      item.showOnStore = p ? p.showOnStore : false;
       item.StockStatus = p ? p.StockStatus : 'Unknown';
       item.currentPrice = p ? p.Price : 0;
       item.actualProductId = p ? p._id.toString() : item._id?.toString();

@@ -83,8 +83,8 @@ export default async function TopPerformingProductsPage({ searchParams }) {
                        Rs. {product.currentPrice?.toLocaleString('en-PK')}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <Badge variant={product.isLive ? 'default' : 'secondary'} className="text-[10px]">
-                        {product.isLive ? 'Live' : 'Draft'}
+                      <Badge variant={product.showOnStore ? 'default' : 'secondary'} className="text-[10px]">
+                        {product.showOnStore ? 'Live' : 'Draft'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right font-bold tabular-nums text-[14px] text-foreground">

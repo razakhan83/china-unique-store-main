@@ -822,7 +822,7 @@ export default function AdminVendorsSection() {
                         <div className="min-w-0">
                           <p className="truncate font-medium text-foreground">{product.Name}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {product.isLive ? 'Live' : 'Draft'} - {product.StockStatus}
+                            {product.showOnStore ? 'Live' : 'Draft'} - {product.StockStatus}
                           </p>
                           <div className="mt-2 flex items-center gap-2">
                             <p className="truncate text-sm text-foreground">
@@ -1122,7 +1122,7 @@ export default function AdminVendorsSection() {
                         <div className="min-w-0">
                           <p className="truncate font-medium text-foreground">{product.Name}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {product.isLive ? 'Live' : 'Draft'} - {product.StockStatus}
+                            {product.showOnStore ? 'Live' : 'Draft'} - {product.StockStatus}
                           </p>
                         </div>
                       </div>

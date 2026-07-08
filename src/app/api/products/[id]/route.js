@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
             .populate({ path: 'Category', select: 'name slug' })
             .lean();
 
@@ -61,8 +61,8 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'isLive')) {
-            existingProduct.isLive = body.isLive === true || body.isLive === 'true';
+        if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'showOnStore')) {
+            existingProduct.showOnStore = body.showOnStore === true || body.showOnStore === 'true';
             await existingProduct.save();
             revalidateTag('products', 'max');
             if (existingProduct.slug) {
@@ -70,6 +70,15 @@ export async function PUT(request, { params }) {
             }
             revalidateTag('admin-dashboard', 'max');
             revalidateTag('home-sections');
+        }
+
+        if (Object.keys(body).length > 1) {
+            if (!body.Name || !body.Price) {
+                return NextResponse.json({ success: false, message: 'Please provide Name and Price' }, { status: 400 });
+            }
+            if (!body.Images || !Array.isArray(body.Images) || body.Images.length === 0) {
+                return NextResponse.json({ success: false, message: 'Please provide at least one product image' }, { status: 400 });
+            }
         }
 
         const categoryInput = Array.isArray(body.Category)
@@ -103,7 +112,7 @@ export async function PUT(request, { params }) {
         existingProduct.Category = categoryArray;
         existingProduct.vendors = normalizedVendors;
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
-        existingProduct.isLive = body.isLive === true || body.isLive === 'true';
+        existingProduct.showOnStore = body.showOnStore !== false && body.showOnStore !== 'false';
         
         // Marketing flags
         existingProduct.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';

@@ -19,10 +19,13 @@ import {
   Trash2,
   TrendingUp,
   X,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 
 import AdminReviewsDialog from "@/components/AdminReviewsDialog";
+import BulkImportModal from "@/components/admin/BulkImportModal";
 import AppPagination from "@/components/AppPagination";
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
 import {
@@ -36,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ProductQuickViewDialog } from "./ProductQuickViewDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,8 +59,8 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { getProductCategoryNames } from "@/lib/productCategories";
@@ -330,9 +334,13 @@ export default function AdminProductsClient({
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
   const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
   const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [stockModal, setStockModal] = useState({ open: false, product: null });
   const [stockQuantityInput, setStockQuantityInput] = useState("0");
   const [isSavingStock, setIsSavingStock] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [quickViewModal, setQuickViewModal] = useState({ open: false, product: null });
+  const [optimisticToggles, setOptimisticToggles] = useState({});
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -390,19 +398,54 @@ export default function AdminProductsClient({
   }
 
   async function handleToggleLive(product) {
+    const currentState = optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore;
+    const nextState = !currentState;
+    
     setTogglingId(product._id);
+    setOptimisticToggles(prev => ({ ...prev, [product._id]: nextState }));
+    
     startTransition(async () => {
       try {
-        const result = await toggleProductLiveAction(product._id, !product.isLive);
+        const result = await toggleProductLiveAction(product._id, nextState);
+        setOptimisticToggles(prev => ({ ...prev, [product._id]: result.showOnStore }));
         setProducts((previous) =>
-          previous.map((entry) => (entry._id === product._id ? { ...entry, isLive: result.isLive } : entry)),
+          previous.map((entry) => (entry._id === product._id ? { ...entry, showOnStore: result.showOnStore } : entry)),
         );
-        toast.success(`"${product.Name}" is now ${result.isLive ? "Live" : "Draft"}.`);
-        router.refresh();
+        toast.success(`"${product.Name}" is now ${result.showOnStore ? "Live" : "Draft"}.`);
       } catch (error) {
+        setOptimisticToggles(prev => {
+          const newState = { ...prev };
+          delete newState[product._id];
+          return newState;
+        });
         toast.error(error.message || "Could not update product visibility.");
       } finally {
         setTogglingId(null);
+      }
+    });
+  }
+
+  async function handleBulkVisibility(action) {
+    setIsBulkUpdating(true);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/admin/products/bulk-visibility", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        });
+        const json = await res.json();
+        
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Failed to bulk update visibility");
+        }
+        
+        toast.success(json.message);
+        router.refresh(); // Refresh to fetch updated data
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setIsBulkUpdating(false);
       }
     });
   }
@@ -598,7 +641,19 @@ export default function AdminProductsClient({
 
   return (
     <div className="admin-page-stack pb-24 md:pb-0">
-      <div className="admin-page-header">
+      <BulkImportModal
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        categoryOptions={categoryOptions}
+      />
+
+      <ProductQuickViewDialog
+        open={quickViewModal.open}
+        onOpenChange={(open) => setQuickViewModal((prev) => ({ ...prev, open }))}
+        product={quickViewModal.product}
+        categoryOptions={categoryOptions}
+      />
+      <div className="admin-page-header flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-0">
         <div>
           <p className="admin-page-kicker">Catalog</p>
           <h2 className="admin-page-title">Products</h2>
@@ -606,21 +661,45 @@ export default function AdminProductsClient({
             {summary.totalProducts} total | {summary.liveProducts} live | {summary.draftProducts} draft
           </p>
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <Link href="/admin/top-performing-products" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "admin-cta-button flex-1 bg-background px-2 sm:flex-none sm:px-3")}>
-            <TrendingUp className="mr-1.5 size-4" />
-            Top Products
+        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-nowrap sm:w-auto">
+          <Link href="/admin/top-performing-products" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3")}>
+            <TrendingUp className="mr-1.5 size-4 shrink-0" />
+            <span className="truncate">Top Products</span>
           </Link>
-          <Link href="/admin/products/add" className={cn(buttonVariants({ variant: "default", size: "sm" }), "admin-cta-button flex-1 px-2 sm:flex-none sm:px-3")}>
-            <Plus className="mr-1.5 size-4" />
-            Add Product
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3" disabled={isBulkUpdating}>
+                <Eye className="mr-1.5 size-4 shrink-0" />
+                <span className="truncate">Bulk Visibility</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleBulkVisibility('live')} disabled={isBulkUpdating} className="cursor-pointer font-medium text-green-600 focus:text-green-600">
+                <Eye className="mr-2 size-4" />
+                Make All Live
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleBulkVisibility('hidden')} disabled={isBulkUpdating} className="cursor-pointer font-medium text-red-600 focus:text-red-600">
+                <EyeOff className="mr-2 size-4" />
+                Make All Draft
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)} className="admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3">
+            <Store className="mr-1.5 size-4 shrink-0" />
+            <span className="truncate">Bulk Import</span>
+          </Button>
+          <Link href="/admin/products/add" className={cn(buttonVariants({ variant: "default", size: "sm" }), "admin-cta-button w-full px-2 sm:w-auto sm:px-3")}>
+            <Plus className="mr-1.5 size-4 shrink-0" />
+            <span className="truncate">Add Product</span>
           </Link>
         </div>
       </div>
 
-      <div className="admin-filter-shell flex flex-col gap-3">
+
+      <div className="admin-filter-shell flex flex-col gap-4 mb-4">
+        {/* Search Bar */}
         <form
-          className="flex flex-col gap-3 lg:flex-row"
+          className="w-full"
           onSubmit={(event) => {
             event.preventDefault();
             navigate({ search: searchQuery.trim() || null, page: null });
@@ -633,10 +712,15 @@ export default function AdminProductsClient({
               placeholder="Search products, categories, or vendors"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-11 pl-10 md:h-10"
+              className="h-11 pl-10 md:h-10 w-full"
             />
           </div>
-          <div className="w-full lg:w-[220px]">
+        </form>
+
+        {/* Sort & Filters (Responsive 2x2 Grid on Mobile) */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          {/* Sort */}
+          <div className="w-full sm:w-[160px]">
             <Select
               value={sortOption}
               onValueChange={(value) => {
@@ -644,84 +728,96 @@ export default function AdminProductsClient({
                 navigate({ sort: value, page: null });
               }}
             >
-              <SelectTrigger className="h-11 w-full bg-background md:h-10">
-                <div className="flex items-center gap-2">
-                  <ArrowDownWideNarrow className="size-4 text-muted-foreground" />
-                  <SelectValue placeholder="Sort" />
+              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+                <div className="flex items-center gap-1.5 overflow-hidden">
+                  <ArrowDownWideNarrow className="size-3.5 shrink-0 text-muted-foreground" />
+                  <SelectValue placeholder="Sort" className="truncate" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Date Created (Newest)</SelectItem>
-                <SelectItem value="oldest">Date Created (Oldest)</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
                 <SelectItem value="updated">Last Updated</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price-high">Price High</SelectItem>
-                <SelectItem value="price-low">Price Low</SelectItem>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </form>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => {
-              setStatusFilter(value);
-              navigate({ status: value, page: null });
-            }}
-          >
-            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="live">Live</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={stockFilter}
-            onValueChange={(value) => {
-              setStockFilter(value);
-              navigate({ stock: value, page: null });
-            }}
-          >
-            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[140px]">
-              <SelectValue placeholder="Stock" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stock</SelectItem>
-              <SelectItem value="in-stock">In Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={categoryFilter}
-            onValueChange={(value) => {
-              setCategoryFilter(value);
-              navigate({ category: value, page: null });
-            }}
-          >
-            <SelectTrigger className="h-11 w-full bg-background text-xs md:h-9 lg:w-[180px]">
-              <SelectValue placeholder="Category">{selectedCategoryLabel}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categoryOptions.map((category) => (
-                <SelectItem key={category._id || category.id} value={category.id}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          {/* Status Filter */}
+          <div className="w-full sm:w-[130px]">
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                navigate({ status: value, page: null });
+              }}
+            >
+              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="live">Live</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Stock Filter */}
+          <div className="w-full sm:w-[130px]">
+            <Select
+              value={stockFilter}
+              onValueChange={(value) => {
+                setStockFilter(value);
+                navigate({ stock: value, page: null });
+              }}
+            >
+              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+                <SelectValue placeholder="Stock" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stock</SelectItem>
+                <SelectItem value="in-stock">In Stock</SelectItem>
+                <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="w-full sm:w-[150px]">
+            <Select
+              value={categoryFilter}
+              onValueChange={(value) => {
+                setCategoryFilter(value);
+                navigate({ category: value, page: null });
+              }}
+            >
+              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+                <SelectValue placeholder="Category">{selectedCategoryLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categoryOptions.map((category) => (
+                  <SelectItem key={category._id || category.id} value={category.id}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Clear Filters */}
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="admin-touch-target h-11 w-full justify-center gap-2 text-muted-foreground hover:text-foreground sm:col-span-2 md:h-9 lg:w-auto"
+              className="col-span-2 sm:col-span-1 h-10 px-3 flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground"
             >
-              <X className="size-4" />
-              Clear Filters
+              <X className="size-3.5 shrink-0" />
+              <span className="text-xs">Clear Filters</span>
             </Button>
           )}
         </div>
@@ -743,12 +839,12 @@ export default function AdminProductsClient({
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-2.5">Product</th>
-                <th className="px-4 py-2.5">Price</th>
-                <th className="px-4 py-2.5">Category</th>
-                <th className="px-4 py-2.5">Vendors</th>
-                <th className="px-4 py-2.5">Updated</th>
-                <th className="px-4 py-2.5">Stock Status</th>
-                <th className="px-4 py-2.5 text-center">Visibility</th>
+                <th className="px-4 py-2.5 hidden md:table-cell">Price</th>
+                <th className="px-4 py-2.5 hidden lg:table-cell">Category</th>
+                <th className="px-4 py-2.5 hidden xl:table-cell">Vendors</th>
+                <th className="px-4 py-2.5 hidden lg:table-cell">Updated</th>
+                <th className="px-4 py-2.5 hidden md:table-cell">Stock Status</th>
+                <th className="px-4 py-2.5 text-center hidden sm:table-cell">Visibility</th>
                 <th className="px-4 py-2.5 text-center">Actions</th>
               </tr>
             </thead>
@@ -764,7 +860,10 @@ export default function AdminProductsClient({
                   <tr key={product._id} className="transition-colors hover:bg-muted/35">
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
-                        <div className="relative size-10 overflow-hidden rounded-lg border border-border bg-muted">
+                        <button 
+                          className="relative size-12 overflow-hidden rounded-lg border border-border bg-muted cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setQuickViewModal({ open: true, product })}
+                        >
                           {getPrimaryProductImage(product)?.url ? (
                             <Image
                               src={getPrimaryProductImage(product).url}
@@ -778,11 +877,11 @@ export default function AdminProductsClient({
                               <ImageIcon className="size-4" />
                             </div>
                           )}
-                        </div>
+                        </button>
                         <span className="max-w-[220px] line-clamp-2 text-[13px] font-semibold text-foreground">{product.Name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 hidden md:table-cell">
                       {product.isDiscounted && product.discountPercentage > 0 ? (
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[13px] font-bold text-foreground">
@@ -794,7 +893,7 @@ export default function AdminProductsClient({
                         <span className="text-[13px] font-semibold text-foreground">{formatPrice(product.Price)}</span>
                       )}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 hidden lg:table-cell">
                       <div className="flex max-w-[180px] flex-wrap gap-1.5">
                         {getProductCategoryNames(product).map((category) => (
                           <Badge key={category} variant="secondary" className="text-[10px]">
@@ -803,7 +902,7 @@ export default function AdminProductsClient({
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-2 text-sm font-medium text-foreground">
+                    <td className="px-4 py-2 text-sm font-medium text-foreground hidden xl:table-cell">
                       <div className="flex max-w-[180px] flex-col gap-0.5">
                         <span>
                           {Array.isArray(product.vendors) && product.vendors.length > 0
@@ -817,47 +916,62 @@ export default function AdminProductsClient({
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-2 text-sm font-medium text-foreground">{formatDate(product.updatedAt || product.createdAt)}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 text-sm font-medium text-foreground hidden lg:table-cell">{formatDate(product.updatedAt || product.createdAt)}</td>
+                    <td className="px-4 py-2 hidden md:table-cell">
                       <div className="flex min-w-[176px] items-center gap-2">
-                        <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
+                        <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="min-w-[85px] justify-center">
                           {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] uppercase">
+                        <Badge variant="outline">
                           Qty {Math.max(0, Number(product.stockQuantity) || 0)}
                         </Badge>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-[11px] font-medium"
+                          className="h-7 px-2 text-xs"
                           onClick={() => openStockDialog(product)}
                           disabled={togglingStockId === product._id}
                         >
                           Adjust
                         </Button>
                         {product.isDiscounted && product.discountPercentage > 0 ? (
-                          <Badge variant="outline" className="text-[10px] uppercase">
+                          <Badge variant="outline" className="text-xs">
                             {product.discountPercentage}% off
                           </Badge>
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-2 text-center">
-                      <div className="inline-flex items-center gap-2">
-                        <Switch
-                          checked={product.isLive}
-                          disabled={togglingId === product._id}
-                          onCheckedChange={() => handleToggleLive(product)}
-                          aria-label={`Toggle ${product.Name} live status`}
-                        />
-                        <span className="min-w-10 text-left text-[10px] font-bold uppercase text-muted-foreground">
-                          {product.isLive ? "Live" : "Draft"}
-                        </span>
+                    <td className="px-4 py-2 text-center hidden sm:table-cell">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className="flex items-center justify-center">
+                          {isPending && togglingId === product._id ? (
+                            <span className="text-muted-foreground">...</span>
+                          ) : (
+                            <Switch
+                              checked={optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore}
+                              onCheckedChange={() => handleToggleLive(product)}
+                            />
+                          )}
+                        </div>
+                        {(optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore) ? (
+                          <Badge variant="default" className="w-[60px] justify-center px-1 py-0 text-[10px]">Live</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="w-[60px] justify-center px-1 py-0 text-[10px]">Draft</Badge>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-2 relative">
                       <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1 shadow-sm"
+                          onClick={() => setQuickViewModal({ open: true, product })}
+                        >
+                          <Eye className="size-3.5" />
+                          View
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             className={cn(
@@ -881,6 +995,9 @@ export default function AdminProductsClient({
                               <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel>Catalog</DropdownMenuLabel>
+                              <DropdownMenuItem className="cursor-pointer" disabled={isPending && togglingId === product._id} onClick={() => handleToggleLive(product)}>
+                                {optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore ? "Mark as Draft" : "Publish to Store"}
+                              </DropdownMenuItem>
                               <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
                                 {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
                               </DropdownMenuItem>
@@ -997,9 +1114,13 @@ export default function AdminProductsClient({
                               Edit Product
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal py-1">Visibility: {product.showOnStore ? "Live" : "Draft"}</DropdownMenuLabel>
                           <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleLive(product)}>
-                            {product.isLive ? "Set as Draft" : "Set as Live"}
+                            {product.showOnStore ? "Set as Draft" : "Set as Live"}
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal py-1">Stock: Qty {Math.max(0, Number(product.stockQuantity) || 0)}</DropdownMenuLabel>
                           <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
                             {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
                           </DropdownMenuItem>
@@ -1015,9 +1136,16 @@ export default function AdminProductsClient({
                             <MessageSquare className="mr-2 size-3.5" />
                             Reviews
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => setVendorsModal({ open: true, product })}>
-                            <Store className="mr-2 size-3.5" />
-                            View Vendors
+                          <DropdownMenuItem className="cursor-pointer flex-col items-start" onClick={() => setVendorsModal({ open: true, product })}>
+                            <div className="flex items-center">
+                              <Store className="mr-2 size-3.5" />
+                              View Vendors
+                            </div>
+                            <span className="text-[10px] text-muted-foreground ml-5 mt-0.5">
+                              {Array.isArray(product.vendors) && product.vendors.length > 0
+                                ? `${product.vendors.length} vendor${product.vendors.length === 1 ? "" : "s"} assigned`
+                                : "No vendor"}
+                            </span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10" onClick={() => setDeleteModal({ open: true, product })}>
@@ -1029,37 +1157,21 @@ export default function AdminProductsClient({
                     </DropdownMenu>
                   </div>
 
-                  <div className="mt-1.5 flex items-center flex-wrap gap-1">
-                    <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
+                  <div className="mt-2 flex items-center justify-between">
+                    <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="px-1.5 py-0 text-[9px] uppercase tracking-wider">
                       {product.StockStatus === "In Stock" ? "In Stock" : "Out"}
                     </Badge>
-                    <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider">
-                      Qty {Math.max(0, Number(product.stockQuantity) || 0)}
-                    </Badge>
-                    <Badge variant={product.isLive ? "default" : "secondary"} className="px-1 py-0 text-[8px] uppercase tracking-wider">
-                      {product.isLive ? "Live" : "Draft"}
-                    </Badge>
-                    {product.isNewArrival && (
-                      <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider text-muted-foreground border-foreground/10 bg-foreground/5">NEW</Badge>
-                    )}
-                    {product.isBestSelling && (
-                      <Badge variant="outline" className="px-1 py-0 text-[8px] uppercase tracking-wider text-muted-foreground border-foreground/10 bg-foreground/5">TOP</Badge>
-                    )}
+                    
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="ml-auto h-6 px-1.5 text-[9px] font-medium"
-                      onClick={() => openStockDialog(product)}
-                      disabled={togglingStockId === product._id}
+                      className="h-6 px-2 text-[10px] font-medium gap-1 shadow-sm"
+                      onClick={() => setQuickViewModal({ open: true, product })}
                     >
-                      Adjust
+                      <Eye className="size-3" />
+                      View
                     </Button>
-                  </div>
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    {Array.isArray(product.vendors) && product.vendors.length > 0
-                      ? `${product.vendors.length} vendor${product.vendors.length === 1 ? "" : "s"}`
-                      : "No vendor"}
                   </div>
                 </div>
               </div>

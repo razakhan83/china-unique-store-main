@@ -127,6 +127,16 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   }
 }
 
+export async function getProductDetailsAction(productId) {
+  await assertAdmin(false);
+  await mongooseConnect();
+  const product = await Product.findById(productId).populate('Category').lean();
+  if (!product) {
+    throw new Error('Product not found');
+  }
+  return JSON.parse(JSON.stringify(product));
+}
+
 export async function toggleProductLiveAction(productId, nextValue) {
   await assertAdmin();
   await mongooseConnect();
@@ -136,17 +146,27 @@ export async function toggleProductLiveAction(productId, nextValue) {
     throw new Error('Product not found');
   }
 
-  product.isLive = Boolean(nextValue);
-  await product.save();
+  const isLive = nextValue === true || nextValue === 'true';
+
+  const updateResult = await Product.updateOne(
+    { _id: productId },
+    { $set: { showOnStore: isLive } }
+  );
+
+  console.log(`toggleProductLiveAction: updated ${productId} to ${isLive}. Matched: ${updateResult.matchedCount}, Modified: ${updateResult.modifiedCount}`);
 
   revalidateTag('products');
   if (product.slug) {
     updateTag(`product-${product.slug}`);
+    revalidatePath(`/product/${product.slug}`);
   }
   revalidateTag('admin-dashboard');
   revalidateTag('home-sections');
+  revalidatePath('/admin/products');
+  revalidatePath('/products');
+  revalidatePath('/');
 
-  return { success: true, isLive: product.isLive };
+  return { success: true, showOnStore: isLive };
 }
 
 export async function deleteProductAction(productId) {

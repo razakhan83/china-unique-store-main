@@ -69,7 +69,7 @@ export default function ProductCard({ product, className = "" }) {
   const reviewCount = Number(product.reviewCount || 0);
   const averageRating = Number(product.averageRating || 0);
   const ratingLabel = reviewCount > 0 && averageRating > 0 ? averageRating.toFixed(1) : "";
-  const isUnavailable = product.StockStatus === "Out of Stock" || product.isLive === false;
+  const isUnavailable = product.StockStatus === "Out of Stock" || product.showOnStore === false;
 
   return (
     <Card

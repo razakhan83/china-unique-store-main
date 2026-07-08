@@ -106,7 +106,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     };
 
-    const isOutOfStock = product.StockStatus === "Out of Stock" || product.isLive === false;
+    const isOutOfStock = product.StockStatus === "Out of Stock" || product.showOnStore === false;
     const secondaryActionClass =
         "h-11 shrink-0 rounded-xl border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] transition-[border-color,background-color,box-shadow,color,transform] duration-200 hover:bg-[color:color-mix(in_oklab,var(--color-muted)_74%,white)] hover:text-foreground active:scale-[0.96]";
 

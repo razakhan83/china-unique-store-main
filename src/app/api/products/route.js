@@ -27,7 +27,7 @@ export async function GET() {
     try {
         await mongooseConnect();
         const products = await Product.find({})
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug isLive createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling')
             .populate({ path: 'Category', select: 'name slug' })
             .sort({ createdAt: -1 })
             .lean();
@@ -82,7 +82,7 @@ export async function POST(req) {
             Category: categoryInput,
             slug,
             StockStatus,
-            isLive,
+            showOnStore,
             isNewArrival,
             isBestSelling,
             vendors,
@@ -90,6 +90,10 @@ export async function POST(req) {
 
         if (!Name || !Price || !categoryInput) {
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
+        }
+
+        if (!Images || !Array.isArray(Images) || Images.length === 0) {
+            return NextResponse.json({ success: false, message: 'Please provide at least one product image' }, { status: 400 });
         }
 
         // Normalize Category to always be an array
@@ -149,7 +153,7 @@ export async function POST(req) {
             StockStatus: stockStatus,
             slug: uniqueSlug, // Ensure slug is saved
             vendors: normalizedVendors,
-            isLive: isLive === true || isLive === 'true' ? true : false,
+            showOnStore: showOnStore !== false && showOnStore !== 'false',
             discountPercentage: normalizedDiscountPercentage,
             isDiscounted: normalizedDiscountPercentage > 0,
             discountedPrice,

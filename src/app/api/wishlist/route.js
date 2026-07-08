@@ -20,7 +20,7 @@ function serializeWishlistProduct(product) {
     Images: Array.isArray(product.Images) ? product.Images : [],
     Category: Array.isArray(product.Category) ? product.Category : product.Category ? [product.Category] : [],
     StockStatus: product.StockStatus || 'Out of Stock',
-    isLive: product.isLive !== false,
+    showOnStore: product.showOnStore !== false,
   };
 }
 
@@ -37,7 +37,7 @@ async function getWishlistPayload(email) {
 
   const products = await Product.find({
     _id: { $in: wishlistIds },
-    isLive: true,
+    showOnStore: true,
   })
     .select('Name Price Images slug StockStatus discountPercentage isDiscounted discountedPrice')
     .lean();

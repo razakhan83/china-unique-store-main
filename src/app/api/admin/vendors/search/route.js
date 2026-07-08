@@ -30,7 +30,7 @@ export async function GET(request) {
       vendors: { $exists: true, $ne: [] },
       $or: [{ Name: searchRegex }, { 'vendors.name': searchRegex }, { 'vendors.vendorProductName': searchRegex }],
     })
-      .select('Name slug StockStatus Images isLive vendors')
+      .select('Name slug StockStatus Images showOnStore vendors')
       .sort({ updatedAt: -1, Name: 1 })
       .limit(25)
       .lean();
@@ -42,7 +42,7 @@ export async function GET(request) {
         slug: product.slug || product._id.toString(),
         Name: product.Name,
         StockStatus: product.StockStatus || 'Out of Stock',
-        isLive: product.isLive !== false,
+        showOnStore: product.showOnStore !== false,
         Images: normalizeProductImages(product.Images),
         vendors: Array.isArray(product.vendors)
           ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)

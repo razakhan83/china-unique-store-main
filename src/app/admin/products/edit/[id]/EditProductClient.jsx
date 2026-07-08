@@ -47,7 +47,7 @@ export default function EditProduct({ id }) {
   const [Categories, setCategories] = useState([]); // array of selected category ids
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
-  const [isLive, setIsLive] = useState(false);
+  const [showOnStore, setIsLive] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(false);
   const [isBestSelling, setIsBestSelling] = useState(false);
 
@@ -122,7 +122,7 @@ export default function EditProduct({ id }) {
           ).map((image) => ({ ...image, isNew: false }));
           setImages(existingImages);
           
-          setIsLive(p.isLive ?? false);
+          setIsLive(p.showOnStore ?? false);
           setIsNewArrival(p.isNewArrival === true);
           setIsBestSelling(p.isBestSelling === true);
         } else {
@@ -300,7 +300,7 @@ export default function EditProduct({ id }) {
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
-          isLive,
+          showOnStore,
           isNewArrival,
           isBestSelling,
         }),
@@ -544,15 +544,15 @@ export default function EditProduct({ id }) {
             />
           </div>
 
-          {/* isLive Toggle */}
+          {/* showOnStore Toggle */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-muted/35 p-4">
             <div>
               <p className="text-sm font-semibold text-foreground">Visibility</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {isLive ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
+                {showOnStore ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
               </p>
             </div>
-            <Switch checked={isLive} onCheckedChange={setIsLive} />
+            <Switch checked={showOnStore} onCheckedChange={setIsLive} />
           </div>
 
           {/* Marketing Flags */}

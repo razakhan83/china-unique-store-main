@@ -57,7 +57,7 @@ export default function AddProduct() {
   const [Categories, setCategories] = useState([]);
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]);
-  const [isLive, setIsLive] = useState(true);
+  const [showOnStore, setIsLive] = useState(true);
   const [isNewArrival, setIsNewArrival] = useState(true);
   const [isBestSelling, setIsBestSelling] = useState(false);
 
@@ -254,7 +254,7 @@ export default function AddProduct() {
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
-          isLive,
+          showOnStore,
           isNewArrival,
           isBestSelling,
         }),
@@ -560,12 +560,12 @@ export default function AddProduct() {
             <div>
               <p className="text-sm font-semibold text-foreground">Visibility</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {isLive
+                {showOnStore
                   ? "Live and visible to customers immediately."
                   : "Saved as draft and hidden from the storefront."}
               </p>
             </div>
-            <Switch checked={isLive} onCheckedChange={setIsLive} />
+            <Switch checked={showOnStore} onCheckedChange={setIsLive} />
           </div>
 
           <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">

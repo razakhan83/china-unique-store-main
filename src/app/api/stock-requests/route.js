@@ -39,14 +39,14 @@ export async function POST(request) {
     }
 
     const product = await Product.findById(productId)
-      .select('_id Name slug StockStatus isLive')
+      .select('_id Name slug StockStatus showOnStore')
       .lean();
 
     if (!product) {
       return NextResponse.json({ success: false, message: 'Product not found.' }, { status: 404 });
     }
 
-    const isUnavailable = product.StockStatus === 'Out of Stock' || product.isLive === false;
+    const isUnavailable = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
     if (!isUnavailable) {
       return NextResponse.json(
         { success: false, message: 'This product is already available.' },

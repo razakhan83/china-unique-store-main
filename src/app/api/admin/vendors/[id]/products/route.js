@@ -43,7 +43,7 @@ function serializeProduct(product, activeVendor, vendorId) {
     slug: product.slug || product._id.toString(),
     Name: product.Name,
     StockStatus: product.StockStatus || 'Out of Stock',
-    isLive: product.isLive !== false,
+    showOnStore: product.showOnStore !== false,
     Images: normalizeProductImages(product.Images),
     vendors: normalizedVendors,
     vendorEntry: buildVendorEntry(normalizedVendors, activeVendor, vendorId),
@@ -84,10 +84,10 @@ export async function GET(request, { params }) {
 
       const searchRegex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       const products = await Product.find({
-        isLive: true,
+        showOnStore: true,
         Name: searchRegex,
       })
-        .select('Name slug StockStatus Images isLive vendors')
+        .select('Name slug StockStatus Images showOnStore vendors')
         .sort({ updatedAt: -1, Name: 1 })
         .limit(20)
         .lean();
@@ -105,7 +105,7 @@ export async function GET(request, { params }) {
     }
 
     const products = await Product.find({ 'vendors.vendorId': id })
-      .select('Name slug StockStatus Images isLive vendors')
+      .select('Name slug StockStatus Images showOnStore vendors')
       .sort({ Name: 1 })
       .lean();
 

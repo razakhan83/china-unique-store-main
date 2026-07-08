@@ -32,7 +32,7 @@ export async function GET(req) {
 
         const products = await Product.find(
             {
-                isLive: { $ne: false },
+                showOnStore: { $ne: false },
                 $or: [
                     { Name: searchRegex },
                     ...(categoryIds.length ? [{ Category: { $in: categoryIds } }] : []),
