@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { mergeCustomPages } from '@/lib/customPages';
 import { getServerSession } from 'next-auth';
+import { storeSettingsSchema } from '@/lib/validation';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -77,6 +78,13 @@ function normalizeCoverImages(input) {
 
 export async function saveStoreSettingsAction(nextSettings) {
   await assertAdmin();
+
+  const validation = storeSettingsSchema.safeParse(nextSettings);
+  if (!validation.success) {
+    return { success: false, error: validation.error.errors[0].message };
+  }
+  const validatedData = validation.data;
+
   await mongooseConnect();
   const Settings = (await import('@/models/Settings')).default;
 
@@ -104,13 +112,13 @@ export async function saveStoreSettingsAction(nextSettings) {
 
   const updates = {};
   for (const field of allowedFields) {
-    if (nextSettings[field] !== undefined) {
+    if (validatedData[field] !== undefined) {
       updates[field] =
         field === 'coverImages'
-          ? normalizeCoverImages(nextSettings[field])
+          ? normalizeCoverImages(validatedData[field])
           : field === 'customPages'
-            ? mergeCustomPages(nextSettings[field])
-            : nextSettings[field];
+            ? mergeCustomPages(validatedData[field])
+            : validatedData[field];
     }
   }
 

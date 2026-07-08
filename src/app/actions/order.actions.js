@@ -7,6 +7,7 @@ import { after } from 'next/server';
 import { getConfiguredAdminEmails, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
+import { submitOrderSchema, draftOrderSchema, updateOrderSchema, trackGuestOrderSchema, linkOrdersSchema } from '@/lib/validation';
 import { applyInventoryAdjustments, buildOrderItemsWithSourcing, calculateOrderTotal } from '@/lib/orderFulfillment';
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import { getStoreSettings } from '@/lib/data';
@@ -120,20 +121,29 @@ async function validateCouponLogic(code, subtotal, email, phone) {
 
 export async function submitOrderAction(input) {
   try {
+    const validation = submitOrderSchema.safeParse(input);
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+    const validatedData = validation.data;
+
     await mongooseConnect();
     const Order = (await import('@/models/Order')).default;
     const Coupon = (await import('@/models/Coupon')).default;
     const User = (await import('@/models/User')).default;
 
-    const customerName = String(input?.customerName || '').trim();
-    const customerPhone = String(input?.customerPhone || '').trim();
-    const customerAddress = String(input?.customerAddress || '').trim();
-    const customerCity = String(input?.customerCity || '').trim();
-    const items = Array.isArray(input?.items) ? input.items : [];
-    const totalAmount = Number(input?.totalAmount || 0);
-    const notes = String(input?.notes || '').trim();
-    const whatsappNumber = String(input?.whatsappNumber || '').trim();
-    const couponCodeInput = String(input?.couponCode || '').trim();
+    const customerName = validatedData.customerName;
+    const customerPhone = validatedData.customerPhone;
+    const customerAddress = validatedData.customerAddress;
+    const customerCity = validatedData.customerCity;
+    const items = validatedData.items;
+    const totalAmount = validatedData.totalAmount;
+    const notes = validatedData.notes;
+    const whatsappNumber = validatedData.whatsappNumber;
+    const couponCodeInput = validatedData.couponCode;
+    const customerEmail = validatedData.customerEmail;
+    const landmark = validatedData.landmark;
+    
     const cookieStore = await cookies();
     const requestHeaders = await headers();
     const clientIp =
@@ -144,13 +154,6 @@ export async function submitOrderAction(input) {
     const siteUrl = getSiteUrlFromHeaders(requestHeaders);
     const fbp = cookieStore.get('_fbp')?.value;
     const fbc = cookieStore.get('_fbc')?.value;
-
-    // Simplified fields from Phase 13
-    const landmark = String(input?.landmark || '').trim();
-
-    if (!customerName || !customerPhone || !customerAddress || !customerCity || items.length === 0 || totalAmount <= 0) {
-      return { success: false, error: 'Missing required checkout details' };
-    }
 
     const [normalizedItems, settings, session] = await Promise.all([
       buildOrderItemsWithSourcing(items),
@@ -163,7 +166,7 @@ export async function submitOrderAction(input) {
     }
 
     const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
-    const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
+    const inputEmail = customerEmail ? normalizeEmail(customerEmail) : null;
     const userEmail = sessionEmail || inputEmail || null;
 
     let appliedCoupon = null;
@@ -382,12 +385,13 @@ export async function linkOrdersAction(phone) {
   // pre-existing bug in the original actions.js and is preserved here as-is.
   // Fix tracked separately.
 
-  const userEmail = normalizeEmail(session.user.email);
-  const normalizedPhone = String(phone || '').trim();
-
-  if (!normalizedPhone) {
-    return { success: false, message: 'Phone number is required.' };
+  const validation = linkOrdersSchema.safeParse({ phone });
+  if (!validation.success) {
+    return { success: false, message: validation.error.errors[0].message };
   }
+  
+  const userEmail = normalizeEmail(session.user.email);
+  const normalizedPhone = validation.data.phone;
 
   await mongooseConnect();
   const User = (await import('@/models/User')).default;
@@ -427,12 +431,13 @@ export async function linkOrdersAction(phone) {
 }
 
 export async function trackGuestOrderAction(input = {}) {
-  const safeOrderId = String(input?.orderId || '').trim().toUpperCase();
-  const normalizedPhone = String(input?.phone || '').trim();
-
-  if (!safeOrderId || !normalizedPhone) {
-    return { success: false, message: 'Order ID and phone number are required.' };
+  const validation = trackGuestOrderSchema.safeParse(input);
+  if (!validation.success) {
+    return { success: false, message: validation.error.errors[0].message };
   }
+  
+  const safeOrderId = validation.data.orderId.toUpperCase();
+  const normalizedPhone = validation.data.phone;
 
   await mongooseConnect();
   const Order = (await import('@/models/Order')).default;
@@ -465,30 +470,29 @@ export async function trackGuestOrderAction(input = {}) {
 
 export async function createDraftOrderAction(input = {}) {
   await assertAdmin();
+
+  const validation = draftOrderSchema.safeParse(input);
+  if (!validation.success) {
+    return { success: false, error: validation.error.errors[0].message };
+  }
+  const validatedData = validation.data;
+
   await mongooseConnect();
   const Order = (await import('@/models/Order')).default;
   const OrderLog = (await import('@/models/OrderLog')).default;
 
   try {
-    const customerName = String(input?.customerName || '').trim();
-    const customerEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : '';
-    const customerPhone = String(input?.customerPhone || '').trim();
-    const customerAddress = String(input?.customerAddress || '').trim();
-    const customerCity = String(input?.customerCity || '').trim();
-    const landmark = String(input?.landmark || '').trim();
-    const notes = String(input?.notes || '').trim();
-    const sourceTag = normalizeSourceTag(input?.sourceTag);
-    const itemType = String(input?.itemType || 'Mix').trim() || 'Mix';
-    const weight = Math.max(0.5, Number(input?.weight || 2));
-    const requestedItems = Array.isArray(input?.items) ? input.items : [];
-
-    if (!customerName || !customerPhone || !customerAddress || !customerCity) {
-      throw new Error('Customer name, phone, city, and address are required.');
-    }
-
-    if (requestedItems.length === 0) {
-      throw new Error('Add at least one item to create a draft order.');
-    }
+    const customerName = validatedData.customerName;
+    const customerEmail = validatedData.customerEmail ? normalizeEmail(validatedData.customerEmail) : '';
+    const customerPhone = validatedData.customerPhone;
+    const customerAddress = validatedData.customerAddress;
+    const customerCity = validatedData.customerCity;
+    const landmark = validatedData.landmark;
+    const notes = validatedData.notes;
+    const sourceTag = validatedData.sourceTag;
+    const itemType = validatedData.itemType || 'Mix';
+    const weight = Math.max(0.5, validatedData.weight || 2);
+    const requestedItems = validatedData.items;
 
     const normalizedItems = await buildOrderItemsWithSourcing(requestedItems);
     const totalAmount = calculateOrderTotal(normalizedItems);
@@ -502,8 +506,7 @@ export async function createDraftOrderAction(input = {}) {
     );
 
     // manualCodAmount: if provided, use it; otherwise leave undefined (= auto = totalAmount)
-    const rawCod = input?.manualCodAmount;
-    const manualCodAmount = (rawCod !== undefined && rawCod !== null && rawCod !== '') ? Number(rawCod) : undefined;
+    const manualCodAmount = (validatedData.manualCodAmount !== undefined && validatedData.manualCodAmount !== '') ? validatedData.manualCodAmount : undefined;
 
     const order = await Order.create({
       orderId: makeOrderId(),
@@ -548,6 +551,13 @@ export async function createDraftOrderAction(input = {}) {
 
 export async function updateOrderAction(id, updates) {
   await assertAdmin();
+  
+  const validation = updateOrderSchema.safeParse(updates);
+  if (!validation.success) {
+    return { success: false, error: validation.error.errors[0].message };
+  }
+  const validatedData = validation.data;
+
   await mongooseConnect();
   const Order = (await import('@/models/Order')).default;
   const OrderLog = (await import('@/models/OrderLog')).default;
@@ -559,15 +569,15 @@ export async function updateOrderAction(id, updates) {
     }
 
     // Explicitly mapping allowed fields for security
-    if (updates.customerName !== undefined) order.customerName = updates.customerName;
-    if (updates.customerPhone !== undefined) order.customerPhone = updates.customerPhone;
-    if (updates.customerAddress !== undefined) order.customerAddress = updates.customerAddress;
-    if (updates.customerCity !== undefined) order.customerCity = updates.customerCity;
-    if (updates.landmark !== undefined) order.landmark = updates.landmark;
-    if (updates.customerEmail !== undefined) order.customerEmail = updates.customerEmail;
-    if (updates.sourceTag !== undefined) order.sourceTag = normalizeSourceTag(updates.sourceTag);
+    if (validatedData.customerName !== undefined) order.customerName = validatedData.customerName;
+    if (validatedData.customerPhone !== undefined) order.customerPhone = validatedData.customerPhone;
+    if (validatedData.customerAddress !== undefined) order.customerAddress = validatedData.customerAddress;
+    if (validatedData.customerCity !== undefined) order.customerCity = validatedData.customerCity;
+    if (validatedData.landmark !== undefined) order.landmark = validatedData.landmark;
+    if (validatedData.customerEmail !== undefined) order.customerEmail = validatedData.customerEmail;
+    if (validatedData.sourceTag !== undefined) order.sourceTag = validatedData.sourceTag;
 
-    const nextStatus = updates.status !== undefined ? normalizeOrderStatus(updates.status) : undefined;
+    const nextStatus = validatedData.status !== undefined ? normalizeOrderStatus(validatedData.status) : undefined;
     const hasStatusChanged = nextStatus !== undefined && nextStatus !== order.status;
     const oldStatus = order.status;
     const wasDraft = order.isDraft === true;
@@ -579,15 +589,15 @@ export async function updateOrderAction(id, updates) {
       order.status = nextStatus;
       order.isDraft = false;
     }
-    if (updates.trackingNumber !== undefined) order.trackingNumber = updates.trackingNumber;
-    if (updates.courierName !== undefined) order.courierName = updates.courierName;
+    if (validatedData.trackingNumber !== undefined) order.trackingNumber = validatedData.trackingNumber;
+    if (validatedData.courierName !== undefined) order.courierName = validatedData.courierName;
 
-    if (updates.weight !== undefined) order.weight = Number(updates.weight);
-    if (updates.itemType !== undefined) order.itemType = updates.itemType;
-    if (updates.orderQuantity !== undefined) order.orderQuantity = Number(updates.orderQuantity);
+    if (validatedData.weight !== undefined) order.weight = validatedData.weight;
+    if (validatedData.itemType !== undefined) order.itemType = validatedData.itemType;
+    if (validatedData.orderQuantity !== undefined) order.orderQuantity = validatedData.orderQuantity;
 
-    if (updates.manualCodAmount !== undefined) {
-      order.manualCodAmount = updates.manualCodAmount === '' ? undefined : Number(updates.manualCodAmount);
+    if (validatedData.manualCodAmount !== undefined) {
+      order.manualCodAmount = validatedData.manualCodAmount === '' ? undefined : validatedData.manualCodAmount;
     }
 
     await order.save();
@@ -611,7 +621,7 @@ export async function updateOrderAction(id, updates) {
       } else if (hasStatusChanged) {
         action = 'STATUS_CHANGE';
         details = `Status changed from ${oldStatus} to ${order.status}`;
-      } else if (updates.trackingNumber !== undefined) {
+      } else if (validatedData.trackingNumber !== undefined) {
         action = 'TRACKING_UPDATE';
         details = `Tracking Number set to ${order.trackingNumber}`;
       }

@@ -115,14 +115,16 @@ export default function ProductsToolbar({
               className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === 'grid2' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               aria-label="Larger cards layout"
             >
-              <Grid2x2 className="size-4" />
+              <Square className="size-4 md:hidden" />
+              <LayoutGrid className="size-4 hidden md:block" />
             </button>
             <button
               onClick={() => handleChange('layout', 'grid3')}
               className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === 'grid3' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               aria-label="Smaller cards layout"
             >
-              <Grid3x3 className="size-4" />
+              <Grid2x2 className="size-4 md:hidden" />
+              <Grid3x3 className="size-4 hidden md:block" />
             </button>
           </div>
         </div>

@@ -310,7 +310,12 @@ src/lib/data.js   ← CENTRAL data access layer
 
 ---
 
-## Security Architecture
+## 8. Security Architecture
+
+1.  **Input Validation & Sanitization (Zod):** All user inputs across Server Actions and API Routes are strictly validated and sanitized using central Zod schemas (`src/lib/validation.js`). This enforces field types, maximum string lengths, and prevents payload inflation.
+2.  **Authentication:** NextAuth.js handles session management. Protected actions verify the session via `getServerSession()`.
+3.  **Admin Authorization:** Actions like `assertAdmin()` check `session.user.isAdmin`.
+4.  **Demo Mode:** Read-only `session.user.isDemo` blocks state mutations safely.
 
 | Concern | Mechanism |
 |---|---|

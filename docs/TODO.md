@@ -21,13 +21,15 @@
 - **Fix:** Add a MongoDB Atlas Search index on `Name`, `shortDescription`, and `seoKeywords`. Replace `$regex` with `$search` aggregation stage.
 - **Effort:** Medium
 
-### [3] No Input Sanitisation on Server Actions
-- **Problem:** `submitOrderAction` and other actions do basic `String(input?.field || '').trim()` but don't validate string length, special characters, or injection patterns. A malicious customer could submit extremely long fields to inflate DB document size.
-- **Fix:** Add a validation layer (e.g., Zod schemas) to all Server Actions before any DB write.
-- **Effort:** Medium
-
 ### ✅ [4] `actions.js` imports are all at top-level (bundle size) — RESOLVED
 - **Resolved:** All Mongoose model imports across all 4 new action files now use dynamic `import()` inside each function body (e.g., `const Product = (await import('@/models/Product')).default;`). No top-level model imports remain in any action file.
+
+---
+
+## 🟠 Important UI Improvements
+
+### ✅ [NEW] Fix uneven product card heights and responsive grid toggles — RESOLVED
+- **Resolved:** Fixed uneven product card heights (added `h-full`, removed `line-clamp-1` overrides) and replaced desktop-only grid layout toggle icons on mobile screens with appropriate responsive toggles (`Square`/`Grid2x2` on mobile, `Grid3x3`/`LayoutGrid` on desktop).
 
 ---
 
@@ -133,6 +135,7 @@
 
 ## Completed / Already Handled (Reference)
 
+- ✅ Centralized Zod Input Validation & Sanitization across all actions & routes — **Issue [3]**
 - ✅ `actions.js` God File split into domain modules (product, order, coupon, settings) with re-export proxy — **Issue [1]**
 - ✅ All Mongoose model imports moved to dynamic `import()` inside action functions — **Issue [4]**
 - ✅ Hot-reload-safe Mongoose model registration (all models)

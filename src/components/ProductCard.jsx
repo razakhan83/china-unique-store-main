@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
 import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
-import { getPrimaryProductImage } from "@/lib/productImages";
+import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
 const formatPrice = (raw) => {
@@ -54,9 +54,15 @@ function getFeatureBadge(product) {
 
 export default function ProductCard({ product, className = "" }) {
   const productName = product.Name || product.name || "Unknown";
-  const primaryImage = getPrimaryProductImage(product);
+  const normalizedImages = normalizeProductImages(product?.Images);
+  const primaryImage = normalizedImages[0] || null;
+  const secondaryImage = normalizedImages[1] || null;
+
   const primaryImageSrc = primaryImage?.url
     ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.productCard)
+    : "";
+  const secondaryImageSrc = secondaryImage?.url
+    ? optimizeCloudinaryUrl(secondaryImage.url, CLOUDINARY_IMAGE_PRESETS.productCard)
     : "";
   const productPrice = product.Price || product.price || 0;
   const sellingPrice = getSellingPrice(product);
@@ -74,7 +80,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 md:hover:shadow-md",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 md:hover:shadow-md",
         "py-0",
         className
       )}
@@ -129,19 +135,37 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           {primaryImageSrc ? (
-            <Image
-              src={primaryImageSrc}
-              alt={productName}
-              fill
-              draggable={false}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              loading="lazy"
-              className={cn(
-                "object-cover outline outline-1 outline-black/5 transition-transform duration-500 ease-out md:group-hover:scale-105",
-                isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75"
+            <>
+              <Image
+                src={primaryImageSrc}
+                alt={productName}
+                fill
+                draggable={false}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                loading="lazy"
+                className={cn(
+                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out md:group-hover:scale-105",
+                  isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
+                  secondaryImageSrc && "md:group-hover:opacity-0"
+                )}
+                {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
+              />
+              {secondaryImageSrc && (
+                <Image
+                  src={secondaryImageSrc}
+                  alt={`${productName} alternate view`}
+                  fill
+                  draggable={false}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  loading="lazy"
+                  className={cn(
+                    "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0 md:group-hover:opacity-100 md:group-hover:scale-105",
+                    isUnavailable && "scale-[1.01] saturate-[0.85]"
+                  )}
+                  {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
+                />
               )}
-              {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
-            />
+            </>
           ) : (
             <div className="flex size-full items-center justify-center bg-muted/50">
               <ShoppingCart className="size-10 text-muted-foreground/30" />
@@ -158,7 +182,7 @@ export default function ProductCard({ product, className = "" }) {
           draggable={false}
         >
           <h3
-            className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:line-clamp-1 @min-[260px]:text-[15px]"
+            className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:text-[15px]"
             title={productName}
             draggable={false}
           >
@@ -166,7 +190,7 @@ export default function ProductCard({ product, className = "" }) {
           </h3>
         </Link>
 
-        <div className="mt-auto flex flex-wrap items-end justify-between gap-2 pt-1 @max-[220px]:flex-col @max-[220px]:items-start @max-[220px]:gap-1.5">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
           <div className="flex min-w-0 flex-col justify-end gap-0.5">
             {compareAtPrice ? (
               <div className="flex flex-wrap items-center gap-1.5">

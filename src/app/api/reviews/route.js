@@ -10,6 +10,7 @@ import Order from '@/models/Order';
 import User from '@/models/User';
 import Product from '@/models/Product';
 import { getPhoneRegex, normalizeEmail } from '@/lib/admin';
+import { reviewSchema } from '@/lib/validation';
 
 // GET reviews for a specific product
 export async function GET(req) {
@@ -44,13 +45,14 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await mongooseConnect();
     const body = await req.json();
-    const { productId, rating, comment } = body;
-
-    if (!productId || !rating) {
-      return NextResponse.json({ success: false, error: 'Product ID and rating are required' }, { status: 400 });
+    const validation = reviewSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error.errors[0].message }, { status: 400 });
     }
+    const { productId, rating, comment } = validation.data;
+
+    await mongooseConnect();
 
     // Find user in DB
     const email = normalizeEmail(session.user.email);

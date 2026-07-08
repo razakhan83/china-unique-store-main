@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import mongooseConnect from '@/lib/mongooseConnect';
 import User from '@/models/User';
+import { userProfileSchema } from '@/lib/validation';
 
 export async function GET() {
   try {
@@ -38,11 +39,12 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, phone, city, address, landmark } = await request.json();
-
-    if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    const body = await request.json();
+    const validation = userProfileSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
     }
+    const { name, phone, city, address, landmark } = validation.data;
 
     await mongooseConnect();
     const user = await User.findOneAndUpdate(

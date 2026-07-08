@@ -97,10 +97,10 @@ async function ProductsResultsContent({ productsPromise, layout }) {
   const data = await productsPromise;
   const placeholderCount = Math.max(PRODUCTS_PAGE_SIZE - data.items.length, 0);
 
-  // Define grid layout based on user selection: 1/2 for mobile, 5/7 for PC
+  // Define grid layout based on user selection: 1/2 for mobile, 4/5 for PC
   const gridClassName = layout === 'grid3'
-    ? "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7"
-    : "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+    ? "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+    : "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
 
   return (
     <>
