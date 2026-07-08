@@ -43,7 +43,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
   await mongooseConnect();
   const Product = (await import('@/models/Product')).default;
 
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).lean();
   if (!product) {
     throw new Error('Product not found');
   }
@@ -96,7 +96,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   await mongooseConnect();
   const Product = (await import('@/models/Product')).default;
 
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).lean();
   if (!product) {
     throw new Error('Product not found');
   }

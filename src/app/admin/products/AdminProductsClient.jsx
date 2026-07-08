@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { startTransition, useEffect, useState, useTransition } from "react";
+import { useState, useMemo, useEffect, startTransition, useTransition } from "react";
+import dynamic from 'next/dynamic';
 import {
   ArrowDownWideNarrow,
   Copy,
@@ -39,7 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ProductQuickViewDialog } from "./ProductQuickViewDialog";
+const ProductQuickViewDialog = dynamic(() => import('./ProductQuickViewDialog').then((mod) => mod.ProductQuickViewDialog));
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -349,7 +349,11 @@ function NavbarContent({
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
   return (
-    <div className="navbar-shell sticky top-0 z-40 overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
+    <>
+      <div className={cn(
+        "navbar-shell sticky top-0 z-40 overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
+        isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
+      )}>
       {showAnnouncementBar ? (
         <div className="relative flex min-h-9 items-center bg-primary py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
           <AnnouncementMarquee items={announcementItems} />
@@ -358,17 +362,11 @@ function NavbarContent({
 
       <div
         className={cn(
-          'relative transition-[height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
-          isSearchOpen ? 'overflow-visible' : 'overflow-hidden',
-          isNavbarHidden ? 'h-0' : 'h-16'
+          'relative h-16',
+          isSearchOpen ? 'overflow-visible' : 'overflow-hidden'
         )}
       >
-        <div
-          className={cn(
-            'relative h-16 transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform',
-            isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
-          )}
-        >
+        <div className="relative h-16">
           <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
             <Button variant="ghost" size="icon" onClick={handleSidebarOpen} aria-label="Open menu" className="md:hidden">
               <Menu />
@@ -538,7 +536,7 @@ function NavbarContent({
             showCloseButton={false}
             className="w-screen min-w-0 max-w-none overflow-hidden border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]"
           >
-            <Sidebar className="h-full bg-transparent text-inherit">
+            <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-0">
               <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
                 <StoreLogo
                   href="/"
@@ -628,21 +626,6 @@ function NavbarContent({
                       </SidebarGroupContent>
                     </SidebarGroup>
 
-                    <SidebarSeparator />
-
-                    <SidebarGroup className="gap-2 p-0">
-                      <SidebarGroupLabel>Account</SidebarGroupLabel>
-                      <SidebarGroupContent className="flex flex-col gap-1">
-                        <MyOrdersButton
-                          isMobile
-                          className={mobileMenuButtonClass}
-                        />
-                        <MyWishlistButton
-                          isMobile
-                          className={mobileMenuButtonClass}
-                        />
-                      </SidebarGroupContent>
-                    </SidebarGroup>
                   </div>
                 </ScrollArea>
               </SidebarContent>
@@ -659,6 +642,8 @@ function NavbarContent({
         </Sheet>
       ) : null}
 
+      </div>
+
       <MobileBottomNav
         pathname={pathname}
         isSearchOpen={isSearchOpen}
@@ -670,7 +655,7 @@ function NavbarContent({
         onNavigate={handleMobileNavigate}
       />
       {isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
-    </div>
+    </>
   );
 }
 

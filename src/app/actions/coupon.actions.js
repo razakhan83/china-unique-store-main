@@ -18,7 +18,7 @@ async function validateCouponLogic(code, subtotal, email, phone) {
 
   if (!code) return { success: false, message: 'Coupon code is required.' };
 
-  const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+  const coupon = await Coupon.findOne({ code: code.toUpperCase() }).lean();
   if (!coupon) return { success: false, message: 'Invalid coupon code.' };
   if (!coupon.isActive) return { success: false, message: 'This coupon is no longer active.' };
 

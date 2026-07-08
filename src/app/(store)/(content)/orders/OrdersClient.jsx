@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { 
   Calendar, 
   Clock, 
@@ -25,7 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InvoiceButton from '@/components/InvoiceButtonWrapper';
 import CopyButton from '@/components/CopyButton';
-import ReviewModal from '@/components/ReviewModal';
+const ReviewModal = dynamic(() => import('@/components/ReviewModal'));
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { cn } from '@/lib/utils';
 

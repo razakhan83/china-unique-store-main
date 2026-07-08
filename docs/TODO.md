@@ -33,6 +33,13 @@
 
 ---
 
+## ⚡ Performance & UI UX
+
+### ✅ [NEW] Implement dynamic imports and micro-animations — RESOLVED
+- **Resolved**: Implemented dynamic imports for heavy hidden UI components (ReviewModal, QuickView dialogs), applied Mongoose `.lean()` on read queries in Server Actions, and integrated lightweight GPU-accelerated micro-animations across product cards, interactive buttons, and the Cart Drawer.
+
+---
+
 ## 🟡 Important Issues
 
 ### [5] PascalCase Field Names in Product Model

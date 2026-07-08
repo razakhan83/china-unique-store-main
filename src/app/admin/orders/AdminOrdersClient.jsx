@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import OrderQuickViewDialog from './OrderQuickViewDialog';
+const OrderQuickViewDialog = dynamic(() => import('./OrderQuickViewDialog'));
 import {
   DropdownMenu,
   DropdownMenuContent,

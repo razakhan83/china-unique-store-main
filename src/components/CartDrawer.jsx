@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Minus, Plus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
@@ -57,19 +58,8 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
   const { cart } = useCartItems();
   const { isCartOpen } = useCartUi();
   const { updateQuantity, removeFromCart, clearCart, setIsCartOpen } = useCartActions();
-  const [exitingItems, setExitingItems] = useState({});
   const [isClearingAll, setIsClearingAll] = useState(false);
-  const removeTimersRef = useRef({});
-  const clearTimerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      Object.values(removeTimersRef.current).forEach((timeoutId) => clearTimeout(timeoutId));
-      if (clearTimerRef.current) {
-        clearTimeout(clearTimerRef.current);
-      }
-    };
-  }, []);
+  const [animationParent] = useAutoAnimate();
 
   const subtotal = cart.reduce((total, item) => {
     const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
@@ -82,31 +72,15 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
   }
 
   function scheduleRemove(item) {
-    const itemId = item.id;
-    if (!itemId || exitingItems[itemId] || isClearingAll) return;
-
-    setExitingItems((current) => ({ ...current, [itemId]: true }));
-    removeTimersRef.current[itemId] = setTimeout(() => {
-      removeFromCart(item);
-      setExitingItems((current) => {
-        const next = { ...current };
-        delete next[itemId];
-        return next;
-      });
-      delete removeTimersRef.current[itemId];
-    }, EXIT_ANIMATION_MS);
+    removeFromCart(item);
   }
 
   function handleClearCart() {
-    Object.values(removeTimersRef.current).forEach((timeoutId) => clearTimeout(timeoutId));
-    removeTimersRef.current = {};
     if (!cart.length || isClearingAll) return;
 
     setIsClearingAll(true);
     clearCart();
-    setExitingItems({});
     setIsClearingAll(false);
-    clearTimerRef.current = null;
   }
 
   function handleWhatsAppDirectCheckout() {
@@ -120,7 +94,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-card)_97%,white),color-mix(in_oklab,var(--color-muted)_38%,white))] p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
-        <Sidebar className="h-full bg-transparent text-inherit">
+        <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-0">
           <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-xl font-bold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
           </SidebarHeader>
@@ -145,34 +119,22 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                     </Button>
                   </div>
                   <SidebarGroupContent>
-                    <div className="flex flex-col gap-2">
+                    <div ref={animationParent} className="flex flex-col gap-2">
                       {cart.map((item, index) => {
                         const primaryImage = getPrimaryProductImage(item);
                         const primaryImageSrc = primaryImage?.url
                           ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.cartItem)
                           : '';
-                        const isExiting = Boolean(exitingItems[item.id]);
                         const itemTotal = formatPrice(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price) * item.quantity;
 
                         return (
                           <div
                             key={item.id || item.slug || item._id || item.Name || item.name || index}
-                            className={cn(
-                              'grid overflow-hidden transition-[grid-template-rows,opacity,margin] ease-[cubic-bezier(0.2,0,0,1)]',
-                              isExiting
-                                ? 'pointer-events-none opacity-0 [grid-template-rows:0fr] duration-200'
-                                : 'opacity-100 [grid-template-rows:1fr] duration-200'
-                            )}
                           >
                             <div className="min-h-0">
                               <Card
                                 size="sm"
-                                className={cn(
-                                  'gap-0 border-[color:color-mix(in_oklab,var(--color-sidebar-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-sidebar)_94%,white)] py-0 shadow-[0_1px_0_color-mix(in_oklab,white_72%,transparent),0_14px_24px_-34px_color-mix(in_oklab,black_18%,transparent)] transition-[transform,opacity,filter,background-color,border-color,box-shadow] duration-180 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[color:color-mix(in_oklab,var(--color-sidebar)_98%,white)]',
-                                  isCartOpen && !isExiting && 'animate-fadeInUp',
-                                  isExiting ? 'translate-x-6 opacity-0' : 'translate-x-0 opacity-100'
-                                )}
-                                style={isCartOpen && !isExiting ? { animationDelay: `${Math.min(index * 70, 210)}ms` } : undefined}
+                                className="gap-0 border-[color:color-mix(in_oklab,var(--color-sidebar-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-sidebar)_94%,white)] py-0 shadow-[0_1px_0_color-mix(in_oklab,white_72%,transparent),0_14px_24px_-34px_color-mix(in_oklab,black_18%,transparent)] transition-[transform,opacity,filter,background-color,border-color,box-shadow] duration-180 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[color:color-mix(in_oklab,var(--color-sidebar)_98%,white)]"
                               >
                                 <CardContent className="px-2.5 py-2">
                                   <div className="flex items-stretch gap-2.5">
@@ -205,7 +167,6 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             size="icon-xs"
                                             onClick={() => updateQuantity(item, item.quantity - 1)}
                                             className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
-                                            disabled={isExiting}
                                           >
                                             <Minus />
                                           </Button>
@@ -218,7 +179,6 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             size="icon-xs"
                                             onClick={() => updateQuantity(item, item.quantity + 1)}
                                             className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
-                                            disabled={isExiting}
                                           >
                                             <Plus />
                                           </Button>
@@ -232,7 +192,6 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                           onClick={() => scheduleRemove(item)}
                                           className="size-7 rounded-[var(--radius-lg)] text-muted-foreground transition-[transform,color] duration-150 hover:text-destructive active:scale-[0.96] [&_svg]:size-3.5"
                                           aria-label="Remove item"
-                                          disabled={isExiting}
                                         >
                                           <Trash2 />
                                         </Button>

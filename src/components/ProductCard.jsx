@@ -80,7 +80,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 md:hover:shadow-md",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out",
         "py-0",
         className
       )}
@@ -144,7 +144,7 @@ export default function ProductCard({ product, className = "" }) {
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
                 className={cn(
-                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out md:group-hover:scale-105",
+                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out transform-gpu md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
                   secondaryImageSrc && "md:group-hover:opacity-0"
                 )}

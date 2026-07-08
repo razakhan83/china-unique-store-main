@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, LogOut, Home, Search, Settings, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 
+import { useCartActions } from '@/context/CartContext';
+
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -118,6 +120,7 @@ export default function MobileBottomNav({
 }) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { setIsCartOpen = () => {}, setIsSidebarOpen = () => {} } = useCartActions() || {};
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const mobileDrawerReservedLane = 'calc(env(safe-area-inset-bottom) + var(--mobile-bottom-nav-offset))';
   const mobileDrawerOverlayClassName =
@@ -161,11 +164,13 @@ export default function MobileBottomNav({
   function closeMobilePanels() {
     closeSearch();
     closeAccountPanel();
+    setIsCartOpen(false);
+    setIsSidebarOpen(false);
   }
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[120] md:hidden">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[200] md:hidden">
         <div className="pointer-events-auto relative z-[1] mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
@@ -190,7 +195,7 @@ export default function MobileBottomNav({
                   return;
                 }
 
-                closeAccountPanel();
+                closeMobilePanels();
                 onSearchOpenChange?.(true);
               }}
               active={isSearchOpen}
@@ -214,7 +219,7 @@ export default function MobileBottomNav({
                   return;
                 }
 
-                closeSearch();
+                closeMobilePanels();
                 openAccountPanel();
               }}
               active={accountPanelOpen || pathname.startsWith('/settings')}
