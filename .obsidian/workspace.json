@@ -1,0 +1,212 @@
+{
+  "main": {
+    "id": "9ce62cf9c4d624de",
+    "type": "split",
+    "children": [
+      {
+        "id": "dc76cf36f9d45a62",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1a1fc4abb735a673",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/TODO.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "TODO"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f844120453df3727",
+    "type": "split",
+    "children": [
+      {
+        "id": "10310f835dae349f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "acb50846e54f4ce8",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "c7764f10786fab44",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "499f7ccd12d3f854",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "37e6cca996876218",
+    "type": "split",
+    "children": [
+      {
+        "id": "439b6ccdb26dea74",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "94886f09f03cafdd",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "docs/TODO.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for TODO"
+            }
+          },
+          {
+            "id": "fd1cc2663c36b888",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "docs/TODO.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from TODO"
+            }
+          },
+          {
+            "id": "e52fa9050f06f07c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "11152055ea8d5def",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "98d9be869b84f243",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "docs/TODO.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of TODO"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "1a1fc4abb735a673",
+  "lastOpenFiles": [
+    "src/app/actions/order.actions.js",
+    "src/app/actions/settings.actions.js",
+    "src/app/actions/product.actions.js",
+    "src/app/actions/coupon.actions.js",
+    "src/app/actions",
+    "docs/Index.md",
+    "docs/TODO.md",
+    "docs/API-Routes-and-Models.md",
+    "docs/messages/no-css-tags.md",
+    "docs/messages",
+    "docs/Flows-and-Workflows.md",
+    "docs/Architecture.md",
+    "docs/Skills-and-TechStack.md",
+    "Untitled.md",
+    "docs",
+    "Untitled.canvas",
+    "public/email-footer-logo-dark-cropped.png",
+    "AGENTS.md",
+    "implementation_plan.md",
+    "Fix.md",
+    "Metadata Preview.png",
+    "README.md",
+    "TECHNICAL_MANUAL.md"
+  ]
+}
