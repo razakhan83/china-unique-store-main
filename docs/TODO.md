@@ -38,6 +38,9 @@
 ### ✅ [NEW] Implement dynamic imports and micro-animations — RESOLVED
 - **Resolved**: Implemented dynamic imports for heavy hidden UI components (ReviewModal, QuickView dialogs), applied Mongoose `.lean()` on read queries in Server Actions, and integrated lightweight GPU-accelerated micro-animations across product cards, interactive buttons, and the Cart Drawer.
 
+### ✅ [NEW] Home Page Auto-Slide Carousel — RESOLVED
+- **Resolved**: Implemented continuous, smooth infinite loop for the Home Page product carousel using Embla Carousel (`embla-carousel-autoplay`). Auto-sliding only activates when 5 or more products exist, respects Next.js Cache Components architecture (`'use client'` wrapper), and natively pauses on user interaction/hover. Kept CSS layout structure to avoid Cumulative Layout Shift (CLS) and CPU spikes on low-end devices.
+
 ---
 
 ## 🟡 Important Issues
