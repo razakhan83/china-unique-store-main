@@ -268,7 +268,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'flex min-h-9 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
+          'flex min-h-8 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
           active
             ? 'border border-border bg-white text-foreground shadow-sm'
             : 'border border-transparent text-foreground/66 hover:border-border hover:bg-muted/70 hover:text-foreground',
@@ -276,7 +276,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         )}
         title={collapsed ? label : undefined}
       >
-        <Icon className="size-4 shrink-0" />
+        <Icon className="size-3.5 shrink-0" />
         <span className={cn('truncate', collapsed && 'hidden')}>{label}</span>
       </Link>
     );
@@ -291,13 +291,13 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'group flex min-h-8 items-center gap-2 rounded-md border border-transparent px-2.5 py-1.5 text-xs transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
+          'group flex min-h-7 items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[11px] transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
           active
             ? 'border-border bg-white text-foreground'
             : 'text-foreground/82 hover:border-border/80 hover:bg-muted/60 hover:text-foreground'
         )}
       >
-        <Icon className="size-3.5 shrink-0 opacity-60 transition-opacity group-hover:opacity-85" />
+        <Icon className="size-3 shrink-0 opacity-60 transition-opacity group-hover:opacity-85" />
         <span className="truncate font-normal">{label}</span>
       </Link>
     );
@@ -317,15 +317,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     return (
       <AccordionTrigger
         className={cn(
-          'min-h-9 rounded-lg border px-2.5 py-2 text-sm font-medium hover:no-underline',
+          'min-h-8 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium hover:no-underline',
           active
             ? 'border border-border bg-white text-foreground shadow-sm'
             : 'border border-transparent text-foreground/66 hover:border-border hover:bg-muted/70 hover:text-foreground'
         )}
       >
-        <div className="flex items-center gap-2.5">
-          <Icon className="size-4 shrink-0" />
-          <span className="text-sm font-medium">{label}</span>
+        <div className="flex items-center gap-2">
+          <Icon className="size-3.5 shrink-0" />
+          <span className="text-[12px] font-medium">{label}</span>
         </div>
       </AccordionTrigger>
     );
@@ -338,8 +338,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           <PanelsTopLeft className="size-3.5 text-foreground" />
         </div>
         <div className={cn('min-w-0', desktopSidebarCollapsed && 'hidden')}>
-          <p className="truncate text-sm font-bold tracking-[0.06em] text-foreground">Admin Panel</p>
-          <p className="truncate text-xs tracking-wider text-muted-foreground">Store Code: CUS786</p>
+          <p className="truncate text-[13px] font-bold tracking-[0.06em] text-foreground">Admin Panel</p>
+          <p className="truncate text-[10px] tracking-wider text-muted-foreground">Store Code: CUS786</p>
         </div>
       </div>
 
@@ -446,12 +446,12 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           href="/"
           onClick={() => setSidebarOpen(false)}
           className={cn(
-            'flex min-h-9 items-center gap-2.5 rounded-lg border border-border bg-white px-2.5 py-2 text-sm font-medium text-foreground transition-[background-color,transform,border-color] duration-200 hover:bg-muted/70 active:scale-[0.98]',
+            'flex min-h-8 items-center gap-2 rounded-lg border border-border bg-white px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-[background-color,transform,border-color] duration-200 hover:bg-muted/70 active:scale-[0.98]',
             desktopSidebarCollapsed && 'justify-center px-0'
           )}
           title="Back to Store"
         >
-          <House className="size-4" />
+          <House className="size-3.5" />
           <span className={cn(desktopSidebarCollapsed && 'hidden')}>Back to Store</span>
         </Link>
 
@@ -461,8 +461,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             <AvatarFallback className="bg-muted text-foreground">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
           </Avatar>
           <div className={cn('flex min-w-0 flex-col', desktopSidebarCollapsed && 'hidden')}>
-            <p className="truncate text-sm font-semibold">{sessionUser?.name || 'Admin'}</p>
-            <p className="truncate text-xs text-muted-foreground">{sessionUser?.email}</p>
+            <p className="truncate text-[12px] font-semibold">{sessionUser?.name || 'Admin'}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{sessionUser?.email}</p>
           </div>
         </div>
 
@@ -470,12 +470,12 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           type="button"
           onClick={() => signOut({ callbackUrl: '/admin/login' })}
           className={cn(
-            'flex min-h-9 items-center gap-2.5 rounded-lg border border-border bg-white px-2.5 py-2 text-sm font-medium text-foreground transition-[background-color,transform,border-color] duration-200 hover:bg-muted/70 active:scale-[0.98]',
+            'flex min-h-8 items-center gap-2 rounded-lg border border-border bg-white px-2.5 py-1.5 text-[12px] font-medium text-foreground transition-[background-color,transform,border-color] duration-200 hover:bg-muted/70 active:scale-[0.98]',
             desktopSidebarCollapsed && 'justify-center px-0'
           )}
           title="Logout"
         >
-          <LogOut className="size-4" />
+          <LogOut className="size-3.5" />
           <span className={cn(desktopSidebarCollapsed && 'hidden')}>Logout</span>
         </button>
       </div>
@@ -509,7 +509,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                   {desktopSidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
                 </Button>
                 <div className="hidden lg:block">
-                  <p className="text-sm font-semibold leading-tight text-foreground md:text-base">{pageMeta.title}</p>
+                  <p className="text-[13px] font-semibold leading-tight text-foreground md:text-sm">{pageMeta.title}</p>
                 </div>
               </div>
 
@@ -524,7 +524,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                     name="q"
                     type="search"
                     placeholder="Search orders, customers..."
-                    className="w-full h-10 rounded-md border border-border bg-muted/40 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full h-9 rounded-md border border-border bg-muted/40 pl-9 pr-3 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </form>
               </div>
@@ -534,7 +534,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="flex h-9 gap-1.5 px-3 text-xs font-medium text-muted-foreground hover:text-foreground sm:px-3 sm:text-sm"
+                  className="flex h-8 gap-1.5 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground sm:px-2.5 sm:text-xs"
                   onClick={() => router.push('/')}
                 >
                   <House className="size-3.5 shrink-0" data-icon="inline-start" />
@@ -549,7 +549,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                     <Button variant="ghost" className="relative size-8 md:size-10 rounded-full p-0">
                       <Avatar className="size-7 md:size-9 border border-border">
                         <AvatarImage src={sessionUser?.image} alt={sessionUser?.name || 'Admin'} />
-                        <AvatarFallback className="bg-muted text-xs md:text-sm text-foreground">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-muted text-[11px] md:text-sm text-foreground">{(sessionUser?.name || 'A').charAt(0)}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -557,8 +557,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                     <DropdownMenuGroup>
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col gap-0.5">
-                          <p className="text-sm font-medium leading-none">{sessionUser?.name || 'Admin'}</p>
-                          <p className="text-xs leading-none text-muted-foreground">{sessionUser?.email}</p>
+                          <p className="text-[13px] font-medium leading-none">{sessionUser?.name || 'Admin'}</p>
+                          <p className="text-[11px] leading-none text-muted-foreground">{sessionUser?.email}</p>
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
@@ -606,14 +606,14 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                 key={href}
                 href={href}
                 className={cn(
-                  'admin-touch-target flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-xs font-semibold tracking-[0.01em] transition-[color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
+                  'admin-touch-target flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[0.65rem] font-semibold tracking-[0.01em] transition-[color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
                   active
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground active:text-primary'
                 )}
               >
                 <span className={cn('flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]', active && 'scale-[1.06]')}>
-                  <Icon className="size-5" strokeWidth={2.6} />
+                  <Icon className="size-4" strokeWidth={2.6} />
                 </span>
                 <span className="truncate">{label}</span>
               </Link>
