@@ -338,8 +338,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           <PanelsTopLeft className="size-3.5 text-foreground" />
         </div>
         <div className={cn('min-w-0', desktopSidebarCollapsed && 'hidden')}>
-          <p className="truncate text-[13px] font-bold tracking-[0.06em] text-foreground">China Unique</p>
-          <p className="truncate text-[10px] text-muted-foreground">Admin</p>
+          <p className="truncate text-[13px] font-bold tracking-[0.06em] text-foreground">Admin Panel</p>
+          <p className="truncate text-[10px] tracking-wider text-muted-foreground">Store Code: CUS786</p>
         </div>
       </div>
 

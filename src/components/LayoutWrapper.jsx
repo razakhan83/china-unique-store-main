@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import StoreDeferredChrome from '@/components/StoreDeferredChrome';
 import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import AnimatedStats from '@/components/AnimatedStats';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -52,6 +53,8 @@ export default function LayoutWrapper({ children, categories, settings }) {
         </Suspense>
 
         <main className="flex-grow">{children}</main>
+
+        <AnimatedStats />
 
         <footer className="mt-auto border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] md:pb-6">
           <div className="container mx-auto max-w-7xl px-4">
