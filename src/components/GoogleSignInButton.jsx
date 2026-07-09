@@ -9,7 +9,7 @@ function GoogleSignInButtonContent({ className, callbackUrl }) {
   return (
     <Button
       variant="outline"
-      className={`relative flex w-full items-center justify-center gap-3 border-border bg-background py-6 font-medium text-foreground transition-all hover:bg-muted/50 ${className}`}
+      className={`relative flex w-full items-center justify-center gap-3 border-border/60 bg-background shadow-sm py-6 font-medium text-foreground transition-all duration-300 hover:bg-primary/5 hover:border-primary/20 hover:text-primary hover:shadow-md ${className}`}
       onClick={() => signIn('google', { callbackUrl })}
     >
       <svg
