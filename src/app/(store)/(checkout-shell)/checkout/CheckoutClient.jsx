@@ -7,22 +7,25 @@ import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState
 import {
   CheckCircle2,
   Check,
-  Clock3,
+  ChevronDown,
   Copy,
-  CreditCard,
   Loader2,
   Lock,
-  MapPin,
+  ShoppingBag,
+  Tag,
   Truck,
-  Wallet,
   Banknote,
+  CreditCard,
+  HelpCircle,
 } from 'lucide-react';
 
 import { getLastOrderDetailsAction, submitOrderAction, validateCouponAction } from '@/app/actions';
+
 import AuthModal from '@/components/AuthModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import CheckoutPageSkeleton from '@/components/CheckoutPageSkeleton';
 import {
   Combobox,
   ComboboxCollection,
@@ -52,6 +55,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useCartActions, useCartItems } from '@/context/CartContext';
 import { PAKISTAN_CITIES } from '@/lib/cities';
@@ -158,6 +162,8 @@ function readStoredSuccessfulOrder() {
     const parsed = JSON.parse(raw);
     if (!parsed?.orderId) return null;
 
+    window.__addToCart = addToCart;
+
     return {
       orderId: String(parsed.orderId),
       whatsappUrl: String(parsed.whatsappUrl || ''),
@@ -194,15 +200,173 @@ function clearStoredSuccessfulOrder() {
   }
 }
 
-export default function CheckoutClient({ settings }) {
+// ─── Order Summary Panel (shared by mobile accordion + desktop sidebar) ────────
+function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, setCouponCodeInput, couponError, setCouponError, couponLoading, handleApplyCoupon, handleRemoveCoupon, relatedProducts = [], addToCart }) {
+  const { subtotal, shipping, total, isFreeShipping, discountAmount } = pricing;
+
+  const availableRelated = relatedProducts
+    ?.filter((p) => !cart.some((item) => String(item.id || item._id) === String(p.id || p._id)))
+    ?.slice(0, 3);
+
+  return (
+    <>
+      {/* Product list */}
+      <div className={styles.summaryProductList}>
+        {cart.map((item, index) => {
+          const itemPrice = item.discountedPrice != null ? item.discountedPrice : item.Price || item.price;
+          const lineTotal = formatPrice(itemPrice) * item.quantity;
+          const imgUrl = getPrimaryProductImage(item)?.url;
+
+          return (
+            <div key={`${item.id}-${index}`} className={styles.summaryProduct}>
+              <div className={styles.summaryProductThumbWrapper}>
+                <div className={styles.summaryProductThumb}>
+                  {imgUrl ? (
+                    <Image
+                      src={imgUrl}
+                      alt={item.Name || item.name}
+                      fill
+                      className="object-cover"
+                      {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
+                    />
+                  ) : null}
+                </div>
+                <span className={styles.summaryProductQtyBadge}>{item.quantity}</span>
+              </div>
+              <span className={styles.summaryProductName}>{item.Name || item.name}</span>
+              <span className={styles.summaryProductPrice}>{formatPriceLabel(lineTotal)}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={styles.summaryDivider} />
+
+      {/* Discount code */}
+      <div className="mb-3">
+        {appliedCoupon ? (
+          <div className={styles.couponApplied}>
+            <div className={styles.couponAppliedLeft}>
+              <Tag className="size-3.5 text-success" />
+              <span className={styles.couponCode}>{appliedCoupon.code}</span>
+              <span className="text-success text-xs font-semibold">Applied</span>
+            </div>
+            <button
+              onClick={handleRemoveCoupon}
+              className="text-xs text-destructive hover:underline font-medium"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleApplyCoupon} className={styles.discountRow}>
+            <Input
+              id="coupon-code"
+              placeholder="Discount code"
+              value={couponCodeInput}
+              onChange={(e) => {
+                setCouponCodeInput(e.target.value.toUpperCase());
+                setCouponError('');
+              }}
+              className={cn('flex-1', couponError && 'border-destructive')}
+            />
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={!couponCodeInput.trim() || couponLoading}
+              className="shrink-0"
+            >
+              {couponLoading ? <Loader2 className="size-4 animate-spin" /> : 'Apply'}
+            </Button>
+          </form>
+        )}
+        {couponError && <p className="mt-1 text-xs text-destructive">{couponError}</p>}
+      </div>
+
+      <div className={styles.summaryDivider} />
+
+      {/* Totals */}
+      <div className={styles.totalsGrid}>
+        <div className={styles.totalRow}>
+          <span className={styles.totalLabel}>Subtotal</span>
+          <span className={styles.totalValue}>Rs. {subtotal.toLocaleString('en-PK')}</span>
+        </div>
+        {discountAmount > 0 && (
+          <div className={styles.totalRow}>
+            <span className={styles.totalLabel}>Discount ({appliedCoupon?.code})</span>
+            <span className={styles.totalValueDiscount}>−Rs. {discountAmount.toLocaleString('en-PK')}</span>
+          </div>
+        )}
+        <div className={styles.totalRow}>
+          <span className={styles.totalLabel}>Shipping</span>
+          <span className={isFreeShipping ? styles.totalValueFree : styles.totalValue}>
+            {isFreeShipping ? 'Free' : `Rs. ${shipping.toLocaleString('en-PK')}`}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.summaryDivider} />
+
+      {/* Grand total */}
+      <div className={styles.grandTotalRow}>
+        <span className={styles.grandTotalLabel}>Total</span>
+        <span>
+          <span className={styles.grandTotalCurrency}>PKR</span>
+          <span className={styles.grandTotalValue}>Rs. {total.toLocaleString('en-PK')}</span>
+        </span>
+      </div>
+
+      {/* Cross-sell */}
+      {availableRelated?.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-[0.95rem] font-bold text-foreground mb-3">You might also like</h3>
+          <div className="flex flex-col gap-3">
+            {availableRelated.map((product) => {
+              const img = getPrimaryProductImage(product);
+              const price = product.discountedPrice || product.Price;
+              return (
+                <div key={product.id} className="flex items-center gap-3.5 bg-background border border-border/60 rounded-md p-2.5 shadow-sm">
+                  <div className={styles.summaryProductThumbWrapper} style={{ transform: 'none', margin: 0 }}>
+                    <div className={styles.summaryProductThumb}>
+                      {img && <Image src={img.url} alt={product.Name} fill className="object-cover" />}
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1 justify-center">
+                    <span className="text-[13px] font-semibold text-foreground/90 line-clamp-1">{product.Name}</span>
+                    <span className="text-[13px] text-muted-foreground font-medium mt-0.5">Rs. {price.toLocaleString('en-PK')}</span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (addToCart) {
+                        addToCart(product, 1);
+                      }
+                    }}
+                    className="shrink-0 text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md shadow-sm transition-colors mr-0.5"
+                  >
+                    Add
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { cart, isInitialized } = useCartItems();
-  const { clearCart } = useCartActions();
+  const { clearCart, addToCart } = useCartActions();
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
   const [hasCachedProfile, setHasCachedProfile] = useState(false);
   const [isHydratingProfile, setIsHydratingProfile] = useState(false);
+  const [saveInfo, setSaveInfo] = useState(true);
+  const [mobileOrderOpen, setMobileOrderOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -303,7 +467,7 @@ export default function CheckoutClient({ settings }) {
   }, [hasAutoFilled, hasCachedProfile, session, status]);
 
   useEffect(() => {
-    if (!hasHydratedCachedProfile) return;
+    if (!hasHydratedCachedProfile || !saveInfo) return;
 
     try {
       window.localStorage.setItem(
@@ -328,6 +492,7 @@ export default function CheckoutClient({ settings }) {
     formData.landmark,
     formData.phone,
     hasHydratedCachedProfile,
+    saveInfo,
   ]);
 
   const subtotal = useMemo(
@@ -350,6 +515,7 @@ export default function CheckoutClient({ settings }) {
 
     return CITY_OPTIONS.filter((city) => city.sortKey.includes(normalizedCitySearch)).slice(0, SEARCH_RESULTS_LIMIT);
   }, [normalizedCitySearch]);
+
   const pricing = calculateCheckoutPricing({
     subtotal,
     city: formData.city,
@@ -357,14 +523,6 @@ export default function CheckoutClient({ settings }) {
     appliedCoupon,
   });
   const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi, discountAmount } = pricing;
-  const shippingStatusLabel = isFreeShipping
-    ? 'Free delivery unlocked'
-    : `Delivery estimate ${formatPriceLabel(shipping)}`;
-  const shippingSupportLabel = isFreeShipping
-    ? `Orders above ${formatPriceLabel(freeShippingThreshold)} ship free.`
-    : isKarachi
-      ? 'Karachi delivery keeps the fastest turnaround.'
-      : 'Outside Karachi rates are shown before confirmation.';
 
   useEffect(() => {
     if (hasTrackedCheckoutView || cart.length === 0) return;
@@ -383,7 +541,14 @@ export default function CheckoutClient({ settings }) {
   function validateForm() {
     const nextErrors = {};
     if (!formData.fullName.trim()) nextErrors.fullName = 'Full Name is required.';
-    if (!formData.phone.trim()) nextErrors.phone = 'Phone Number is required.';
+    
+    const cleanPhone = formData.phone.replace(/\s+/g, '');
+    if (!cleanPhone) {
+      nextErrors.phone = 'Phone Number is required.';
+    } else if (!/^03\d{9}$/.test(cleanPhone)) {
+      nextErrors.phone = 'Enter a valid 11-digit number (e.g. 03001234567).';
+    }
+
     if (!formData.city.trim()) nextErrors.city = 'City is required.';
     if (!formData.address.trim()) nextErrors.address = 'Complete Address is required.';
     setErrors(nextErrors);
@@ -396,10 +561,10 @@ export default function CheckoutClient({ settings }) {
       setCouponError('Please enter a coupon code.');
       return;
     }
-    
+
     setCouponLoading(true);
     setCouponError('');
-    
+
     try {
       const res = await validateCouponAction(
         couponCodeInput,
@@ -407,7 +572,7 @@ export default function CheckoutClient({ settings }) {
         formData.email || session?.user?.email || '',
         formData.phone || ''
       );
-      
+
       if (res.success) {
         setAppliedCoupon(res.coupon);
         setCouponCodeInput('');
@@ -452,7 +617,7 @@ export default function CheckoutClient({ settings }) {
   }
 
   function handlePlaceOrder(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     if (submissionLockRef.current || submitting || !isInitialized || !validateForm() || cart.length === 0) return;
 
     submissionLockRef.current = true;
@@ -510,23 +675,16 @@ export default function CheckoutClient({ settings }) {
     })();
   }
 
+  // ─── Loading / empty states ────────────────────────────────────────────────
+
   if (!isInitialized && !orderState.orderId) {
-    return (
-      <section className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="surface-card w-full max-w-md rounded-[1.4rem] border border-border/80 py-10 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
-          <CardContent className="flex flex-col items-center gap-4 text-center">
-            <Loader2 className="size-8 animate-spin text-primary" />
-            <p className="text-sm font-medium text-muted-foreground">Loading your checkout...</p>
-          </CardContent>
-        </Card>
-      </section>
-    );
+    return <CheckoutPageSkeleton />;
   }
 
   if (cart.length === 0 && !orderState.orderId) {
     return (
       <section className="flex min-h-[60vh] items-center justify-center px-4">
-        <Empty className="surface-card w-full max-w-md rounded-[1.4rem] border border-border/80 py-10 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
+        <Empty className="w-full max-w-md rounded-2xl border border-border/80 bg-card py-10">
           <EmptyHeader>
             <EmptyTitle className="text-2xl font-bold text-foreground [text-wrap:balance]">Your cart is empty</EmptyTitle>
             <EmptyDescription className="[text-wrap:pretty]">
@@ -553,27 +711,27 @@ export default function CheckoutClient({ settings }) {
     (isHydratingProfile || !hasAutoFilled);
 
   if (shouldShowCentralCheckoutLoader) {
-    return (
-      <section className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="surface-card w-full max-w-lg rounded-[1.5rem] border border-border/80 py-12 shadow-[0_24px_60px_-42px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]">
-          <CardContent className="flex flex-col items-center gap-5 text-center">
-            <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Loader2 className="size-6 animate-spin" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">Preparing your checkout</h2>
-              <p className="text-sm text-muted-foreground">
-                Loading your saved details and delivery information.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-    );
+    return <CheckoutPageSkeleton />;
   }
+
+  const summaryProps = {
+    cart,
+    pricing,
+    appliedCoupon,
+    couponCodeInput,
+    setCouponCodeInput,
+    couponError,
+    setCouponError,
+    couponLoading,
+    handleApplyCoupon,
+    handleRemoveCoupon,
+    addToCart,
+    relatedProducts: relatedProducts.map((p) => ({ ...p, id: p._id || p.id })),
+  };
 
   return (
     <>
+      {/* ── Success dialog ── */}
       <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
         <DialogContent className={cn('p-8 text-center sm:max-w-md', styles.dialogPanel)} hideClose>
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[1.35rem] bg-success/10 text-success shadow-[0_18px_32px_-26px_color-mix(in_oklab,var(--color-success)_52%,transparent)]">
@@ -605,7 +763,11 @@ export default function CheckoutClient({ settings }) {
             </div>
 
             <div className="grid gap-3 pt-2">
-              <Button size="lg" className={cn('w-full font-semibold active:scale-[0.96]', styles.ctaButton)} onClick={handleViewOrders}>
+              <Button
+                size="lg"
+                className={cn('w-full font-semibold active:scale-[0.96]', styles.dialogCtaButton)}
+                onClick={handleViewOrders}
+              >
                 View My Orders
               </Button>
               <Button variant="outline" size="lg" className="w-full active:scale-[0.96]" onClick={handleModalClose}>
@@ -618,395 +780,404 @@ export default function CheckoutClient({ settings }) {
 
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
 
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-        <div className="space-y-6 lg:col-span-7">
-          <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '90ms' }}>
-              <CardHeader className={styles.sectionHeader}>
-                <span className={styles.sectionKicker}>Delivery details</span>
-                <CardTitle className={cn('flex items-center gap-2 text-xl', styles.sectionTitle)}>
-                  <MapPin className="size-5 text-primary" />
-                  Shipping Information
-                </CardTitle>
-                <CardDescription className={styles.sectionDescription}>Contact and address information for this order.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePlaceOrder} className="space-y-6">
-                  <FieldGroup>
-                    <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="email" className="flex items-center gap-2">
-                          Email Address
-                          {session?.user ? <Lock className="size-3 text-muted-foreground/60" title="Locked to your account" /> : null}
-                        </FieldLabel>
-                        <Input
-                          id="email"
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="you@example.com"
-                          readOnly={!!session?.user}
-                          className={session?.user ? 'cursor-not-allowed bg-muted/30' : ''}
-                        />
-                      </Field>
-                      <Field data-invalid={errors.phone ? 'true' : undefined}>
-                        <FieldLabel htmlFor="phone">Phone Number *</FieldLabel>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          placeholder="e.g. 0300 1234567"
-                          aria-invalid={Boolean(errors.phone)}
-                        />
-                        <FieldError>{errors.phone}</FieldError>
-                      </Field>
-                    </FieldGroup>
+      {/* ══════════════════════════════════════════════
+          MOBILE ORDER SUMMARY ACCORDION
+      ══════════════════════════════════════════════ */}
+      <div className={styles.mobileOrderSummary}>
+        <button
+          type="button"
+          id="mobile-order-summary-toggle"
+          className={styles.mobileOrderSummaryTrigger}
+          onClick={() => setMobileOrderOpen((v) => !v)}
+          aria-expanded={mobileOrderOpen}
+        >
+          <span className={styles.mobileOrderSummaryTriggerLeft}>
+            <ShoppingBag className="size-4" />
+            {mobileOrderOpen ? 'Hide order summary' : 'Show order summary'}
+            <ChevronDown
+              className={cn(styles.mobileOrderSummaryChevron, mobileOrderOpen && styles.mobileOrderSummaryChevronOpen)}
+              aria-hidden
+            />
+          </span>
+          <span className={styles.mobileOrderSummaryTotal}>Rs. {total.toLocaleString('en-PK')}</span>
+        </button>
 
-                    <Separator />
+        {mobileOrderOpen && (
+          <div className={styles.mobileOrderSummaryBody}>
+            <div className={styles.mobileOrderSummaryBodyInner}>
+              <OrderSummaryContent {...summaryProps} />
+            </div>
+          </div>
+        )}
+      </div>
 
-                    <FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Field data-invalid={errors.fullName ? 'true' : undefined}>
-                        <FieldLabel htmlFor="fullName">Full Name *</FieldLabel>
-                        <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} aria-invalid={Boolean(errors.fullName)} />
-                        <FieldError>{errors.fullName}</FieldError>
-                      </Field>
-                      <Field data-invalid={errors.city ? 'true' : undefined}>
-                        <FieldLabel htmlFor="city">City *</FieldLabel>
-                        <Combobox
-                          id="city"
-                          items={CITY_OPTIONS}
-                          filteredItems={visibleCityOptions}
-                          value={selectedCity}
-                          autoHighlight="always"
-                          onInputValueChange={setCitySearch}
-                          onValueChange={(city) => {
-                            setFormData((previous) => ({ ...previous, city: city?.value || '' }));
-                            setCitySearch('');
-                            if (errors.city) {
-                              setErrors((previous) => ({ ...previous, city: '' }));
-                            }
-                          }}
-                        >
-                          <ComboboxInput
-                            placeholder="Search city name"
-                            aria-invalid={Boolean(errors.city)}
-                            showClear={Boolean(formData.city)}
-                            inputClassName={cn(
-                              'transition-none shadow-none',
-                              'hover:border-transparent hover:bg-transparent',
-                              'focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:shadow-none',
-                              'data-[pressed]:scale-100 data-[pressed]:translate-y-0'
-                            )}
-                            triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
-                            className={cn(
-                              'h-11 rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
-                              'hover:border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] hover:bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]',
-                              'focus-within:border-[color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-border))] focus-within:bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] focus-within:ring-3 focus-within:ring-[color:color-mix(in_oklab,var(--color-primary)_10%,transparent)]',
-                              '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
-                              errors.city && 'border-destructive bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] ring-4 ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)]'
-                            )}
-                          />
-                          <ComboboxContent
-                            className="rounded-xl border border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-popover)_96%,white)] p-0 shadow-lg"
-                            sideOffset={8}
-                          >
-                            <ComboboxList className="max-h-72 p-2">
-                              <ComboboxEmpty className="px-3 py-4 text-sm">No matching city found.</ComboboxEmpty>
-                              <ComboboxGroup>
-                                <ComboboxLabel>{normalizedCitySearch ? 'Search results' : 'Main cities'}</ComboboxLabel>
-                                <ComboboxCollection>
-                                  {(city) => (
-                                    <ComboboxItem
-                                      key={city.value}
-                                      value={city}
-                                      className={cn(
-                                        'rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-[background-color,color] duration-200 data-highlighted:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)] sm:px-3.5',
-                                        selectedCity?.value === city.value &&
-                                          'bg-[color:color-mix(in_oklab,var(--color-primary)_8%,white)] text-primary'
-                                      )}
-                                    >
-                                      <span className="truncate leading-5">{city.label}</span>
-                                    </ComboboxItem>
-                                  )}
-                                </ComboboxCollection>
-                              </ComboboxGroup>
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                        <FieldError>{errors.city}</FieldError>
-                      </Field>
-                    </FieldGroup>
+      {/* ══════════════════════════════════════════════
+          TWO-PANEL CHECKOUT SHELL
+      ══════════════════════════════════════════════ */}
+      <div className={styles.checkoutShell}>
 
-                    <FieldGroup>
-                      <Field data-invalid={errors.address ? 'true' : undefined}>
-                        <FieldLabel htmlFor="address">Complete Address (Street/Area) *</FieldLabel>
-                        <Input
-                          id="address"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          placeholder="House, Street, Sector/Area"
-                          aria-invalid={Boolean(errors.address)}
-                        />
-                        <FieldError>{errors.address}</FieldError>
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="landmark">Nearest Landmark</FieldLabel>
-                        <Input id="landmark" name="landmark" value={formData.landmark} onChange={handleChange} placeholder="e.g. Near ABC School" />
-                      </Field>
-                      <Field>
-                        <FieldLabel htmlFor="instructions">Special Notes</FieldLabel>
-                        <FieldContent>
-                          <Textarea id="instructions" name="instructions" value={formData.instructions} onChange={handleChange} rows={3} />
-                          <FieldDescription>Optional delivery notes.</FieldDescription>
-                        </FieldContent>
-                      </Field>
-                    </FieldGroup>
-                  </FieldGroup>
+        {/* ── LEFT PANEL (forms) ── */}
+        <div className={styles.leftPanel}>
+          <div className={cn(styles.leftPanelInner, styles.enter)} style={{ '--checkout-delay': '60ms' }}>
 
-                  {errors.submit ? (
-                    <Alert variant="destructive">
-                      <AlertTitle>Unable to place order</AlertTitle>
-                      <AlertDescription>{errors.submit}</AlertDescription>
-                    </Alert>
-                  ) : null}
+            {/* ── CONTACT ── */}
+            <div className={styles.sectionBlock}>
+              <div className={styles.sectionTitleRow}>
+                <h2 className={styles.sectionTitle}>Contact</h2>
+                {!session?.user ? (
+                  <button
+                    type="button"
+                    className={styles.signInLink}
+                    onClick={() => setShowAuthModal(true)}
+                  >
+                    Sign in
+                  </button>
+                ) : null}
+              </div>
 
-                  <button type="submit" id="checkout-submit" className="hidden" />
-                </form>
-              </CardContent>
-          </Card>
+              <FieldGroup className="gap-3">
+                <Field>
+                  <Input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Email or mobile phone number"
+                    readOnly={!!session?.user}
+                    className={session?.user ? 'cursor-not-allowed bg-muted/30' : ''}
+                  />
+                </Field>
 
-          <Card className={cn(styles.sectionCard, styles.enter)} style={{ '--checkout-delay': '150ms' }}>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl">Payment</CardTitle>
-                <CardDescription>All transactions are secure and encrypted.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-xl border border-border bg-background overflow-hidden">
-                  {/* Debit / Credit Card - Coming Soon */}
-                  <label className="flex items-center justify-between p-4 opacity-50 bg-muted/20 cursor-not-allowed">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-4 items-center justify-center rounded-full border-[1.5px] border-muted-foreground/40 bg-transparent transition-colors">
-                      </div>
-                      <span className="text-sm font-medium">Debit - Credit Card</span>
-                      <span className="ml-2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Coming soon</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Image src="/VISA-logo.png" alt="Visa" width={36} height={24} className="h-6 w-auto object-contain rounded-sm" />
-                      <Image src="/Mastercard-Logo.png" alt="Mastercard" width={36} height={24} className="h-6 w-auto object-contain rounded-sm" />
-                    </div>
-                  </label>
-
-                  {/* COD */}
-                  <div className={cn("flex flex-col transition-colors", paymentMethod === 'cod' ? "bg-[color:color-mix(in_oklab,var(--color-primary)_4%,white)] border-y border-primary" : "border-t border-border")}>
-                      <label className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setPaymentMethod('cod')}>
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "flex size-4 items-center justify-center rounded-full border-[1.5px] transition-colors",
-                            paymentMethod === 'cod' ? "border-primary bg-white" : "border-muted-foreground/40 bg-transparent"
-                          )}>
-                            {paymentMethod === 'cod' && <div className="size-2 rounded-full bg-primary" />}
-                          </div>
-                          <span className="text-sm font-medium">Cash on Delivery (COD)</span>
-                        </div>
-                        <Banknote className="size-5 text-muted-foreground" />
-                      </label>
-                  </div>
-
-                  {/* Bank Deposit */}
-                  {settings?.bankDepositEnabled && (
-                    <div className={cn("flex flex-col transition-colors", paymentMethod === 'cod' ? "" : "border-t border-border", paymentMethod === 'bank' ? "bg-[color:color-mix(in_oklab,var(--color-primary)_4%,white)] border-y border-primary" : "")}>
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setPaymentMethod('bank')}>
-                        <div className={cn(
-                          "flex size-4 items-center justify-center rounded-full border-[1.5px] transition-colors",
-                          paymentMethod === 'bank' ? "border-primary bg-white" : "border-muted-foreground/40 bg-transparent"
-                        )}>
-                          {paymentMethod === 'bank' && <div className="size-2 rounded-full bg-primary" />}
-                        </div>
-                        <span className="text-sm font-medium">Bank Deposit</span>
-                      </label>
-                      
-                      {paymentMethod === 'bank' && (
-                        <div className="bg-[color:color-mix(in_oklab,var(--color-muted)_50%,white)] p-4 text-sm text-foreground/80 border-t border-border/80">
-                          <p className="font-semibold mb-2">Please share whatsapp slip on this number: <a href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{settings?.whatsappNumber}</a></p>
-                          <div className="whitespace-pre-wrap font-mono text-xs text-muted-foreground bg-background border border-border p-3 rounded-md">
-                            {settings?.bankDepositAccountDetails || "Account details will appear here."}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    id="email-offers"
+                    className="size-4 rounded accent-primary"
+                    defaultChecked={false}
+                  />
+                  <label htmlFor="email-offers">Email me with news and offers</label>
                 </div>
-              </CardContent>
-          </Card>
+              </FieldGroup>
+            </div>
+
+            {/* ── DELIVERY ── */}
+            <div className={styles.sectionBlock}>
+              <h2 className={styles.sectionTitle}>Delivery</h2>
+
+              <FieldGroup className="gap-3">
+
+                {/* Name / Phone row */}
+                <div className={styles.inputRow2}>
+                  <Field data-invalid={errors.fullName ? 'true' : undefined}>
+                    <Input
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      placeholder="Full name *"
+                      aria-invalid={Boolean(errors.fullName)}
+                    />
+                    <FieldError>{errors.fullName}</FieldError>
+                  </Field>
+                  <Field data-invalid={errors.phone ? 'true' : undefined}>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Phone *"
+                      aria-invalid={Boolean(errors.phone)}
+                    />
+                    <FieldError>{errors.phone}</FieldError>
+                  </Field>
+                </div>
+
+                {/* Address */}
+                <Field data-invalid={errors.address ? 'true' : undefined}>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Complete address *"
+                    aria-invalid={Boolean(errors.address)}
+                  />
+                  <FieldError>{errors.address}</FieldError>
+                </Field>
+
+                {/* Apartment */}
+                <Field>
+                  <Input
+                    id="landmark"
+                    name="landmark"
+                    value={formData.landmark}
+                    onChange={handleChange}
+                    placeholder="Apartment, suite, etc. (optional)"
+                  />
+                </Field>
+
+                {/* City / Postal row */}
+                <div className={styles.inputRow2}>
+                  <Field data-invalid={errors.city ? 'true' : undefined}>
+                    <Combobox
+                      id="city"
+                      items={CITY_OPTIONS}
+                      filteredItems={visibleCityOptions}
+                      value={selectedCity}
+                      autoHighlight="always"
+                      onInputValueChange={setCitySearch}
+                      onValueChange={(city) => {
+                        setFormData((previous) => ({ ...previous, city: city?.value || '' }));
+                        setCitySearch('');
+                        if (errors.city) {
+                          setErrors((previous) => ({ ...previous, city: '' }));
+                        }
+                      }}
+                    >
+                      <ComboboxInput
+                        placeholder="City *"
+                        aria-invalid={Boolean(errors.city)}
+                        showClear={Boolean(formData.city)}
+                        inputClassName={cn(
+                          'transition-none shadow-none',
+                          'hover:border-transparent hover:bg-transparent',
+                          'focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:shadow-none',
+                          'data-[pressed]:scale-100 data-[pressed]:translate-y-0'
+                        )}
+                        triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
+                        className={cn(
+                          'h-11 rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
+                          'hover:border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] hover:bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]',
+                          'focus-within:border-[color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-border))] focus-within:bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] focus-within:ring-3 focus-within:ring-[color:color-mix(in_oklab,var(--color-primary)_10%,transparent)]',
+                          '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
+                          errors.city && 'border-destructive bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] ring-4 ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)]'
+                        )}
+                      />
+                      <ComboboxContent
+                        className="rounded-xl border border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-popover)_96%,white)] p-0 shadow-lg"
+                        sideOffset={8}
+                      >
+                        <ComboboxList className="max-h-72 p-2">
+                          <ComboboxEmpty className="px-3 py-4 text-sm">No matching city found.</ComboboxEmpty>
+                          <ComboboxGroup>
+                            <ComboboxLabel>{normalizedCitySearch ? 'Search results' : 'Main cities'}</ComboboxLabel>
+                            <ComboboxCollection>
+                              {(city) => (
+                                <ComboboxItem
+                                  key={city.value}
+                                  value={city}
+                                  className={cn(
+                                    'rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-[background-color,color] duration-200 data-highlighted:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)] sm:px-3.5',
+                                    selectedCity?.value === city.value &&
+                                      'bg-[color:color-mix(in_oklab,var(--color-primary)_8%,white)] text-primary'
+                                  )}
+                                >
+                                  <span className="truncate leading-5">{city.label}</span>
+                                </ComboboxItem>
+                              )}
+                            </ComboboxCollection>
+                          </ComboboxGroup>
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    <FieldError>{errors.city}</FieldError>
+                  </Field>
+                  <Field>
+                    <Input id="postal" placeholder="Postal code (optional)" />
+                  </Field>
+                </div>
+
+                {/* Save for next time */}
+                <div className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    id="save-info"
+                    checked={saveInfo}
+                    onChange={(e) => setSaveInfo(e.target.checked)}
+                    className="size-4 rounded accent-primary"
+                  />
+                  <label htmlFor="save-info">Save this information for next time</label>
+                </div>
+              </FieldGroup>
+            </div>
+
+
+
+            {/* ── PAYMENT ── */}
+            <div className={styles.sectionBlock}>
+              <h2 className={styles.sectionTitle}>Payment</h2>
+              <p className={styles.sectionSubtitle}>All transactions are secure and encrypted.</p>
+
+              <div className={styles.paymentOptions}>
+
+                {/* Credit card — coming soon */}
+                <div className={cn(styles.paymentOption, styles.paymentOptionDisabled)}>
+                  <div className={styles.paymentOptionHeader}>
+                    <div className={styles.paymentOptionLeft}>
+                      <div className={styles.radioCircle} />
+                      <CreditCard className="size-4 text-muted-foreground" aria-hidden />
+                      <span className={styles.paymentOptionLabel}>Credit card</span>
+                      <span className={styles.comingSoonBadge}>Coming soon</span>
+                    </div>
+                    <div className={styles.paymentCardLogos}>
+                      <Image src="/VISA-logo.png" alt="Visa" width={36} height={24} className={styles.paymentCardLogo} style={{ width: 'auto' }} />
+                      <Image src="/Mastercard-Logo.png" alt="Mastercard" width={36} height={24} className={styles.paymentCardLogo} style={{ width: 'auto' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cash on Delivery */}
+                <div
+                  id="payment-cod"
+                  className={styles.paymentOption}
+                  onClick={() => setPaymentMethod('cod')}
+                >
+                  <div className={cn(styles.paymentOptionHeader, paymentMethod === 'cod' && styles.paymentOptionSelectedBg)}>
+                    <div className={styles.paymentOptionLeft}>
+                      <div className={cn(styles.radioCircle, paymentMethod === 'cod' && styles.radioCircleActive)}>
+                        {paymentMethod === 'cod' && <div className={styles.radioDot} />}
+                      </div>
+                      <Banknote className="size-4 text-muted-foreground" aria-hidden />
+                      <span className={styles.paymentOptionLabel}>Cash on Delivery (COD)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Deposit */}
+                {settings?.bankDepositEnabled && (
+                  <div
+                    id="payment-bank"
+                    className={styles.paymentOption}
+                    onClick={() => setPaymentMethod('bank')}
+                  >
+                    <div className={cn(styles.paymentOptionHeader, paymentMethod === 'bank' && styles.paymentOptionSelectedBg)}>
+                      <div className={styles.paymentOptionLeft}>
+                        <div className={cn(styles.radioCircle, paymentMethod === 'bank' && styles.radioCircleActive)}>
+                          {paymentMethod === 'bank' && <div className={styles.radioDot} />}
+                        </div>
+                        <span className={styles.paymentOptionLabel}>Bank Deposit</span>
+                      </div>
+                    </div>
+
+                    {paymentMethod === 'bank' && (
+                      <div className={styles.bankInfo}>
+                        <p className="font-semibold">
+                          Send payment slip to:{' '}
+                          <a
+                            href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {settings?.whatsappNumber}
+                          </a>
+                        </p>
+                        <div className={styles.bankInfoCode}>
+                          {settings?.bankDepositAccountDetails || 'Account details will appear here.'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Billing address row */}
+              <div className={styles.billingRow}>
+                <input
+                  type="checkbox"
+                  id="billing-same"
+                  defaultChecked
+                  className="size-4 rounded accent-primary"
+                />
+                <label htmlFor="billing-same" className="cursor-pointer text-sm">
+                  Use shipping address as billing address
+                </label>
+              </div>
+            </div>
+
+            {/* Special instructions */}
+            <div className={styles.sectionBlock}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="instructions">Special Notes (optional)</FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      id="instructions"
+                      name="instructions"
+                      value={formData.instructions}
+                      onChange={handleChange}
+                      rows={3}
+                      placeholder="Any special delivery instructions…"
+                    />
+                    <FieldDescription>Optional delivery notes.</FieldDescription>
+                  </FieldContent>
+                </Field>
+              </FieldGroup>
+            </div>
+
+            {/* Submit error */}
+            {errors.submit ? (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTitle>Unable to place order</AlertTitle>
+                <AlertDescription>{errors.submit}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            {/* Hidden submit trigger for form */}
+            <form onSubmit={handlePlaceOrder}>
+              <button type="submit" id="checkout-submit" className="hidden" />
+            </form>
+
+            {/* Desktop CTA */}
+            <button
+              id="place-order-desktop"
+              className={cn(styles.ctaButton, 'hidden md:flex')}
+              onClick={() => document.getElementById('checkout-submit')?.click()}
+              disabled={submitting || !isInitialized}
+            >
+              {submitting && <Loader2 className="size-4 animate-spin" />}
+              {submitting ? 'Placing Order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+            </button>
+
+            {/* Footer links */}
+            <div className={styles.trustLinks}>
+              <a href="/refund-policy" className={styles.trustLink}>Refund policy</a>
+              <a href="/shipping-policy" className={styles.trustLink}>Shipping</a>
+              <a href="/privacy-policy" className={styles.trustLink}>Privacy policy</a>
+              <a href="/terms-of-service" className={styles.trustLink}>Terms of service</a>
+              <a href="/contact" className={styles.trustLink}>Contact</a>
+            </div>
+          </div>
         </div>
 
-        <div className="lg:col-span-5">
-          <Card className={cn('surface-panel sticky top-24', styles.sectionCard, styles.summaryCard, styles.enter)} style={{ '--checkout-delay': '120ms' }}>
-            <CardHeader className={cn('mb-2', styles.summaryHeader)}>
-              <div className={styles.summaryMeta}>
-                <div>
-                  <p className={styles.sectionKicker}>Order summary</p>
-                  <CardTitle className={cn('mt-2 text-xl', styles.sectionTitle)}>Your cart</CardTitle>
-                </div>
-                <span className={styles.summaryPill}>
-                  <strong>{cart.length}</strong>
-                  {cart.length === 1 ? 'item' : 'items'}
-                </span>
-              </div>
-              <CardDescription className={styles.sectionDescription}>
-                <span className={cn(isFreeShipping ? styles.shippingFree : styles.shippingTone)}>{shippingStatusLabel}</span>{' '}
-                {shippingSupportLabel}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-                <div className={cn('mb-6 max-h-[320px] overflow-y-auto pr-1', styles.summaryItems)}>
-                  {cart.map((item, index) => {
-                    const itemPrice = item.discountedPrice != null ? item.discountedPrice : item.Price || item.price;
-                    const lineTotal = formatPrice(itemPrice) * item.quantity;
-
-                    return (
-                      <div key={`${item.id}-${index}`} className={styles.summaryItem}>
-                        <div className={styles.summaryImage}>
-                          {getPrimaryProductImage(item)?.url ? (
-                            <Image
-                              src={getPrimaryProductImage(item).url}
-                              alt={item.Name || item.name}
-                              fill
-                              className="object-cover"
-                              {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
-                            />
-                          ) : null}
-                        </div>
-                        <div className={styles.summaryText}>
-                          <h4 className={cn('line-clamp-2 text-sm font-semibold text-foreground', styles.summaryName)}>{item.Name || item.name}</h4>
-                          <div className={styles.summaryBottom}>
-                            <span className={styles.qtyBadge}>Qty {item.quantity}</span>
-                            <div className={styles.priceStack}>
-                              <div className={styles.unitPrice}>{formatPriceLabel(itemPrice)} each</div>
-                              <div className={styles.linePrice}>{formatPriceLabel(lineTotal)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <Separator className="mb-4" />
-
-                <div className="mb-6 space-y-4">
-                  {appliedCoupon ? (
-                    <div className="flex items-center justify-between rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm">
-                      <div>
-                        <p className="font-semibold text-success flex items-center gap-2">
-                          <CheckCircle2 className="size-4" />
-                          Coupon Applied
-                        </p>
-                        <p className="font-mono text-muted-foreground mt-0.5">{appliedCoupon.code}</p>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={handleRemoveCoupon} className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive">
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <FieldLabel htmlFor="coupon-code">Have a coupon?</FieldLabel>
-                      <div className="flex gap-2">
-                        <Input 
-                          id="coupon-code" 
-                          placeholder="Enter coupon code" 
-                          value={couponCodeInput}
-                          onChange={(e) => {
-                            setCouponCodeInput(e.target.value.toUpperCase());
-                            setCouponError('');
-                          }}
-                          className={couponError ? 'border-destructive' : ''}
-                        />
-                        <Button 
-                          variant="secondary" 
-                          onClick={handleApplyCoupon} 
-                          disabled={!couponCodeInput.trim() || couponLoading}
-                        >
-                          {couponLoading ? <Loader2 className="size-4 animate-spin" /> : 'Apply'}
-                        </Button>
-                      </div>
-                      {couponError && <p className="text-xs text-destructive">{couponError}</p>}
-                    </div>
-                  )}
-                </div>
-
-                <Separator className="mb-4" />
-
-                <div className={cn('mb-6 space-y-3', styles.totalsPanel)}>
-                  <div className={cn('flex justify-between text-sm text-muted-foreground', styles.totalRow)}>
-                    <span>Subtotal</span>
-                    <span className="font-semibold text-foreground">Rs. {subtotal.toLocaleString('en-PK')}</span>
-                  </div>
-                  {discountAmount > 0 && (
-                    <div className={cn('flex justify-between text-sm text-success', styles.totalRow)}>
-                      <span>Discount ({appliedCoupon?.code})</span>
-                      <span className="font-semibold">-Rs. {discountAmount.toLocaleString('en-PK')}</span>
-                    </div>
-                  )}
-                  <div className={cn('flex justify-between text-sm text-muted-foreground', styles.totalRow)}>
-                    <span>Shipping Estimate</span>
-                    <span className="font-semibold text-foreground">{isFreeShipping ? 'FREE' : `Rs. ${shipping.toLocaleString('en-PK')}`}</span>
-                  </div>
-                </div>
-
-                <Separator className="mb-4" />
-
-                <div className={cn('mb-8 flex items-center justify-between text-xl font-bold text-foreground', styles.totalRow)}>
-                  <span>Net Amount</span>
-                  <span>Rs. {total.toLocaleString('en-PK')}</span>
-                </div>
-
-                <Button
-                  className={cn('hidden w-full md:inline-flex', styles.ctaButton)}
-                  size="lg"
-                  onClick={() => document.getElementById('checkout-submit')?.click()}
-                  disabled={submitting || !isInitialized}
-                >
-                  {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-                  {submitting ? 'Placing Order...' : 'Place Order'}
-                </Button>
-
-                <div className="mt-4 grid gap-2 text-xs font-medium text-muted-foreground">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="flex items-center justify-center gap-1.5 rounded-full bg-background/70 px-3 py-2">
-                      <Truck className="size-3.5 text-primary" />
-                      Nationwide delivery
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 rounded-full bg-background/70 px-3 py-2">
-                      <Clock3 className="size-3.5 text-primary" />
-                      2 to 3 working days
-                    </div>
-                  </div>
-                </div>
-            </CardContent>
-          </Card>
+        {/* ── RIGHT PANEL (order summary — desktop only) ── */}
+        <div className={styles.rightPanel}>
+          <div className={cn(styles.rightPanelInner, styles.enter)} style={{ '--checkout-delay': '120ms' }}>
+            <OrderSummaryContent {...summaryProps} />
+          </div>
         </div>
       </div>
 
+      {/* ══════════════════════════════════════════════
+          MOBILE STICKY BOTTOM BAR
+      ══════════════════════════════════════════════ */}
       <div className={styles.mobileCheckoutBar}>
         <div className={styles.mobileCheckoutInner}>
           <div className={styles.mobileAmount}>
-            <span className={styles.mobileAmountLabel}>Net Amount</span>
+            <span className={styles.mobileAmountLabel}>Total</span>
             <strong>Rs. {total.toLocaleString('en-PK')}</strong>
           </div>
-          <Button
-            className={cn('min-w-[10rem]', styles.ctaButton)}
-            size="lg"
+          <button
+            id="place-order-mobile"
+            className={styles.mobilePlaceOrderBtn}
             onClick={() => document.getElementById('checkout-submit')?.click()}
             disabled={submitting || !isInitialized}
           >
-            {submitting ? <Loader2 className="animate-spin" data-icon="inline-start" /> : null}
-            {submitting ? 'Placing...' : 'Place Order'}
-          </Button>
+            {submitting && <Loader2 className="size-4 animate-spin" />}
+            {submitting ? 'Placing…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+          </button>
         </div>
       </div>
     </>
