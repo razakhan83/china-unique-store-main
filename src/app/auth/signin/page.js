@@ -1,19 +1,19 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Suspense } from 'react';
 
 import StoreLogo from '@/components/StoreLogo';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 import { getStoreSettings } from '@/lib/data';
-import AdminLoginFormClient from './AdminLoginFormClient';
+import SignInFormClient from './SignInFormClient';
 
 export const metadata = {
-  title: 'Admin Login',
+  title: 'Sign In',
 };
 
-export default async function AdminLoginPage() {
+export default async function SignInPage() {
   const settings = await getStoreSettings();
-  const guestModeEnabled = settings?.guestModeEnabled !== false;
 
   return (
     <div className="relative flex min-h-screen flex-col w-full items-center justify-center bg-muted/10 p-4 lg:p-8">
@@ -38,18 +38,18 @@ export default async function AdminLoginPage() {
                 />
             </div>
             
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">Store Management</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h2>
             <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-              Securely log in to manage your inventory, process orders, and control your storefront.
+              Sign in to access your orders, saved items, and a personalized shopping experience tailored just for you.
             </p>
             
-            <div className="mt-14 w-full max-w-[440px]">
+            <div className="mt-12 w-full max-w-[400px]">
               <Image 
-                src="/Work time-amico.svg" 
-                alt="Admin Workspace Illustration" 
-                width={440} 
-                height={440}
-                className="mx-auto w-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-700 hover:scale-105"
+                src="/Tablet login-bro.svg" 
+                alt="Login Illustration" 
+                width={400} 
+                height={400}
+                className="mx-auto w-full object-contain mix-blend-multiply dark:mix-blend-normal"
                 priority
               />
             </div>
@@ -70,22 +70,32 @@ export default async function AdminLoginPage() {
             </div>
 
             <div className="mb-10">
-              <div className="mb-6 flex size-16 items-center justify-center rounded-2xl border border-border bg-muted text-foreground">
-                <ShieldCheck className="size-8" />
-              </div>
-              <h1 className="text-4xl font-bold tracking-tight text-foreground lg:text-5xl">Admin Access</h1>
+              <h1 className="text-4xl font-bold tracking-tight text-foreground lg:text-5xl">Sign In</h1>
               <p className="mt-3 text-base text-muted-foreground">
-                Sign in with authorized credentials to continue.
+                Enter your email and password to securely access your account.
               </p>
             </div>
 
-            <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-muted/50" />}>
-              <AdminLoginFormClient guestModeEnabled={guestModeEnabled} />
+            <Suspense fallback={<div className="h-48 animate-pulse rounded-xl bg-muted/50" />}>
+              <SignInFormClient />
             </Suspense>
 
-            <p className="mt-10 text-center text-sm font-medium text-muted-foreground flex items-center justify-center gap-2">
-              <ShieldCheck className="size-4" />
-              Authorized personnel only
+            <div className="relative mb-8 mt-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                <span className="bg-background px-4 text-muted-foreground font-medium">Or continue with</span>
+              </div>
+            </div>
+
+            <GoogleSignInButton callbackUrl="/" className="h-14 text-base" />
+
+            <p className="mt-10 text-center text-sm text-muted-foreground leading-relaxed">
+              By clicking continue, you agree to our{' '}
+              <Link href="/privacy-policy" className="font-medium underline underline-offset-4 hover:text-foreground transition-colors">Terms of Service</Link>{' '}
+              and{' '}
+              <Link href="/privacy-policy" className="font-medium underline underline-offset-4 hover:text-foreground transition-colors">Privacy Policy</Link>.
             </p>
           </div>
         </div>

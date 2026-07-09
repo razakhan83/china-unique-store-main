@@ -61,7 +61,7 @@ export default async function OrdersPage() {
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button render={<Link href="/admin/login" />} nativeButton={false}>
+                <Button render={<Link href="/auth/signin" />} nativeButton={false}>
                   Sign In
                 </Button>
               </EmptyContent>
