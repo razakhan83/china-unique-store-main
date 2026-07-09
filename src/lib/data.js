@@ -1100,6 +1100,19 @@ export async function getStorefrontHomePage() {
           };
         }
 
+        if (section.type === 'VideoCatalog') {
+          const pcVideo = section.pcVideo?.url ? section.pcVideo : null;
+          const mobileVideo = section.mobileVideo?.url ? section.mobileVideo : null;
+
+          return pcVideo || mobileVideo
+            ? {
+                ...section,
+                pcVideo,
+                mobileVideo,
+              }
+            : null;
+        }
+
         return null;
       })
       .filter(Boolean);

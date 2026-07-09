@@ -28,6 +28,24 @@ const HomePageAssetSchema = new mongoose.Schema(
   },
 );
 
+const HomePageVideoSchema = new mongoose.Schema(
+  {
+    url: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    publicId: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const HomePageHeroSlideSchema = new mongoose.Schema(
   {
     desktopImage: {
@@ -154,6 +172,14 @@ const HomePageSectionSchema = new mongoose.Schema(
     },
     mobileImage: {
       type: HomePageBannerImageSchema,
+      default: undefined,
+    },
+    pcVideo: {
+      type: HomePageVideoSchema,
+      default: undefined,
+    },
+    mobileVideo: {
+      type: HomePageVideoSchema,
       default: undefined,
     },
   },

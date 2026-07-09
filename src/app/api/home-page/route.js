@@ -140,6 +140,23 @@ async function normalizeSectionForSave(section, index) {
     };
   }
 
+  if (type === 'VideoCatalog') {
+    const pcVideo = section?.pcVideo && typeof section.pcVideo === 'object' ? section.pcVideo : null;
+    const mobileVideo = section?.mobileVideo && typeof section.mobileVideo === 'object' ? section.mobileVideo : null;
+
+    return {
+      ...baseSection,
+      pcVideo: pcVideo ? {
+        url: cleanText(pcVideo.url),
+        publicId: cleanText(pcVideo.publicId || pcVideo.public_id),
+      } : null,
+      mobileVideo: mobileVideo ? {
+        url: cleanText(mobileVideo.url),
+        publicId: cleanText(mobileVideo.publicId || mobileVideo.public_id),
+      } : null,
+    };
+  }
+
   if (type === 'ScrollableBannerCarousel') {
     return {
       ...baseSection,

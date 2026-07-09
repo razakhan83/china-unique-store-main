@@ -4,6 +4,7 @@ import HomeCategoriesGrid from '@/components/home/HomeCategoriesGrid';
 import HomeProductBanner from '@/components/home/HomeProductBanner';
 import HomeProductGridSection from '@/components/home/HomeProductGridSection';
 import HomeScrollableBannerCarousel from '@/components/home/HomeScrollableBannerCarousel';
+import HomeVideoCatalog from '@/components/home/HomeVideoCatalog';
 
 export default function HomeSectionRenderer({ sections = [] }) {
   if (!sections.length) return null;
@@ -66,6 +67,17 @@ export default function HomeSectionRenderer({ sections = [] }) {
               title={section.title}
               products={section.products}
               viewAllHref={section.viewAllHref}
+            />
+          );
+        }
+
+        if (section.type === 'VideoCatalog') {
+          return (
+            <HomeVideoCatalog
+              key={section.id}
+              title={section.title}
+              pcVideo={section.pcVideo}
+              mobileVideo={section.mobileVideo}
             />
           );
         }

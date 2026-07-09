@@ -38,6 +38,7 @@ import {
   Upload,
   Sparkles,
   ChevronRight,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,7 +78,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
+import { uploadImageDataUrl, uploadVideoFile } from '@/lib/cloudinaryUpload';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { cn } from '@/lib/utils';
 
@@ -124,6 +125,11 @@ const SECTION_TEMPLATES = [
     collectionKey: 'top-rated',
     label: 'Top Rated Products',
     icon: Star,
+  },
+  {
+    type: 'VideoCatalog',
+    label: 'Video Catalog',
+    icon: Video,
   },
 ];
 
@@ -208,6 +214,18 @@ function createSection(template, index = 0) {
     };
   }
 
+  if (type === 'VideoCatalog') {
+    return {
+      id: createSectionId(type, index),
+      type,
+      title: 'Video Catalog',
+      description: '',
+      isEnabled: true,
+      pcVideo: null,
+      mobileVideo: null,
+    };
+  }
+
   return {
     id: createSectionId(type, index),
     type,
@@ -265,6 +283,8 @@ function normalizeSections(input = []) {
           mobileImage: slide.mobileImage || null,
         }))
       : [],
+    pcVideo: section.pcVideo || null,
+    mobileVideo: section.mobileVideo || null,
   }));
 }
 
@@ -313,6 +333,51 @@ function PreviewUploadTile({ label, description, asset, onChange, disabled, rati
   );
 }
 
+function PreviewVideoUploadTile({ label, description, asset, onChange, disabled, ratio = 'landscape' }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/75 p-2.5">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold text-foreground">{label}</p>
+          <p className="text-[11px] text-muted-foreground">{description}</p>
+        </div>
+        <label
+          className={cn(
+            'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted',
+            disabled && 'cursor-not-allowed opacity-60',
+          )}
+        >
+          <Upload className="size-3.5" />
+          Upload Video
+          <input type="file" accept="video/mp4,video/webm" className="hidden" disabled={disabled} onChange={onChange} />
+        </label>
+      </div>
+
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-xl border border-border bg-muted/25 flex items-center justify-center',
+          ratio === 'square' ? 'aspect-square' : 'aspect-[21/9]',
+        )}
+      >
+        {asset?.url ? (
+          <video
+            src={asset.url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
+            Upload a video for this slot.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SortableSectionCard({
   section,
   index,
@@ -325,6 +390,7 @@ function SortableSectionCard({
   onToggleEnabled,
   onSectionChange,
   onSectionImageUpload,
+  onSectionVideoUpload,
   onAddHeroSlide,
   onHeroSlideChange,
   onHeroSlideImageUpload,
@@ -725,6 +791,40 @@ function SortableSectionCard({
           </Field>
         )}
 
+        {section.type === 'VideoCatalog' && (
+          <div className="rounded-2xl border border-border bg-muted/20 p-3">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-foreground">Video Catalog</p>
+              <p className="text-xs text-muted-foreground">
+                Upload separate videos for PC and Mobile. They will be auto-optimized to lightweight format.
+              </p>
+            </div>
+
+            <div className="grid gap-3 xl:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-background/80 p-3">
+                <PreviewVideoUploadTile
+                  label="PC Video"
+                  description="Ultra-wide video for desktop screens (21:9)."
+                  asset={section.pcVideo}
+                  ratio="cinema"
+                  disabled={uploadingKey === `${section.id}:pcVideo`}
+                  onChange={(event) => onSectionVideoUpload(section.id, 'pcVideo', event)}
+                />
+              </div>
+              <div className="rounded-2xl border border-border bg-background/80 p-3">
+                <PreviewVideoUploadTile
+                  label="Mobile Video"
+                  description="Square video for small screens (1:1)."
+                  asset={section.mobileVideo}
+                  ratio="square"
+                  disabled={uploadingKey === `${section.id}:mobileVideo`}
+                  onChange={(event) => onSectionVideoUpload(section.id, 'mobileVideo', event)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {section.type === 'HeroSlider' && (
           <div className="rounded-2xl border border-border bg-muted/20 p-3">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -957,6 +1057,7 @@ function HomePageSectionsWorkspace({
   onToggleEnabled,
   onSectionChange,
   onSectionImageUpload,
+  onSectionVideoUpload,
   onAddHeroSlide,
   onHeroSlideChange,
   onHeroSlideImageUpload,
@@ -1014,6 +1115,7 @@ function HomePageSectionsWorkspace({
                 onToggleEnabled={onToggleEnabled}
                 onSectionChange={onSectionChange}
                 onSectionImageUpload={onSectionImageUpload}
+                onSectionVideoUpload={onSectionVideoUpload}
                 onAddHeroSlide={onAddHeroSlide}
                 onHeroSlideChange={onHeroSlideChange}
                 onHeroSlideImageUpload={onHeroSlideImageUpload}
@@ -1043,6 +1145,7 @@ function HomePageSectionsWorkspace({
               onToggleEnabled={() => {}}
               onSectionChange={() => {}}
               onSectionImageUpload={() => {}}
+              onSectionVideoUpload={() => {}}
               onAddHeroSlide={() => {}}
               onHeroSlideChange={() => {}}
               onHeroSlideImageUpload={() => {}}
@@ -1354,6 +1457,26 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
     }
   }
 
+  async function handleSectionVideoUpload(sectionId, fieldName, event) {
+    const file = Array.from(event.target.files || []).find((entry) => entry.type.startsWith('video/'));
+    event.target.value = '';
+    if (!file) return;
+
+    const uploadId = `${sectionId}:${fieldName}`;
+    setUploadingKey(uploadId);
+    setSaved(false);
+
+    try {
+      const ratioType = fieldName === 'pcVideo' ? 'pc' : fieldName === 'mobileVideo' ? 'mobile' : null;
+      const asset = await uploadVideoFile(file, 'kifayatly_homepage_videos', ratioType);
+      updateSection(sectionId, { [fieldName]: asset });
+    } catch (error) {
+      toast.error(error.message || 'Failed to upload video.');
+    } finally {
+      setUploadingKey('');
+    }
+  }
+
   async function handleHeroSlideImageUpload(sectionId, slideId, fieldName, event) {
     const file = Array.from(event.target.files || []).find((entry) => entry.type.startsWith('image/'));
     event.target.value = '';
@@ -1416,6 +1539,8 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
                   mobileImage: slide.mobileImage || null,
                 }))
               : [],
+            pcVideo: section.pcVideo || null,
+            mobileVideo: section.mobileVideo || null,
           })),
         }),
       });
@@ -1465,6 +1590,7 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
           onToggleEnabled={handleToggleEnabled}
           onSectionChange={updateSection}
           onSectionImageUpload={handleSectionImageUpload}
+          onSectionVideoUpload={handleSectionVideoUpload}
           onAddHeroSlide={handleAddHeroSlide}
           onHeroSlideChange={handleHeroSlideChange}
           onHeroSlideImageUpload={handleHeroSlideImageUpload}

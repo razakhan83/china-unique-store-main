@@ -13,6 +13,7 @@ export const HOME_PAGE_SECTION_TYPES = [
   'ScrollableBannerCarousel',
   'ProductGridByCategory',
   'ProductCollection',
+  'VideoCatalog',
 ];
 
 function cleanText(value = '') {
@@ -146,6 +147,23 @@ export function normalizeHomePageSection(section, index = 0) {
       ...baseSection,
       collectionKey,
       productLimit: Math.min(24, Math.max(1, safeNumber(section?.productLimit, 8))),
+    };
+  }
+
+  if (type === 'VideoCatalog') {
+    const pcVideo = section?.pcVideo && typeof section.pcVideo === 'object' ? section.pcVideo : null;
+    const mobileVideo = section?.mobileVideo && typeof section.mobileVideo === 'object' ? section.mobileVideo : null;
+    
+    return {
+      ...baseSection,
+      pcVideo: pcVideo ? {
+        url: cleanText(pcVideo.url),
+        publicId: cleanText(pcVideo.publicId || pcVideo.public_id),
+      } : null,
+      mobileVideo: mobileVideo ? {
+        url: cleanText(mobileVideo.url),
+        publicId: cleanText(mobileVideo.publicId || mobileVideo.public_id),
+      } : null,
     };
   }
 
