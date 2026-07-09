@@ -33,7 +33,15 @@ export const submitOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
 });
 
-export const draftOrderSchema = submitOrderSchema.extend({
+export const draftOrderSchema = z.object({
+  customerName: nameSchema.min(1, 'Name is required'),
+  customerPhone: phoneSchema.optional().or(z.literal('')),
+  customerAddress: addressSchema.optional().or(z.literal('')),
+  customerCity: citySchema.optional().or(z.literal('')),
+  landmark: landmarkSchema,
+  customerEmail: emailSchema,
+  notes: notesSchema,
+  items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   sourceTag: z.string().trim().max(50).optional().or(z.literal('')),
   itemType: z.string().trim().max(50).optional().or(z.literal('')),
   weight: z.coerce.number().nonnegative().optional(),
