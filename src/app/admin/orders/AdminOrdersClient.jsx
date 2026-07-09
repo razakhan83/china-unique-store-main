@@ -2316,7 +2316,7 @@ export default function AdminOrdersClient({
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      <Badge className={cn('text-[10px] font-medium border', getCityColorClass(order.customerCity))}>
+                      <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
                         {order.customerCity || 'N/A'}
                       </Badge>
                     </td>
@@ -2473,7 +2473,7 @@ export default function AdminOrdersClient({
                         ) : null}
                         {/* Mobile info strip — visible inline, no hunting in dropdown */}
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <Badge className={cn('text-[10px] font-medium border', getCityColorClass(order.customerCity))}>
+                          <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
                             {order.customerCity || 'N/A'}
                           </Badge>
                           <span className="text-[11px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</span>
@@ -3165,7 +3165,7 @@ export default function AdminOrdersClient({
                     <FieldLabel htmlFor="manualCodAmount" className="text-[12px]">COD Amount (Override)</FieldLabel>
                     <Input id="manualCodAmount" name="manualCodAmount" type="number" className="h-8 text-[13px]" placeholder="Blank = auto" defaultValue={editingOrder.manualCodAmount ?? ''} />
                     <FieldDescription className="text-[10px]">
-                      If blank, COD = {formatPrice(editinggetCodAmount(order) || 0)}
+                      If blank, COD = {formatPrice(getCodAmount(editingOrder) || 0)}
                     </FieldDescription>
                   </Field>
                 </FieldGroup>
