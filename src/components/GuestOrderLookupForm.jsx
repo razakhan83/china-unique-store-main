@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ClipboardList, Loader2, Phone, Search } from 'lucide-react';
+import { ClipboardList, Loader2, Phone, PackageSearch, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -12,7 +12,6 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
@@ -54,84 +53,92 @@ export default function GuestOrderLookupForm() {
   }
 
   return (
-    <Card className="border-border/70 shadow-sm">
-      <CardHeader>
-        <div className="flex items-start gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Search className="size-5" />
+    <Card className="border-border/60 shadow-lg bg-card/80 backdrop-blur-sm overflow-hidden">
+      <CardHeader className="pb-6 pt-8">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-inner">
+            <PackageSearch className="size-8" />
           </div>
-          <div className="space-y-1">
-            <CardTitle>Track your order</CardTitle>
-            <CardDescription>
-              Enter your order ID and checkout phone number to view your order safely without signing in.
+          <div className="space-y-2">
+            <CardTitle className="text-2xl font-bold tracking-tight">Track Your Order</CardTitle>
+            <CardDescription className="text-base px-2 sm:px-6 leading-relaxed">
+              Enter your order details below to check the current status and tracking information.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
+      <CardContent className="px-6 sm:px-10 pb-10">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <FieldGroup className="space-y-5">
             <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-id">Order ID</FieldLabel>
-              <FieldDescription>
-                Use the order ID you received after checkout, for example `ORD-ABC123`.
-              </FieldDescription>
-              <InputGroup className="min-h-11 rounded-xl">
-                <InputGroupAddon align="inline-start" className="pl-3 text-muted-foreground">
+              <FieldLabel htmlFor="guest-order-id" className="text-sm font-semibold text-foreground mb-1.5">Order ID</FieldLabel>
+              <InputGroup className="min-h-12 rounded-xl border-border/70 bg-background shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
+                <InputGroupAddon align="inline-start" className="pl-4 text-muted-foreground">
                   <InputGroupText>
-                    <ClipboardList />
+                    <ClipboardList className="size-5" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
                   id="guest-order-id"
                   type="text"
-                  placeholder="ORD-ABC123"
+                  placeholder="e.g. ORD-ABC123"
                   value={orderId}
                   onChange={(event) => setOrderId(event.target.value.toUpperCase())}
-                  className="h-11"
+                  className="h-12 px-3 text-base placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
                   disabled={isPending}
                   aria-invalid={Boolean(submitError)}
                   required
                 />
               </InputGroup>
+              <FieldDescription className="mt-2 text-xs text-muted-foreground/80">
+                Found in your confirmation email or SMS.
+              </FieldDescription>
             </Field>
 
             <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-phone">Phone number</FieldLabel>
-              <FieldDescription>
-                Enter the same number you used at checkout, for example `0300 1234567`.
-              </FieldDescription>
-              <InputGroup className="min-h-11 rounded-xl">
-                <InputGroupAddon align="inline-start" className="pl-3 text-muted-foreground">
+              <FieldLabel htmlFor="guest-order-phone" className="text-sm font-semibold text-foreground mb-1.5">Phone Number</FieldLabel>
+              <InputGroup className="min-h-12 rounded-xl border-border/70 bg-background shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
+                <InputGroupAddon align="inline-start" className="pl-4 text-muted-foreground">
                   <InputGroupText>
-                    <Phone />
+                    <Phone className="size-5" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
                   id="guest-order-phone"
                   type="tel"
-                  placeholder="0300 1234567"
+                  placeholder="e.g. 0300 1234567"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  className="h-11"
+                  className="h-12 px-3 text-base placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
                   disabled={isPending}
                   aria-invalid={Boolean(submitError)}
                   required
                 />
-                <InputGroupAddon align="inline-end" className="pr-2">
-                  <InputGroupButton
-                    type="submit"
-                    size="sm"
-                    className="h-8 min-w-[116px] rounded-lg px-4"
-                    disabled={isPending || !orderId.trim() || !phone.trim()}
-                  >
-                    {isPending ? <Loader2 className="animate-spin" /> : 'Track Order'}
-                  </InputGroupButton>
-                </InputGroupAddon>
               </InputGroup>
-              <FieldError>{submitError}</FieldError>
+              <FieldDescription className="mt-2 text-xs text-muted-foreground/80">
+                The exact phone number you provided during checkout.
+              </FieldDescription>
+              {submitError && <FieldError className="mt-2 text-sm font-medium">{submitError}</FieldError>}
             </Field>
           </FieldGroup>
+
+          <Button 
+            type="submit" 
+            className="w-full h-14 text-base font-semibold rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 mt-8"
+            disabled={isPending || !orderId.trim() || !phone.trim()}
+          >
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="size-5 animate-spin" />
+                Searching...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2 w-full">
+                Track Order
+                <ArrowRight className="size-5" />
+              </span>
+            )}
+          </Button>
         </form>
       </CardContent>
     </Card>
