@@ -209,7 +209,7 @@ export default function ProductsPageHeader({
       <div
         className={cn(
           "products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
-          isProductsBarHidden ? "-translate-y-full" : "translate-y-0"
+          isProductsBarHidden ? "-translate-y-24" : "translate-y-0"
         )}
       >
         <div className="relative mx-auto max-w-7xl px-4">
