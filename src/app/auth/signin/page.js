@@ -23,7 +23,7 @@ export default async function SignInPage() {
         <div className="absolute h-full w-full bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_50%,transparent_100%)]"></div>
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full h-full max-h-[100dvh] sm:max-h-[700px] flex-col overflow-hidden sm:rounded-2xl border-x-0 border-y sm:border border-border bg-background lg:flex-row lg:max-w-[1200px] lg:h-[700px] lg:rounded-[2.5rem]">
+      <div className="relative z-10 mx-auto flex w-full h-full max-h-[100dvh] sm:max-h-[700px] flex-col overflow-hidden sm:rounded-2xl border-x-0 border-y sm:border border-border bg-background lg:flex-row lg:max-w-[1200px] lg:h-[700px] lg:rounded-2xl">
         
         {/* Mobile: Top / PC: Left - SVG Image */}
         <div className="relative flex w-full shrink-0 flex-col items-center justify-center bg-primary/5 p-2 pt-14 sm:p-6 lg:w-1/2 lg:p-16">
