@@ -641,6 +641,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           couponCode: appliedCoupon?.code,
           items: cart.map((item) => ({
             productId: item.id || item._id || item.slug,
+            slug: item.slug,
+            packLabel: item.packLabel || '',
             name: item.Name || item.name,
             price: item.discountedPrice != null ? item.discountedPrice : item.Price || item.price,
             quantity: item.quantity,

@@ -19,7 +19,14 @@ function toSafeNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function resolveCheckoutUnitPrice(product) {
+function resolveCheckoutUnitPrice(product, packLabel = '') {
+  if (packLabel && Array.isArray(product.packOptions)) {
+    const pack = product.packOptions.find(p => p.label === packLabel);
+    if (pack) {
+      return Math.max(0, toSafeNumber(pack.price));
+    }
+  }
+
   if (product.isDiscounted === true && product.discountedPrice != null) {
     return Math.max(0, toSafeNumber(product.discountedPrice));
   }
@@ -45,8 +52,9 @@ export async function buildOrderItemsWithSourcing(items = []) {
 
   const requestedItems = (Array.isArray(items) ? items : [])
     .map((item) => ({
-      productId: toCleanId(item.productId || item.id || item.slug),
+      productId: toCleanId(item.slug || item.productId || item._id || item.id),
       quantity: Math.max(1, toSafeNumber(item.quantity, 1)),
+      packLabel: toCleanString(item.packLabel || ''),
     }))
     .filter((item) => item.productId);
 
@@ -62,7 +70,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
       ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
     ],
   })
-    .select('slug Name Price discountedPrice isDiscounted vendors Images')
+    .select('slug Name Price discountedPrice isDiscounted vendors Images packOptions')
     .lean();
   const productMap = buildProductLookupMap(products);
 
@@ -117,11 +125,17 @@ export async function buildOrderItemsWithSourcing(items = []) {
   return requestedItems.map((item) => {
     const product = productMap.get(item.productId);
     const images = normalizeProductImages(product.Images);
+    
+    let finalName = toCleanString(product.Name);
+    if (item.packLabel && !finalName.includes(`(${item.packLabel})`)) {
+      finalName = `${finalName} (${item.packLabel})`;
+    }
 
     return {
       productId: item.productId,
-      name: toCleanString(product.Name),
-      price: resolveCheckoutUnitPrice(product),
+      name: finalName,
+      price: resolveCheckoutUnitPrice(product, item.packLabel),
+      packLabel: item.packLabel,
       quantity: item.quantity,
       image: toCleanString(images[0]?.url),
       sourcingVendors: sourcingMap.get(item.productId) || [],
