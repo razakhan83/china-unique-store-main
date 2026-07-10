@@ -39,7 +39,7 @@ export default function ProductGallery({ images }) {
       ssr: Array.from({ length: normalizedImages.length }, () => 31.25),
       breakpoints: {
         '(min-width: 768px)': {
-          ssr: Array.from({ length: normalizedImages.length }, () => 25),
+          ssr: Array.from({ length: normalizedImages.length }, () => 33.33),
         },
       },
     }),
@@ -96,7 +96,7 @@ export default function ProductGallery({ images }) {
                     alt={`Product Image ${index + 1}`}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
-                    className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                    className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
                     {...getBlurPlaceholderProps(image.blurDataURL)}
                     preload={index === 0}
                   />
@@ -117,17 +117,17 @@ export default function ProductGallery({ images }) {
             {normalizedImages.map((image, index) => (
               <CarouselItem
                 key={index}
-                className="basis-[31.25%] pl-3 md:basis-[25%] md:pl-4"
+                className="basis-[31.25%] pl-3 md:basis-[33.33%] md:pl-4"
               >
                 <button
                   type="button"
                   onClick={() => handleThumbnailClick(index)}
                   aria-label={`Show product image ${index + 1}`}
                   aria-pressed={index === selectedIndex}
-                  className={`relative block aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg border transition-all duration-300 ease-out ${
+                  className={`relative block aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-300 ease-out ${
                     index === selectedIndex
-                      ? 'border-primary shadow-sm opacity-100'
-                      : 'border-border opacity-60 hover:scale-[1.02] hover:opacity-100'
+                      ? 'border-primary shadow-sm shadow-primary/30 opacity-100'
+                      : 'border-transparent opacity-60 hover:scale-[1.02] hover:opacity-100'
                   }`}
                 >
                   <div className="absolute inset-0 bg-muted" />

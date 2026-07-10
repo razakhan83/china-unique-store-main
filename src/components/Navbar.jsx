@@ -106,7 +106,7 @@ function AnnouncementMarquee({ items = [] }) {
   const totalCharacters = items.reduce((count, item) => count + item.length, 0);
   const durationSeconds = Math.min(120, Math.max(56, totalCharacters * 0.7));
 
-  const marqueeItems = Array.from({ length: 6 }, (_, repeatIndex) =>
+  const marqueeItems = Array.from({ length: 4 }, (_, repeatIndex) =>
     items.map((text) => ({
       id: `${repeatIndex}-${text}`,
       text,
@@ -355,7 +355,7 @@ function NavbarContent({
         isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
       )}>
       {showAnnouncementBar ? (
-        <div className="relative flex min-h-9 items-center bg-primary py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
+        <div className="relative flex min-h-8 md:min-h-9 items-center bg-primary py-1.5 md:py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
           <AnnouncementMarquee items={announcementItems} />
         </div>
       ) : null}
@@ -452,7 +452,7 @@ function NavbarContent({
               </DropdownMenu>
             </nav>
 
-            <div className="ml-auto flex items-center gap-2 self-center">
+            <div className="ml-auto flex items-center gap-2 md:gap-4 self-center">
               <Button
                 variant="ghost"
                 size="icon-lg"

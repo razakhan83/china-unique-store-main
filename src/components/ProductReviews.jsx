@@ -9,8 +9,8 @@ export default async function ProductReviews({ productId, productName }) {
   const reviews = await getApprovedReviews(productId);
   if (reviews.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <p className="mb-4 text-sm text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+      <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-primary/5 rounded-2xl border border-primary/10">
+        <p className="mb-4 text-sm font-medium text-foreground">No reviews yet — be the first to review!</p>
         <ProductReviewsClient productId={productId} productName={productName} reviewCount={0} />
       </div>
     );

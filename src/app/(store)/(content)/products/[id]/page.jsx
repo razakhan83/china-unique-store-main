@@ -1,5 +1,5 @@
 import { cache, Suspense } from 'react';
-import { BadgeCheck, PackageCheck, Truck } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
@@ -318,6 +318,7 @@ async function ProductHeroSection({ paramsPromise }) {
 
   const primaryCategory = getProductCategories(product)[0];
   const categoryLabel = primaryCategory?.name || '';
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
   const colors = getCategoryColor(categoryLabel);
   const productJsonLd = getProductJsonLd({ product });
   const price = getSellingPrice(product);
@@ -375,11 +376,25 @@ async function ProductHeroSection({ paramsPromise }) {
               </div>
 
               <div className="flex items-start justify-between gap-4">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl leading-tight">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl leading-tight sm:leading-tight md:leading-tight">
                   {product.Name}
                 </h1>
                 <ProductSocialActions product={product} className="md:hidden shrink-0 mt-1" />
               </div>
+
+              <a 
+                href="#product-reviews"
+                className="flex items-center gap-2 group w-fit -mt-1"
+              >
+                 <div className="flex items-center text-amber-400">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
+                    ))}
+                 </div>
+                 <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                   ({reviewSummary.reviewCount} reviews)
+                 </span>
+              </a>
 
               <div className="hidden">
                 {/* Static price block moved to ProductActions for dynamic pack options */}
@@ -424,11 +439,13 @@ async function ProductTabsWrapper({ paramsPromise }) {
     'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
 
   return (
-    <ProductDetailsTabs
-      reviewCount={reviewSummary.reviewCount}
-      descriptionContent={<ProductDescription html={descriptionHtml} />}
-      reviewsContent={<ProductReviews productId={product._id} productName={product.Name} />}
-    />
+    <div id="product-reviews" className="scroll-mt-24 md:scroll-mt-32">
+      <ProductDetailsTabs
+        reviewCount={reviewSummary.reviewCount}
+        descriptionContent={<ProductDescription html={descriptionHtml} />}
+        reviewsContent={<ProductReviews productId={product._id} productName={product.Name} />}
+      />
+    </div>
   );
 }
 
