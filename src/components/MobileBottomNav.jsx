@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart, LogOut, Home, Search, Settings, ShoppingBag, User, UserPlus, X } from 'lucide-react';
+import { Heart, LogOut, Home, Search, Settings, ShoppingBag, ShoppingCart, Package, User, UserPlus, X } from 'lucide-react';
 
 import { useCartActions } from '@/context/CartContext';
 
@@ -38,32 +38,24 @@ function MobileNavButton({
   iconSwap,
 }) {
   const content = (
-    <div className="relative flex flex-col items-center gap-1.5">
-
-      <div
-        className={cn(
-          'flex size-[2.4rem] items-center justify-center rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
-          active ? 'bg-primary/10' : 'bg-transparent'
-        )}
-      >
-        <span
-          className={cn(
-            'transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
-            active ? 'scale-110' : 'scale-100'
-          )}
-        >
-          {iconSwap ? (
-            iconSwap
-          ) : (
-            <Icon
-              className={cn('size-[1.3rem] transition-all duration-300', active ? 'stroke-[2.5]' : 'stroke-[1.75]')}
-            />
-          )}
-        </span>
-      </div>
+    <div className="relative flex flex-col items-center gap-1">
       <span
         className={cn(
-          'text-[0.65rem] font-bold transition-colors duration-200',
+          'transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] flex items-center justify-center',
+          active ? 'scale-110 text-primary' : 'scale-100 text-muted-foreground'
+        )}
+      >
+        {iconSwap ? (
+          iconSwap
+        ) : (
+          <Icon
+            className={cn('size-6 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.25]')}
+          />
+        )}
+      </span>
+      <span
+        className={cn(
+          'text-[11px] font-bold transition-colors duration-200',
           active ? 'text-primary' : 'text-muted-foreground'
         )}
       >
@@ -170,11 +162,11 @@ export default function MobileBottomNav({
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[200] md:hidden">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
         <div className="pointer-events-auto relative z-[1] mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
-            className="grid grid-cols-4 items-stretch gap-1 overflow-visible border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.7rem)] pt-1 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
+            className="grid grid-cols-4 items-stretch gap-1 overflow-visible border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
           >
             <MobileNavButton
               icon={Home}
@@ -202,7 +194,7 @@ export default function MobileBottomNav({
               iconSwap={isSearchOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
             />
             <MobileNavButton
-              icon={ShoppingBag}
+              icon={Package}
               label="My Orders"
               onClick={() => {
                 closeMobilePanels();
@@ -266,7 +258,7 @@ export default function MobileBottomNav({
                         onClick={() => onNavigate('/settings')}
                       />
                       <AccountMenuButton
-                        icon={ShoppingBag}
+                        icon={Package}
                         label="My Orders"
                         onClick={() => onNavigate('/orders')}
                       />

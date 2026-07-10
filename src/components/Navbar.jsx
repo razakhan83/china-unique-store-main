@@ -8,8 +8,10 @@ import {
   ChevronDown,
   LayoutGrid,
   Menu,
+  Phone,
   Search,
   ShoppingBag,
+  ShoppingCart,
   Sparkles,
   Store,
   Tag,
@@ -35,7 +37,14 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
@@ -344,7 +353,7 @@ function NavbarContent({
   const mobileMenuButtonClass =
     'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground data-[active=true]:text-sidebar-primary-foreground active:scale-[0.99]';
   const navActionButtonClass =
-    'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-[transform,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:border-primary/18 hover:bg-background hover:text-foreground active:scale-[0.96]';
+    'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[2px] hover:border-primary/30 hover:bg-background hover:text-primary hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] active:scale-[0.96] active:translate-y-0';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
@@ -458,6 +467,7 @@ function NavbarContent({
                 size="icon-lg"
                 onClick={handleSearchToggle}
                 aria-label="Toggle search"
+                title="Search"
                 aria-expanded={isSearchOpen}
                 className={cn(
                   `nav-search-toggle hidden overflow-hidden md:inline-flex ${navActionButtonClass}`,
@@ -467,8 +477,8 @@ function NavbarContent({
                 )}
               >
                 <span className="relative flex size-5 items-center justify-center">
-                  <Search className={cn('navbar-toggle-icon navbar-toggle-icon-search', isSearchOpen && 'is-hidden')} />
-                  <X className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
+                  <Search strokeWidth={1.5} className={cn('navbar-toggle-icon navbar-toggle-icon-search', isSearchOpen && 'is-hidden')} />
+                  <X strokeWidth={1.5} className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
                 </span>
               </Button>
               <MyOrdersButton
@@ -486,9 +496,10 @@ function NavbarContent({
                 onClick={openCart}
                 className={`nav-cart-button overflow-visible ${navActionButtonClass}`}
                 aria-label="Open cart"
+                title="Cart"
               >
                 <span className="relative flex size-5 items-center justify-center">
-                  <ShoppingBag className="size-[1.05rem]" />
+                  <ShoppingBag strokeWidth={1.5} className="size-[1.2rem]" />
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (
@@ -529,118 +540,152 @@ function NavbarContent({
         </div>
       </div>
 
-      {isSidebarOpen ? (
-        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetContent
             side="left"
             showCloseButton={false}
-            className="w-screen min-w-0 max-w-none overflow-hidden border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-none md:w-[min(76vw,22rem)] md:min-w-[16rem] md:max-w-[22rem]"
+            className="w-[85vw] max-w-sm border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:w-[22rem] md:w-[min(76vw,22rem)] flex flex-col"
           >
-            <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-0">
-              <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
-                <StoreLogo
-                  href="/"
-                  storeName={storeName}
-                  lightLogoUrl={lightLogoUrl}
-                  darkLogoUrl={darkLogoUrl}
-                  logoScalePercent={logoScalePercent}
-                  variant="light-surface"
-                  compact
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="max-w-full pl-3"
-                />
-              </SidebarHeader>
+            <SheetClose 
+              onClick={() => setIsSidebarOpen(false)}
+              className="absolute -right-12 top-4 rounded-full bg-black/20 p-2 opacity-70 ring-offset-background transition-all hover:bg-black/40 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            >
+              <X className="h-6 w-6 text-white" />
+              <span className="sr-only">Close</span>
+            </SheetClose>
 
-              <SidebarContent>
-                <ScrollArea className="min-h-0 flex-1 px-3 py-3">
-                  <div className="flex min-h-full flex-col gap-3">
-                    <SidebarGroup className="gap-2 p-0">
-                      <SidebarGroupLabel>Main</SidebarGroupLabel>
-                      <SidebarGroupContent>
-                        <SidebarMenu>
-                          {mobileItems.map(({ href, label, icon: Icon }) => (
-                            <SidebarMenuItem key={href}>
-                              <SidebarMenuButton
-                                isActive={pathname === href}
-                                className={mobileMenuButtonClass}
-                                render={<Link href={href} onClick={() => setIsSidebarOpen(false)} />}
-                              >
-                                <Icon />
-                                <span>{label}</span>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
-                          ))}
-                        </SidebarMenu>
-                      </SidebarGroupContent>
-                    </SidebarGroup>
+            <Tabs defaultValue="menu" className="flex h-full w-full flex-col">
+              <div className="flex w-full items-center p-4 pb-2">
+                <TabsList className="grid h-10 w-full grid-cols-2">
+                  <TabsTrigger value="menu" className="text-sm font-medium">Menu</TabsTrigger>
+                  <TabsTrigger value="categories" className="text-sm font-medium">Categories</TabsTrigger>
+                </TabsList>
+              </div>
 
-                    <SidebarGroup className="gap-2 p-0">
-                      <SidebarGroupLabel>Categories</SidebarGroupLabel>
-                      <SidebarGroupContent>
-                    <Accordion className="w-full">
-                          <AccordionItem value="categories" className="border-none">
-                            <AccordionTrigger className="rounded-xl px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground hover:no-underline [&[aria-expanded=true]]:bg-sidebar-accent/35">
-                              <div className="flex items-center gap-3">
-                                <LayoutGrid className="size-4" />
-                                <span>Shop by Category</span>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-0 pt-2 pb-0">
-                              <SidebarMenu>
-                                <SidebarMenuItem>
-                                  <SidebarMenuButton
-                                    isActive={activeCategory === 'new-arrivals'}
-                                    onClick={() => handleCategoryClick('new-arrivals')}
-                                    className={mobileMenuButtonClass}
-                                  >
-                                    <Sparkles />
-                                    <span>New Arrivals</span>
-                                  </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                  <SidebarMenuButton
-                                    isActive={activeCategory === 'special-offers'}
-                                    onClick={() => handleCategoryClick('special-offers')}
-                                    className={mobileMenuButtonClass}
-                                  >
-                                    <Tag />
-                                    <span>Special Offers</span>
-                                  </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                                  <SidebarMenuItem key={category.id}>
-                                    <SidebarMenuButton
-                                      isActive={activeCategory === category.id}
-                                      onClick={() => handleCategoryClick(category.id)}
-                                      className={mobileMenuButtonClass}
-                                    >
-                                      <Tag />
-                                      <span>{category.label}</span>
-                                    </SidebarMenuButton>
-                                  </SidebarMenuItem>
-                                ))}
-                              </SidebarMenu>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </SidebarGroupContent>
-                    </SidebarGroup>
-
-                  </div>
+              <TabsContent value="menu" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-left-4 duration-300 ease-out">
+                <ScrollArea className="flex-1">
+                  <Sidebar className="bg-transparent border-0 shadow-none w-full">
+                    <SidebarContent className="px-0 py-2">
+                      <SidebarMenu className="px-4 gap-1">
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname === '/'}
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                            render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
+                          >
+                            <Store className="size-4 text-foreground" />
+                            <span className="text-[14px] tracking-tight">Home</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname === '/products'}
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/products' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                            render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
+                          >
+                            <LayoutGrid className="size-4 text-foreground" />
+                            <span className="text-[14px] tracking-tight">All Products</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem className="flex items-center">
+                          <MyOrdersButton
+                            isMobile
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/orders') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                          />
+                        </SidebarMenuItem>
+                        <SidebarMenuItem className="flex items-center">
+                          <MyWishlistButton
+                            isMobile
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/wishlist') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                          />
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={pathname === '/contact'}
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/contact' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                            render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
+                          >
+                            <Phone className="size-4 text-foreground" />
+                            <span className="text-[14px] tracking-tight">Contact Us</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarContent>
+                  </Sidebar>
                 </ScrollArea>
-              </SidebarContent>
 
-              <SidebarFooter className="border-t border-sidebar-border px-3 pb-3 pt-3">
-                <NavbarSidebarFooter
-                  mobileMenuButtonClass={mobileMenuButtonClass}
-                  onCloseSidebar={() => setIsSidebarOpen(false)}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                />
-              </SidebarFooter>
-            </Sidebar>
+                <div className="mt-auto flex flex-col gap-4 border-t border-border p-4 bg-background">
+                  <div className="flex justify-center gap-6 py-2">
+                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                      <span className="sr-only">Facebook</span>
+                    </Link>
+                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M3 21l1.65-6.03A9.74 9.74 0 0 1 3 10.5C3 5.25 7.25 1 12.5 1S22 5.25 22 10.5 17.75 20 12.5 20c-1.74 0-3.37-.47-4.75-1.27L3 21z"></path><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path></svg>
+                      <span className="sr-only">WhatsApp</span>
+                    </Link>
+                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                      <span className="sr-only">Instagram</span>
+                    </Link>
+                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5h3a5 5 0 0 1-8 0"></path></svg>
+                      <span className="sr-only">TikTok</span>
+                    </Link>
+                  </div>
+                  <NavbarSidebarFooter
+                    mobileMenuButtonClass={mobileMenuButtonClass}
+                    onCloseSidebar={() => setIsSidebarOpen(false)}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="categories" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-right-4 duration-300 ease-out">
+                <ScrollArea className="flex-1">
+                  <Sidebar className="bg-transparent border-0 shadow-none w-full">
+                    <SidebarContent className="px-0 py-0">
+                      <SidebarMenu className="px-4 gap-1">
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={activeCategory === 'new-arrivals'}
+                            onClick={() => handleCategoryClick('new-arrivals')}
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'new-arrivals' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                          >
+                            <Sparkles className="size-4 text-foreground" />
+                            <span className="text-[14px] tracking-tight">New Arrivals</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton
+                            isActive={activeCategory === 'special-offers'}
+                            onClick={() => handleCategoryClick('special-offers')}
+                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'special-offers' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                          >
+                            <Tag className="size-4 text-foreground" />
+                            <span className="text-[14px] tracking-tight">Special Offers</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                          <SidebarMenuItem key={category.id}>
+                            <SidebarMenuButton
+                              isActive={activeCategory === category.id}
+                              onClick={() => handleCategoryClick(category.id)}
+                              className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === category.id ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                            >
+                              <Tag className="size-4 text-foreground" />
+                              <span className="text-[14px] tracking-tight">{category.label}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarContent>
+                  </Sidebar>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </SheetContent>
         </Sheet>
-      ) : null}
 
       </div>
 

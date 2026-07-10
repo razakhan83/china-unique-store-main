@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { Heart, LayoutGrid, LogOut, Settings, ShoppingBag, User } from 'lucide-react';
+import { Heart, LayoutGrid, LogOut, Settings, ShoppingBag, User, Package } from 'lucide-react';
 
 import AuthModal from '@/components/AuthModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -51,9 +51,10 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
           size="icon-lg"
           onClick={() => setIsAuthModalOpen(true)}
           className={`nav-profile-button overflow-hidden ${navActionButtonClass}`}
+          title="Account"
         >
           <span className="relative flex size-5 items-center justify-center">
-            <User className="size-5" />
+            <User strokeWidth={1.5} className="size-[1.2rem]" />
           </span>
         </Button>
         {isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
@@ -64,7 +65,7 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
   return (
     <div className="hidden md:block">
       <DropdownMenu>
-        <DropdownMenuTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
+        <DropdownMenuTrigger title="Account" className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
 
             <Avatar className="size-9">
               {!isAvatarLoaded ? <Skeleton className="absolute inset-0 rounded-full" /> : null}
@@ -89,7 +90,7 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/orders')}>
-              <ShoppingBag className="mr-2 h-4 w-4" />
+              <Package className="mr-2 h-4 w-4" />
               <span>My Orders</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/wishlist')}>

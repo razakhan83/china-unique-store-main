@@ -20,7 +20,7 @@ export default function NavbarSidebarFooter({ mobileMenuButtonClass = '', onClos
           onCloseSidebar();
           onOpenAuth();
         }}
-        className="min-h-10 w-full rounded-xl py-2.5 shadow-none"
+        className="h-9 min-h-9 w-full rounded-lg px-3 py-1.5 shadow-none text-[14px]"
       />
     );
   }
@@ -31,14 +31,14 @@ export default function NavbarSidebarFooter({ mobileMenuButtonClass = '', onClos
         <SidebarMenuItem>
           <Button
             type="button"
-            variant="destructive"
+            variant="ghost"
             onClick={() => {
               onCloseSidebar();
               signOut();
             }}
-            className="min-h-10 w-full justify-start rounded-xl px-3.5 py-2.5 text-sm font-medium active:scale-[0.96]"
+            className="h-9 min-h-9 w-full justify-start rounded-lg px-3 py-1.5 text-[14px] font-medium transition-all duration-300 active:scale-[0.98] !bg-red-400 !text-white hover:!bg-red-500 shadow-none border-0"
           >
-            <LogOut />
+            <LogOut className="mr-3 size-4" />
             Logout
           </Button>
         </SidebarMenuItem>

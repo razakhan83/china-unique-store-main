@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardList } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { useCartActions } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ export default function MyOrdersButton({ className, isMobile = false, iconOnly =
           className
         )}
       >
-        <ClipboardList className="size-4" />
+        <Package className="size-4" />
         My Orders
       </Button>
     );
@@ -47,9 +47,10 @@ export default function MyOrdersButton({ className, isMobile = false, iconOnly =
         size="icon-lg"
         onClick={handleClick}
         aria-label="Open my orders"
+        title="My Orders"
         className={cn(className)}
       >
-        <ClipboardList className="size-5" />
+        <Package className="size-5" strokeWidth={1.5} />
       </Button>
     );
   }
@@ -60,7 +61,7 @@ export default function MyOrdersButton({ className, isMobile = false, iconOnly =
       onClick={handleClick}
       className={cn('text-muted-foreground hover:bg-muted hover:text-foreground gap-2', className)}
     >
-      <ClipboardList className="size-4" />
+      <Package className="size-4" />
       My Orders
     </Button>
   );

@@ -50,9 +50,10 @@ export default function MyWishlistButton({ className, isMobile = false, iconOnly
         size="icon-lg"
         onClick={handleClick}
         aria-label="Open wishlist"
+        title="Wishlist"
         className={cn('relative overflow-visible', className)}
       >
-        <Heart className="size-5" />
+        <Heart className="size-5" strokeWidth={1.5} />
         {!isLoading && wishlistCount > 0 ? (
           <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
             {wishlistCount > 99 ? '99+' : wishlistCount}
