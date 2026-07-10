@@ -89,10 +89,10 @@ export default function AnimatedStats() {
       <div className="relative z-10 container mx-auto max-w-7xl px-4">
         <div className="mb-14 md:mb-20 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
-            Why Choose China Unique?
+            Why Choose China Unique Store?
           </h2>
           <p className="mt-6 text-muted-foreground text-sm md:text-base max-w-3xl mx-auto leading-relaxed">
-            We provide premium kitchenware and lifestyle products designed to elevate your home. From unbeatable quality and seamless shopping experiences to dedicated customer support, we constantly strive to deliver excellence every step of the way.
+            We bring the best of imported Chinese innovation directly to your doorstep. Specializing in premium kitchenware, the latest tech gadgets, and a wide variety of lifestyle essentials, we guarantee top-notch quality in everything we sell. Experience unbeatable value, a seamless shopping experience, and dedicated customer support with every order.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-4 md:gap-8">

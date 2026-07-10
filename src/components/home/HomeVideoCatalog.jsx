@@ -12,12 +12,6 @@ export default function HomeVideoCatalog({ title, pcVideo, mobileVideo }) {
 
   return (
     <section className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
-      {title && (
-        <h2 className="mb-6 text-2xl font-bold tracking-tight text-foreground md:text-3xl lg:mb-8">
-          {title}
-        </h2>
-      )}
-
       <div className="relative overflow-hidden rounded-2xl bg-muted/20">
         {/* Desktop Video */}
         {pcVideo?.url && (
