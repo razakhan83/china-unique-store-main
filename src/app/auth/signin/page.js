@@ -30,9 +30,9 @@ export default async function SignInPage() {
           
           {/* Back Button Inside Card */}
           <div className="absolute top-4 left-4 lg:top-8 lg:left-8 z-20">
-            <Link href="/" className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground transition-all duration-300 bg-background px-4 py-2 rounded-xl border border-border shadow hover:bg-muted hover:shadow-md">
-              <ArrowLeft className="size-4 sm:size-5 transition-transform duration-300 group-hover:-translate-x-1" />
-              Exit to Store
+            <Link href="/" className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              <ArrowLeft className="size-4 transition-transform duration-300 group-hover:-translate-x-1" />
+              Back
             </Link>
           </div>
 

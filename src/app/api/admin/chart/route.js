@@ -140,6 +140,7 @@ export async function GET(req) {
 
     return NextResponse.json({ success: true, data: finalData });
   } catch (error) {
+    console.error('Chart API Error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

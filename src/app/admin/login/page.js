@@ -30,9 +30,9 @@ export default async function AdminLoginPage() {
           
           {/* Back Button Inside Card */}
           <div className="absolute top-4 left-4 lg:top-8 lg:left-8 z-20">
-            <Link href="/" className="group inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground transition-all duration-300 bg-background px-4 py-2 rounded-xl border border-border shadow hover:bg-muted hover:shadow-md">
-              <ArrowLeft className="size-4 sm:size-5 transition-transform duration-300 group-hover:-translate-x-1" />
-              Exit to Store
+            <Link href="/" className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              <ArrowLeft className="size-4 transition-transform duration-300 group-hover:-translate-x-1" />
+              Back
             </Link>
           </div>
 
@@ -79,9 +79,6 @@ export default async function AdminLoginPage() {
         <div className="flex w-full flex-1 flex-col justify-start pt-6 sm:pt-8 sm:justify-center overflow-hidden p-4 sm:p-8 lg:w-1/2 lg:p-20">
           <div className="mx-auto w-full max-w-md">
             <div className="mb-2 sm:mb-8 flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
-              <div className="mb-1.5 sm:mb-4 flex size-8 sm:size-12 lg:size-16 items-center justify-center rounded-xl sm:rounded-2xl border border-border bg-muted text-foreground">
-                <ShieldCheck className="size-4 sm:size-6 lg:size-8" />
-              </div>
               <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl xl:text-5xl">Admin Access</h1>
               <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-sm lg:mt-3 lg:text-base">
                 Sign in with authorized credentials.
@@ -98,8 +95,7 @@ export default async function AdminLoginPage() {
               <AdminLoginFormClient guestModeEnabled={guestModeEnabled} />
             </Suspense>
 
-            <p className="mt-3 sm:mt-8 lg:mt-10 flex items-center justify-center gap-1.5 sm:gap-2 text-center text-[9px] sm:text-[11px] font-medium text-muted-foreground lg:text-sm">
-              <ShieldCheck className="size-3 sm:size-3.5 lg:size-4" />
+            <p className="mt-3 sm:mt-8 lg:mt-10 text-center text-[9px] sm:text-[11px] font-medium text-muted-foreground lg:text-sm">
               Authorized personnel only
             </p>
           </div>
