@@ -56,7 +56,31 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
         <AnimatedStats />
 
-        <footer className="mt-auto border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] md:pb-6">
+        {/* ── Wholesale CTA ── */}
+        <div className="mt-auto border-t border-border bg-primary/5 px-4 py-14 sm:py-16 text-center">
+          <div className="mx-auto max-w-3xl">
+            <h3 className="mb-3 text-lg font-bold text-primary sm:text-xl">
+              Are You a Wholesaler or Retailer?
+            </h3>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Wholesale & Bulk Orders
+            </h2>
+            <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Looking to stock premium imported gadgets, kitchenware, and lifestyle products? We supply top-notch quality items at competitive wholesale rates. Connect with us directly for bulk orders and exclusive B2B pricing.
+            </p>
+            <a
+              href={whatsappLink || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm ring-1 ring-inset ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#22c15c] hover:shadow-[0_10px_20px_-5px_rgba(37,211,102,0.6)] active:scale-[0.97] active:bg-[#1da851] active:shadow-sm"
+            >
+              <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-300 group-hover:scale-110" />
+              Chat on WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <footer className="border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] md:pb-6">
           <div className="container mx-auto max-w-7xl px-4">
 
             {/* ── Trust Badge Strip ── */}
