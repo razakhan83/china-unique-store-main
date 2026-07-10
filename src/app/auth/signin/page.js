@@ -26,7 +26,7 @@ export default async function SignInPage() {
       <div className="relative z-10 mx-auto flex w-full h-full max-h-[100dvh] sm:max-h-[700px] flex-col overflow-hidden sm:rounded-2xl border-x-0 border-y sm:border border-border bg-background lg:flex-row lg:max-w-[1200px] lg:h-[700px] lg:rounded-2xl">
         
         {/* Mobile: Top / PC: Left - SVG Image */}
-        <div className="relative flex w-full shrink-0 flex-col items-center justify-center bg-primary/5 p-2 pt-14 sm:p-6 lg:w-1/2 lg:p-16">
+        <div className="relative flex w-full shrink-0 flex-col items-center justify-center bg-primary/5 p-4 sm:p-6 lg:w-1/2 lg:p-16">
           
           {/* Back Button Inside Card */}
           <div className="absolute top-4 left-4 lg:top-8 lg:left-8 z-20">
@@ -57,11 +57,6 @@ export default async function SignInPage() {
                 />
             </div>
             
-            <h2 className="hidden text-2xl font-bold tracking-tight text-foreground lg:block lg:text-3xl xl:text-4xl">Welcome back</h2>
-            <p className="mt-4 hidden text-sm text-muted-foreground leading-relaxed lg:block lg:text-base">
-              Sign in to access your orders, saved items, and a personalized shopping experience.
-            </p>
-            
             <div className="w-full max-w-[180px] mt-1 sm:max-w-[220px] lg:mt-12 lg:max-w-[440px]">
               <Image 
                 src="/Tablet login-bro.svg" 
@@ -77,10 +72,10 @@ export default async function SignInPage() {
 
         {/* Mobile: Bottom / PC: Right - Form Data */}
         <div className="flex w-full flex-1 flex-col justify-start pt-6 sm:pt-8 sm:justify-center overflow-hidden p-4 sm:p-8 lg:w-1/2 lg:p-20">
-          <div className="mx-auto w-full max-w-md">
+          <div className="mx-auto w-full max-w-[380px]">
             <div className="mb-2 sm:mb-8 flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
               <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl xl:text-5xl">Sign In</h1>
-              <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-sm lg:mt-3 lg:text-base">
+              <p className="mt-0.5 text-[10px] text-foreground/70 sm:text-sm lg:mt-3 lg:text-base">
                 Enter your details to access your account.
               </p>
             </div>
@@ -100,13 +95,13 @@ export default async function SignInPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-[9px] uppercase tracking-wider sm:text-xs">
-                <span className="bg-background px-2 sm:px-3 text-muted-foreground font-medium lg:px-4">Or continue with</span>
+                <span className="bg-background px-2 sm:px-3 text-foreground/70 font-medium lg:px-4">OR</span>
               </div>
             </div>
 
             <GoogleSignInButton callbackUrl="/" className="h-10 text-xs sm:h-14 sm:text-base" />
 
-            <p className="mt-3 sm:mt-8 lg:mt-10 text-center text-[9px] sm:text-[11px] text-muted-foreground leading-relaxed lg:text-sm">
+            <p className="mt-3 sm:mt-8 lg:mt-10 text-center text-[9px] sm:text-[11px] text-foreground/70 leading-relaxed lg:text-sm whitespace-nowrap">
               By continuing, you agree to our{' '}
               <Link href="/privacy-policy" className="font-medium underline underline-offset-4 hover:text-foreground transition-colors">Terms of Service</Link>{' '}
               and{' '}
