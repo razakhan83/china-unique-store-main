@@ -59,6 +59,7 @@ const OrderSchema = new mongoose.Schema(
                 productId: { type: String },
                 name: { type: String },
                 price: { type: Number },
+                packLabel: { type: String, default: '' },
                 quantity: { type: Number, default: 1 },
                 image: { type: String },
                 isReviewed: { type: Boolean, default: false },
@@ -166,8 +167,9 @@ if (cachedOrder) {
     const hasCouponCode = !!cachedOrder.schema.paths.couponCode;
     const hasDiscountAmount = !!cachedOrder.schema.paths.discountAmount;
     const hasIsDeleted = !!cachedOrder.schema.paths.isDeleted;
+    const hasPackLabel = !!cachedOrder.schema.path('items').schema.paths.packLabel;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted) {
+    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted || !hasPackLabel) {
         delete mongoose.models.Order;
     }
 }

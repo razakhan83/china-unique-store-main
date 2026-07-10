@@ -87,11 +87,13 @@ const PRODUCT_DETAIL_PROJECTION = [
   'seoKeywords',
   'seoCanonicalUrl',
   'vendors',
+  'packOptions',
 ].join(' ');
 const PRODUCT_ADMIN_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
   'stockQuantity',
   'vendors',
+  'packOptions',
 ].join(' ');
 let hasLoggedSettingsFetchFailure = false;
 const SLOW_DATA_LOG_MS = 700;
@@ -246,6 +248,7 @@ function toProductDetailView(product) {
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
   };
 }
 
@@ -272,6 +275,7 @@ function toAdminProductRow(product) {
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
   };
 }
 

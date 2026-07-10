@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors packOptions')
             .populate({ path: 'Category', select: 'name slug' })
             .lean();
 
@@ -111,6 +111,7 @@ export async function PUT(request, { params }) {
         existingProduct.Images = normalizedImages;
         existingProduct.Category = categoryArray;
         existingProduct.vendors = normalizedVendors;
+        existingProduct.packOptions = Array.isArray(body.packOptions) ? body.packOptions : [];
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.showOnStore = body.showOnStore !== false && body.showOnStore !== 'false';
         

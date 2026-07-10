@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useCartActions } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,8 +57,10 @@ export function ProductSocialActions({ product, className = '' }) {
     );
 }
 
-export default function ProductActions({ product, whatsappNumber = '', storeName = 'China Unique Store' }) {
+export default function ProductActions({ product, whatsappNumber = '', storeName = 'China Unique Store', basePrice = 0, compareAtPrice = null }) {
     const { addToCart } = useCartActions();
+    const packOptions = Array.isArray(product?.packOptions) ? product.packOptions : [];
+    const [selectedPack, setSelectedPack] = useState(packOptions.length > 0 ? packOptions[0] : null);
     const [isAdding, setIsAdding] = useState(false);
     const [didJustAdd, setDidJustAdd] = useState(false);
     const [quantity, setQuantity] = useState(1);
@@ -75,7 +78,16 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         setIsAdding(true);
         const startedAt = performance.now();
         try {
-            const result = await addToCart(product, quantity);
+            const productToAdd = selectedPack ? {
+                ...product,
+                Price: selectedPack.price,
+                discountedPrice: selectedPack.price,
+                discountPercentage: 0,
+                isDiscounted: false,
+                packLabel: selectedPack.label
+            } : product;
+
+            const result = await addToCart(productToAdd, quantity);
             if (result?.success) {
                 setDidJustAdd(true);
             }
@@ -149,9 +161,60 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         }
     };
 
+    const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
+    const displayPrice = selectedPack ? selectedPack.price : basePrice;
+    const displayComparePrice = (() => {
+        if (!compareAtPrice) return null;
+        if (!selectedPack) return compareAtPrice > basePrice ? compareAtPrice : null;
+        
+        const match = selectedPack.label.match(/\d+/);
+        const quantity = match ? parseInt(match[0], 10) : 1;
+        const calculatedCompare = compareAtPrice * quantity;
+        
+        return calculatedCompare > selectedPack.price ? calculatedCompare : null;
+    })();
+
     return (
         <>
         <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-end gap-x-4 gap-y-2 mb-2">
+                <span className="text-3xl font-bold tracking-tight text-foreground">
+                    {formatPrice(displayPrice)}
+                </span>
+                {displayComparePrice ? (
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg font-medium text-muted-foreground line-through">
+                            {formatPrice(displayComparePrice)}
+                        </span>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 shadow-none font-semibold">
+                            Save {formatPrice(displayComparePrice - displayPrice)}
+                        </Badge>
+                    </div>
+                ) : null}
+            </div>
+
+            {packOptions.length > 0 && (
+                <div className="mb-2 space-y-3">
+                    <span className="text-sm font-semibold text-foreground">Pack Options</span>
+                    <div className="flex flex-wrap gap-2">
+                        {packOptions.map((pack, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setSelectedPack(pack)}
+                                className={cn(
+                                    "flex h-11 flex-1 sm:flex-none sm:min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg border px-4 text-sm font-semibold transition-colors",
+                                    selectedPack?.label === pack.label
+                                        ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_14px_rgba(var(--color-primary),0.2)]"
+                                        : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                                )}
+                            >
+                                {pack.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {!isOutOfStock ? (
                 <div className="hidden items-center gap-3 md:flex">
                     <span className="text-sm font-semibold text-foreground">Quantity</span>

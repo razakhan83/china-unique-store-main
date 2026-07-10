@@ -12,7 +12,11 @@ const CartUiContext = createContext(null);
 const CartActionsContext = createContext(null);
 
 function getCartItemId(item) {
-  return item?.slug || item?._id || item?.id || item?.productId || item?.Name || item?.name;
+  if (item?.id && item?.packLabel && typeof item.id === 'string' && item.id.endsWith(item.packLabel)) {
+    return item.id;
+  }
+  const baseId = item?.slug || item?._id || item?.id || item?.productId || item?.Name || item?.name;
+  return item?.packLabel ? `${baseId}-${item.packLabel}` : baseId;
 }
 
 function normalizeCartItem(item) {
@@ -25,11 +29,19 @@ function normalizeCartItem(item) {
       ? Math.round(basePrice * (1 - discountPercentage / 100))
       : null;
 
+  const packLabel = item.packLabel || '';
+  const originalName = item.originalName || item.Name || item.name || 'Untitled Product';
+  const finalName = packLabel && !originalName.includes(`(${packLabel})`) 
+      ? `${originalName} (${packLabel})` 
+      : originalName;
+
   return {
     id: getCartItemId(item),
     slug: item.slug || item.id || item._id || '',
     _id: item._id || item.id || item.slug || '',
-    Name: item.Name || item.name || 'Untitled Product',
+    Name: finalName,
+    originalName,
+    packLabel,
     Price: basePrice,
     discountedPrice,
     discountPercentage,

@@ -22,6 +22,24 @@ const ProductImageSchema = new mongoose.Schema(
     }
 );
 
+const PackOptionSchema = new mongoose.Schema(
+    {
+        label: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
 const ProductVendorSchema = new mongoose.Schema(
     {
         vendorId: {
@@ -140,6 +158,10 @@ const ProductSchema = new mongoose.Schema(
             type: [ProductVendorSchema],
             default: [],
         },
+        packOptions: {
+            type: [PackOptionSchema],
+            default: [],
+        },
         stockQuantity: {
             type: Number,
             default: 0,
@@ -208,7 +230,8 @@ if (
         !cachedProduct.schema.path('vendors').schema?.path('phone') ||
         !cachedProduct.schema.path('vendors').schema?.path('whatsappNumber') ||
         !cachedProduct.schema.path('vendors').schema?.path('email') ||
-        !cachedProduct.schema.path('vendors').schema?.path('address')
+        !cachedProduct.schema.path('vendors').schema?.path('address') ||
+        !cachedProduct.schema.path('packOptions')
     )
 ) {
     delete mongoose.models.Product;

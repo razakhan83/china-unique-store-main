@@ -381,33 +381,27 @@ async function ProductHeroSection({ paramsPromise }) {
                 <ProductSocialActions product={product} className="md:hidden shrink-0 mt-1" />
               </div>
 
-              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-                <span className="text-3xl font-bold tracking-tight text-foreground">
-                  {formatPrice(price)}
-                </span>
-                {compareAtPrice ? (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg font-medium text-muted-foreground line-through">
-                      {formatPrice(compareAtPrice)}
-                    </span>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 shadow-none font-semibold">
-                      Save {formatPrice(compareAtPrice - price)}
-                    </Badge>
-                  </div>
-                ) : null}
+              <div className="hidden">
+                {/* Static price block moved to ProductActions for dynamic pack options */}
               </div>
+            </div>
+
+            <div className="pt-2">
+              <ProductActions 
+                product={product} 
+                whatsappNumber={settings.whatsappNumber} 
+                storeName={settings.storeName} 
+                basePrice={price}
+                compareAtPrice={compareAtPrice}
+              />
             </div>
 
             {product.shortDescription ? (
               <div
-                className="text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 border-y border-border py-6"
+                className="text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 border-t border-border pt-6 mt-6"
                 dangerouslySetInnerHTML={{ __html: product.shortDescription }}
               />
-            ) : <Separator className="my-2" />}
-
-            <div className="pt-2">
-              <ProductActions product={product} whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
-            </div>
+            ) : <Separator className="my-6" />}
           </div>
         </div>
       </div>

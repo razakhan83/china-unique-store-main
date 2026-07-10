@@ -44,6 +44,7 @@ export default function EditProduct({ id }) {
   const [seoCanonicalUrl, setSeoCanonicalUrl] = useState('');
   const [Price, setPrice] = useState('');
   const [compareAtPrice, setCompareAtPrice] = useState('');
+  const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
   const [Categories, setCategories] = useState([]); // array of selected category ids
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
@@ -116,6 +117,7 @@ export default function EditProduct({ id }) {
                 })).filter((vendor) => vendor.vendorId)
               : []
           );
+          setPackOptions(p.packOptions?.length > 0 ? p.packOptions : [{ label: "1 pcs", price: p.Price || "" }]);
           
           const existingImages = normalizeProductImages(
             p.Images,
@@ -300,6 +302,7 @@ export default function EditProduct({ id }) {
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
+          packOptions: packOptions.filter(p => p.label && p.price),
           showOnStore,
           isNewArrival,
           isBestSelling,
@@ -489,6 +492,64 @@ export default function EditProduct({ id }) {
                 </span>
               </p>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Pack Variations</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Define different pack sizes and their prices. Leave empty if not applicable.
+              </p>
+            </div>
+            {packOptions.map((pack, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={pack.label}
+                    onChange={(e) => {
+                      const newOptions = [...packOptions];
+                      newOptions[index].label = e.target.value;
+                      setPackOptions(newOptions);
+                    }}
+                    className="h-11 px-4"
+                    placeholder="e.g., Pack of 5"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="number"
+                    value={pack.price}
+                    onChange={(e) => {
+                      const newOptions = [...packOptions];
+                      newOptions[index].price = e.target.value;
+                      setPackOptions(newOptions);
+                    }}
+                    className="h-11 px-4"
+                    placeholder="Price (Rs)"
+                    step="0.01"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => setPackOptions(packOptions.filter((_, i) => i !== index))}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPackOptions([...packOptions, { label: "", price: "" }])}
+              className="w-full rounded-xl border-dashed"
+            >
+              <PlusCircle className="mr-2 size-4" />
+              Add More Pack Option
+            </Button>
           </div>
 
           <div>
