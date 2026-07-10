@@ -44,24 +44,24 @@ export default function SignInFormClient() {
   };
 
   return (
-    <form className="mb-6" onSubmit={handleSubmit}>
+    <form className="mb-3 sm:mb-6" onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" name="email" type="email" placeholder="name@example.com" required autoComplete="email" className="h-14 text-base" />
+          <Input id="email" name="email" type="email" placeholder="name@example.com" required autoComplete="email" className="h-10 sm:h-12 text-sm sm:text-base" />
         </Field>
         <Field>
           <div className="flex items-center justify-between">
             <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Link href="#" className="text-sm font-medium text-primary hover:underline" tabIndex={-1}>
+            <button type="button" className="text-[10px] sm:text-sm font-medium text-primary hover:underline" tabIndex={-1}>
               Forgot password?
-            </Link>
+            </button>
           </div>
-          <Input id="password" name="password" type="password" placeholder="••••••••" required autoComplete="current-password" className="h-14 text-base" />
+          <Input id="password" name="password" type="password" placeholder="••••••••" required autoComplete="current-password" className="h-10 sm:h-12 text-sm sm:text-base" />
         </Field>
       </FieldGroup>
 
-      <Button type="submit" disabled={isLoading} className="mt-8 h-14 w-full text-base font-semibold">
+      <Button type="submit" disabled={isLoading} className="mt-5 sm:mt-8 h-10 sm:h-12 w-full text-sm sm:text-base font-semibold">
         {isLoading ? 'Signing in...' : 'Sign In'}
       </Button>
     </form>
