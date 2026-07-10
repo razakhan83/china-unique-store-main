@@ -66,13 +66,13 @@ export default function LayoutWrapper({ children, categories, settings }) {
               Wholesale & Bulk Orders
             </h2>
             <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Looking to stock premium imported gadgets, kitchenware, and lifestyle products? We supply top-notch quality items at competitive wholesale rates. Connect with us directly for bulk orders and exclusive B2B pricing.
+              Looking to stock premium imported gadgets, kitchenware, and lifestyle products? We supply top-notch quality items at competitive wholesale rates. Connect with us directly for <span className="font-semibold text-primary">bulk orders</span> and <span className="font-semibold text-primary">exclusive B2B pricing</span>.
             </p>
             <a
               href={whatsappLink || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm ring-1 ring-inset ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#22c15c] hover:shadow-[0_10px_20px_-5px_rgba(37,211,102,0.6)] active:scale-[0.97] active:bg-[#1da851] active:shadow-sm"
+              className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm ring-1 ring-inset ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#22c15c] hover:shadow-[0_10px_20px_-5px_rgba(37,211,102,0.6)] active:scale-[0.97] active:bg-[#1da851] active:shadow-sm"
             >
               <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-300 group-hover:scale-110" />
               Chat on WhatsApp
