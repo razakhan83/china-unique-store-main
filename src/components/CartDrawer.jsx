@@ -94,7 +94,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-card)_97%,white),color-mix(in_oklab,var(--color-muted)_38%,white))] p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
-        <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-0">
+        <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-0">
           <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-xl font-bold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
           </SidebarHeader>

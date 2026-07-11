@@ -58,7 +58,7 @@
 }
 
 :root {
-  --mobile-bottom-nav-offset: 88px;
+  --mobile-bottom-nav-offset: 66px;
 }
 
 @layer base {

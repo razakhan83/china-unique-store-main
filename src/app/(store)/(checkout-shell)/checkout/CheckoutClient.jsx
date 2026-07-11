@@ -1135,7 +1135,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
             {/* Desktop CTA */}
             <button
               id="place-order-desktop"
-              className={cn(styles.ctaButton, 'hidden md:flex')}
+              className={cn(styles.ctaButton, 'hidden md:flex items-center justify-center gap-2')}
               onClick={() => document.getElementById('checkout-submit')?.click()}
               disabled={submitting || !isInitialized}
             >

@@ -626,10 +626,6 @@
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--color-primary) 45%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
   margin-top: 1.25rem;
 }
 
