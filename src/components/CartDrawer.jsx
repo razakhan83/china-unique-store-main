@@ -93,7 +93,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-card)_97%,white),color-mix(in_oklab,var(--color-muted)_38%,white))] p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
+      <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-background p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
         <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-0">
           <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-xl font-bold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
@@ -165,6 +165,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             type="button"
                                             variant="ghost"
                                             size="icon-xs"
+                                            aria-label="Decrease quantity"
                                             onClick={() => updateQuantity(item, item.quantity - 1)}
                                             className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
                                           >
@@ -177,6 +178,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             type="button"
                                             variant="ghost"
                                             size="icon-xs"
+                                            aria-label="Increase quantity"
                                             onClick={() => updateQuantity(item, item.quantity + 1)}
                                             className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
                                           >
@@ -200,7 +202,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             Total
                                           </p>
                                           <p className="text-[0.92rem] font-semibold leading-none text-foreground tabular-nums">
-                                            Rs. {itemTotal.toLocaleString('en-PK')}
+                                            Rs.&nbsp;{itemTotal.toLocaleString('en-PK')}
                                           </p>
                                         </div>
                                       </div>
@@ -239,32 +241,33 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
           </SidebarContent>
 
           {cart.length ? (
-            <SidebarFooter className="gap-3 border-t border-sidebar-border bg-sidebar px-5 pb-5 pt-4">
+            <SidebarFooter className="gap-3 border-t border-sidebar-border bg-background px-5 pb-5 pt-4">
               <Card size="sm" className="gap-0 border border-sidebar-border/80 bg-muted/30 py-0 shadow-[inset_0_1px_0_color-mix(in_oklab,white_72%,transparent)]">
                 <CardHeader className="flex flex-row items-center justify-between gap-3 px-4 py-3">
                   <CardTitle className="text-sm">Subtotal</CardTitle>
                   <p className="text-lg font-semibold text-foreground tabular-nums">
-                    Rs. {subtotal.toLocaleString('en-PK')}
+                    Rs.&nbsp;{subtotal.toLocaleString('en-PK')}
                   </p>
                 </CardHeader>
               </Card>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleWhatsAppDirectCheckout}>
-                    <WhatsAppIcon className="size-5" />
-                    <span>Order on WhatsApp</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive
-                    render={<Link href="/checkout" onClick={() => setIsCartOpen(false)} className="w-full" />}
-                  >
-                    <span>Checkout</span>
-                    <ArrowRight data-icon="inline-end" className="ml-auto size-4" />
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+              <div className="flex items-center gap-3 mt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 px-2 rounded-[var(--radius-md)] border-border bg-background hover:bg-muted text-foreground text-[0.8rem] sm:text-sm font-medium shadow-sm"
+                  onClick={handleWhatsAppDirectCheckout}
+                >
+                  <WhatsAppIcon className="mr-1.5 size-4 shrink-0 text-[#25D366]" />
+                  <span className="truncate">Order on WhatsApp</span>
+                </Button>
+                
+                <Link 
+                  href="/checkout" 
+                  onClick={() => setIsCartOpen(false)} 
+                  className="flex-1 inline-flex h-10 px-2 items-center justify-center rounded-[var(--radius-md)] bg-primary text-[0.85rem] sm:text-[0.9rem] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                >
+                  <span className="truncate">Checkout</span> <ArrowRight className="ml-1.5 size-4 shrink-0" />
+                </Link>
+              </div>
             </SidebarFooter>
           ) : null}
         </Sidebar>

@@ -67,7 +67,7 @@ import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
 import styles from './CheckoutClient.module.css';
 
 const formatPrice = (raw) => Number(raw || 0);
-const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
+const formatPriceLabel = (raw) => `Rs.\u00A0${formatPrice(raw).toLocaleString('en-PK')}`;
 const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
 const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
 const SEARCH_RESULTS_LIMIT = 24;
@@ -289,18 +289,18 @@ function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, se
       <div className={styles.totalsGrid}>
         <div className={styles.totalRow}>
           <span className={styles.totalLabel}>Subtotal</span>
-          <span className={styles.totalValue}>Rs. {subtotal.toLocaleString('en-PK')}</span>
+          <span className={styles.totalValue}>Rs.&nbsp;{subtotal.toLocaleString('en-PK')}</span>
         </div>
         {discountAmount > 0 && (
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Discount ({appliedCoupon?.code})</span>
-            <span className={styles.totalValueDiscount}>−Rs. {discountAmount.toLocaleString('en-PK')}</span>
+            <span className={styles.totalValueDiscount}>−Rs.&nbsp;{discountAmount.toLocaleString('en-PK')}</span>
           </div>
         )}
         <div className={styles.totalRow}>
           <span className={styles.totalLabel}>Shipping</span>
           <span className={isFreeShipping ? styles.totalValueFree : styles.totalValue}>
-            {isFreeShipping ? 'Free' : `Rs. ${shipping.toLocaleString('en-PK')}`}
+            {isFreeShipping ? 'Free' : `Rs.\u00A0${shipping.toLocaleString('en-PK')}`}
           </span>
         </div>
       </div>
@@ -312,7 +312,7 @@ function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, se
         <span className={styles.grandTotalLabel}>Total</span>
         <span>
           <span className={styles.grandTotalCurrency}>PKR</span>
-          <span className={styles.grandTotalValue}>Rs. {total.toLocaleString('en-PK')}</span>
+          <span className={styles.grandTotalValue}>Rs.&nbsp;{total.toLocaleString('en-PK')}</span>
         </span>
       </div>
 
@@ -333,7 +333,7 @@ function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, se
                   </div>
                   <div className="flex flex-col min-w-0 flex-1 justify-center">
                     <span className="text-[13px] font-semibold text-foreground/90 line-clamp-1">{product.Name}</span>
-                    <span className="text-[13px] text-muted-foreground font-medium mt-0.5">Rs. {price.toLocaleString('en-PK')}</span>
+                    <span className="text-[13px] text-muted-foreground font-medium mt-0.5">Rs.&nbsp;{price.toLocaleString('en-PK')}</span>
                   </div>
                   <button
                     onClick={(e) => {
@@ -757,6 +757,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   variant="outline"
                   size="icon-sm"
                   className="text-muted-foreground transition-[transform,color,background-color] duration-200 ease-out hover:text-foreground active:scale-[0.96]"
+                  aria-label="Copy Order ID"
                   title="Copy Order ID"
                 >
                   {copied ? <Check className="text-success" /> : <Copy />}
@@ -801,7 +802,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
               aria-hidden
             />
           </span>
-          <span className={styles.mobileOrderSummaryTotal}>Rs. {total.toLocaleString('en-PK')}</span>
+          <span className={styles.mobileOrderSummaryTotal}>Rs.&nbsp;{total.toLocaleString('en-PK')}</span>
         </button>
 
         {mobileOrderOpen && (
@@ -843,6 +844,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     id="email"
                     type="email"
                     name="email"
+                    autoComplete="email"
+                    spellCheck={false}
+                    aria-label="Email or mobile phone number"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Email or mobile phone number"
@@ -875,6 +879,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     <Input
                       id="fullName"
                       name="fullName"
+                      autoComplete="name"
+                      spellCheck={false}
+                      aria-label="Full name"
                       value={formData.fullName}
                       onChange={handleChange}
                       placeholder="Full name *"
@@ -887,6 +894,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                       id="phone"
                       type="tel"
                       name="phone"
+                      autoComplete="tel"
+                      aria-label="Phone number"
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="Phone *"
@@ -901,6 +910,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   <Input
                     id="address"
                     name="address"
+                    autoComplete="street-address"
+                    aria-label="Complete address"
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="Complete address *"
@@ -914,6 +925,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   <Input
                     id="landmark"
                     name="landmark"
+                    aria-label="Apartment, suite, etc. (optional)"
                     value={formData.landmark}
                     onChange={handleChange}
                     placeholder="Apartment, suite, etc. (optional)"
@@ -1033,6 +1045,10 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                 {/* Cash on Delivery */}
                 <div
                   id="payment-cod"
+                  role="radio"
+                  aria-checked={paymentMethod === 'cod'}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPaymentMethod('cod'); } }}
                   className={styles.paymentOption}
                   onClick={() => setPaymentMethod('cod')}
                 >
@@ -1051,6 +1067,10 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                 {settings?.bankDepositEnabled && (
                   <div
                     id="payment-bank"
+                    role="radio"
+                    aria-checked={paymentMethod === 'bank'}
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPaymentMethod('bank'); } }}
                     className={styles.paymentOption}
                     onClick={() => setPaymentMethod('bank')}
                   >
@@ -1169,7 +1189,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         <div className={styles.mobileCheckoutInner}>
           <div className={styles.mobileAmount}>
             <span className={styles.mobileAmountLabel}>Total</span>
-            <strong>Rs. {total.toLocaleString('en-PK')}</strong>
+            <strong>Rs.&nbsp;{total.toLocaleString('en-PK')}</strong>
           </div>
           <button
             id="place-order-mobile"

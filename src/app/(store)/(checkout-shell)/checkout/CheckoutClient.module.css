@@ -128,8 +128,14 @@
 
 .inputRow2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.6rem;
+}
+
+@media (min-width: 640px) {
+  .inputRow2 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Shopify-style stacked bordered inputs */
@@ -655,9 +661,12 @@
   right: 0;
   z-index: 40;
   display: none;
-  padding: 0 0 env(safe-area-inset-bottom);
-  background: white;
-  border-top: 1px solid oklch(0.88 0.01 95);
+  padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom, 1rem));
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid oklch(0.9 0.01 95 / 0.5);
+  box-shadow: 0 -8px 32px -8px rgba(0,0,0,0.08);
 }
 
 .mobileCheckoutInner {
@@ -665,7 +674,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.85rem;
-  padding: 0.85rem 1.25rem;
+  padding: 0;
 }
 
 .mobileAmount {
