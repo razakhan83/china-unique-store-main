@@ -1,3 +1,7 @@
+'use client';
+
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +10,7 @@ import { ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
 import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -45,7 +50,7 @@ function getFeatureBadge(product) {
     return {
       label: "Best Seller",
       className:
-        "pointer-events-auto rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 uppercase tracking-[0.08em]",
+        "pointer-events-auto rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 uppercase tracking-[0.08em]",
     };
   }
 
@@ -69,6 +74,17 @@ export default function ProductCard({ product, className = "" }) {
   const compareAtPrice = getVisibleCompareAtPrice(product, sellingPrice);
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
+
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleNavigation = (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    startTransition(() => {
+      router.push(productHref, { scroll: true });
+    });
+  };
 
   const discountLabel = getDiscountBadge(product);
   const featureBadge = getFeatureBadge(product);
@@ -131,6 +147,7 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
+          onClick={handleNavigation}
           className="relative block aspect-square w-full overflow-hidden bg-muted/30"
           draggable={false}
         >
@@ -144,9 +161,11 @@ export default function ProductCard({ product, className = "" }) {
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
                 className={cn(
-                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out transform-gpu md:group-hover:scale-105",
+                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out transform-gpu",
+                  !isPending && "md:group-hover:scale-105",
+                  isPending && "opacity-0 scale-95",
                   isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
-                  secondaryImageSrc && "md:group-hover:opacity-0"
+                  secondaryImageSrc && !isPending && "md:group-hover:opacity-0"
                 )}
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
               />
@@ -159,7 +178,8 @@ export default function ProductCard({ product, className = "" }) {
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   loading="lazy"
                   className={cn(
-                    "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0 md:group-hover:opacity-100 md:group-hover:scale-105",
+                    "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0",
+                    !isPending && "md:group-hover:opacity-100 md:group-hover:scale-105",
                     isUnavailable && "scale-[1.01] saturate-[0.85]"
                   )}
                   {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
@@ -175,49 +195,67 @@ export default function ProductCard({ product, className = "" }) {
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 @max-[220px]:p-2.5 @max-[220px]:gap-1.5 sm:p-4">
-        <Link
-          href={productHref}
-          scroll={true}
-          className="block text-left"
-          draggable={false}
-        >
-          <h3
-            className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:text-[15px]"
-            title={productName}
-            draggable={false}
-          >
-            {productName}
-          </h3>
-        </Link>
-
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
-          <div className="flex min-w-0 flex-col justify-end gap-0.5">
-            {compareAtPrice ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p
-                  className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
-                  draggable={false}
-                >
-                  {formatPrice(sellingPrice)}
-                </p>
-                <p
-                  className="text-[11px] font-medium leading-none text-muted-foreground/75 line-through @min-[260px]:text-[13px]"
-                  draggable={false}
-                >
-                  {formatPrice(compareAtPrice)}
-                </p>
+        {isPending ? (
+          <>
+            <div className="block text-left pt-0.5">
+              <Skeleton className="mb-1.5 h-3.5 w-[85%] rounded-md sm:h-4" />
+              <Skeleton className="h-3.5 w-[50%] rounded-md sm:h-4" />
+            </div>
+            <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
+              <div className="flex min-w-0 flex-col justify-end gap-0.5">
+                <Skeleton className="h-[15px] w-16 rounded-md sm:h-[17px] sm:w-20" />
               </div>
-            ) : (
-              <p
-                className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
+              <Skeleton className="h-[34px] w-[34px] shrink-0 rounded-full sm:h-9 sm:w-[90px]" />
+            </div>
+          </>
+        ) : (
+          <>
+            <Link
+              href={productHref}
+              scroll={true}
+              onClick={handleNavigation}
+              className="block text-left"
+              draggable={false}
+            >
+              <h3
+                className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:text-[15px]"
+                title={productName}
                 draggable={false}
               >
-                {formatPrice(sellingPrice)}
-              </p>
-            )}
-          </div>
-          <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
-        </div>
+                {productName}
+              </h3>
+            </Link>
+
+            <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
+              <div className="flex min-w-0 flex-col justify-end gap-0.5">
+                {compareAtPrice ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p
+                      className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
+                      draggable={false}
+                    >
+                      {formatPrice(sellingPrice)}
+                    </p>
+                    <p
+                      className="text-[11px] font-medium leading-none text-muted-foreground/75 line-through @min-[260px]:text-[13px]"
+                      draggable={false}
+                    >
+                      {formatPrice(compareAtPrice)}
+                    </p>
+                  </div>
+                ) : (
+                  <p
+                    className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
+                    draggable={false}
+                  >
+                    {formatPrice(sellingPrice)}
+                  </p>
+                )}
+              </div>
+              <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

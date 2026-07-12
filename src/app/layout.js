@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { getMetadataBase } from "@/lib/siteUrl";
+import AuthProvider from "@/components/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,8 +72,10 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        {children}
-        <Toaster position="bottom-center" richColors />
+        <AuthProvider>
+          {children}
+          <Toaster position="bottom-center" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
