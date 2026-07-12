@@ -96,6 +96,27 @@ const MobileBottomNav = dynamic(() => import('@/components/MobileBottomNav'), {
   loading: () => null,
 });
 
+const MobileMenuContent = dynamic(() => import('@/components/MobileMenuContent'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full flex-col p-4 animate-pulse">
+      <div className="flex w-full items-center pb-2 mb-2">
+        <div className="grid h-10 w-full grid-cols-2 gap-2">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+      </div>
+      <div className="flex-1 space-y-3 mt-4">
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </div>
+    </div>
+  ),
+});
+
 function normalizeAnnouncementItems(messages = [], announcementText = '') {
   const rawMessages = Array.isArray(messages) && messages.length > 0
     ? messages
@@ -353,7 +374,7 @@ function NavbarContent({
   const mobileMenuButtonClass =
     'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground data-[active=true]:text-sidebar-primary-foreground active:scale-[0.99]';
   const navActionButtonClass =
-    'nav-icon-button relative rounded-2xl border border-border/60 bg-card/85 p-0 text-foreground transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[2px] hover:border-primary/30 hover:bg-background hover:text-primary hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] active:scale-[0.96] active:translate-y-0';
+    'nav-icon-button relative rounded-2xl md:border border-transparent md:border-border/60 bg-transparent md:bg-card/85 p-0 text-foreground transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[2px] hover:border-primary/30 hover:bg-background hover:text-primary hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] active:scale-[0.96] active:translate-y-0';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
@@ -378,7 +399,7 @@ function NavbarContent({
         <div className="relative h-16">
           <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
             <Button variant="ghost" size="icon" onClick={handleSidebarOpen} aria-label="Open menu" className="md:hidden">
-              <Menu />
+              <Menu className="size-6 md:size-7" strokeWidth={2.2} />
             </Button>
 
             <StoreLogo
@@ -498,8 +519,8 @@ function NavbarContent({
                 aria-label="Open cart"
                 title="Cart"
               >
-                <span className="relative flex size-5 items-center justify-center">
-                  <ShoppingBag strokeWidth={1.5} className="size-[1.2rem]" />
+                <span className="relative flex size-6 items-center justify-center">
+                  <ShoppingBag strokeWidth={1.5} className="size-[1.45rem] md:size-[1.3rem]" />
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (
@@ -554,136 +575,17 @@ function NavbarContent({
               <span className="sr-only">Close</span>
             </SheetClose>
 
-            <Tabs defaultValue="menu" className="flex h-full w-full flex-col">
-              <div className="flex w-full items-center p-4 pb-2">
-                <TabsList className="grid h-10 w-full grid-cols-2">
-                  <TabsTrigger value="menu" className="text-sm font-medium">Menu</TabsTrigger>
-                  <TabsTrigger value="categories" className="text-sm font-medium">Categories</TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="menu" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-left-4 duration-300 ease-out">
-                <ScrollArea className="flex-1">
-                  <Sidebar className="bg-transparent border-0 shadow-none w-full">
-                    <SidebarContent className="px-0 py-2">
-                      <SidebarMenu className="px-4 gap-1">
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname === '/'}
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                            render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
-                          >
-                            <Store className="size-4 text-foreground" />
-                            <span className="text-[14px] tracking-tight">Home</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname === '/products'}
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/products' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                            render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
-                          >
-                            <LayoutGrid className="size-4 text-foreground" />
-                            <span className="text-[14px] tracking-tight">All Products</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem className="flex items-center">
-                          <MyOrdersButton
-                            isMobile
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/orders') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                          />
-                        </SidebarMenuItem>
-                        <SidebarMenuItem className="flex items-center">
-                          <MyWishlistButton
-                            isMobile
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/wishlist') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                          />
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={pathname === '/contact'}
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/contact' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                            render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
-                          >
-                            <Phone className="size-4 text-foreground" />
-                            <span className="text-[14px] tracking-tight">Contact Us</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      </SidebarMenu>
-                    </SidebarContent>
-                  </Sidebar>
-                </ScrollArea>
-
-                <div className="mt-auto flex flex-col gap-4 border-t border-border p-4 bg-background">
-                  <div className="flex justify-center gap-6 py-2">
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                      <span className="sr-only">Facebook</span>
-                    </Link>
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M3 21l1.65-6.03A9.74 9.74 0 0 1 3 10.5C3 5.25 7.25 1 12.5 1S22 5.25 22 10.5 17.75 20 12.5 20c-1.74 0-3.37-.47-4.75-1.27L3 21z"></path><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path></svg>
-                      <span className="sr-only">WhatsApp</span>
-                    </Link>
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                      <span className="sr-only">Instagram</span>
-                    </Link>
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5h3a5 5 0 0 1-8 0"></path></svg>
-                      <span className="sr-only">TikTok</span>
-                    </Link>
-                  </div>
-                  <NavbarSidebarFooter
-                    mobileMenuButtonClass={mobileMenuButtonClass}
-                    onCloseSidebar={() => setIsSidebarOpen(false)}
-                    onOpenAuth={() => setIsAuthModalOpen(true)}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="categories" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-right-4 duration-300 ease-out">
-                <ScrollArea className="flex-1">
-                  <Sidebar className="bg-transparent border-0 shadow-none w-full">
-                    <SidebarContent className="px-0 py-0">
-                      <SidebarMenu className="px-4 gap-1">
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={activeCategory === 'new-arrivals'}
-                            onClick={() => handleCategoryClick('new-arrivals')}
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'new-arrivals' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                          >
-                            <Sparkles className="size-4 text-foreground" />
-                            <span className="text-[14px] tracking-tight">New Arrivals</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                          <SidebarMenuButton
-                            isActive={activeCategory === 'special-offers'}
-                            onClick={() => handleCategoryClick('special-offers')}
-                            className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'special-offers' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                          >
-                            <Tag className="size-4 text-foreground" />
-                            <span className="text-[14px] tracking-tight">Special Offers</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                          <SidebarMenuItem key={category.id}>
-                            <SidebarMenuButton
-                              isActive={activeCategory === category.id}
-                              onClick={() => handleCategoryClick(category.id)}
-                              className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === category.id ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                            >
-                              <Tag className="size-4 text-foreground" />
-                              <span className="text-[14px] tracking-tight">{category.label}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarContent>
-                  </Sidebar>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
+            {isSidebarOpen && (
+              <MobileMenuContent
+                pathname={pathname}
+                categories={categories}
+                activeCategory={activeCategory}
+                handleCategoryClick={handleCategoryClick}
+                setIsSidebarOpen={setIsSidebarOpen}
+                setIsAuthModalOpen={setIsAuthModalOpen}
+                mobileMenuButtonClass={mobileMenuButtonClass}
+              />
+            )}
           </SheetContent>
         </Sheet>
 
