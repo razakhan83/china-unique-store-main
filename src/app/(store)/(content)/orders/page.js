@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
@@ -22,7 +23,15 @@ export const metadata = {
   title: 'My Orders | Kifayatly',
 };
 
-export default async function OrdersPage() {
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pb-16 pt-8"><div className="container mx-auto max-w-4xl px-4 animate-pulse"><div className="h-10 w-48 bg-muted rounded mb-2"></div><div className="h-4 w-64 bg-muted rounded mb-8"></div><div className="h-96 w-full bg-muted rounded-xl"></div></div></div>}>
+      <OrdersContent />
+    </Suspense>
+  );
+}
+
+async function OrdersContent() {
   const [session, settings] = await Promise.all([
     getServerSession(authOptions),
     getStoreSettings(),

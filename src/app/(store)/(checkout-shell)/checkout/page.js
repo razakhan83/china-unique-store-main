@@ -12,9 +12,11 @@ export const metadata = {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<CheckoutPageSkeleton />}>
-      <CheckoutContent />
-    </Suspense>
+    <div className="min-h-screen bg-background pb-24 md:pb-0">
+      <Suspense fallback={<CheckoutPageSkeleton />}>
+        <CheckoutContent />
+      </Suspense>
+    </div>
   );
 }
 
@@ -23,9 +25,5 @@ async function CheckoutContent() {
   const productsPromise = await getProductsList({ limit: 12 });
   const relatedProducts = (productsPromise?.items || []).filter(p => p.StockStatus === 'In Stock' && p.showOnStore !== false);
   
-  return (
-    <div className="min-h-screen bg-background pb-24 md:pb-0">
-      <CheckoutClient settings={settings} relatedProducts={relatedProducts} />
-    </div>
-  );
+  return <CheckoutClient settings={settings} relatedProducts={relatedProducts} />;
 }

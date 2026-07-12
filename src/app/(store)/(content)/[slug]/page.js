@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 
 import StoreCustomPage from '@/components/StoreCustomPage';
@@ -17,7 +18,15 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function DynamicCustomPage({ params }) {
+export default function DynamicCustomPage({ params }) {
+  return (
+    <Suspense fallback={null}>
+      <CustomPageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function CustomPageContent({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
 

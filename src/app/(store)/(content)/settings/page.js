@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -9,7 +10,17 @@ export const metadata = {
   description: 'Manage your profile and delivery preferences.',
 };
 
-export default async function SettingsPage() {
+export default function SettingsPage() {
+  return (
+    <main className="min-h-screen bg-background">
+      <Suspense fallback={null}>
+        <SettingsContent />
+      </Suspense>
+    </main>
+  );
+}
+
+async function SettingsContent() {
   await connection();
   const session = await getServerSession(authOptions);
 
@@ -17,9 +28,5 @@ export default async function SettingsPage() {
     redirect('/');
   }
 
-  return (
-    <main className="min-h-screen bg-background">
-      <SettingsClient />
-    </main>
-  );
+  return <SettingsClient />;
 }

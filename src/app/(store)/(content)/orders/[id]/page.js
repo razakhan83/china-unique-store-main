@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { ChevronLeft } from 'lucide-react';
@@ -16,7 +17,15 @@ export const metadata = {
   description: 'View your order status and invoice.',
 };
 
-export default async function SingleOrderPage({ params, searchParams }) {
+export default function SingleOrderPage({ params, searchParams }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pb-20 pt-12"><div className="container mx-auto max-w-5xl px-4 animate-pulse"><div className="h-10 w-64 bg-muted rounded mb-8"></div><div className="h-96 w-full bg-muted rounded-xl"></div></div></div>}>
+      <SingleOrderContent params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function SingleOrderContent({ params, searchParams }) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   
