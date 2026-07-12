@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Check,
@@ -662,9 +662,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         setOrderState(result);
         persistSuccessfulOrder(result);
         clearCart();
-        startTransition(() => {
-          router.refresh();
-        });
+        router.refresh();
       } catch (error) {
         setErrors((previous) => ({
           ...previous,

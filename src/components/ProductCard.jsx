@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
@@ -76,15 +76,8 @@ export default function ProductCard({ product, className = "" }) {
   const productHref = `/products/${productSlug}`;
 
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  const handleNavigation = (e) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-    e.preventDefault();
-    startTransition(() => {
-      router.push(productHref, { scroll: true });
-    });
-  };
+  const [primaryLoaded, setPrimaryLoaded] = useState(false);
+  const [secondaryLoaded, setSecondaryLoaded] = useState(false);
 
   const discountLabel = getDiscountBadge(product);
   const featureBadge = getFeatureBadge(product);
@@ -147,12 +140,14 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
-          onClick={handleNavigation}
           className="relative block aspect-square w-full overflow-hidden bg-muted/30"
           draggable={false}
         >
           {primaryImageSrc ? (
             <>
+              {!primaryImage.blurDataURL && !primaryLoaded && (
+                <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60" />
+              )}
               <Image
                 src={primaryImageSrc}
                 alt={productName}
@@ -160,30 +155,38 @@ export default function ProductCard({ product, className = "" }) {
                 draggable={false}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
+                onLoad={() => setPrimaryLoaded(true)}
                 className={cn(
                   "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out transform-gpu",
-                  !isPending && "md:group-hover:scale-105",
-                  isPending && "opacity-0 scale-95",
+                  (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
+                  "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
-                  secondaryImageSrc && !isPending && "md:group-hover:opacity-0"
+                  secondaryImageSrc && "md:group-hover:opacity-0"
                 )}
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
               />
               {secondaryImageSrc && (
-                <Image
-                  src={secondaryImageSrc}
-                  alt={`${productName} alternate view`}
-                  fill
-                  draggable={false}
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  loading="lazy"
-                  className={cn(
-                    "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0",
-                    !isPending && "md:group-hover:opacity-100 md:group-hover:scale-105",
-                    isUnavailable && "scale-[1.01] saturate-[0.85]"
+                <>
+                  {!secondaryImage.blurDataURL && !secondaryLoaded && (
+                    <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
                   )}
-                  {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
-                />
+                  <Image
+                    src={secondaryImageSrc}
+                    alt={`${productName} alternate view`}
+                    fill
+                    draggable={false}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                    onLoad={() => setSecondaryLoaded(true)}
+                    className={cn(
+                      "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0",
+                      (!secondaryImage.blurDataURL && !secondaryLoaded) ? "opacity-0" : "",
+                      "md:group-hover:opacity-100 md:group-hover:scale-105",
+                      isUnavailable && "scale-[1.01] saturate-[0.85]"
+                    )}
+                    {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
+                  />
+                </>
               )}
             </>
           ) : (
@@ -195,25 +198,10 @@ export default function ProductCard({ product, className = "" }) {
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-2 bg-card px-3 pb-3 pt-3 @max-[220px]:p-2.5 @max-[220px]:gap-1.5 sm:p-4">
-        {isPending ? (
-          <>
-            <div className="block text-left pt-0.5">
-              <Skeleton className="mb-1.5 h-3.5 w-[85%] rounded-md sm:h-4" />
-              <Skeleton className="h-3.5 w-[50%] rounded-md sm:h-4" />
-            </div>
-            <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
-              <div className="flex min-w-0 flex-col justify-end gap-0.5">
-                <Skeleton className="h-[15px] w-16 rounded-md sm:h-[17px] sm:w-20" />
-              </div>
-              <Skeleton className="h-[34px] w-[34px] shrink-0 rounded-full sm:h-9 sm:w-[90px]" />
-            </div>
-          </>
-        ) : (
           <>
             <Link
               href={productHref}
               scroll={true}
-              onClick={handleNavigation}
               className="block text-left"
               draggable={false}
             >
@@ -255,7 +243,6 @@ export default function ProductCard({ product, className = "" }) {
               <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
             </div>
           </>
-        )}
       </CardContent>
     </Card>
   );
