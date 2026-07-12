@@ -19,9 +19,69 @@ export const metadata = {
 
 export default function SingleOrderPage({ params, searchParams }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background pb-20 pt-12"><div className="container mx-auto max-w-5xl px-4 animate-pulse"><div className="h-10 w-64 bg-muted rounded mb-8"></div><div className="h-96 w-full bg-muted rounded-xl"></div></div></div>}>
+    <Suspense fallback={<SingleOrderSkeleton />}>
       <SingleOrderContent params={params} searchParams={searchParams} />
     </Suspense>
+  );
+}
+
+function SingleOrderSkeleton() {
+  return (
+    <main className="min-h-screen bg-background pb-20 pt-12">
+      <div className="container mx-auto max-w-6xl px-4 animate-pulse">
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="h-4 w-32 bg-muted rounded mb-4"></div>
+            <div className="h-9 w-64 bg-muted rounded mb-2"></div>
+            <div className="h-4 w-96 max-w-full bg-muted rounded"></div>
+          </div>
+          <div className="h-10 w-40 bg-muted rounded-md"></div>
+        </div>
+
+        {/* Content */}
+        <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+          {/* Left Column */}
+          <div className="flex flex-col gap-4 md:gap-6 md:col-span-2">
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm h-32 flex flex-col justify-center p-6 gap-4">
+              <div className="h-6 w-48 bg-muted rounded"></div>
+              <div className="h-4 w-32 bg-muted rounded"></div>
+            </div>
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm h-96 p-6">
+              <div className="h-6 w-32 bg-muted rounded mb-2"></div>
+              <div className="h-4 w-24 bg-muted rounded mb-6"></div>
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex gap-4 items-center">
+                    <div className="size-12 rounded bg-muted shrink-0"></div>
+                    <div className="h-4 flex-1 bg-muted rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="flex flex-col gap-4 md:gap-6 md:col-span-1">
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm h-48 p-6">
+              <div className="h-6 w-32 bg-muted rounded mb-6"></div>
+              <div className="space-y-4">
+                <div className="h-4 w-full bg-muted rounded"></div>
+                <div className="h-4 w-full bg-muted rounded"></div>
+                <div className="h-4 w-full bg-muted rounded"></div>
+              </div>
+            </div>
+            <div className="rounded-xl border bg-card text-card-foreground shadow-sm h-48 p-6">
+              <div className="h-6 w-40 bg-muted rounded mb-6"></div>
+              <div className="space-y-4">
+                <div className="h-4 w-3/4 bg-muted rounded"></div>
+                <div className="h-4 w-1/2 bg-muted rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -68,7 +128,7 @@ async function SingleOrderContent({ params, searchParams }) {
 
   return (
     <main className="min-h-screen bg-background pb-20 pt-12">
-      <div className="container mx-auto max-w-5xl px-4">
+      <div className="container mx-auto max-w-6xl px-4">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link 

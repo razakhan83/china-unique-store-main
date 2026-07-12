@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Calendar, ChevronLeft, ChevronRight, MessageSquare, Package, Search, Star, Trash2 } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, MessageSquare, Package, Search, Star, Trash2, Check, Eye, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +54,7 @@ export default function AdminReviewsClient({
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [loadingId, setLoadingId] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
+  const [viewReview, setViewReview] = useState(null);
 
   useEffect(() => {
     setReviews(initialReviews);
@@ -89,28 +92,35 @@ export default function AdminReviewsClient({
     });
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this review?')) return;
-
+  async function handleStatusChange(id, status) {
     setLoadingId(id);
 
     try {
-      const res = await fetch(`/api/admin/reviews?id=${id}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/admin/reviews`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        toast.error(data.message || 'Delete failed');
+        toast.error(data.message || 'Status update failed');
         return;
       }
 
-      setReviews((prev) => prev.filter((review) => review._id !== id));
-      toast.success('Review deleted successfully');
+      setReviews((prev) => 
+        prev.map((review) => review._id === id ? { ...review, status, isApproved: status === 'Approved' } : review)
+      );
+      toast.success(`Review ${status.toLowerCase()} successfully`);
       router.refresh();
+      
+      // If modal is open for this review, update its status too or close it
+      if (viewReview && viewReview._id === id) {
+         setViewReview(prev => ({ ...prev, status, isApproved: status === 'Approved' }));
+      }
     } catch (error) {
-      toast.error('An error occurred while deleting the review');
+      toast.error('An error occurred while updating the review');
     } finally {
       setLoadingId(null);
     }
@@ -216,7 +226,14 @@ export default function AdminReviewsClient({
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold text-foreground flex items-center gap-2">
                           {review.userName}
-                          {highlightedId === review._id && (
+                          {review.status === 'Approved' || (review.isApproved && review.status !== 'Rejected') ? (
+                            <Badge className="h-4 bg-green-100 text-green-700 hover:bg-green-100 border-none px-1.5 text-[10px] uppercase tracking-wider">Approved</Badge>
+                          ) : review.status === 'Rejected' ? (
+                            <Badge className="h-4 bg-red-100 text-red-700 hover:bg-red-100 border-none px-1.5 text-[10px] uppercase tracking-wider">Rejected</Badge>
+                          ) : (
+                            <Badge className="h-4 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-1.5 text-[10px] uppercase tracking-wider">Pending</Badge>
+                          )}
+                          {(highlightedId === review._id || review.status === 'Pending' || (!review.status && !review.isApproved)) && (
                             <Badge className="h-4 animate-pulse bg-foreground px-1 text-[10px] uppercase tracking-wider text-background">
                               New
                             </Badge>
@@ -255,16 +272,45 @@ export default function AdminReviewsClient({
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleDelete(review._id)}
-                      disabled={loadingId === review._id}
-                    >
-                      <Trash2 className="size-4" />
-                      <span className="sr-only">Delete review</span>
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                        onClick={() => setViewReview(review)}
+                        title="View Full Review"
+                      >
+                        <Eye className="size-4" />
+                        <span className="sr-only">View review</span>
+                      </Button>
+                      
+                      {review.status !== 'Approved' && (!review.isApproved || review.status === 'Rejected') && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                          onClick={() => handleStatusChange(review._id, 'Approved')}
+                          disabled={loadingId === review._id}
+                          title="Approve Review"
+                        >
+                          <Check className="size-4" />
+                          <span className="sr-only">Approve review</span>
+                        </Button>
+                      )}
+                      {review.status !== 'Rejected' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => handleStatusChange(review._id, 'Rejected')}
+                          disabled={loadingId === review._id}
+                          title="Reject Review"
+                        >
+                          <X className="size-4" />
+                          <span className="sr-only">Reject review</span>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -299,6 +345,76 @@ export default function AdminReviewsClient({
           />
         </div>
       )}
+
+      <Dialog open={!!viewReview} onOpenChange={() => setViewReview(null)}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review Details</DialogTitle>
+          </DialogHeader>
+          {viewReview && (
+            <div className="space-y-6 pt-4 font-sans">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-muted font-bold text-foreground">
+                    {viewReview.userName?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{viewReview.userName}</p>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={cn("size-3", i < viewReview.rating ? "fill-foreground text-foreground" : "text-muted/40")} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  {viewReview.status === 'Approved' || (viewReview.isApproved && viewReview.status !== 'Rejected') ? (
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none uppercase tracking-wider">Approved</Badge>
+                  ) : viewReview.status === 'Rejected' ? (
+                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none uppercase tracking-wider">Rejected</Badge>
+                  ) : (
+                    <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none uppercase tracking-wider">Pending</Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="rounded-xl bg-muted/40 p-4 border text-sm">
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                  {viewReview.comment || <span className="italic text-muted-foreground">No text comment provided</span>}
+                </p>
+              </div>
+              
+              {viewReview.images && viewReview.images.length > 0 && (
+                <div>
+                  <h4 className="mb-3 font-semibold text-sm flex items-center gap-2"><ImageIcon className="size-4" /> Attached Images</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {viewReview.images.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border bg-muted/20">
+                        {/* Use standard img tag for external user uploaded images to avoid Next.js domain config errors if cloudinary domain isn't fully configured */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img} alt={`Review attachment ${idx + 1}`} className="object-cover w-full h-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                {viewReview.status !== 'Approved' && (!viewReview.isApproved || viewReview.status === 'Rejected') && (
+                   <Button onClick={() => handleStatusChange(viewReview._id, 'Approved')} disabled={loadingId === viewReview._id} className="bg-green-600 hover:bg-green-700 text-white">
+                     <Check className="size-4 mr-2"/> Approve
+                   </Button>
+                )}
+                {viewReview.status !== 'Rejected' && (
+                   <Button onClick={() => handleStatusChange(viewReview._id, 'Rejected')} disabled={loadingId === viewReview._id} variant="destructive">
+                     <X className="size-4 mr-2"/> Reject
+                   </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

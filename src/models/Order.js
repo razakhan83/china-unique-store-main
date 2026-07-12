@@ -97,6 +97,12 @@ const OrderSchema = new mongoose.Schema(
             default: DEFAULT_ORDER_STATUS,
             set: normalizeOrderStatus,
         },
+        statusHistory: [
+            {
+                status: { type: String, required: true },
+                timestamp: { type: Date, default: Date.now }
+            }
+        ],
         courierName: {
             type: String,
             required: false,
@@ -168,8 +174,9 @@ if (cachedOrder) {
     const hasDiscountAmount = !!cachedOrder.schema.paths.discountAmount;
     const hasIsDeleted = !!cachedOrder.schema.paths.isDeleted;
     const hasPackLabel = !!cachedOrder.schema.path('items').schema.paths.packLabel;
+    const hasStatusHistory = !!cachedOrder.schema.paths.statusHistory;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted || !hasPackLabel) {
+    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted || !hasPackLabel || !hasStatusHistory) {
         delete mongoose.models.Order;
     }
 }

@@ -206,6 +206,7 @@ export async function submitOrderAction(input) {
       couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       discountAmount: pricing.discountAmount || 0,
       shippingAmount: pricing.shipping || 0,
+      statusHistory: [{ status: DEFAULT_ORDER_STATUS, timestamp: new Date() }],
     });
 
     if (appliedCoupon) {

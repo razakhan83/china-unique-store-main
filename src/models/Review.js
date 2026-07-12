@@ -27,9 +27,17 @@ const ReviewSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    images: [{
+      type: String,
+    }],
+    status: {
+      type: String,
+      enum: ['Pending', 'Approved', 'Rejected'],
+      default: 'Pending',
+    },
     isApproved: {
       type: Boolean,
-      default: true, // Auto-approve for now as requested, admin can delete later
+      default: false, // Legacy field, kept for backward compatibility
     },
   },
   {
@@ -40,5 +48,16 @@ const ReviewSchema = new mongoose.Schema(
 ReviewSchema.index({ productId: 1, isApproved: 1, createdAt: -1 });
 ReviewSchema.index({ userId: 1, createdAt: -1 });
 ReviewSchema.index({ createdAt: -1 });
+
+// Next.js hot reloading cache buster for schema changes
+const cachedReview = mongoose.models.Review;
+if (cachedReview) {
+  const hasImages = !!cachedReview.schema.paths.images;
+  const hasStatus = !!cachedReview.schema.paths.status;
+  
+  if (!hasImages || !hasStatus) {
+    delete mongoose.models.Review;
+  }
+}
 
 export default mongoose.models.Review || mongoose.model('Review', ReviewSchema);

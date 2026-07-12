@@ -27,7 +27,10 @@ export async function GET(req) {
       ? new mongoose.Types.ObjectId(productId)
       : productId;
 
-    const reviews = await Review.find({ productId: resolvedProductId, isApproved: true })
+    const reviews = await Review.find({ 
+      productId: resolvedProductId, 
+      $or: [{ status: 'Approved' }, { isApproved: true }] 
+    })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -50,7 +53,7 @@ export async function POST(req) {
     if (!validation.success) {
       return NextResponse.json({ success: false, error: validation.error.errors[0].message }, { status: 400 });
     }
-    const { productId, rating, comment } = validation.data;
+    const { productId, rating, comment, images } = validation.data;
 
     await mongooseConnect();
 
@@ -109,6 +112,7 @@ export async function POST(req) {
       userName: user.name,
       rating: Number(rating),
       comment: comment || '',
+      images: images || [],
     });
 
     // Create Admin Notification

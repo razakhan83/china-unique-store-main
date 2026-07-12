@@ -32,18 +32,28 @@ export async function GET() {
   }
 }
 
-export async function DELETE(req) {
+export async function PATCH(req) {
   try {
     await requireMutationAccess();
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const { id, status } = await req.json();
 
-    if (!id) {
-      return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
+    if (!id || !status) {
+      return NextResponse.json({ success: false, error: 'Review ID and status are required' }, { status: 400 });
+    }
+
+    if (!['Approved', 'Rejected'].includes(status)) {
+      return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
     }
 
     await mongooseConnect();
-    const result = await Review.findByIdAndDelete(id);
+    const result = await Review.findByIdAndUpdate(
+      id, 
+      { 
+        status, 
+        isApproved: status === 'Approved' 
+      }, 
+      { new: true }
+    );
 
     if (!result) {
       return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 });
@@ -51,7 +61,7 @@ export async function DELETE(req) {
 
     revalidateTag(`reviews-${result.productId?.toString?.() || result.productId}`);
 
-    return NextResponse.json({ success: true, message: 'Review deleted successfully' });
+    return NextResponse.json({ success: true, message: `Review ${status.toLowerCase()} successfully` });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

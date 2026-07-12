@@ -34,6 +34,11 @@ export async function PATCH(req, { params }) {
       }
       order.status = nextStatus;
       order.isDraft = false;
+      
+      if (hasStatusChanged) {
+        if (!order.statusHistory) order.statusHistory = [];
+        order.statusHistory.push({ status: nextStatus, timestamp: new Date() });
+      }
     }
     if (courierName !== undefined) order.courierName = courierName;
     if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;

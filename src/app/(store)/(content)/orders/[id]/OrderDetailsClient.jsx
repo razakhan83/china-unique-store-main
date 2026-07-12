@@ -1,181 +1,207 @@
 'use client';
 
 import Image from 'next/image';
-import { Package, Calendar, Clock, Truck, FileText } from 'lucide-react';
+import { Package } from 'lucide-react';
+import CopyButton from '@/components/CopyButton';
+import InvoiceButton from '@/components/InvoiceButtonWrapper';
+import { normalizeOrderStatus } from '@/lib/order-status';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import InvoiceButton from '@/components/InvoiceButtonWrapper';
-import CopyButton from '@/components/CopyButton';
-import { normalizeOrderStatus } from '@/lib/order-status';
-import { cn } from '@/lib/utils';
-
-const STATUS_COLORS = {
-  'Order Confirmed': 'bg-primary/10 text-primary border-primary/20',
-  'In Process': 'bg-secondary text-secondary-foreground border-border',
-  Packed: 'bg-secondary text-secondary-foreground border-border',
-  Shipped: 'bg-secondary text-secondary-foreground border-border',
-  'Out For Delivery': 'bg-secondary text-secondary-foreground border-border',
-  Delivered: 'bg-success/12 text-success border-success/20',
-  Returned: 'bg-muted text-muted-foreground border-border',
-};
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function OrderDetailsClient({ order, invoiceBranding }) {
   if (!order) return null;
   const normalizedStatus = normalizeOrderStatus(order.status);
+  
+  const customerName = order.shippingAddress?.fullName || order.customerName || 'Customer';
+  const customerAddress = order.shippingAddress 
+    ? `${order.shippingAddress.address1 || ''}${order.shippingAddress.city ? `, ${order.shippingAddress.city}` : ''}`
+    : order.customerAddress || 'No Address Provided';
+  
+  const customerPhone = order.shippingAddress?.phone || order.customerPhone || '';
+  
+  const itemsSubtotal = order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
+  const deliveryCharges = order.shippingAmount != null ? order.shippingAmount : Math.max(0, order.totalAmount - itemsSubtotal);
 
   return (
-    <div className="surface-card overflow-hidden rounded-xl border border-border shadow-md">
-      {/* Card Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-8 bg-muted/30">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Order ID</span>
-            <div className="flex items-center gap-1">
-              <span className="font-mono text-lg font-bold text-foreground">{order.orderId}</span>
-              <CopyButton 
-                text={order.orderId} 
-                className="size-7 p-1 hover:bg-primary/10 transition-colors"
-              />
+    <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+      {/* Left Column */}
+      <div className="flex flex-col gap-4 md:gap-6 md:col-span-2 min-w-0">
+        
+        {/* Order Header Card */}
+        <Card>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 space-y-0">
+            <div className="flex flex-col space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CardTitle className="text-lg md:text-xl break-all">Order #{order.orderId}</CardTitle>
+                <CopyButton text={order.orderId} className="size-6 text-muted-foreground shrink-0" />
+              </div>
+              <CardDescription className="text-xs sm:text-sm">
+                Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </CardDescription>
             </div>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Calendar className="size-3" />
-              {new Date(order.createdAt).toLocaleDateString()}
+            <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
+              <Badge variant="outline" className="px-2.5 py-0.5 text-xs">
+                {normalizedStatus}
+              </Badge>
+              <InvoiceButton order={order} branding={invoiceBranding} variant="outline" className="h-8 sm:h-9 text-xs sm:text-sm" />
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="size-3" />
-              {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <InvoiceButton order={order} branding={invoiceBranding} />
-          <Badge 
-            variant="outline" 
-            className={cn("px-4 py-1.5 text-sm rounded-full border shadow-sm font-semibold", STATUS_COLORS[normalizedStatus] || 'bg-muted')}
-          >
-            {normalizedStatus}
-          </Badge>
-        </div>
-      </div>
+          </CardHeader>
+        </Card>
 
-      {/* Card Body */}
-      <div className="p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left Column: Items */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Package className="size-5 text-primary" />
-              Order Items
-            </h3>
-            <div className="space-y-4">
+        {/* Items Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Items</CardTitle>
+            <CardDescription>
+              {order.items.length} item{order.items.length === 1 ? '' : 's'} in this order.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-0 sm:px-6">
+            
+            {/* --- PC VIEW (Native Shadcn Table) --- */}
+            <div className="hidden sm:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Image</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {order.items.map((item, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        <div className="relative size-12 rounded-md bg-muted overflow-hidden">
+                          {item.image ? (
+                             <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                          ) : (
+                             <div className="flex h-full w-full items-center justify-center">
+                                <Package className="size-4 text-muted-foreground/50" />
+                             </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">Rs. {Number(item.price || 0).toLocaleString('en-PK')}</TableCell>
+                      <TableCell className="text-right font-medium">Rs. {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-PK')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* --- MOBILE VIEW (Flex Layout) --- */}
+            <div className="flex flex-col divide-y sm:hidden">
               {order.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-3 rounded-lg border border-border/50 bg-muted/10">
-                  <div className="relative size-16 overflow-hidden rounded-lg border border-border bg-muted shrink-0">
-                    {item.image && (
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    )}
+                <div key={idx} className="flex flex-col gap-3 py-4 px-4 min-w-0">
+                  <div className="flex gap-4 min-w-0">
+                    <div className="relative size-16 rounded-md border bg-muted overflow-hidden shrink-0">
+                      {item.image ? (
+                         <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                      ) : (
+                         <div className="flex h-full w-full items-center justify-center">
+                            <Package className="size-5 text-muted-foreground/50" />
+                         </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-center min-w-0 flex-1">
+                      <span className="font-medium text-sm line-clamp-2">{item.name}</span>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Qty: {item.quantity} × Rs. {Number(item.price || 0).toLocaleString('en-PK')}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                  <div className="flex justify-between items-center text-sm font-medium pt-2 border-t mt-1">
+                    <span className="text-xs text-muted-foreground uppercase">Total</span>
+                    <span>Rs. {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-PK')}</span>
                   </div>
-                  <span className="text-sm font-bold text-foreground">Rs. {(item.price * item.quantity).toLocaleString('en-PK')}</span>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Right Column: Tracking & Summary */}
-          <div className="space-y-8">
-            {/* Tracking Info */}
-            {(order.courierName || order.trackingNumber) && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 border-dashed">
-                <div className="flex items-center gap-2 mb-4">
-                  <Truck className="size-5 text-primary" />
-                  <h3 className="text-md font-bold text-primary">Tracking Details</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  {order.courierName && (
-                    <div>
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1">Courier</p>
-                      <p className="text-sm font-bold text-foreground">{order.courierName}</p>
-                    </div>
-                  )}
-                  {order.trackingNumber && (
-                    <div>
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1">Tracking ID</p>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-mono font-bold text-foreground">{order.trackingNumber}</span>
-                        <CopyButton 
-                          text={order.trackingNumber} 
-                          className="size-6 p-1 hover:bg-primary/10 transition-colors"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column */}
+      <div className="flex flex-col gap-4 md:gap-6 md:col-span-1">
+        
+        {/* Summary Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>Rs. {itemsSubtotal.toLocaleString('en-PK')}</span>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Delivery</span>
+              <span>{deliveryCharges === 0 ? 'Free' : `Rs. ${deliveryCharges.toLocaleString('en-PK')}`}</span>
+            </div>
+
+            {order.discountAmount > 0 && (
+              <div className="flex items-center justify-between text-sm text-green-600">
+                <span>Discount</span>
+                <span>-Rs. {order.discountAmount.toLocaleString('en-PK')}</span>
               </div>
             )}
 
-            {/* Shipping Summary */}
-            <div className="space-y-4 pt-4">
-               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Truck className="size-5 text-primary" />
-                Shipping Details
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Customer:</span>
-                  <span className="font-semibold">{order.customerName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Address:</span>
-                  <span className="font-semibold text-right max-w-[200px]">{order.customerAddress}</span>
-                </div>
-              </div>
-            </div>
-
             <Separator />
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-muted-foreground text-sm">
-                <span>Payment Method:</span>
-                <span className="font-semibold text-foreground">Cash on Delivery</span>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-sm font-semibold text-foreground">Items Subtotal:</span>
-                <span className="text-sm font-semibold text-foreground">Rs. {order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0).toLocaleString('en-PK')}</span>
-              </div>
-              <div className="flex items-center justify-between text-muted-foreground text-sm">
-                <span>Delivery Charges:</span>
-                <span>Rs. {order.shippingAmount != null ? order.shippingAmount.toLocaleString('en-PK') : Math.max(0, order.totalAmount - order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0)).toLocaleString('en-PK')}</span>
-              </div>
-              {order.discountAmount > 0 && (
-                <div className="flex items-center justify-between text-green-600 dark:text-green-400 text-sm">
-                  <span>Discount:</span>
-                  <span>-Rs. {order.discountAmount.toLocaleString('en-PK')}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-2 border-t border-border">
-                <span className="text-lg font-bold text-foreground">Total Paid:</span>
-                <span className="text-2xl font-black text-primary">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
-              </div>
+            <div className="flex items-center justify-between font-medium">
+              <span>Total</span>
+              <span className="text-lg">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Footer text */}
-      <div className="p-6 bg-muted/10 border-t border-border text-center text-xs text-muted-foreground">
-        Order created on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+          </CardContent>
+        </Card>
+
+        {/* Shipping Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Shipping Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm">
+              <div className="font-medium">{customerName}</div>
+              <div className="text-muted-foreground mt-1 leading-relaxed break-words">{customerAddress}</div>
+              {customerPhone && <div className="text-muted-foreground mt-1">{customerPhone}</div>}
+            </div>
+          </CardContent>
+          <Separator />
+          <CardHeader className="pt-4 pb-2">
+            <CardTitle className="text-sm">Payment Method</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-muted-foreground">
+              {order.paymentMethod || 'Cash on Delivery'}
+            </div>
+          </CardContent>
+        </Card>
+        
       </div>
     </div>
   );

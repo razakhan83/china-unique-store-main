@@ -64,12 +64,12 @@ import { cn } from '@/lib/utils';
 
 const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), {
   ssr: false,
-  loading: () => <Skeleton className="min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
+  loading: () => <Skeleton className="hidden md:inline-flex min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
 });
 
 const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), {
   ssr: false,
-  loading: () => <Skeleton className="min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
+  loading: () => <Skeleton className="hidden md:inline-flex min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
 });
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), {
