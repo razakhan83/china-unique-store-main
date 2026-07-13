@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import {
   Armchair,
@@ -95,14 +96,21 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
           </h2>
         </div>
 
-        <div className="relative overflow-hidden">
+        {/* The clipping box is expanded by 40px (2.5rem) on all sides to allow shadows to render, while preventing bleeding across the whole screen */}
+        <div className="relative -mx-10 -my-8 overflow-hidden py-8">
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 md:w-10"
-            style={{ background: 'linear-gradient(to right, var(--color-card), transparent)' }}
+            className={cn(
+              "pointer-events-none absolute inset-y-8 left-0 z-10 w-10 transition-opacity duration-300",
+              canScrollLeft ? "opacity-100" : "opacity-0"
+            )}
+            style={{ background: 'linear-gradient(to right, var(--color-card) 20%, transparent)' }}
           />
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 md:w-10"
-            style={{ background: 'linear-gradient(to left, var(--color-card), transparent)' }}
+            className={cn(
+              "pointer-events-none absolute inset-y-8 right-0 z-10 w-10 transition-opacity duration-300",
+              canScrollRight ? "opacity-100" : "opacity-0"
+            )}
+            style={{ background: 'linear-gradient(to left, var(--color-card) 20%, transparent)' }}
           />
 
           <div
@@ -123,10 +131,10 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                 <div key={`${category.id}-${index}`} className="category-icon-carousel-item">
                   <Link
                     href={`/products?category=${category.id}`}
-                    className="group flex w-full min-w-0 flex-col items-center gap-3 px-1 py-1 text-center"
+                    className="group flex w-full min-w-0 flex-col items-center gap-3 p-3 text-center"
                   >
                     <span
-                      className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] transition-transform duration-300 group-hover:scale-[1.04] md:h-[8.5rem] md:w-[8.5rem]"
+                      className="mac-dock-circle relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] md:h-[8.5rem] md:w-[8.5rem]"
                       style={{
                         background: `radial-gradient(circle at 30% 25%, white, ${colors.hex})`,
                       }}
@@ -156,30 +164,30 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
               );
             })}
           </div>
-
-          {categories.length > 1 ? (
-            <>
-              <button
-                type="button"
-                aria-label="Scroll categories left"
-                onClick={() => scrollCategories('left')}
-                disabled={!canScrollLeft}
-                className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex"
-              >
-                <ChevronLeft className="size-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Scroll categories right"
-                onClick={() => scrollCategories('right')}
-                disabled={!canScrollRight}
-                className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex"
-              >
-                <ChevronRight className="size-5" />
-              </button>
-            </>
-          ) : null}
         </div>
+
+        {categories.length > 1 ? (
+          <>
+            <button
+              type="button"
+              aria-label="Scroll categories left"
+              onClick={() => scrollCategories('left')}
+              disabled={!canScrollLeft}
+              className="pointer-events-auto absolute -left-4 top-[55%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-left-12"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll categories right"
+              onClick={() => scrollCategories('right')}
+              disabled={!canScrollRight}
+              className="pointer-events-auto absolute -right-4 top-[55%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-right-12"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </>
+        ) : null}
       </div>
     </section>
   );

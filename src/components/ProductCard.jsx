@@ -89,7 +89,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-out",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-none hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out hover:z-50",
         "py-0",
         className
       )}
@@ -117,7 +117,7 @@ export default function ProductCard({ product, className = "" }) {
           {discountLabel && (
             <Badge
               className={cn(
-                "pointer-events-auto rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-emerald-700 uppercase tracking-[0.08em]"
+                "pointer-events-auto rounded border-none bg-primary px-2 py-1 text-[11px] font-bold text-primary-foreground tracking-wide shadow-sm"
               )}
             >
               {discountLabel}
@@ -136,11 +136,12 @@ export default function ProductCard({ product, className = "" }) {
         </div>
 
         <ProductCardWishlistSlot product={product} />
+        <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
 
         <Link
           href={productHref}
           scroll={true}
-          className="relative block aspect-square w-full overflow-hidden bg-muted/30"
+          className="relative block aspect-square w-full overflow-hidden rounded-t-[11px] bg-muted/30 isolate transform-gpu"
           draggable={false}
         >
           {primaryImageSrc ? (
@@ -157,7 +158,7 @@ export default function ProductCard({ product, className = "" }) {
                 loading="lazy"
                 onLoad={() => setPrimaryLoaded(true)}
                 className={cn(
-                  "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out transform-gpu",
+                  "object-cover transition-all duration-500 ease-out transform-gpu",
                   (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
@@ -179,7 +180,7 @@ export default function ProductCard({ product, className = "" }) {
                     loading="lazy"
                     onLoad={() => setSecondaryLoaded(true)}
                     className={cn(
-                      "object-cover outline outline-1 outline-black/5 transition-all duration-500 ease-out absolute inset-0 opacity-0",
+                      "object-cover transition-all duration-500 ease-out transform-gpu absolute inset-0 opacity-0",
                       (!secondaryImage.blurDataURL && !secondaryLoaded) ? "opacity-0" : "",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",
                       isUnavailable && "scale-[1.01] saturate-[0.85]"
@@ -206,39 +207,34 @@ export default function ProductCard({ product, className = "" }) {
               draggable={false}
             >
               <h3
-                className="line-clamp-2 text-[14px] font-semibold leading-[1.2rem] text-foreground/90 @min-[260px]:text-[15px]"
-                title={productName}
+                className="line-clamp-2 text-[13px] font-medium leading-[1.3] text-foreground/90 @min-[260px]:text-[14px]"
                 draggable={false}
               >
                 {productName}
               </h3>
             </Link>
 
-            <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
-              <div className="flex min-w-0 flex-col justify-end gap-0.5">
+            <div className="mt-auto flex flex-col gap-3.5 pt-3">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                <p
+                  className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px]"
+                  draggable={false}
+                >
+                  {formatPrice(sellingPrice)}
+                </p>
                 {compareAtPrice ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <>
                     <p
-                      className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
-                      draggable={false}
-                    >
-                      {formatPrice(sellingPrice)}
-                    </p>
-                    <p
-                      className="text-[11px] font-medium leading-none text-muted-foreground/75 line-through @min-[260px]:text-[13px]"
+                      className="text-[12px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[13px]"
                       draggable={false}
                     >
                       {formatPrice(compareAtPrice)}
                     </p>
-                  </div>
-                ) : (
-                  <p
-                    className="text-[15px] font-bold leading-none text-black tabular-nums @min-[260px]:text-[17px]"
-                    draggable={false}
-                  >
-                    {formatPrice(sellingPrice)}
-                  </p>
-                )}
+                    <Badge className="pointer-events-auto rounded bg-emerald-100/60 px-2 py-0.5 text-[11px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[22px] inline-flex items-center">
+                      Save {formatPrice(compareAtPrice - sellingPrice)}
+                    </Badge>
+                  </>
+                ) : null}
               </div>
               <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
             </div>

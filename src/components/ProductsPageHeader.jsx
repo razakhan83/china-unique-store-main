@@ -12,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useProductsNavigationFeedback } from "@/components/ProductsNavigationFeedback";
 import { cn } from "@/lib/utils";
 
 const categoryPillClassName =
@@ -63,6 +64,7 @@ export default function ProductsPageHeader({
 }) {
   const router = useRouter();
   const categoryNavRef = useRef(null);
+  const { setCategoryPending } = useProductsNavigationFeedback();
   const [isPending, startTransition] = useTransition();
   const [pendingCategoryId, setPendingCategoryId] = useState(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -174,6 +176,13 @@ export default function ProductsPageHeader({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isPending) {
+      setPendingCategoryId(null);
+      setCategoryPending(null, false);
+    }
+  }, [isPending, setCategoryPending]);
+
   function centerCategoryPill(target) {
     const nav = categoryNavRef.current;
     if (!nav || !(target instanceof HTMLElement)) return;
@@ -188,6 +197,7 @@ export default function ProductsPageHeader({
     const target = event.currentTarget;
     centerCategoryPill(target);
     setPendingCategoryId(categoryId);
+    setCategoryPending(categoryId, true);
 
     startTransition(() => {
       router.push(href, { scroll: false });

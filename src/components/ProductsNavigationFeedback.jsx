@@ -17,7 +17,7 @@ export function ProductsNavigationFeedbackProvider({ children }) {
         return categoryId;
       }
 
-      if (current === categoryId) {
+      if (categoryId === null || current === categoryId) {
         return null;
       }
 

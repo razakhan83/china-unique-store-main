@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, ChevronRight, CreditCard, MapPin, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
+import { BadgeCheck, ChevronRight, CreditCard, MapPin, RefreshCcw, ShieldCheck, Truck, Code } from 'lucide-react';
 
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
@@ -52,7 +52,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           />
         </Suspense>
 
-        <main className="flex-grow">{children}</main>
+        <main>{children}</main>
 
         <AnimatedStats />
 
@@ -201,10 +201,19 @@ export default function LayoutWrapper({ children, categories, settings }) {
             <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 text-xs text-muted-foreground md:flex-row">
               <p>&copy; China Unique Store. All rights reserved.</p>
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-background/75 px-3 py-2 text-foreground">
-                  <CreditCard className="size-4" />
-                  Secure checkout
-                </span>
+                <div className="group flex cursor-default items-center gap-3">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary shadow-sm transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_-3px_color-mix(in_oklab,var(--color-primary)_50%,transparent)]">
+                    <Code className="size-5" />
+                  </span>
+                  <div className="flex flex-col items-start gap-1 leading-none">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/60 transition-colors group-hover:text-muted-foreground/90">
+                      Powered by
+                    </span>
+                    <span className="text-lg font-bold tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                      Ahmed Raza
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

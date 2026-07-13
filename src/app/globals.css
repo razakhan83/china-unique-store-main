@@ -757,10 +757,13 @@
   grid-auto-columns: 31.25%;
   gap: 0.5rem;
   overflow-x: auto;
+  overflow-y: visible;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
-  padding-block: 0.125rem;
+  padding-block: 2rem;
+  margin-block: -2rem;
+  padding-inline: 2.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -776,6 +779,26 @@
 .category-icon-carousel-item {
   min-width: 0;
   scroll-snap-align: start;
+}
+
+/* macOS Dock Effect for Category Circles */
+.category-icon-carousel-item .mac-dock-circle {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease-out;
+  transform-origin: bottom center;
+}
+
+.category-icon-carousel-item:hover .mac-dock-circle {
+  transform: scale(1.12) translateY(-6px);
+  box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-primary), 0 14px 28px rgba(10, 61, 46, 0.15);
+  z-index: 20;
+}
+
+.category-icon-carousel-item:has(+ .category-icon-carousel-item:hover) .mac-dock-circle {
+  transform: scale(1.06) translateY(-2px) translateX(-8px);
+}
+
+.category-icon-carousel-item:hover + .category-icon-carousel-item .mac-dock-circle {
+  transform: scale(1.06) translateY(-2px) translateX(8px);
 }
 
 @media (min-width: 640px) {
@@ -816,7 +839,7 @@
   }
 
   .category-icon-carousel {
-    grid-auto-columns: 11.25%;
+    grid-auto-columns: calc((100% - 7 * 0.75rem) / 8);
   }
 }
 

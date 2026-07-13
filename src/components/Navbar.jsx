@@ -381,7 +381,7 @@ function NavbarContent({
   return (
     <>
       <div className={cn(
-        "navbar-shell sticky top-0 z-40 overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
+        "navbar-shell sticky top-0 z-[200] overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
         isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
       )}>
       {showAnnouncementBar ? (
@@ -398,8 +398,11 @@ function NavbarContent({
       >
         <div className="relative h-16">
           <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
-            <Button variant="ghost" size="icon" onClick={handleSidebarOpen} aria-label="Open menu" className="md:hidden">
-              <Menu className="size-6 md:size-7" strokeWidth={2.2} />
+            <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
+              <span className="relative flex size-6 md:size-7 items-center justify-center">
+                <Menu strokeWidth={2.2} className={cn('absolute inset-0 transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
+                <X strokeWidth={2.2} className={cn('absolute inset-0 transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
+              </span>
             </Button>
 
             <StoreLogo
@@ -565,16 +568,11 @@ function NavbarContent({
           <SheetContent
             side="left"
             showCloseButton={false}
-            className="w-[85vw] max-w-sm border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:w-[22rem] md:w-[min(76vw,22rem)] flex flex-col"
+            className={cn(
+              "w-[85vw] max-w-sm border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:w-[22rem] md:w-[min(76vw,22rem)] flex flex-col data-[state=closed]:duration-300 data-[state=open]:duration-300",
+              showAnnouncementBar ? "pt-[96px]" : "pt-[64px]"
+            )}
           >
-            <SheetClose 
-              onClick={() => setIsSidebarOpen(false)}
-              className="absolute -right-12 top-4 rounded-full bg-black/20 p-2 opacity-70 ring-offset-background transition-all hover:bg-black/40 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-            >
-              <X className="h-6 w-6 text-white" />
-              <span className="sr-only">Close</span>
-            </SheetClose>
-
             {isSidebarOpen && (
               <MobileMenuContent
                 pathname={pathname}

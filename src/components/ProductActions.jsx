@@ -271,7 +271,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         <Button
                             onClick={handleAddToCart}
                             disabled={isAdding || isOutOfStock}
-                            className="add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96]"
+                            className={cn(
+                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-colors duration-500 ease-out border border-solid border-foreground/40",
+                                isAdding || isOutOfStock ? "" : "bg-muted/20 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary active:bg-primary active:text-primary-foreground active:border-primary"
+                            )}
                             size="lg"
                         >
                             <span className="relative inline-flex size-5 items-center justify-center">
@@ -330,7 +333,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         <Button
                             onClick={handleAddToCart}
                             disabled={isAdding}
-                            className="add-to-cart-button h-12 w-full rounded-xl active:scale-[0.96] font-bold text-base"
+                            className={cn(
+                                "add-to-cart-button h-12 w-full rounded-xl active:scale-[0.96] font-bold text-base transition-colors duration-500 ease-out border border-solid border-foreground/40",
+                                isAdding ? "" : "bg-muted/20 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary active:bg-primary active:text-primary-foreground active:border-primary"
+                            )}
                         >
                             <span className="relative inline-flex size-5 items-center justify-center mr-2">
                                 <Spinner

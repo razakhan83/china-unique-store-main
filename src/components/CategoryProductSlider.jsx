@@ -141,7 +141,7 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
         {/* Section header */}
         <div className="mb-5 flex items-center justify-between gap-4 md:mb-6 md:items-end">
           <div className="min-w-0 flex-1">
-            <h2 className="text-[1.7rem] font-bold tracking-[-0.04em] text-primary [text-wrap:balance] md:text-[2.1rem]">
+            <h2 className="text-[1.25rem] leading-tight font-bold tracking-[-0.03em] text-primary [text-wrap:balance] sm:text-[1.5rem] md:text-[2.1rem]">
               {categoryLabel}
             </h2>
           </div>
@@ -162,11 +162,11 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
         </div>
 
         {/* Slides */}
-        <CarouselContent className="-ml-3 md:-ml-4">
+        <CarouselContent className="-ml-3 md:-ml-4" viewportClassName="pt-6 pb-6 -mt-6 -mb-6">
           {slides.map((slide, idx) => (
             <CarouselItem
               key={`product-slide-${idx}`}
-              className="pl-3 md:pl-4 basis-[45%] sm:basis-[46%] md:basis-[34%] lg:basis-[27%] xl:basis-[23%]"
+              className="pl-3 md:pl-4 basis-[50%] md:basis-[33.33%] lg:basis-[25%]"
             >
               <div className="h-full min-w-0 pb-1">{slide}</div>
             </CarouselItem>

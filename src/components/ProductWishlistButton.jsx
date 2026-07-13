@@ -70,9 +70,9 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
       onClick={handleToggle}
       disabled={isSubmitting || isLoading}
       className={cn(
-        "group/wishlist absolute right-2.5 top-2.5 z-10 hidden size-8 items-center justify-center rounded-full border border-border/60 bg-background/92 p-0 text-foreground shadow-xs backdrop-blur-md outline-none transition-[transform,opacity,border-color,box-shadow,color,background-color] duration-200 ease-out hover:scale-[1.03] active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-ring/50 md:inline-flex md:hover:border-destructive/30 md:hover:text-destructive md:hover:shadow-sm after:absolute after:-inset-2 after:content-['']",
+        "group/wishlist absolute right-2.5 top-2.5 z-10 hidden size-8 items-center justify-center rounded-full border border-border/60 bg-background/92 p-0 text-foreground shadow-xs backdrop-blur-md outline-none transition-[transform,opacity,border-color,box-shadow,color,background-color] duration-200 ease-out hover:scale-[1.03] active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-ring/50 md:inline-flex md:hover:border-red-500/30 md:hover:text-red-500 md:hover:shadow-sm after:absolute after:-inset-2 after:content-['']",
         active
-          ? 'border-destructive/30 bg-background text-destructive opacity-100'
+          ? 'border-red-500/30 bg-background text-red-500 opacity-100'
           : 'md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100',
         (isSubmitting || isLoading) && 'pointer-events-none opacity-60',
         className,
@@ -81,13 +81,13 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
       <span className="relative block size-4">
         <Heart
           className={cn(
-            'absolute inset-0 size-4 transition-all duration-200 ease-out md:group-hover/wishlist:text-destructive/70',
+            'absolute inset-0 size-4 transition-all duration-200 ease-out md:group-hover/wishlist:text-red-500/70',
             active ? 'scale-75 opacity-0' : 'scale-100 opacity-100'
           )}
         />
         <Heart
           className={cn(
-            'absolute inset-0 size-4 fill-destructive stroke-destructive transition-all duration-200 ease-out',
+            'absolute inset-0 size-4 fill-red-500 stroke-red-500 transition-all duration-200 ease-out',
             active ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
           )}
         />

@@ -81,7 +81,7 @@ function ProductsGridSkeletonContent() {
         {Array.from({ length: 12 }).map((_, index) => (
           <div
             key={index}
-            className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card border border-border/40"
+            className="@container product-card-surface group relative flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card"
           >
             <div className="relative block aspect-square w-full overflow-hidden bg-muted/30">
               <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60" />
@@ -91,11 +91,12 @@ function ProductsGridSkeletonContent() {
                 <Skeleton className="mb-1.5 h-3.5 w-[85%] rounded-md sm:h-4" />
                 <Skeleton className="h-3.5 w-[50%] rounded-md sm:h-4" />
               </div>
-              <div className="mt-auto flex items-end justify-between gap-2 pt-1 @max-[220px]:gap-1.5">
-                <div className="flex min-w-0 flex-col justify-end gap-0.5">
-                  <Skeleton className="h-[15px] w-16 rounded-md sm:h-[17px] sm:w-20" />
+              <div className="mt-auto flex flex-col gap-2.5 pt-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                  <Skeleton className="h-[15px] w-16 rounded-md sm:h-[16px] sm:w-20" />
+                  <Skeleton className="h-[12px] w-12 rounded-md sm:h-[13px] sm:w-16" />
                 </div>
-                <Skeleton className="h-[34px] w-[34px] shrink-0 rounded-full sm:h-9 sm:w-[90px]" />
+                <Skeleton className="h-10 w-full rounded-lg" />
               </div>
             </div>
           </div>

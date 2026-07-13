@@ -167,7 +167,7 @@ function ProductGridContent({
     <>
       {!hideCategoryBar ? (
         <div className="border-y border-border/70 bg-card/70">
-          <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-4 hide-scrollbar">
+          <div className="mx-auto max-w-[1500px] overflow-x-auto px-4 py-4 hide-scrollbar">
             <ToggleGroup
               type="single"
               value={activeCategory}
@@ -199,7 +199,7 @@ function ProductGridContent({
       ) : null}
 
       {!hideSearch ? (
-        <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-5">
+        <div className="products-page-toolbar mx-auto max-w-[1500px] px-4 pt-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="min-w-0 flex-1">
               <SearchField
@@ -242,7 +242,7 @@ function ProductGridContent({
         </div>
       ) : null}
 
-      <section className="mx-auto max-w-7xl px-4 py-6">
+      <section className="mx-auto max-w-[1500px] px-4 py-6">
         <div className="products-page-results-meta mb-4 flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground tabular-nums">
             Showing <span className="font-semibold text-foreground">{displayedProducts.length}</span> of{" "}
