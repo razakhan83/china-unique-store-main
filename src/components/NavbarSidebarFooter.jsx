@@ -36,9 +36,9 @@ export default function NavbarSidebarFooter({ mobileMenuButtonClass = '', onClos
               onCloseSidebar();
               signOut();
             }}
-            className="h-9 min-h-9 w-full justify-start rounded-lg px-3 py-1.5 text-[14px] font-medium transition-all duration-300 active:scale-[0.98] !bg-red-400 !text-white hover:!bg-red-500 shadow-none border-0"
+            className="h-8 min-h-8 w-full justify-start rounded-lg px-2.5 py-1 text-[13px] font-medium transition-all duration-300 active:scale-[0.98] !bg-red-500/10 !text-red-500 hover:!bg-red-500/20 shadow-none border-0"
           >
-            <LogOut className="mr-3 size-4" />
+            <LogOut className="mr-2 size-3.5" />
             Logout
           </Button>
         </SidebarMenuItem>

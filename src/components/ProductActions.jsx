@@ -36,14 +36,14 @@ export function ProductSocialActions({ product, className = '' }) {
     };
 
     const secondaryActionClass =
-        "h-11 shrink-0 rounded-xl border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] transition-[border-color,background-color,box-shadow,color,transform] duration-200 hover:bg-[color:color-mix(in_oklab,var(--color-muted)_74%,white)] hover:text-foreground active:scale-[0.96]";
+        "h-11 shrink-0 rounded-xl border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] transition-all duration-300 hover:bg-[color:color-mix(in_oklab,var(--color-muted)_74%,white)] active:scale-[0.96]";
 
     return (
         <div className={cn('flex gap-3', className)}>
             <Button
                 onClick={handleShare}
                 variant="outline"
-                className={cn(secondaryActionClass, "size-11 px-0")}
+                className={cn(secondaryActionClass, "size-11 px-0 hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-50/50 dark:hover:bg-blue-500/10")}
                 title="Share"
             >
                 <Share2 className="size-5" />
@@ -51,7 +51,7 @@ export function ProductSocialActions({ product, className = '' }) {
             <ProductWishlistButton
                 product={product}
                 mode="detail"
-                className={cn(secondaryActionClass, "size-11 shrink-0 px-0 [&>span]:hidden")}
+                className={cn(secondaryActionClass, "size-11 shrink-0 px-0 [&>span]:hidden hover:text-red-500 hover:border-red-500/40 hover:bg-red-50/50 dark:hover:bg-red-500/10")}
                 title="Save to Wishlist"
             />
         </div>
@@ -188,7 +188,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             <span className="text-lg font-medium text-muted-foreground line-through">
                                 {formatPrice(displayComparePrice)}
                             </span>
-                            <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 shadow-none font-semibold">
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-sm font-bold tracking-wide">
                                 Save {formatPrice(displayComparePrice - displayPrice)}
                             </Badge>
                         </div>
@@ -222,10 +222,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 key={idx}
                                 onClick={() => setSelectedPack(pack)}
                                 className={cn(
-                                    "flex h-11 flex-1 sm:flex-none sm:min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg border px-4 text-sm font-semibold transition-colors",
+                                    "flex h-9 sm:h-10 flex-1 sm:flex-none sm:min-w-[100px] items-center justify-center whitespace-nowrap rounded-md border px-3 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                                     selectedPack?.label === pack.label
-                                        ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_14px_rgba(var(--color-primary),0.2)]"
-                                        : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                                        ? "border-primary bg-primary text-primary-foreground shadow-[0_2px_10px_rgba(var(--color-primary),0.2)]"
+                                        : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-muted/50 hover:text-foreground shadow-sm"
                                 )}
                             >
                                 {pack.label}
@@ -300,7 +300,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleWhatsApp}
                             size="lg"
                             variant="outline"
-                            className={cn(secondaryActionClass, "size-11 px-0")}
+                            className={cn(secondaryActionClass, "size-11 px-0 hover:text-[#25D366] hover:border-[#25D366]/40 hover:bg-[#25D366]/10")}
                             title="WhatsApp"
                         >
                             <WhatsAppIcon className="size-5" />
@@ -326,7 +326,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             <Button
                                 onClick={handleWhatsApp}
                                 variant="outline"
-                                className={cn(secondaryActionClass, "h-10 flex-1 px-0 text-sm")}
+                                className={cn(secondaryActionClass, "h-10 flex-1 px-0 text-sm hover:text-[#25D366] hover:border-[#25D366]/40 hover:bg-[#25D366]/10")}
                             >
                                 <WhatsAppIcon className="size-4 mr-1.5" />
                                 <span>WhatsApp</span>

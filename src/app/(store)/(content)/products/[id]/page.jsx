@@ -360,16 +360,16 @@ async function ProductHeroSection({ paramsPromise }) {
         <div className="w-full md:w-[55%] lg:w-[58%]">
           <div className="flex flex-col gap-4 md:gap-6 md:sticky md:top-24">
             <div className="space-y-2 md:space-y-4">
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="text-xs font-medium px-2.5 py-0.5 rounded-full">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary" className="text-[11px] sm:text-xs font-medium px-2.5 py-0.5 rounded-md bg-muted/60 text-muted-foreground hover:bg-muted/80 border-0 shadow-sm">
                   {categoryLabel || 'Premium Item'}
                 </Badge>
                 {isOutOfStock ? (
-                  <Badge variant="destructive" className="text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-none">
+                  <Badge variant="destructive" className="text-[11px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-md shadow-sm border-0">
                     Out of Stock
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 rounded-full border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
+                  <Badge variant="outline" className="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-md border-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-sm tracking-wide">
                     In Stock
                   </Badge>
                 )}

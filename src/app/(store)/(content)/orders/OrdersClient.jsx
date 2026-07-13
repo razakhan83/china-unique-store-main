@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -112,7 +113,9 @@ const ProgressTracker = ({ status }) => {
               )}
 
               <span className={cn(
-                "absolute top-8 sm:top-10 text-[10px] sm:text-xs font-bold whitespace-nowrap transition-colors duration-500",
+                "absolute top-8 sm:top-10 text-[9px] sm:text-xs font-bold transition-colors duration-500",
+                "text-center w-[56px] sm:w-auto leading-[1.1] sm:leading-normal whitespace-normal sm:whitespace-nowrap",
+                "hidden min-[360px]:block", // Hide text on extremely small screens (<360px) like old SE
                 isCompleted ? "text-gray-900" :
                 isActive ? "text-blue-700" : "text-gray-400"
               )}>
@@ -180,15 +183,24 @@ const TrackingTimeline = ({ order, mounted }) => {
         const isLast = index === steps.length - 1;
 
         return (
-          <div key={step.key} className="flex gap-5 group">
+          <div 
+            key={step.key} 
+            className="flex gap-5 group animate-in slide-in-from-left-4 fade-in fill-mode-both duration-500"
+            style={{ animationDelay: `${index * 150}ms` }}
+          >
             {/* Timeline Column */}
             <div className="flex flex-col items-center">
               {/* Dot */}
-              <div className={cn(
-                "size-3.5 rounded-full z-10 transition-all duration-500 shrink-0 mt-1",
-                isPast || isDelivered ? "bg-primary shadow-sm ring-4 ring-primary/10" : 
-                isActive ? "bg-white border-[3px] border-primary ring-4 ring-primary/20" : "bg-gray-200"
-              )} />
+              <div className="relative mt-1">
+                {isActive && (
+                  <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+                )}
+                <div className={cn(
+                  "size-3.5 rounded-full z-10 transition-all duration-500 shrink-0 relative",
+                  isPast || isDelivered ? "bg-primary shadow-sm ring-4 ring-primary/10" : 
+                  isActive ? "bg-white border-[3px] border-primary ring-4 ring-primary/20 scale-110" : "bg-gray-200"
+                )} />
+              </div>
               {/* Line */}
               {!isLast && (
                 <div className={cn(
@@ -207,7 +219,7 @@ const TrackingTimeline = ({ order, mounted }) => {
                 {step.label}
               </span>
               {dateToShow && (
-                <span className="text-[13px] font-medium text-gray-500 mt-2 flex items-center gap-1.5">
+                <span className="text-[13px] font-medium text-gray-500 mt-2 flex items-center gap-1.5 animate-in fade-in duration-500">
                   <Clock className="size-3.5 opacity-70" />
                   {dateToShow}
                 </span>
@@ -249,6 +261,9 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
   // Auto-popup logic for delivered orders
   useEffect(() => {
     if (mounted) {
+      const isPermanentlyDismissed = localStorage.getItem('feedback_popup_dismissed') === 'true';
+      if (isPermanentlyDismissed) return;
+
       const unreviewedDeliveredOrder = deliveredOrders.find(order => {
         // Use sessionStorage so it only pops up once per session per order
         const shownKey = `feedback_shown_${order.orderId}`;
@@ -329,7 +344,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                       </div>
                       <div className="flex flex-col gap-0.5 sm:gap-1">
                         <div className="text-gray-500 uppercase text-[10px] sm:text-[11px] font-bold tracking-widest">Total</div>
-                        <div className="font-semibold text-gray-900 text-[13px] sm:text-sm">Rs. {order.totalAmount.toLocaleString('en-PK')}</div>
+                        <div className="font-semibold text-gray-900 text-[13px] sm:text-sm">Rs. {mounted ? order.totalAmount.toLocaleString('en-PK') : order.totalAmount}</div>
                       </div>
                     </div>
                     
@@ -470,7 +485,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
 
       {/* Tracking Modal */}
       <Dialog open={!!trackingOrder} onOpenChange={(open) => !open && setTrackingOrder(null)}>
-        <DialogContent className="max-w-[440px] md:max-w-[500px] w-full bg-white p-0 overflow-hidden rounded-[24px] border-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] gap-0">
+        <DialogContent className="max-w-[440px] md:max-w-[500px] w-full bg-white p-0 overflow-hidden rounded-[24px] border-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] gap-0 font-sans">
           {trackingOrder && (
              <div className="flex flex-col h-full relative">
                {/* Elegant Header */}
@@ -479,7 +494,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                   <DialogDescription className="text-xs font-bold text-gray-400 uppercase tracking-widest z-10 relative">#{trackingOrder.orderId}</DialogDescription>
                   
                   {normalizeOrderStatus(trackingOrder.status) === 'Delivered' && (
-                    <div className="absolute right-4 top-4 md:right-8 md:top-6 z-20 origin-top-right">
+                    <div className="absolute right-4 top-4 md:right-8 md:top-6 z-20 origin-top-right animate-in zoom-in-75 fade-in duration-500">
                        <DeliveredStamp className="scale-100" />
                     </div>
                   )}
@@ -488,36 +503,42 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                {/* Tracking Info Area */}
                {trackingOrder.trackingNumber ? (
                  <div className="px-7 md:px-9 py-5 bg-gray-50/50 border-b border-gray-100 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between group">
                       <div className="flex flex-col gap-1">
-                         <span className="text-[11px] font-bold text-primary uppercase tracking-widest">
+                         <span className="text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5 cursor-pointer hover:text-primary/80 transition-colors"
+                           onClick={() => {
+                              navigator.clipboard.writeText(trackingOrder.courierName || 'Courier');
+                              toast?.success?.("Courier name copied!");
+                           }}
+                         >
                            {trackingOrder.courierName || 'Courier'}
+                           <Copy className="size-3 opacity-0 group-hover:opacity-50 transition-opacity" />
                          </span>
-                         <span className="text-xl font-bold text-gray-900 tracking-tight font-mono">{trackingOrder.trackingNumber}</span>
+                         <span 
+                           className="text-xl font-bold text-gray-900 tracking-tight font-mono cursor-pointer hover:text-gray-600 transition-colors flex items-center gap-2"
+                           onClick={() => {
+                             navigator.clipboard.writeText(trackingOrder.trackingNumber);
+                             const el = document.getElementById('copy-icon-' + trackingOrder.orderId);
+                             if(el) {
+                                el.classList.replace('text-gray-400', 'text-green-600');
+                                setTimeout(() => {
+                                  el.classList.replace('text-green-600', 'text-gray-400');
+                                }, 2000);
+                             }
+                           }}
+                         >
+                           {trackingOrder.trackingNumber}
+                           <Copy id={'copy-icon-' + trackingOrder.orderId} className="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95" />
+                         </span>
                       </div>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(trackingOrder.trackingNumber);
-                          const el = document.getElementById('copy-icon-' + trackingOrder.orderId);
-                          if(el) {
-                             el.classList.replace('text-gray-600', 'text-green-600');
-                             setTimeout(() => {
-                               el.classList.replace('text-green-600', 'text-gray-600');
-                             }, 2000);
-                          }
-                        }}
-                        className="size-10 rounded-full bg-white shadow-sm ring-1 ring-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:scale-105 transition-all"
-                      >
-                        <Copy id={'copy-icon-' + trackingOrder.orderId} className="size-4 transition-colors" />
-                      </button>
                     </div>
-                    <div className="text-[13px] font-medium text-gray-500">
+                    <div className="text-[13px] font-medium text-gray-500 animate-in fade-in slide-in-from-bottom-2 duration-500">
                       Your package has been shipped and is on its way.
                     </div>
                  </div>
                ) : (
                  <div className="px-7 md:px-9 py-6 bg-gray-50/50 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed">
+                    <p className="text-sm font-medium text-gray-500 leading-relaxed animate-in fade-in">
                       Your order is currently being processed. Tracking details will appear here once your package ships.
                     </p>
                  </div>
@@ -541,9 +562,10 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
             setFeedbackOrder(null);
           }}
           onDismissPermanently={() => {
-            const newReviewed = [...reviewedOrders, feedbackOrder._id];
-            setReviewedOrders(newReviewed);
-            localStorage.setItem('reviewedOrders', JSON.stringify(newReviewed));
+            localStorage.setItem('feedback_popup_dismissed', 'true');
+            setFeedbackOrder(null);
+          }}
+          onClose={() => {
             setFeedbackOrder(null);
           }}
           onSuccess={handleFeedbackSuccess}
@@ -556,7 +578,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
 // ------------------------------------------------------------------
 // Custom Feedback Modal Component (Per-Product Reviews)
 // ------------------------------------------------------------------
-const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onSuccess }) => {
+const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, onSuccess }) => {
   const getItemKey = (item, idx) => item._id ? item._id : `${item.productId}-${idx}`;
 
   // Initialize state for each product in the order
@@ -659,7 +681,8 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onSuccess }
         onSuccess(order._id);
       }
       setTimeout(() => {
-        onDismissPermanently();
+        if (onClose) onClose();
+        else onDismissPermanently();
       }, 2000);
     } catch (error) {
       // Assuming toast from 'sonner' is available in scope or we use standard alert
