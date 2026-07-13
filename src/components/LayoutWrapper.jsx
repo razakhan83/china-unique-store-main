@@ -35,6 +35,8 @@ export default function LayoutWrapper({ children, categories, settings }) {
   const quickLinks = Array.isArray(settings.customPages)
     ? settings.customPages.filter((page) => page?.isEnabled !== false && page?.showInFooter !== false)
     : [];
+  const hasAnnouncementBar = settings.announcementBarEnabled && 
+    (settings.announcementBarText || (Array.isArray(settings.announcementBarMessages) && settings.announcementBarMessages.length > 0));
 
   return (
     <>
@@ -219,7 +221,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           </div>
         </footer>
       </div>
-      <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
+      <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} hasAnnouncementBar={hasAnnouncementBar} />
     </>
   );
 }

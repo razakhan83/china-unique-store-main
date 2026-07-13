@@ -754,16 +754,16 @@
 .category-icon-carousel {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 31.25%;
-  gap: 0.5rem;
+  grid-auto-columns: 28%;
+  gap: 0.75rem;
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
-  padding-block: 2rem;
-  margin-block: -2rem;
-  padding-inline: 2.5rem;
+  padding-block: 1rem;
+  margin-block: -1rem;
+  padding-inline: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -787,18 +787,20 @@
   transform-origin: bottom center;
 }
 
-.category-icon-carousel-item:hover .mac-dock-circle {
-  transform: scale(1.12) translateY(-6px);
-  box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-primary), 0 14px 28px rgba(10, 61, 46, 0.15);
-  z-index: 20;
-}
+@media (min-width: 768px) {
+  .category-icon-carousel-item:hover .mac-dock-circle {
+    transform: scale(1.12) translateY(-6px);
+    box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-primary), 0 14px 28px rgba(10, 61, 46, 0.15);
+    z-index: 20;
+  }
 
-.category-icon-carousel-item:has(+ .category-icon-carousel-item:hover) .mac-dock-circle {
-  transform: scale(1.06) translateY(-2px) translateX(-8px);
-}
+  .category-icon-carousel-item:has(+ .category-icon-carousel-item:hover) .mac-dock-circle {
+    transform: scale(1.06) translateY(-2px) translateX(-8px);
+  }
 
-.category-icon-carousel-item:hover + .category-icon-carousel-item .mac-dock-circle {
-  transform: scale(1.06) translateY(-2px) translateX(8px);
+  .category-icon-carousel-item:hover + .category-icon-carousel-item .mac-dock-circle {
+    transform: scale(1.06) translateY(-2px) translateX(8px);
+  }
 }
 
 @media (min-width: 640px) {
@@ -819,6 +821,10 @@
   }
 
   .category-icon-carousel {
+    gap: 0.5rem;
+    padding-block: 2rem;
+    margin-block: -2rem;
+    padding-inline: 2.5rem;
     grid-auto-columns: 18%;
   }
 }

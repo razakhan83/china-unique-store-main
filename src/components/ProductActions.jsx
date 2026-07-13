@@ -180,7 +180,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-                    <span className="text-3xl font-bold tracking-tight text-foreground">
+                    <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                         {formatPrice(displayPrice)}
                     </span>
                     {displayComparePrice ? (
@@ -195,18 +195,20 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     ) : null}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1.5 text-primary">
-                        <Truck className="size-4" />
-                        <span className="text-foreground">Free Delivery above Rs. 3,000</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1 text-primary">
+                        <Truck className="size-3.5 sm:size-4" />
+                        <span className="text-foreground whitespace-nowrap">Free Delivery</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-primary">
-                        <BadgeCheck className="size-4" />
-                        <span className="text-foreground">Cash on Delivery Available</span>
+                    <span className="text-border">|</span>
+                    <div className="flex items-center gap-1 text-primary">
+                        <BadgeCheck className="size-3.5 sm:size-4" />
+                        <span className="text-foreground whitespace-nowrap">COD Available</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-primary">
-                        <PackageCheck className="size-4" />
-                        <span className="text-foreground">7-Day Easy Return</span>
+                    <span className="text-border">|</span>
+                    <div className="flex items-center gap-1 text-primary">
+                        <PackageCheck className="size-3.5 sm:size-4" />
+                        <span className="text-foreground whitespace-nowrap">7-Day Return</span>
                     </div>
                 </div>
             </div>
@@ -308,25 +310,25 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 <ProductSocialActions product={product} />
             </div>
 
-            <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] left-0 right-0 z-30 flex flex-col gap-2 border-t border-border/80 bg-background/98 p-3 backdrop-blur-md shadow-[0_-8px_20px_rgba(0,0,0,0.06)] md:hidden">
+            <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] left-0 right-0 z-30 flex flex-col gap-2 border-t border-border/80 bg-background/98 p-2.5 backdrop-blur-md shadow-[0_-8px_20px_rgba(0,0,0,0.06)] md:hidden">
                 {!isOutOfStock ? (
                     <>
                         <div className="flex items-center gap-2">
-                            <div className="inline-flex flex-1 items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-11 px-1">
-                                <button onClick={decrement} className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                    <Minus className="size-4" />
+                            <div className="inline-flex flex-1 items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-10 px-1">
+                                <button onClick={decrement} className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                    <Minus className="size-3.5" />
                                 </button>
-                                <span className="inline-flex min-w-8 items-center justify-center text-sm font-semibold text-foreground">{quantity}</span>
-                                <button onClick={increment} className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                    <Plus className="size-4" />
+                                <span className="inline-flex min-w-6 items-center justify-center text-sm font-semibold text-foreground">{quantity}</span>
+                                <button onClick={increment} className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                    <Plus className="size-3.5" />
                                 </button>
                             </div>
                             <Button
                                 onClick={handleWhatsApp}
                                 variant="outline"
-                                className={cn(secondaryActionClass, "h-11 flex-1 px-0")}
+                                className={cn(secondaryActionClass, "h-10 flex-1 px-0 text-sm")}
                             >
-                                <WhatsAppIcon className="size-5 mr-2" />
+                                <WhatsAppIcon className="size-4 mr-1.5" />
                                 <span>WhatsApp</span>
                             </Button>
                         </div>
@@ -334,20 +336,20 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleAddToCart}
                             disabled={isAdding}
                             className={cn(
-                                "add-to-cart-button h-12 w-full rounded-xl active:scale-[0.96] font-bold text-base transition-colors duration-500 ease-out border border-solid border-foreground/40",
+                                "add-to-cart-button h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm transition-colors duration-500 ease-out border border-solid border-foreground/40",
                                 isAdding ? "" : "bg-muted/20 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary active:bg-primary active:text-primary-foreground active:border-primary"
                             )}
                         >
-                            <span className="relative inline-flex size-5 items-center justify-center mr-2">
+                            <span className="relative inline-flex size-4 items-center justify-center mr-2">
                                 <Spinner
                                     className={cn(
-                                        "add-to-cart-icon absolute size-5",
+                                        "add-to-cart-icon absolute size-4",
                                         isAdding ? "is-visible" : ""
                                     )}
                                 />
                                 <ShoppingCart
                                     className={cn(
-                                        "add-to-cart-icon absolute size-5",
+                                        "add-to-cart-icon absolute size-4",
                                         !isAdding ? "is-visible" : "",
                                         didJustAdd ? "text-primary-foreground" : ""
                                     )}
@@ -359,9 +361,9 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 ) : (
                     <Button
                         onClick={() => setNotifyModalOpen(true)}
-                        className="h-12 w-full rounded-xl active:scale-[0.96] font-bold text-base"
+                        className="h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm"
                     >
-                        <BellRing className="size-5 mr-2" />
+                        <BellRing className="size-4 mr-2" />
                         Notify Me
                     </Button>
                 )}

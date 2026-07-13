@@ -185,12 +185,13 @@ function NavbarContent({
   const router = useRouter();
   const pathname = usePathname();
   const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
-  const { activeCategory = 'all', isSidebarOpen = false } = useCartUi() || {};
+  const { activeCategory = 'all', isSidebarOpen = false, isCartOpen = false } = useCartUi() || {};
   const {
     setActiveCategory = () => {},
     setIsSidebarOpen = () => {},
     openSidebar = () => {},
     openCart = () => {},
+    setIsCartOpen = () => {},
   } = useCartActions() || {};
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -244,7 +245,7 @@ function NavbarContent({
           setIsNavbarHidden(false);
         }
         scrollAnchorYRef.current = currentScrollY;
-      } else if (!(isSearchOpen || isSidebarOpen || isAccountDrawerOpen)) {
+      } else if (!(isSearchOpen || isSidebarOpen || isAccountDrawerOpen || isCartOpen)) {
         if (!isNavbarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80) {
           isNavbarHiddenRef.current = true;
           setIsNavbarHidden(true);
@@ -399,9 +400,9 @@ function NavbarContent({
         <div className="relative h-16">
           <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
             <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
-              <span className="relative flex size-6 md:size-7 items-center justify-center">
-                <Menu strokeWidth={2.2} className={cn('absolute inset-0 transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
-                <X strokeWidth={2.2} className={cn('absolute inset-0 transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
+              <span className="relative flex size-7 items-center justify-center">
+                <Menu strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
+                <X strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
               </span>
             </Button>
 
@@ -517,13 +518,14 @@ function NavbarContent({
                 type="button"
                 variant="ghost"
                 size="icon-lg"
-                onClick={openCart}
+                onClick={() => isCartOpen ? setIsCartOpen(false) : openCart()}
                 className={`nav-cart-button overflow-visible ${navActionButtonClass}`}
                 aria-label="Open cart"
                 title="Cart"
               >
-                <span className="relative flex size-6 items-center justify-center">
-                  <ShoppingBag strokeWidth={1.5} className="size-[1.45rem] md:size-[1.3rem]" />
+                <span className="relative flex size-6 md:size-[1.3rem] items-center justify-center">
+                  <ShoppingBag strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
+                  <X strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (

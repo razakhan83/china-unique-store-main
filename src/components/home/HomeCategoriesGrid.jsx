@@ -96,8 +96,8 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
           </h2>
         </div>
 
-        {/* The clipping box is expanded by 40px (2.5rem) on all sides to allow shadows to render, while preventing bleeding across the whole screen */}
-        <div className="relative -mx-10 -my-8 overflow-hidden py-8">
+        {/* The clipping box is expanded by 40px (2.5rem) on all sides to allow shadows to render on desktop, while preventing bleeding across the whole screen */}
+        <div className="relative md:-mx-10 -my-8 overflow-hidden py-8">
           <div
             className={cn(
               "pointer-events-none absolute inset-y-8 left-0 z-10 w-10 transition-opacity duration-300",

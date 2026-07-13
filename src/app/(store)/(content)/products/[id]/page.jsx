@@ -243,13 +243,13 @@ export default function ProductPage({ params }) {
     <div className="product-detail-shell min-h-screen bg-background">
       <ProductPageScrollReset />
 
-      <div className="container mx-auto max-w-7xl px-4 pb-2 pt-5 md:pt-7">
+      <div className="container mx-auto max-w-7xl px-4 pb-1 pt-3 md:pt-7">
         <Suspense fallback={<ProductBreadcrumbSkeleton />}>
           <ProductBreadcrumb paramsPromise={params} />
         </Suspense>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-2 md:pb-8 md:pt-4">
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-1 md:pb-8 md:pt-4">
         <Suspense fallback={<ProductHeroSkeleton />}>
           <ProductHeroSection paramsPromise={params} />
         </Suspense>
@@ -352,14 +352,14 @@ async function ProductHeroSection({ paramsPromise }) {
         }}
       />
 
-      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8 lg:gap-10">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-10">
         <div className="w-full md:w-[45%] lg:w-[42%]">
           <ProductGallery images={product.Images} />
         </div>
 
         <div className="w-full md:w-[55%] lg:w-[58%]">
-          <div className="flex flex-col gap-6 md:sticky md:top-24">
-            <div className="space-y-4">
+          <div className="flex flex-col gap-4 md:gap-6 md:sticky md:top-24">
+            <div className="space-y-2 md:space-y-4">
               <div className="flex items-center gap-3">
                 <Badge variant="secondary" className="text-xs font-medium px-2.5 py-0.5 rounded-full">
                   {categoryLabel || 'Premium Item'}
@@ -376,10 +376,10 @@ async function ProductHeroSection({ paramsPromise }) {
               </div>
 
               <div className="flex items-start justify-between gap-4">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl leading-tight sm:leading-tight md:leading-tight">
+                <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-2xl md:text-4xl leading-tight sm:leading-tight md:leading-tight">
                   {product.Name}
                 </h1>
-                <ProductSocialActions product={product} className="md:hidden shrink-0 mt-1" />
+                <ProductSocialActions product={product} className="md:hidden shrink-0 mt-0.5" />
               </div>
 
               <a 

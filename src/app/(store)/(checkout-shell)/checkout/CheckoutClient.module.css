@@ -662,9 +662,7 @@
   z-index: 40;
   display: none;
   padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom, 1rem));
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #ffffff;
   border-top: 1px solid oklch(0.9 0.01 95 / 0.5);
   box-shadow: 0 -8px 32px -8px rgba(0,0,0,0.08);
 }

@@ -536,7 +536,16 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
       {feedbackOrder && (
         <FeedbackModal 
           order={feedbackOrder} 
-          onClose={() => setFeedbackOrder(null)} 
+          onRemindLater={() => {
+            sessionStorage.setItem(`feedback_shown_${feedbackOrder.orderId}`, 'true');
+            setFeedbackOrder(null);
+          }}
+          onDismissPermanently={() => {
+            const newReviewed = [...reviewedOrders, feedbackOrder._id];
+            setReviewedOrders(newReviewed);
+            localStorage.setItem('reviewedOrders', JSON.stringify(newReviewed));
+            setFeedbackOrder(null);
+          }}
           onSuccess={handleFeedbackSuccess}
         />
       )}
@@ -547,7 +556,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
 // ------------------------------------------------------------------
 // Custom Feedback Modal Component (Per-Product Reviews)
 // ------------------------------------------------------------------
-const FeedbackModal = ({ order, onClose, onSuccess }) => {
+const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onSuccess }) => {
   const getItemKey = (item, idx) => item._id ? item._id : `${item.productId}-${idx}`;
 
   // Initialize state for each product in the order
@@ -650,7 +659,7 @@ const FeedbackModal = ({ order, onClose, onSuccess }) => {
         onSuccess(order._id);
       }
       setTimeout(() => {
-        onClose();
+        onDismissPermanently();
       }, 2000);
     } catch (error) {
       // Assuming toast from 'sonner' is available in scope or we use standard alert
@@ -685,7 +694,7 @@ const FeedbackModal = ({ order, onClose, onSuccess }) => {
             <p className="text-sm text-gray-500 mt-1">Order #{order.orderId}</p>
           </div>
           <button 
-            onClick={onClose}
+            onClick={onDismissPermanently}
             className="size-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors"
           >
             <X className="size-5" />
@@ -801,7 +810,7 @@ const FeedbackModal = ({ order, onClose, onSuccess }) => {
         <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex gap-3 mt-auto shrink-0">
           <Button 
             variant="outline" 
-            onClick={onClose}
+            onClick={onRemindLater}
             className="flex-1 h-12 rounded-xl text-gray-600 font-semibold border-gray-200 hover:bg-gray-100 transition-all"
           >
             Remind me later

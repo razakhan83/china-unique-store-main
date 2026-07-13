@@ -54,7 +54,7 @@ const formatPrice = (raw) => {
 const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
 const EXIT_ANIMATION_MS = 180;
 
-export default function CartDrawer({ whatsappNumber = '', storeName = 'China Unique Store' }) {
+export default function CartDrawer({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
   const { cart } = useCartItems();
   const { isCartOpen } = useCartUi();
   const { updateQuantity, removeFromCart, clearCart, setIsCartOpen } = useCartActions();
@@ -93,9 +93,9 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetContent side="right" className="data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-background p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:data-[side=right]:w-[min(70vw,28rem)] md:w-[min(70vw,28rem)] md:min-w-[18rem] md:max-w-[28rem]">
+      <SheetContent side="right" className={cn("data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-background p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:!w-[25vw] md:data-[side=right]:!w-[25vw] md:!min-w-[400px] md:!max-w-[25vw] md:data-[side=right]:!max-w-[25vw] md:!top-0 md:!h-full md:!pt-0 md:!z-[250]", hasAnnouncementBar ? "max-md:!top-[96px] max-md:!h-[calc(100dvh-96px)]" : "max-md:!top-[64px] max-md:!h-[calc(100dvh-64px)]")} closeButtonClassName="max-md:hidden" overlayClassName="md:!z-[250]">
         <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-0">
-          <SidebarHeader className="border-b border-sidebar-border px-5 pb-4 pt-5">
+          <SidebarHeader className="max-md:hidden border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-xl font-bold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
           </SidebarHeader>
 
@@ -241,16 +241,16 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
           </SidebarContent>
 
           {cart.length ? (
-            <SidebarFooter className="gap-3 border-t border-sidebar-border bg-background px-5 pb-5 pt-4">
+            <SidebarFooter className="gap-2 md:gap-3 border-t border-sidebar-border bg-background px-5 pb-4 md:pb-5 pt-3 md:pt-4">
               <Card size="sm" className="gap-0 border border-sidebar-border/80 bg-muted/30 py-0 shadow-[inset_0_1px_0_color-mix(in_oklab,white_72%,transparent)]">
-                <CardHeader className="flex flex-row items-center justify-between gap-3 px-4 py-3">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 md:px-4 py-2.5 md:py-3">
                   <CardTitle className="text-sm">Subtotal</CardTitle>
                   <p className="text-lg font-semibold text-foreground tabular-nums">
                     Rs.&nbsp;{subtotal.toLocaleString('en-PK')}
                   </p>
                 </CardHeader>
               </Card>
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
                 <Button
                   variant="outline"
                   className="flex-1 h-10 px-2 rounded-[var(--radius-md)] border-border bg-background hover:bg-muted text-foreground text-[0.8rem] sm:text-sm font-medium shadow-sm"

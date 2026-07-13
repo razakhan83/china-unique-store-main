@@ -2,6 +2,7 @@
 
 import { createContext, startTransition, useContext, useEffect, useMemo, useOptimistic, useState } from 'react';
 import { toast } from 'sonner';
+import { ShoppingCart } from 'lucide-react';
 
 import { trackAddToCartEvent } from '@/lib/clientTracking';
 
@@ -162,16 +163,25 @@ function CartProviderContent({ children }) {
               console.error('Failed to track add to cart event', error);
             }
 
-            toast.success(`${normalized.Name} added to cart`, {
-              duration: 3000,
-              action: {
-                label: 'View Cart',
-                onClick: () => {
-                  setIsSidebarOpen(false);
-                  setIsCartOpen(true);
-                },
-              },
-            });
+            toast(
+                <div className="flex items-center gap-2.5 w-full">
+                    <div className="relative size-10 rounded-md overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                        {(normalized.Images?.[0]?.url || normalized.image || normalized.image_url) ? (
+                            <img src={normalized.Images?.[0]?.url || normalized.image || normalized.image_url} alt={normalized.Name || 'Product'} className="object-cover w-full h-full" />
+                        ) : (
+                            <ShoppingCart className="size-4 text-muted-foreground" />
+                        )}
+                    </div>
+                    <div className="flex flex-col flex-1 min-w-0 pr-1">
+                        <p className="font-semibold text-[13px] line-clamp-1 text-foreground leading-snug">{normalized.Name}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{normalized.quantity} × Rs. {(normalized.discountedPrice ?? normalized.Price).toLocaleString('en-PK')}</p>
+                    </div>
+                    <a href="/checkout" className="shrink-0 flex items-center justify-center h-7 px-3 text-[11px] font-bold uppercase tracking-wide bg-primary text-primary-foreground rounded shadow-sm transition-colors hover:bg-primary/90">
+                        Checkout
+                    </a>
+                </div>,
+                { position: 'top-center', duration: 6000 }
+            );
 
             resolve({ success: true, item: normalized, cart: nextCart });
           });

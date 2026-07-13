@@ -93,6 +93,11 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
     <Button
       type="button"
       disabled={isBusy || isOutOfStock}
+      onMouseEnter={() => {
+        if (isOutOfStock) return;
+        const productSlug = product.slug || product._id || product.id;
+        router.prefetch(`/products/${productSlug}`);
+      }}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

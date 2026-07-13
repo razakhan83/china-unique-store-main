@@ -52,7 +52,7 @@ function scheduleDeferredMount(callback) {
   };
 }
 
-export default function StoreDeferredChrome({ whatsappNumber = '', storeName = 'China Unique Store' }) {
+export default function StoreDeferredChrome({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function StoreDeferredChrome({ whatsappNumber = '', storeName = '
 
   return (
     <>
-      <CartDrawer whatsappNumber={whatsappNumber} storeName={storeName} />
+      <CartDrawer whatsappNumber={whatsappNumber} storeName={storeName} hasAnnouncementBar={hasAnnouncementBar} />
     </>
   );
 }
