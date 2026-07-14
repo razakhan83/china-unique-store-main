@@ -72,7 +72,7 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
 
     const startAutoplay = () => {
       stopAutoplay();
-      autoplayTimerRef.current = setInterval(advance, 4500);
+      autoplayTimerRef.current = setInterval(advance, 8000);
     };
 
     const stopAutoplay = () => {
@@ -85,10 +85,10 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
     const stopAndScheduleResume = () => {
       stopAutoplay();
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-      // Resume after 10 seconds of inactivity
+      // Resume after 15 seconds of inactivity
       resumeTimerRef.current = setTimeout(() => {
         if (!isHoveredRef.current) startAutoplay();
-      }, 10000);
+      }, 15000);
     };
 
     // Pause when user hovers
@@ -135,6 +135,7 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
           align: 'start',
           loop: true,
           watchDrag: true,
+          duration: 40,
         }}
         className="w-full"
       >

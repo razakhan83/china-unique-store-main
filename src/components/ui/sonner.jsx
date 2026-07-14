@@ -6,13 +6,13 @@ import { Toaster as Sonner } from "sonner"
 function Toaster({ ...props }) {
   return (
     <Sonner
-      className="toaster group"
+      className="toaster group pointer-events-none"
       toastOptions={{
         style: { width: '340px', backgroundColor: 'var(--color-card)' },
         className: 'max-w-[320px]',
         classNames: {
           toast:
-            "group toast !bg-card !text-foreground !border-border shadow-lg rounded-xl font-sans",
+            "group toast !bg-card !text-foreground !border-border shadow-lg rounded-xl font-sans pointer-events-auto",
           title: "group-[.toast]:text-foreground group-[.toast]:font-semibold",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
@@ -31,9 +31,9 @@ function Toaster({ ...props }) {
       }}
       richColors
       closeButton
-      position="bottom-center"
+      position="top-center"
       expand={false}
-      duration={4200}
+      duration={5000}
       {...props}
     />
   )

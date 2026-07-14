@@ -163,24 +163,31 @@ function CartProviderContent({ children }) {
               console.error('Failed to track add to cart event', error);
             }
 
-            toast(
-                <div className="flex items-center gap-2.5 w-full">
-                    <div className="relative size-10 rounded-md overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+            const toastId = toast(
+                <div className="flex items-center gap-3 w-full py-0.5 sm:py-1">
+                    <div className="relative size-12 sm:size-14 rounded-lg overflow-hidden bg-muted shrink-0 flex items-center justify-center border border-border/50 shadow-sm">
                         {(normalized.Images?.[0]?.url || normalized.image || normalized.image_url) ? (
                             <img src={normalized.Images?.[0]?.url || normalized.image || normalized.image_url} alt={normalized.Name || 'Product'} className="object-cover w-full h-full" />
                         ) : (
-                            <ShoppingCart className="size-4 text-muted-foreground" />
+                            <ShoppingCart className="size-5 sm:size-6 text-muted-foreground" />
                         )}
                     </div>
-                    <div className="flex flex-col flex-1 min-w-0 pr-1">
-                        <p className="font-semibold text-[13px] line-clamp-1 text-foreground leading-snug">{normalized.Name}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{normalized.quantity} × Rs. {(normalized.discountedPrice ?? normalized.Price).toLocaleString('en-PK')}</p>
+                    <div className="flex flex-col flex-1 min-w-0 pr-2">
+                        <p className="font-semibold text-sm sm:text-[15px] line-clamp-1 text-foreground leading-snug tracking-tight">{normalized.Name}</p>
+                        <p className="text-xs sm:text-[13px] font-medium text-muted-foreground mt-0.5">
+                            <span className="text-foreground/70">{normalized.quantity} ×</span> Rs. {(normalized.discountedPrice ?? normalized.Price).toLocaleString('en-PK')}
+                        </p>
                     </div>
-                    <a href="/checkout" className="shrink-0 flex items-center justify-center h-7 px-3 text-[11px] font-bold uppercase tracking-wide bg-primary text-primary-foreground rounded shadow-sm transition-colors hover:bg-primary/90">
-                        Checkout
-                    </a>
+                    <button type="button" onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} className="shrink-0 flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 text-[11px] sm:text-xs font-bold uppercase tracking-wide bg-primary text-primary-foreground rounded-lg shadow-sm transition-all hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
+                        View Cart
+                    </button>
                 </div>,
-                { position: 'top-center', duration: 6000 }
+                { 
+                    position: 'top-center', 
+                    duration: 5000,
+                    className: '!max-w-none p-2 sm:p-3 rounded-[1.15rem]',
+                    style: { width: '100%', minWidth: 'min(420px, calc(100vw - 32px))' }
+                }
             );
 
             resolve({ success: true, item: normalized, cart: nextCart });

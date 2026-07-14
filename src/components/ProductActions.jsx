@@ -76,6 +76,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const decrement = () => setQuantity(q => (q > 1 ? q - 1 : 1));
 
     const handleAddToCart = async () => {
+        if (isAdding || isOutOfStock) return;
         setIsAdding(true);
         const startedAt = performance.now();
         try {
@@ -272,10 +273,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     <>
                         <Button
                             onClick={handleAddToCart}
-                            disabled={isAdding || isOutOfStock}
+                            disabled={isOutOfStock}
                             className={cn(
                                 "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-all duration-300 ease-out border border-transparent shadow-sm hover:-translate-y-0.5",
-                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
+                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
                             )}
                             size="lg"
                         >
@@ -334,10 +335,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         </div>
                         <Button
                             onClick={handleAddToCart}
-                            disabled={isAdding}
+                            disabled={isOutOfStock}
                             className={cn(
                                 "add-to-cart-button h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm transition-all duration-300 ease-out border border-transparent shadow-sm",
-                                isAdding ? "bg-muted/20 text-foreground border-foreground/40" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
+                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
                             )}
                         >
                             <span className="relative inline-flex size-4 items-center justify-center mr-2">

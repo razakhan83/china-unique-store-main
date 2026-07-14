@@ -394,7 +394,7 @@ function NavbarContent({
   const mobileMenuButtonClass =
     'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground data-[active=true]:text-sidebar-primary-foreground active:scale-[0.99]';
   const navActionButtonClass =
-    'nav-icon-button relative rounded-2xl md:border border-transparent md:border-border/60 bg-transparent md:bg-card/85 p-0 text-foreground transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[2px] hover:border-primary/30 hover:bg-background hover:text-primary hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] active:scale-[0.96] active:translate-y-0';
+    'nav-icon-button relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground transition-all duration-300 ease-out hover:-translate-y-1.5 hover:scale-110 hover:border-[#E3FCEF] hover:bg-[#E3FCEF] hover:text-[#015347] hover:shadow-[0_8px_25px_rgba(227,252,239,0.8)] active:scale-95 active:translate-y-0';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
 
@@ -453,7 +453,7 @@ function NavbarContent({
                 variant="ghost"
                 size="icon-lg"
                 onClick={() => isCartOpen ? setIsCartOpen(false) : openCart()}
-                className={`nav-cart-button overflow-visible ${navActionButtonClass}`}
+                className={cn('nav-cart-button overflow-visible rounded-full', navActionButtonClass, 'hover:!bg-[#E3FCEF] hover:!text-[#015347] hover:!border-[#E3FCEF] hover:!shadow-[0_8px_25px_rgba(227,252,239,0.9)]')}
                 aria-label="Open cart"
                 title="Cart"
               >
@@ -492,9 +492,9 @@ function NavbarContent({
 
           {/* Top Secondary Navbar (now below header) */}
           <div className="hidden md:flex relative z-50 bg-muted/30 py-2.5 border-y border-border/50">
-            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[15px] font-semibold text-muted-foreground/90">
-              <div className="flex items-center gap-10 xl:gap-14">
-                <Link href="/" className="inline-flex relative z-50 items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-muted-foreground/90">
+              <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
+                <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <Home className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Home
                 </Link>
                 <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
@@ -505,23 +505,23 @@ function NavbarContent({
                     }}
                     onPointerLeave={scheduleCategoriesClose}
                   >
-                    <DropdownMenuTrigger className="group/button flex items-center gap-1.5 hover:text-primary transition-all duration-300 outline-none select-none hover:-translate-y-0.5 hover:scale-105">
-                      <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-110" strokeWidth={2.2} /> Categories / Collections
-                      <ChevronDown className={cn('size-3.5 transition-transform duration-300', isCategoriesOpen && 'rotate-180')} />
+                    <DropdownMenuTrigger className="group/button flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out outline-none select-none active:scale-95 active:translate-y-0">
+                      <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-[1.15]" strokeWidth={2.2} /> Categories / Collections
+                      <ChevronDown className={cn('size-3.5 transition-transform duration-300 ease-out', isCategoriesOpen && 'rotate-180')} />
                     </DropdownMenuTrigger>
                   </div>
                   <DropdownMenuContent
-                    className="w-60 p-1"
+                    className="w-60 p-1 rounded-2xl"
                     align="start"
-                    sideOffset={16}
+                    sideOffset={8}
                     onPointerEnter={cancelCategoriesClose}
                     onPointerLeave={scheduleCategoriesClose}
                   >
-                    <DropdownMenuItem onClick={() => handleCategoryClick('new-arrivals')}>
+                    <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('new-arrivals')}>
                       <Sparkles className="text-accent-foreground" />
                       <span>New Arrivals</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleCategoryClick('special-offers')}>
+                    <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('special-offers')}>
                       <Tag className="text-accent-foreground" />
                       <span>Special Offers</span>
                     </DropdownMenuItem>
@@ -529,6 +529,7 @@ function NavbarContent({
                     {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
                       <DropdownMenuItem
                         key={category.id}
+                        className="rounded-xl cursor-pointer hover:bg-muted"
                         onClick={() => handleCategoryClick(category.id)}
                       >
                         <Tag className="text-muted-foreground" />
@@ -537,28 +538,28 @@ function NavbarContent({
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Link href="/products" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <ShoppingBag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> All Products
                 </Link>
                 {session ? (
-                  <Link href="/orders" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                     <Package className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> My Orders
                   </Link>
                 ) : (
-                  <Link href="/track-order" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Link href="/track-order" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                     <MapPin className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Track Order
                   </Link>
                 )}
-                <Link href="/wishlist" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <Heart className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Wishlist
                 </Link>
-                <Link href="/products?price=under500" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                <Link href="/products?price=under500" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 500 Store
                 </Link>
-                <Link href="/products?price=under1000" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                <Link href="/products?price=under1000" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 1000 Store
                 </Link>
-                <Link href="/contact" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <Phone className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Contact Us
                 </Link>
               </div>
