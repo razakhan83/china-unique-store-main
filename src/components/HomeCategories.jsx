@@ -17,7 +17,7 @@ export default function HomeCategories({ sections = [] }) {
     <div className="flex flex-col">
       {sections.map((section, index) => {
         const sectionClassName =
-          index % 2 === 0 ? 'bg-[color:color-mix(in_oklab,var(--color-primary)_10%,white)]' : 'bg-white';
+          index % 2 === 0 ? 'bg-card/50' : 'bg-transparent';
 
         return (
           <section

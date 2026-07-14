@@ -89,7 +89,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-none hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out hover:z-50",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border/50 bg-card shadow-none hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out hover:z-50",
         "py-0",
         className
       )}
@@ -141,7 +141,7 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
-          className="relative block aspect-square w-full overflow-hidden rounded-t-[11px] bg-muted/30 isolate transform-gpu"
+          className="relative block aspect-square w-full overflow-hidden rounded-t-[11px] bg-transparent isolate transform-gpu"
           draggable={false}
         >
           {primaryImageSrc ? (
@@ -161,7 +161,7 @@ export default function ProductCard({ product, className = "" }) {
                   "object-cover transition-all duration-500 ease-out transform-gpu",
                   (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
-                  isUnavailable && "scale-[1.01] saturate-[0.85] opacity-75",
+                  isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
                   secondaryImageSrc && "md:group-hover:opacity-0"
                 )}
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
@@ -183,7 +183,7 @@ export default function ProductCard({ product, className = "" }) {
                       "object-cover transition-all duration-500 ease-out transform-gpu absolute inset-0 opacity-0",
                       (!secondaryImage.blurDataURL && !secondaryLoaded) ? "opacity-0" : "",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",
-                      isUnavailable && "scale-[1.01] saturate-[0.85]"
+                      isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75"
                     )}
                     {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
                   />
@@ -191,7 +191,7 @@ export default function ProductCard({ product, className = "" }) {
               )}
             </>
           ) : (
-            <div className="flex size-full items-center justify-center bg-muted/50">
+            <div className="flex size-full items-center justify-center bg-transparent">
               <ShoppingCart className="size-10 text-muted-foreground/30" />
             </div>
           )}

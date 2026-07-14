@@ -274,8 +274,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleAddToCart}
                             disabled={isAdding || isOutOfStock}
                             className={cn(
-                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-colors duration-500 ease-out border border-solid border-foreground/40",
-                                isAdding || isOutOfStock ? "" : "bg-muted/20 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary active:bg-primary active:text-primary-foreground active:border-primary"
+                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-all duration-300 ease-out border border-transparent shadow-sm hover:-translate-y-0.5",
+                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
                             )}
                             size="lg"
                         >
@@ -336,8 +336,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleAddToCart}
                             disabled={isAdding}
                             className={cn(
-                                "add-to-cart-button h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm transition-colors duration-500 ease-out border border-solid border-foreground/40",
-                                isAdding ? "" : "bg-muted/20 text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary active:bg-primary active:text-primary-foreground active:border-primary"
+                                "add-to-cart-button h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm transition-all duration-300 ease-out border border-transparent shadow-sm",
+                                isAdding ? "bg-muted/20 text-foreground border-foreground/40" : "bg-primary text-white hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)]"
                             )}
                         >
                             <span className="relative inline-flex size-4 items-center justify-center mr-2">
@@ -355,7 +355,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                     )}
                                 />
                             </span>
-                            Add to Cart
+                            {didJustAdd ? "Added to Cart" : "Add to Cart"}
                         </Button>
                     </>
                 ) : (

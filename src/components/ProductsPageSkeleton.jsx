@@ -3,24 +3,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function ProductsHeaderSkeleton() {
   return (
     <div>
-      <div className="products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl">
-        <div className="relative mx-auto max-w-7xl px-4">
-          <div className="relative flex gap-1.5 overflow-x-hidden py-3 hide-scrollbar">
-            <Skeleton className="h-9 w-24 shrink-0 rounded-full" />
-            <Skeleton className="h-9 w-30 shrink-0 rounded-full" />
-            <Skeleton className="h-9 w-31 shrink-0 rounded-full" />
-            <Skeleton className="h-9 w-28 shrink-0 rounded-full" />
-            <Skeleton className="h-9 w-26 shrink-0 rounded-full" />
-            <Skeleton className="h-9 w-32 shrink-0 rounded-full" />
+      <div className="products-page-bar fixed inset-x-0 top-[96px] md:top-[162px] z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl translate-y-0">
+        <div className="relative mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
+          <div className="relative flex gap-1.5 overflow-x-hidden py-3 hide-scrollbar md:px-8">
+            <Skeleton className="h-8 md:h-[40px] w-24 shrink-0 rounded-full" />
+            <Skeleton className="h-8 md:h-[40px] w-30 shrink-0 rounded-full" />
+            <Skeleton className="h-8 md:h-[40px] w-31 shrink-0 rounded-full" />
+            <Skeleton className="h-8 md:h-[40px] w-28 shrink-0 rounded-full" />
+            <Skeleton className="h-8 md:h-[40px] w-26 shrink-0 rounded-full" />
+            <Skeleton className="h-8 md:h-[40px] w-32 shrink-0 rounded-full" />
           </div>
         </div>
       </div>
 
-      <div className="h-18 md:h-20" aria-hidden="true" />
+      <div className="h-[70px] md:h-[90px]" aria-hidden="true" />
 
-      <div className="container mx-auto mb-2 max-w-7xl px-4 pt-3">
+      <div className="mx-auto w-full max-w-[1600px] mb-2 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 pt-3">
         <Skeleton className="products-page-meta mb-2 h-4 w-32 rounded-md" />
-        <Skeleton className="products-page-heading h-9 w-44 rounded-md" />
+        <Skeleton className="products-page-heading h-9 w-44 rounded-md mt-2" />
       </div>
     </div>
   );
@@ -28,27 +28,30 @@ export function ProductsHeaderSkeleton() {
 
 export function ProductsToolbarSkeleton() {
   return (
-    <div className="products-page-toolbar mx-auto max-w-7xl px-4 pt-4">
-      <div className="flex flex-col gap-2 rounded-2xl border border-border/50 bg-card/70 p-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] lg:flex-row lg:items-center">
-        <div className="min-w-0 flex-1">
-          <div className="relative h-11 overflow-hidden rounded-xl bg-background/82">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <Skeleton className="size-4 rounded-full" />
+    <div className="mx-auto w-full max-w-[1600px] px-4 pt-2 md:pt-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
+        {/* Left side: Filters */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-[100px] rounded-md" />
+          <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-8 w-[80px] rounded-md" />
             </div>
-            <div className="flex h-full items-center justify-between gap-3 pl-10 pr-2">
-              <Skeleton className="h-4 w-40 rounded-md md:w-56" />
-              <Skeleton className="h-8 w-22 shrink-0 rounded-lg" />
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-8 w-[80px] rounded-md" />
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 lg:w-[18.5rem]">
-          <div className="relative h-11 w-full overflow-hidden rounded-xl bg-background/82 px-3">
-            <div className="flex h-full items-center gap-3">
-              <Skeleton className="size-4 rounded-full" />
-              <Skeleton className="h-4 w-28 rounded-md" />
-            </div>
+
+        {/* Right side: Sort and Layout */}
+        <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-8 w-[100px] rounded-md" />
           </div>
-          <Skeleton className="h-11 w-22 shrink-0 rounded-xl" />
+          <div className="flex items-center gap-0.5 border-l border-border/50 pl-3">
+            <Skeleton className="h-8 w-8 rounded-md" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
         </div>
       </div>
     </div>
@@ -57,7 +60,7 @@ export function ProductsToolbarSkeleton() {
 
 export function ProductsGridSkeleton() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-6">
+    <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
       <ProductsGridSkeletonContent />
     </section>
   );
@@ -77,7 +80,7 @@ function ProductsGridSkeletonContent() {
         </div>
       </div>
 
-      <div className="grid auto-rows-max grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+      <div className="grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
         {Array.from({ length: 12 }).map((_, index) => (
           <div
             key={index}

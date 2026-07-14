@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import SearchField from '@/components/SearchField';
 import { trackSearchEvent } from '@/lib/clientTracking';
 
-export default function NavbarSearchPanel({ open, onOpenChange }) {
+export default function NavbarSearchPanel({ open, onOpenChange, placeholder }) {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,7 +111,9 @@ export default function NavbarSearchPanel({ open, onOpenChange }) {
       isFocused={isFocused}
       suggestions={suggestions}
       showSuggestions
+      isLoading={isLoadingSuggestions}
       emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}
+      placeholder={placeholder}
     />
   );
 }

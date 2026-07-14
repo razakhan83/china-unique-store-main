@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProductsFilterSheet from '@/components/ProductsFilterSheet';
+import { cn } from '@/lib/utils';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -26,7 +27,7 @@ export default function ProductsToolbar({
   const [isPending, startTransition] = useTransition();
 
   const currentSort = searchParams.get('sort') || initialSort;
-  const layout = searchParams.get('layout') || 'grid3';
+  const layout = searchParams.get('layout') || 'grid4';
   const currentPrice = searchParams.get('price') || 'all';
   const currentInstock = searchParams.get('instock') || 'all';
 
@@ -49,7 +50,7 @@ export default function ProductsToolbar({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-2 md:pt-4">
+    <div className="mx-auto w-full max-w-[1600px] px-4 pt-2 md:pt-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
         {/* Left side: Filters */}
         <div className="flex items-center gap-3">
@@ -58,7 +59,6 @@ export default function ProductsToolbar({
               <ProductsFilterSheet activeCategory={activeCategory} currentSort={currentSort} />
             </Suspense>
           </div>
-          
           <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-medium text-muted-foreground">Availability</span>
@@ -82,6 +82,7 @@ export default function ProductsToolbar({
                 <SelectContent align="start" className="rounded-xl">
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="under500">Under Rs. 500</SelectItem>
+                  <SelectItem value="under1000">Under Rs. 1000</SelectItem>
                   <SelectItem value="500-1500">Rs. 500 - 1,500</SelectItem>
                   <SelectItem value="1500-5000">Rs. 1,500 - 5,000</SelectItem>
                   <SelectItem value="above5000">Above Rs. 5,000</SelectItem>
@@ -111,20 +112,18 @@ export default function ProductsToolbar({
 
           <div className="flex items-center gap-0.5 border-l border-border/50 pl-3">
             <button
-              onClick={() => handleChange('layout', 'grid2')}
-              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === 'grid2' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-              aria-label="Larger cards layout"
+              onClick={() => handleChange('layout', '1col')}
+              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === '1col' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              title="1 per row (Mobile), 4 per row (PC)"
             >
-              <Square className="size-4 md:hidden" />
-              <LayoutGrid className="size-4 hidden md:block" />
+              <Square className="size-4" />
             </button>
             <button
-              onClick={() => handleChange('layout', 'grid3')}
-              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === 'grid3' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-              aria-label="Smaller cards layout"
+              onClick={() => handleChange('layout', '2col')}
+              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === '2col' || !layout || layout === 'grid4' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              title="2 per row (Mobile), 4 per row (PC)"
             >
-              <Grid2x2 className="size-4 md:hidden" />
-              <Grid3x3 className="size-4 hidden md:block" />
+              <Grid2x2 className="size-4" />
             </button>
           </div>
         </div>

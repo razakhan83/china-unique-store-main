@@ -7,7 +7,7 @@ function Skeleton({ className, ...props }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-md bg-gray-200",
+        "relative overflow-hidden rounded-md bg-muted",
         className
       )}
       {...props}

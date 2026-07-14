@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
   ChevronDown,
   LayoutGrid,
@@ -16,6 +17,10 @@ import {
   Store,
   Tag,
   X,
+  Heart,
+  Home,
+  Package,
+  MapPin,
 } from 'lucide-react';
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
@@ -199,6 +204,20 @@ function NavbarContent({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
+  const { data: session } = useSession() || {};
+  
+  const searchPlaceholders = categories?.length > 0 
+    ? categories.map(c => `What are you finding? ${c.label}`)
+    : ["What are you finding? Kitchen Accessories", "What are you finding? Stationeries", "What are you finding? Gadgets"];
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % searchPlaceholders.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const closeCategoriesTimeoutRef = useRef(null);
   const isNavbarHiddenRef = useRef(false);
   const lastScrollYRef = useRef(0);
@@ -391,129 +410,44 @@ function NavbarContent({
         </div>
       ) : null}
 
-      <div
-        className={cn(
-          'relative h-16',
-          isSearchOpen ? 'overflow-visible' : 'overflow-hidden'
-        )}
-      >
-        <div className="relative h-16">
-          <header className="relative z-20 mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
-            <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
-              <span className="relative flex size-7 items-center justify-center">
-                <Menu strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
-                <X strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
-              </span>
-            </Button>
+      <div className="relative z-50">
+          <header className="relative z-20 mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+            <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
+                <span className="relative flex size-7 items-center justify-center">
+                  <Menu strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
+                  <X strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
+                </span>
+              </Button>
 
-            <StoreLogo
-              storeName={storeName}
-              lightLogoUrl={lightLogoUrl}
-              darkLogoUrl={darkLogoUrl}
-              logoScalePercent={logoScalePercent}
-              variant="light-surface"
-              priority
-              onClick={(event) => {
-                event.preventDefault();
-                handleDesktopNavigate('/');
-              }}
-              className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
-            />
-
-            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
-              <Link
-                href="/"
-                className={navLinkClass('/')}
+              <StoreLogo
+                storeName={storeName}
+                lightLogoUrl={lightLogoUrl}
+                darkLogoUrl={darkLogoUrl}
+                logoScalePercent={logoScalePercent * 1.35}
+                variant="light-surface"
+                priority
                 onClick={(event) => {
                   event.preventDefault();
                   handleDesktopNavigate('/');
                 }}
-              >
-                Home
-              </Link>
-              <Link
-                href="/products"
-                scroll={true}
-                className={navLinkClass('/products')}
-                onClick={(event) => {
-                  event.preventDefault();
-                  handleDesktopNavigate('/products');
-                }}
-              >
-                All Products
-              </Link>
-              <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
-                <div
-                  onPointerEnter={() => {
-                    cancelCategoriesClose();
-                    setIsCategoriesOpen(true);
-                  }}
-                  onPointerLeave={scheduleCategoriesClose}
-                >
-                  <DropdownMenuTrigger className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
-
-                      Categories
-                      <ChevronDown className={cn('size-4 transition-transform', isCategoriesOpen && 'rotate-180')} />
-                    
-</DropdownMenuTrigger>
-                </div>
-                <DropdownMenuContent
-                  className="w-60 p-1"
-                  align="start"
-                  sideOffset={8}
-                  onPointerEnter={cancelCategoriesClose}
-                  onPointerLeave={scheduleCategoriesClose}
-                >
-                  <DropdownMenuItem onClick={() => handleCategoryClick('new-arrivals')}>
-                    <Sparkles className="text-accent-foreground" />
-                    <span>New Arrivals</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('special-offers')}>
-                    <Tag className="text-accent-foreground" />
-                    <span>Special Offers</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                    <DropdownMenuItem
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                    >
-                      <Tag className="text-muted-foreground" />
-                      <span>{category.label}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </nav>
-
-            <div className="ml-auto flex items-center gap-2 md:gap-4 self-center">
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                onClick={handleSearchToggle}
-                aria-label="Toggle search"
-                title="Search"
-                aria-expanded={isSearchOpen}
-                className={cn(
-                  `nav-search-toggle hidden overflow-hidden md:inline-flex ${navActionButtonClass}`,
-                  isSearchOpen
-                    ? 'is-open border-primary/18 bg-background text-primary'
-                    : ''
-                )}
-              >
-                <span className="relative flex size-5 items-center justify-center">
-                  <Search strokeWidth={1.5} className={cn('navbar-toggle-icon navbar-toggle-icon-search', isSearchOpen && 'is-hidden')} />
-                  <X strokeWidth={1.5} className={cn('navbar-toggle-icon navbar-toggle-icon-close', isSearchOpen && 'is-visible')} />
-                </span>
-              </Button>
-              <MyOrdersButton
-                iconOnly
-                className={`hidden md:inline-flex ${navActionButtonClass}`}
+                className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 transition-transform duration-300 hover:scale-[1.02] cursor-pointer"
+                isLink={false}
               />
-              <MyWishlistButton
-                iconOnly
-                className={`hidden md:inline-flex ${navActionButtonClass}`}
+            </div>
+
+            {/* Center Zone: Search (Desktop only) */}
+            <div className="hidden md:block flex-1 w-full mx-6 xl:mx-10">
+              <NavbarSearchPanel
+                open={true}
+                onOpenChange={() => {}}
+                placeholder={searchPlaceholders[placeholderIndex]}
               />
+            </div>
+
+            {/* Right Zone: Actions */}
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+              {/* Combined Cart Button */}
               <Button
                 type="button"
                 variant="ghost"
@@ -523,19 +457,19 @@ function NavbarContent({
                 aria-label="Open cart"
                 title="Cart"
               >
-                <span className="relative flex size-6 md:size-[1.3rem] items-center justify-center">
+                <span className="relative flex size-7 md:size-[1.65rem] items-center justify-center">
                   <ShoppingBag strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
                   <X strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                    <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
                       {cartCount}
                     </span>
                   ) : null
                 ) : (
-                  <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
-                    <span className="h-2.5 w-2.5 rounded-full bg-primary-foreground/70" />
+                  <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
+                    <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
                   </span>
                 )}
               </Button>
@@ -544,27 +478,81 @@ function NavbarContent({
             </div>
           </header>
 
-          <div
-            data-state={isSearchOpen ? 'open' : 'closed'}
-            aria-hidden={!isSearchOpen}
-            className={cn(
-              'navbar-search-shell absolute inset-x-0 top-full z-10 grid border-t bg-background/96 backdrop-blur transition-[grid-template-rows,opacity,border-color] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:bg-background/80',
-              isSearchOpen
-                ? 'md:relative md:inset-auto md:top-auto md:z-auto'
-                : 'md:absolute md:inset-x-0 md:top-full md:z-10',
-              isSearchOpen ? 'grid-rows-[1fr] overflow-visible border-border/70 opacity-100' : 'pointer-events-none grid-rows-[0fr] overflow-hidden border-transparent opacity-0'
-            )}
-          >
-            <div className="overflow-visible">
-              <div className="navbar-search-inner mx-auto max-w-4xl px-4 py-4">
-                {isSearchOpen ? (
-                  <NavbarSearchPanel open={isSearchOpen} onOpenChange={handleSearchOpenChange} />
-                ) : null}
+          {/* Top Secondary Navbar (now below header) */}
+          <div className="hidden md:flex relative z-50 bg-muted/30 py-2.5 border-y border-border/50">
+            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[15px] font-semibold text-muted-foreground/90">
+              <div className="flex items-center gap-10 xl:gap-14">
+                <Link href="/" className="inline-flex relative z-50 items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Home className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Home
+                </Link>
+                <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+                  <div
+                    onPointerEnter={() => {
+                      cancelCategoriesClose();
+                      setIsCategoriesOpen(true);
+                    }}
+                    onPointerLeave={scheduleCategoriesClose}
+                  >
+                    <DropdownMenuTrigger className="group/button flex items-center gap-1.5 hover:text-primary transition-all duration-300 outline-none select-none hover:-translate-y-0.5 hover:scale-105">
+                      <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-110" strokeWidth={2.2} /> Categories / Collections
+                      <ChevronDown className={cn('size-3.5 transition-transform duration-300', isCategoriesOpen && 'rotate-180')} />
+                    </DropdownMenuTrigger>
+                  </div>
+                  <DropdownMenuContent
+                    className="w-60 p-1"
+                    align="start"
+                    sideOffset={16}
+                    onPointerEnter={cancelCategoriesClose}
+                    onPointerLeave={scheduleCategoriesClose}
+                  >
+                    <DropdownMenuItem onClick={() => handleCategoryClick('new-arrivals')}>
+                      <Sparkles className="text-accent-foreground" />
+                      <span>New Arrivals</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCategoryClick('special-offers')}>
+                      <Tag className="text-accent-foreground" />
+                      <span>Special Offers</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                      <DropdownMenuItem
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.id)}
+                      >
+                        <Tag className="text-muted-foreground" />
+                        <span>{category.label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Link href="/products" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <ShoppingBag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> All Products
+                </Link>
+                {session ? (
+                  <Link href="/orders" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                    <Package className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> My Orders
+                  </Link>
+                ) : (
+                  <Link href="/track-order" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                    <MapPin className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Track Order
+                  </Link>
+                )}
+                <Link href="/wishlist" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Heart className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Wishlist
+                </Link>
+                <Link href="/products?price=under500" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 500 Store
+                </Link>
+                <Link href="/products?price=under1000" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 1000 Store
+                </Link>
+                <Link href="/contact" className="flex items-center gap-1.5 hover:text-primary transition-all duration-300 group hover:-translate-y-0.5 hover:scale-105">
+                  <Phone className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Contact Us
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetContent

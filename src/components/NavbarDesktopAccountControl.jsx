@@ -53,8 +53,8 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
           className={`nav-profile-button overflow-hidden ${navActionButtonClass}`}
           title="Account"
         >
-          <span className="relative flex size-5 items-center justify-center">
-            <User strokeWidth={1.5} className="size-[1.2rem]" />
+          <span className="relative flex size-6 items-center justify-center">
+            <User strokeWidth={1.5} className="size-[1.45rem]" />
           </span>
         </Button>
         {isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
@@ -67,7 +67,7 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
       <DropdownMenu>
         <DropdownMenuTrigger title="Account" className="group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground">
 
-            <Avatar className="size-9">
+            <Avatar className="size-10">
               {!isAvatarLoaded ? <Skeleton className="absolute inset-0 rounded-full" /> : null}
               <AvatarImage
                 src={avatarSrc}

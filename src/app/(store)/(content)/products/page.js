@@ -23,6 +23,7 @@ function buildSuspenseKey(searchParams) {
     category: searchParams?.category || 'all',
     search: searchParams?.search || '',
     sort: searchParams?.sort || 'newest',
+    price: searchParams?.price || 'all',
     page: searchParams?.page || '1',
   });
 }
@@ -67,6 +68,7 @@ async function ProductsPageContent({ searchParams }) {
     category: resolvedSearchParams.category || 'all',
     search: resolvedSearchParams.search || '',
     sort: resolvedSearchParams.sort || 'newest',
+    price: resolvedSearchParams.price || 'all',
     page: Number(resolvedSearchParams.page || 1),
     limit: PRODUCTS_PAGE_SIZE,
   });
@@ -85,11 +87,11 @@ async function ProductsPageContent({ searchParams }) {
           initialSort={resolvedSearchParams.sort || 'newest'}
           activeCategory={resolvedSearchParams.category || 'all'}
         />
-        <section className="mx-auto max-w-7xl px-4 py-2">
+        <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
           <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
             <ProductsResultsContent 
               productsPromise={productsPromise} 
-              layout={resolvedSearchParams.layout || 'grid3'} 
+              layout={resolvedSearchParams.layout || 'grid4'} 
             />
           </Suspense>
           <Suspense fallback={null}>
@@ -105,10 +107,14 @@ async function ProductsResultsContent({ productsPromise, layout }) {
   const data = await productsPromise;
   const placeholderCount = Math.max(PRODUCTS_PAGE_SIZE - data.items.length, 0);
 
-  // Define grid layout based on user selection: 1/2 for mobile, 4/5 for PC
-  const gridClassName = layout === 'grid3'
-    ? "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-    : "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+  // Define grid layout based on user selection
+  let gridClassName;
+  if (layout === '1col') {
+    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
+  } else {
+    // Default: 2col (2 per row on mobile, 4 per row on PC)
+    gridClassName = "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4";
+  }
 
   return (
     <>

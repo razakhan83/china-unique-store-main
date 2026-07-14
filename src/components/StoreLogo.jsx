@@ -37,6 +37,7 @@ export default function StoreLogo({
   priority = false,
   compact = false,
   onClick,
+  isLink = true,
 }) {
   const prefersLightLogo = variant === 'dark-surface';
   const preferredLogoUrl = prefersLightLogo ? lightLogoUrl : darkLogoUrl;
@@ -47,8 +48,8 @@ export default function StoreLogo({
   const safeScalePercent = Math.min(200, Math.max(60, Number(logoScalePercent) || 100));
   const logoScale = 1 + ((safeScalePercent - 100) / 100) * 1.9;
 
-  return (
-    <Link href={href} onClick={onClick} className={cn('flex min-w-0 items-center gap-3', className)}>
+  const innerContent = (
+    <>
       {hasLogo ? (
         <div
           className="flex shrink-0 items-center overflow-visible"
@@ -61,13 +62,27 @@ export default function StoreLogo({
             height={80}
             priority={priority}
             sizes={compact ? '208px' : '192px'}
-            className="h-auto w-auto object-contain origin-left-center"
+            className="h-auto w-auto object-contain origin-left-center pointer-events-none"
             style={{ height: `${baseHeight}px`, transform: `translateY(3px) scale(${logoScale})` }}
           />
         </div>
       ) : (
         <BrandFallback storeName={storeName} invert={prefersLightLogo} compact={compact} />
       )}
+    </>
+  );
+
+  if (!isLink) {
+    return (
+      <div onClick={onClick} className={cn('flex min-w-0 items-center gap-3 cursor-pointer', className)}>
+        {innerContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href} onClick={onClick} className={cn('flex min-w-0 items-center gap-3', className)}>
+      {innerContent}
     </Link>
   );
 }

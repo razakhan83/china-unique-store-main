@@ -5,22 +5,22 @@ export default function HomePageSkeleton() {
     <div className="space-y-6 pb-10">
       <Skeleton className="h-[44svh] w-full rounded-none md:h-[60svh]" />
 
-      <div className="mx-auto flex max-w-7xl gap-3 overflow-hidden px-4">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Skeleton key={index} className="h-20 min-w-24 flex-1 rounded-2xl" />
+      <div className="mx-auto flex w-full max-w-[1500px] gap-3 overflow-hidden px-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-20 min-w-[120px] flex-1 rounded-2xl" />
         ))}
       </div>
 
       <div className="space-y-10">
         {Array.from({ length: 3 }).map((_, sectionIndex) => (
-          <section key={sectionIndex} className="mx-auto max-w-7xl space-y-4 px-4">
+          <section key={sectionIndex} className="mx-auto w-full max-w-[1500px] space-y-4 px-4">
             <div className="flex items-center justify-between">
               <Skeleton className="h-8 w-48 rounded-lg" />
               <Skeleton className="h-10 w-28 rounded-lg" />
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, cardIndex) => (
-                <div key={cardIndex} className="@container product-card-surface group relative flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card">
+            <div className="flex gap-3 overflow-hidden">
+              {Array.from({ length: 5 }).map((_, cardIndex) => (
+                <div key={cardIndex} className="min-w-[160px] md:min-w-[220px] lg:min-w-[260px] flex-1 group relative flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card">
                   <div className="relative block aspect-square w-full overflow-hidden bg-muted/30">
                     <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60" />
                   </div>

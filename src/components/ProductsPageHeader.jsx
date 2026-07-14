@@ -16,7 +16,7 @@ import { useProductsNavigationFeedback } from "@/components/ProductsNavigationFe
 import { cn } from "@/lib/utils";
 
 const categoryPillClassName =
-  "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,transform] outline-none active:scale-[0.97]";
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border transition-[color,background-color,border-color,box-shadow,transform] outline-none active:scale-[0.97] h-8 px-3 text-xs md:h-[40px] md:px-5 md:text-sm font-semibold";
 
 function getCategoryPillClassName(isActive) {
   if (isActive) {
@@ -218,11 +218,11 @@ export default function ProductsPageHeader({
     <div>
       <div
         className={cn(
-          "products-page-bar fixed inset-x-0 top-24 z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
-          isProductsBarHidden ? "-translate-y-24" : "translate-y-0"
+          "products-page-bar fixed inset-x-0 top-[96px] md:top-[162px] z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
+          isProductsBarHidden ? "-translate-y-[96px] md:-translate-y-[162px]" : "translate-y-0"
         )}
       >
-        <div className="relative mx-auto max-w-7xl px-4">
+        <div className="relative mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
           <div className="pointer-events-none absolute inset-y-0 left-4 z-10 hidden items-center md:flex">
             <button
               type="button"
@@ -270,8 +270,6 @@ export default function ProductsPageHeader({
                 >
                   {isLoading ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  ) : Icon ? (
-                    <Icon className="size-4" aria-hidden="true" />
                   ) : null}
                   {category.label}
                 </button>
@@ -281,9 +279,9 @@ export default function ProductsPageHeader({
         </div>
       </div>
 
-      <div className="h-18 md:h-20" aria-hidden="true" />
+      <div className="h-[70px] md:h-[90px]" aria-hidden="true" />
 
-      <div className="container mx-auto mb-2 max-w-7xl px-4 pt-3">
+      <div className="mx-auto w-full max-w-[1600px] mb-2 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 pt-3">
         <Breadcrumb className="products-page-meta mb-2">
           <BreadcrumbList>
             <BreadcrumbItem>

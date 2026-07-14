@@ -13,7 +13,7 @@ export default function HomeProductGridSection({
   const sectionLabel = title || category?.label || 'Products';
 
   return (
-    <section className="relative bg-white py-8 md:py-11 even:bg-[color:color-mix(in_oklab,var(--color-primary)_6%,white)]">
+    <section className="relative bg-transparent py-8 md:py-11 even:bg-card/50">
       <SectionDoodleBackground categoryLabel={sectionLabel} />
       <div className="relative z-10 mx-auto w-full max-w-[1500px] px-4">
         <CategoryProductSlider

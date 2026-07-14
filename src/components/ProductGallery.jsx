@@ -105,13 +105,31 @@ export default function ProductGallery({ images }) {
             ))}
           </CarouselContent>
         </Carousel>
+
+        {hasMultipleImages && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 md:hidden z-10 pointer-events-none">
+            {normalizedImages.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleThumbnailClick(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                className={`size-2 rounded-full transition-all duration-300 pointer-events-auto shadow-sm ${
+                  index === selectedIndex
+                    ? 'bg-primary scale-125'
+                    : 'bg-primary/30 hover:bg-primary/50 backdrop-blur-sm'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {hasMultipleImages ? (
         <Carousel
           setApi={setThumbsApi}
           opts={thumbsOptions}
-          className="w-full"
+          className="hidden w-full md:block"
         >
           <CarouselContent className="-ml-3 md:-ml-4">
             {normalizedImages.map((image, index) => (

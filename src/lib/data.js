@@ -1132,7 +1132,7 @@ export async function getStorefrontHomePage() {
   }
 }
 
-export async function getProductsList({ category = 'all', search = '', sort = 'newest', page = 1, limit = 12 } = {}) {
+export async function getProductsList({ category = 'all', search = '', sort = 'newest', page = 1, limit = 12, price = 'all' } = {}) {
   'use cache';
   cacheLife('foreverish');
   cacheTag('products', 'categories');
@@ -1146,6 +1146,18 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const safeLimit = Math.max(1, Number(limit) || 12);
 
   const query = { showOnStore: true };
+
+  if (price === 'under500') {
+    query.Price = { $lt: 500 };
+  } else if (price === 'under1000') {
+    query.Price = { $lt: 1000 };
+  } else if (price === '500-1500') {
+    query.Price = { $gte: 500, $lte: 1500 };
+  } else if (price === '1500-5000') {
+    query.Price = { $gte: 1500, $lte: 5000 };
+  } else if (price === 'above5000') {
+    query.Price = { $gt: 5000 };
+  }
 
   if (safeCategory === 'new-arrivals') {
     query.isNewArrival = true;
@@ -1224,6 +1236,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     activeCategory: safeCategory,
     searchTerm: safeSearch,
     sort: safeSort,
+    price,
   };
 }
 
