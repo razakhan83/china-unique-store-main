@@ -49,13 +49,13 @@ function MobileNavButton({
           iconSwap
         ) : (
           <Icon
-            className={cn('size-6 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.25]')}
+            className={cn('size-5 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.25]')}
           />
         )}
       </span>
       <span
         className={cn(
-          'text-[11px] font-bold transition-colors duration-200',
+          'text-[10px] font-bold transition-colors duration-200',
           active ? 'text-primary' : 'text-muted-foreground'
         )}
       >
@@ -191,7 +191,7 @@ export default function MobileBottomNav({
                 onSearchOpenChange?.(true);
               }}
               active={isSearchOpen}
-              iconSwap={isSearchOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
+              iconSwap={isSearchOpen ? <X className="size-5" strokeWidth={2.5} /> : undefined}
             />
             <MobileNavButton
               icon={Package}
@@ -215,7 +215,7 @@ export default function MobileBottomNav({
                 openAccountPanel();
               }}
               active={accountPanelOpen || pathname.startsWith('/settings')}
-              iconSwap={accountPanelOpen ? <X className="size-[1.2rem]" strokeWidth={3} /> : undefined}
+              iconSwap={accountPanelOpen ? <X className="size-5" strokeWidth={2.5} /> : undefined}
             />
           </nav>
         </div>

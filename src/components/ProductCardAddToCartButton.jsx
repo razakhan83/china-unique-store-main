@@ -12,7 +12,7 @@ const ProductCardAddToCartButtonClient = dynamic(
 function AddToCartSkeleton({ mode }) {
   if (mode === 'icon') {
     return (
-      <Skeleton className="absolute right-2.5 top-[3.25rem] z-10 hidden size-8 rounded-full md:inline-flex" aria-hidden="true" />
+      <Skeleton className="size-9 sm:size-10 shrink-0 rounded-full" aria-hidden="true" />
     );
   }
   return <Skeleton className="w-full h-8 sm:h-9 rounded-md" aria-hidden="true" />;

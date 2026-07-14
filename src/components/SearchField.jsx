@@ -32,6 +32,7 @@ export default function SearchField({
   showSuggestions = true,
   isLoading = false,
   placeholder = "Search for premium products...",
+  autoFocus = false,
 }) {
   return (
     <div className={cn("relative", className)}>
@@ -61,6 +62,7 @@ export default function SearchField({
             value={value}
             onChange={onChange}
             onFocus={onFocus}
+            autoFocus={autoFocus}
             className={cn(
               "h-12 min-w-0 border-0 bg-transparent pl-11 pr-10 text-sm text-foreground shadow-none outline-none ring-0 transition-none placeholder:text-transparent",
               "hover:border-0 hover:bg-transparent hover:shadow-none",

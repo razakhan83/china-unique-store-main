@@ -414,7 +414,7 @@ function NavbarContent({
           <header className="relative z-20 mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
             <div className="flex items-center gap-4 lg:gap-8 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
-                <span className="relative flex size-7 items-center justify-center">
+                <span className="relative flex size-6 items-center justify-center">
                   <Menu strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
                   <X strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
@@ -457,7 +457,7 @@ function NavbarContent({
                 aria-label="Open cart"
                 title="Cart"
               >
-                <span className="relative flex size-7 md:size-[1.65rem] items-center justify-center">
+                <span className="relative flex size-6 md:size-[1.65rem] items-center justify-center">
                   <ShoppingBag strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
                   <X strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
@@ -477,6 +477,18 @@ function NavbarContent({
               <NavbarDesktopAccountControl navActionButtonClass={navActionButtonClass} />
             </div>
           </header>
+
+          {/* Mobile Search Panel */}
+          {isSearchOpen && (
+            <div className="md:hidden px-4 pb-3 animate-in slide-in-from-top-2 fade-in-0 duration-300">
+              <NavbarSearchPanel
+                open={isSearchOpen}
+                onOpenChange={setIsSearchOpen}
+                placeholder={searchPlaceholders[placeholderIndex]}
+                autoFocus={true}
+              />
+            </div>
+          )}
 
           {/* Top Secondary Navbar (now below header) */}
           <div className="hidden md:flex relative z-50 bg-muted/30 py-2.5 border-y border-border/50">

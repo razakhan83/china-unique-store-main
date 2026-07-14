@@ -75,17 +75,17 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
         data-state={animationState}
         aria-busy={isBusy}
         className={cn(
-          "absolute right-2.5 top-[3.25rem] z-10 hidden size-9 items-center justify-center rounded-full border border-border/60 bg-background/92 p-0 text-foreground shadow-xs backdrop-blur-md outline-none transition-all duration-300 ease-out hover:scale-[1.1] hover:-translate-y-0.5 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-ring/50 md:inline-flex md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 hover:shadow-[0_4px_12px_rgba(16,185,129,0.2)]",
+          "inline-flex shrink-0 size-9 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50",
           isOutOfStock && "pointer-events-none opacity-40",
           (isBusy || isLoading) && "pointer-events-none opacity-60"
         )}
         aria-label="Add to cart"
       >
-        <span className="relative block size-4.5">
+        <span className="relative block size-4.5 sm:size-5">
           {isLoading ? (
-            <Spinner className="absolute inset-0 size-4.5" />
+            <Spinner className="absolute inset-0 size-4.5 sm:size-5" />
           ) : (
-            <ShoppingCart className="absolute inset-0 size-4.5 transition-all duration-300 ease-out text-emerald-600" />
+            <ShoppingCart className="absolute inset-0 size-4.5 sm:size-5 transition-all duration-300 ease-out" />
           )}
         </span>
       </button>

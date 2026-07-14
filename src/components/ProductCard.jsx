@@ -136,7 +136,6 @@ export default function ProductCard({ product, className = "" }) {
         </div>
 
         <ProductCardWishlistSlot product={product} />
-        <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
 
         <Link
           href={productHref}
@@ -207,36 +206,36 @@ export default function ProductCard({ product, className = "" }) {
               draggable={false}
             >
               <h3
-                className="line-clamp-2 text-[13px] font-medium leading-[1.3] text-foreground/90 @min-[260px]:text-[14px]"
+                className="line-clamp-2 text-[13px] font-medium leading-[1.3] text-foreground/90 @min-[260px]:text-[14px] sm:text-[15px]"
                 draggable={false}
               >
                 {productName}
               </h3>
             </Link>
 
-            <div className="mt-auto flex flex-col gap-3.5 pt-3">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+            <div className="mt-auto flex items-end justify-between gap-2 pt-2 sm:pt-3">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <p
-                  className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px]"
+                  className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
                   draggable={false}
                 >
                   {formatPrice(sellingPrice)}
                 </p>
                 {compareAtPrice ? (
-                  <>
+                  <div className="flex flex-col gap-1 @min-[260px]:flex-row @min-[260px]:items-center @min-[260px]:gap-x-2 @min-[260px]:flex-wrap">
                     <p
-                      className="text-[12px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[13px]"
+                      className="text-[12px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[13px] sm:text-[14px]"
                       draggable={false}
                     >
                       {formatPrice(compareAtPrice)}
                     </p>
-                    <Badge className="pointer-events-auto rounded bg-emerald-100/60 px-2 py-0.5 text-[11px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[22px] inline-flex items-center">
+                    <Badge className="pointer-events-auto w-fit rounded bg-emerald-100/60 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[20px] inline-flex items-center sm:px-2 sm:text-[11px] sm:h-[22px]">
                       Save {formatPrice(compareAtPrice - sellingPrice)}
                     </Badge>
-                  </>
+                  </div>
                 ) : null}
               </div>
-              <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} />
+              <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
             </div>
           </>
       </CardContent>
