@@ -6,6 +6,7 @@ import ProductsPagination from '@/components/ProductsPagination';
 import { ProductsNavigationFeedbackProvider, ProductsPendingResults } from '@/components/ProductsNavigationFeedback';
 import ProductsPageHeader from '@/components/ProductsPageHeader';
 import ProductsToolbar from '@/components/ProductsToolbar';
+import ProductsSidebar from '@/components/ProductsSidebar';
 import {
   Empty,
   EmptyDescription,
@@ -24,6 +25,8 @@ function buildSuspenseKey(searchParams) {
     search: searchParams?.search || '',
     sort: searchParams?.sort || 'newest',
     price: searchParams?.price || 'all',
+    layout: searchParams?.layout || 'grid4',
+    instock: searchParams?.instock || 'false',
     page: searchParams?.page || '1',
   });
 }
@@ -88,15 +91,23 @@ async function ProductsPageContent({ searchParams }) {
           activeCategory={resolvedSearchParams.category || 'all'}
         />
         <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
-          <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
-            <ProductsResultsContent 
-              productsPromise={productsPromise} 
-              layout={resolvedSearchParams.layout || 'grid4'} 
+          <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-start relative">
+            <ProductsSidebar 
+              categories={categories} 
+              activeCategory={resolvedSearchParams.category || 'all'} 
             />
-          </Suspense>
-          <Suspense fallback={null}>
-            <ProductsPaginationContent productsPromise={productsPromise} />
-          </Suspense>
+            <div className="flex-1 min-w-0">
+              <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
+                <ProductsResultsContent 
+                  productsPromise={productsPromise} 
+                  layout={resolvedSearchParams.layout || 'grid4'} 
+                />
+              </Suspense>
+              <Suspense fallback={null}>
+                <ProductsPaginationContent productsPromise={productsPromise} />
+              </Suspense>
+            </div>
+          </div>
         </section>
       </div>
     </ProductsNavigationFeedbackProvider>
@@ -110,10 +121,11 @@ async function ProductsResultsContent({ productsPromise, layout }) {
   // Define grid layout based on user selection
   let gridClassName;
   if (layout === '1col') {
-    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6";
+    // Dense layout: 1 mobile, 3 tablet, 4/5/6 PC
+    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
   } else {
-    // Default: 2col (2 per row on mobile, 4 per row on PC)
-    gridClassName = "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4";
+    // Default layout: 2 mobile, 3 tablet, 3/4 PC
+    gridClassName = "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
   }
 
   return (

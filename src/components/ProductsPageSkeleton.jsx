@@ -33,15 +33,7 @@ export function ProductsToolbarSkeleton() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
         {/* Left side: Filters */}
         <div className="flex items-center gap-3">
-          <Skeleton className="h-8 w-[100px] rounded-md" />
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Skeleton className="h-8 w-[80px] rounded-md" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Skeleton className="h-8 w-[80px] rounded-md" />
-            </div>
-          </div>
+          <Skeleton className="h-8 w-[100px] rounded-md md:hidden" />
         </div>
 
         {/* Right side: Sort and Layout */}
@@ -61,9 +53,9 @@ export function ProductsToolbarSkeleton() {
 
 export function ProductsGridSkeleton() {
   return (
-    <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
+    <div className="w-full">
       <ProductsGridSkeletonContent />
-    </section>
+    </div>
   );
 }
 
@@ -81,7 +73,7 @@ function ProductsGridSkeletonContent() {
         </div>
       </div>
 
-      <div className="grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
+      <div className="grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
         {Array.from({ length: 12 }).map((_, index) => (
           <ProductCardSkeleton key={index} />
         ))}
@@ -109,9 +101,33 @@ export function ProductsResultsSkeleton() {
   return (
     <>
       <ProductsToolbarSkeleton />
-      <section className="mx-auto max-w-7xl px-4 py-6">
-        <ProductsGridSkeletonContent />
-        <ProductsPaginationSkeleton />
+      <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
+        <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-start relative">
+          <aside className="hidden md:flex flex-col w-[260px] lg:w-[280px] shrink-0 gap-8 py-2">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-24" />
+              <div className="space-y-2">
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-md" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-16" />
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-5 w-36" />
+              </div>
+            </div>
+          </aside>
+          <div className="flex-1 min-w-0">
+            <ProductsGridSkeletonContent />
+            <ProductsPaginationSkeleton />
+          </div>
+        </div>
       </section>
     </>
   );

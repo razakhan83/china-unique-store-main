@@ -59,37 +59,6 @@ export default function ProductsToolbar({
               <ProductsFilterSheet activeCategory={activeCategory} currentSort={currentSort} />
             </Suspense>
           </div>
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-medium text-muted-foreground">Availability</span>
-              <Select value={currentInstock} onValueChange={(val) => handleChange('instock', val)}>
-                <SelectTrigger className="h-8 w-auto min-w-[100px] border-0 bg-transparent px-2 text-sm font-medium shadow-none focus:ring-0 hover:bg-muted/50 rounded-md">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent align="start" className="rounded-xl">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="true">In Stock</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-medium text-muted-foreground">Price</span>
-              <Select value={currentPrice} onValueChange={(val) => handleChange('price', val)}>
-                <SelectTrigger className="h-8 w-auto min-w-[100px] border-0 bg-transparent px-2 text-sm font-medium shadow-none focus:ring-0 hover:bg-muted/50 rounded-md">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent align="start" className="rounded-xl">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="under500">Under Rs. 500</SelectItem>
-                  <SelectItem value="under1000">Under Rs. 1000</SelectItem>
-                  <SelectItem value="500-1500">Rs. 500 - 1,500</SelectItem>
-                  <SelectItem value="1500-5000">Rs. 1,500 - 5,000</SelectItem>
-                  <SelectItem value="above5000">Above Rs. 5,000</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </div>
 
         {/* Right side: Sort and Layout */}

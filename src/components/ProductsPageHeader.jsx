@@ -218,8 +218,8 @@ export default function ProductsPageHeader({
     <div>
       <div
         className={cn(
-          "products-page-bar fixed inset-x-0 top-[96px] md:top-[162px] z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform",
-          isProductsBarHidden ? "-translate-y-[96px] md:-translate-y-[162px]" : "translate-y-0"
+          "products-page-bar fixed inset-x-0 top-[96px] z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform md:hidden",
+          isProductsBarHidden ? "-translate-y-[96px]" : "translate-y-0"
         )}
       >
         <div className="relative mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
@@ -279,9 +279,9 @@ export default function ProductsPageHeader({
         </div>
       </div>
 
-      <div className="h-[70px] md:h-[90px]" aria-hidden="true" />
+      <div className="h-[70px] md:hidden" aria-hidden="true" />
 
-      <div className="mx-auto w-full max-w-[1600px] mb-2 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 pt-3">
+      <div className="mx-auto w-full max-w-[1600px] mb-2 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 pt-3 md:pt-1">
         <Breadcrumb className="products-page-meta mb-2">
           <BreadcrumbList>
             <BreadcrumbItem>
