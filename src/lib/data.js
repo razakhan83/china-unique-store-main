@@ -99,20 +99,10 @@ let hasLoggedSettingsFetchFailure = false;
 const SLOW_DATA_LOG_MS = 700;
 
 async function measureDataAccess(label, loader) {
-  const startedAt = Date.now();
-
   try {
-    const result = await loader();
-    const duration = Date.now() - startedAt;
-
-    if (duration >= SLOW_DATA_LOG_MS) {
-      console.warn(`[DATA] Slow ${label}: ${duration}ms`);
-    }
-
-    return result;
+    return await loader();
   } catch (error) {
-    const duration = Date.now() - startedAt;
-    console.error(`[DATA] Failed ${label} after ${duration}ms:`, error.message);
+    console.error(`[DATA] Failed ${label}:`, error.message);
     throw error;
   }
 }
@@ -1423,9 +1413,6 @@ export async function getProductPrerenderParams(limit = 1) {
 }
 
 export async function getRelatedProducts({ category = '', excludeSlug = '', limit = 8 } = {}) {
-  'use cache';
-  cacheLife('foreverish');
-  cacheTag('products');
   const products = await getLiveProductsRaw();
 
   return products

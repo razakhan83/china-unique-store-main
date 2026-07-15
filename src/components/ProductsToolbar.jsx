@@ -114,16 +114,18 @@ export default function ProductsToolbar({
             <button
               onClick={() => handleChange('layout', '1col')}
               className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === '1col' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-              title="1 per row (Mobile), 4 per row (PC)"
+              title="1 per row (Mobile), 6 per row (PC)"
             >
-              <Square className="size-4" />
+              <Square className="size-4 sm:hidden" />
+              <Grid3x3 className="size-4 hidden sm:block" />
             </button>
             <button
               onClick={() => handleChange('layout', '2col')}
               className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${layout === '2col' || !layout || layout === 'grid4' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
               title="2 per row (Mobile), 4 per row (PC)"
             >
-              <Grid2x2 className="size-4" />
+              <Grid2x2 className="size-4 sm:hidden" />
+              <LayoutGrid className="size-4 hidden sm:block" />
             </button>
           </div>
         </div>

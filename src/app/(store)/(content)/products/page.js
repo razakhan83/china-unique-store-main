@@ -110,7 +110,7 @@ async function ProductsResultsContent({ productsPromise, layout }) {
   // Define grid layout based on user selection
   let gridClassName;
   if (layout === '1col') {
-    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
+    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6";
   } else {
     // Default: 2col (2 per row on mobile, 4 per row on PC)
     gridClassName = "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4";
