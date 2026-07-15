@@ -140,7 +140,7 @@ export default function ProductCard({ product, className = "" }) {
         <Link
           href={productHref}
           scroll={true}
-          className="relative block aspect-square w-full overflow-hidden rounded-t-[11px] isolate transform-gpu"
+          className="relative block aspect-square w-full overflow-hidden rounded-t-[11px]"
           style={{ backgroundColor: '#e1f2ed' }}
           draggable={false}
         >
@@ -158,7 +158,7 @@ export default function ProductCard({ product, className = "" }) {
                 loading="lazy"
                 onLoad={() => setPrimaryLoaded(true)}
                 className={cn(
-                  "object-cover transition-all duration-500 ease-out transform-gpu",
+                  "object-cover transition-all duration-500 ease-out",
                   (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
@@ -180,7 +180,7 @@ export default function ProductCard({ product, className = "" }) {
                     loading="lazy"
                     onLoad={() => setSecondaryLoaded(true)}
                     className={cn(
-                      "object-cover transition-all duration-500 ease-out transform-gpu absolute inset-0 opacity-0",
+                      "object-cover transition-all duration-500 ease-out absolute inset-0 opacity-0",
                       (!secondaryImage.blurDataURL && !secondaryLoaded) ? "opacity-0" : "",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",
                       isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75"
