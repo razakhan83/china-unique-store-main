@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 
 export function ProductsHeaderSkeleton() {
   return (
@@ -82,10 +83,7 @@ function ProductsGridSkeletonContent() {
 
       <div className="grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4">
         {Array.from({ length: 12 }).map((_, index) => (
-          <div
-            key={index}
-            className="products-grid-skeleton-card relative flex h-full min-h-[320px] flex-col overflow-hidden rounded-xl border border-border"
-          />
+          <ProductCardSkeleton key={index} />
         ))}
       </div>
     </>

@@ -12,6 +12,7 @@ import ProductViewTracking from '@/components/ProductViewTracking';
 import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 import ProductMetaTags from './ProductMetaTags';
 import ProductReviews from '@/components/ProductReviews';
+import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -550,7 +551,7 @@ function RelatedProductsSkeleton() {
         <Skeleton className="mb-6 h-8 w-56 rounded-lg" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-72 rounded-2xl" />
+            <ProductCardSkeleton key={index} />
           ))}
         </div>
       </div>

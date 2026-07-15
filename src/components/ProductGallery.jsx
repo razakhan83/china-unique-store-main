@@ -69,7 +69,7 @@ export default function ProductGallery({ images }) {
 
   if (normalizedImages.length === 0) {
     return (
-      <div className="surface-card relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl text-muted-foreground" style={{ backgroundColor: '#e1f2ed' }}>
+      <div className="surface-card relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl text-muted-foreground" style={{ backgroundColor: '#ffffff' }}>
         <ImageIcon className="size-16" />
       </div>
     );
@@ -81,7 +81,7 @@ export default function ProductGallery({ images }) {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#e1f2ed' }}>
+      <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#ffffff' }}>
         <Carousel
           setApi={setMainApi}
           opts={mainOptions}
@@ -148,7 +148,7 @@ export default function ProductGallery({ images }) {
                       : 'border-transparent opacity-60 hover:scale-[1.02] hover:opacity-100'
                   }`}
                 >
-                  <div className="absolute inset-0" style={{ backgroundColor: '#e1f2ed' }} />
+                  <div className="absolute inset-0" style={{ backgroundColor: '#ffffff' }} />
                   <Image
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryThumb)}
                     alt={`Thumbnail ${index + 1}`}

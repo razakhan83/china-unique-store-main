@@ -155,8 +155,7 @@
 }
 
 @layer utilities {
-  .skeleton-card,
-  .products-grid-skeleton-card {
+  .skeleton-card {
     background: linear-gradient(
       90deg, 
       oklch(0.94 0.003 260) 25%, 
