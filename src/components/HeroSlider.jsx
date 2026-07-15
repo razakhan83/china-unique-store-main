@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -9,32 +9,23 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
 
-function getSlideAssets(slide) {
+function extractSlideImages(slide) {
   const desktopAsset = slide?.desktopImage || null;
-  const tabletAsset = slide?.tabletImage || desktopAsset;
-  const mobileAsset = slide?.mobileImage || desktopAsset;
+  const mobileAsset = slide?.mobileImage || null;
+
+  const desktopSrc = desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '';
+  const mobileSrc = mobileAsset?.url || slide?.mobileSrc || desktopSrc || '';
 
   return {
-    mobile: {
-      src: mobileAsset?.url || slide?.mobileSrc || desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
-      blurDataURL: mobileAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
-    },
-    tablet: {
-      src: tabletAsset?.url || slide?.tabletSrc || desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
-      blurDataURL: tabletAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
-    },
-    desktop: {
-      src: desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
-      blurDataURL: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
-    },
+    desktopSrc,
+    desktopBlur: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    mobileSrc,
+    mobileBlur: mobileAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
   };
 }
 
 function SlideFrame({ href, children }) {
-  if (!href) {
-    return <>{children}</>;
-  }
-
+  if (!href) return <>{children}</>;
   return (
     <Link href={href} className="block h-full w-full">
       {children}
@@ -52,30 +43,36 @@ export default function HeroSlider({ slides = [] }) {
       slides
         .map((slide, index) => ({
           ...slide,
-          assets: getSlideAssets(slide),
+          images: extractSlideImages(slide),
           alt: slide?.alt || `Slide ${index + 1}`,
         }))
-        .filter(
-          (slide) => slide.assets?.desktop?.src || slide.assets?.tablet?.src || slide.assets?.mobile?.src
-        ),
+        .filter((slide) => slide.images.mobileSrc || slide.images.desktopSrc),
     [slides]
   );
+
   const safeActiveIndex =
     resolvedSlides.length > 0 ? activeIndex % resolvedSlides.length : 0;
 
-  function goToSlide(nextIndex) {
-    if (resolvedSlides.length === 0) return;
-    const normalizedIndex = ((nextIndex % resolvedSlides.length) + resolvedSlides.length) % resolvedSlides.length;
-    setActiveIndex(normalizedIndex);
-  }
+  const goToSlide = useCallback(
+    (nextIndex) => {
+      if (resolvedSlides.length === 0) return;
+      const normalizedIndex =
+        ((nextIndex % resolvedSlides.length) + resolvedSlides.length) %
+        resolvedSlides.length;
+      setActiveIndex(normalizedIndex);
+    },
+    [resolvedSlides.length]
+  );
 
-  function goToNextSlide() {
-    goToSlide(safeActiveIndex + 1);
-  }
+  const goToNextSlide = useCallback(
+    () => goToSlide(safeActiveIndex + 1),
+    [goToSlide, safeActiveIndex]
+  );
 
-  function goToPrevSlide() {
-    goToSlide(safeActiveIndex - 1);
-  }
+  const goToPrevSlide = useCallback(
+    () => goToSlide(safeActiveIndex - 1),
+    [goToSlide, safeActiveIndex]
+  );
 
   function handleTouchStart(event) {
     const touch = event.touches?.[0];
@@ -88,36 +85,21 @@ export default function HeroSlider({ slides = [] }) {
     const touch = event.changedTouches?.[0];
     const startX = touchStartXRef.current;
     const startY = touchStartYRef.current;
-
     touchStartXRef.current = null;
     touchStartYRef.current = null;
-
     if (!touch || startX == null || startY == null) return;
-
     const deltaX = touch.clientX - startX;
     const deltaY = touch.clientY - startY;
-
-    if (Math.abs(deltaX) < HERO_SWIPE_THRESHOLD_PX || Math.abs(deltaX) <= Math.abs(deltaY)) {
-      return;
-    }
-
-    if (deltaX < 0) {
-      goToNextSlide();
-      return;
-    }
-
-    goToPrevSlide();
+    if (Math.abs(deltaX) < HERO_SWIPE_THRESHOLD_PX || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (deltaX < 0) goToNextSlide();
+    else goToPrevSlide();
   }
 
   useEffect(() => {
-    if (resolvedSlides.length <= 1) {
-      return;
-    }
-
+    if (resolvedSlides.length <= 1) return;
     const autoplayTimer = window.setTimeout(() => {
       setActiveIndex((current) => (current + 1) % resolvedSlides.length);
     }, HERO_AUTOPLAY_DELAY_MS);
-
     return () => window.clearTimeout(autoplayTimer);
   }, [resolvedSlides.length, safeActiveIndex]);
 
@@ -133,59 +115,44 @@ export default function HeroSlider({ slides = [] }) {
       <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-primary/10 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => (
           <div
-            key={
-              slide.id ||
-              `${slide.assets.desktop.src || slide.assets.tablet.src || slide.assets.mobile.src}-${index}`
-            }
+            key={slide.id || `${slide.images.mobileSrc}-${index}`}
             className={`hero-fade-slide ${safeActiveIndex === index ? 'is-active' : ''}`}
             aria-hidden={safeActiveIndex !== index}
           >
-            {/* Slide images */}
             <SlideFrame href={slide.link}>
-              <div className="block h-full w-full md:hidden">
+              {/* Mobile Image */}
+              {slide.images.mobileSrc && (
                 <Image
-                  src={slide.assets.mobile.src}
+                  src={slide.images.mobileSrc}
                   alt={slide.alt}
                   fill
                   sizes="100vw"
                   priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  {...getBlurPlaceholderProps(slide.assets.mobile.blurDataURL)}
+                  className="object-cover md:hidden"
+                  quality={85}
+                  {...getBlurPlaceholderProps(slide.images.mobileBlur)}
                 />
-              </div>
-
-              <div className="hidden h-full w-full md:block lg:hidden">
+              )}
+              {/* PC Image */}
+              {slide.images.desktopSrc && (
                 <Image
-                  src={slide.assets.tablet.src}
+                  src={slide.images.desktopSrc}
                   alt={slide.alt}
                   fill
-                  sizes="(min-width: 768px) and (max-width: 1023px) 100vw, 100vw"
+                  sizes="100vw"
                   priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  {...getBlurPlaceholderProps(slide.assets.tablet.blurDataURL)}
+                  className="hidden object-cover md:block"
+                  quality={85}
+                  {...getBlurPlaceholderProps(slide.images.desktopBlur)}
                 />
-              </div>
-
-              <div className="hidden h-full w-full lg:block">
-                <Image
-                  src={slide.assets.desktop.src}
-                  alt={slide.alt}
-                  fill
-                  sizes="(min-width: 1024px) 100vw, 100vw"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  {...getBlurPlaceholderProps(slide.assets.desktop.blurDataURL)}
-                />
-              </div>
+              )}
             </SlideFrame>
 
-            {/* Gradient scrim for legibility */}
+            {/* Gradient scrim for text legibility */}
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.18)_50%,rgba(0,0,0,0.04)_100%)]" />
 
             {/* Text + CTA overlay */}
@@ -213,6 +180,7 @@ export default function HeroSlider({ slides = [] }) {
           </div>
         ))}
 
+        {/* Prev/Next arrows — desktop only */}
         {resolvedSlides.length > 1 ? (
           <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-10 hidden items-center justify-between px-4 md:flex lg:px-6">
             <button
@@ -234,6 +202,7 @@ export default function HeroSlider({ slides = [] }) {
           </div>
         ) : null}
 
+        {/* Dot indicators */}
         {resolvedSlides.length > 1 ? (
           <div className="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-2">
             {resolvedSlides.map((slide, index) => (

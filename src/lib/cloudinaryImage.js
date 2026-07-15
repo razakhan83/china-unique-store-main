@@ -1,15 +1,43 @@
 const CLOUDINARY_HOSTS = new Set(['res.cloudinary.com']);
 
 export const CLOUDINARY_IMAGE_PRESETS = {
-  categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto' },
-  heroOriginal: { includeDpr: false },
-  productCard: { width: 285, crop: 'fill', gravity: 'auto', format: 'avif' },
-  productGalleryMain: { width: 1400, height: 1400, crop: 'fill', gravity: 'auto' },
-  productGalleryThumb: { width: 240, height: 240, crop: 'fill', gravity: 'auto' },
-  searchSuggestion: { width: 96, height: 96, crop: 'fill', gravity: 'auto' },
-  cartItem: { width: 160, height: 160, crop: 'fill', gravity: 'auto' },
-  productModal: { width: 960, height: 960, crop: 'fill', gravity: 'auto' },
-  adminThumb: { width: 128, height: 128, crop: 'fill', gravity: 'auto' },
+  // ── Store-facing presets ─────────────────────────────────────────────────────
+
+  // Product cards: mobile-first sizing
+  // Mobile: 2-column grid → ~180px wide per card on a 360px screen
+  // Tablet: 3-column grid → ~240px wide per card
+  // Desktop: 4-column grid → ~285px wide per card
+  // We use 380px as the Cloudinary transform width to cover 2x DPR on mobile
+  // (180px × 2 = 360px ≈ 380px with some breathing room)
+  productCard: { width: 380, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
+
+  // Category circles: small fixed-size icons in the horizontal carousel
+  categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+
+  // Hero slider: full-width banner images
+  // Single image per slide (was 3 separate mobile/tablet/desktop images).
+  // Cloudinary delivers at full width; Next.js image sizing handles the rest.
+  // We request at 1400px max to cover large retina displays without waste.
+  heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+
+  // Product detail gallery — main zoom image
+  productGalleryMain: { width: 1400, height: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 82 },
+
+  // Product detail gallery — thumbnail strip
+  productGalleryThumb: { width: 240, height: 240, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
+
+  // Search suggestions dropdown — tiny thumbnails
+  searchSuggestion: { width: 96, height: 96, crop: 'fill', gravity: 'auto', format: 'avif', quality: 72 },
+
+  // Cart drawer line items
+  cartItem: { width: 160, height: 160, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
+
+  // Product quick-view modal
+  productModal: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+
+  // ── Admin-facing presets ─────────────────────────────────────────────────────
+  // Admin thumbnails don't need AVIF since they're behind auth and not LCP-critical
+  adminThumb: { width: 128, height: 128, crop: 'fill', gravity: 'auto', format: 'webp', quality: 80 },
 };
 
 function buildCloudinaryTransformSegment(options = {}) {

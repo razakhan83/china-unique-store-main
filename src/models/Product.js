@@ -215,6 +215,8 @@ ProductSchema.index({ showOnStore: 1, slug: 1 });
 ProductSchema.index({ showOnStore: 1, isDiscounted: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isNewArrival: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isBestSelling: 1, createdAt: -1 });
+ProductSchema.index({ showOnStore: 1, Price: 1, createdAt: -1 });
+ProductSchema.index({ showOnStore: 1, Price: -1, createdAt: -1 });
 ProductSchema.index({ 'vendors.name': 1 });
 ProductSchema.index({ 'vendors.vendorId': 1 });
 

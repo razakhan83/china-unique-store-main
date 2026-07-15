@@ -316,11 +316,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     <>
                         <div className="flex items-center gap-2">
                             <div className="inline-flex flex-1 items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-10 px-1">
-                                <button onClick={decrement} className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Minus className="size-3.5" />
                                 </button>
                                 <span className="inline-flex min-w-6 items-center justify-center text-sm font-semibold text-foreground">{quantity}</span>
-                                <button onClick={increment} className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                <button onClick={increment} aria-label="Increase quantity" className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Plus className="size-3.5" />
                                 </button>
                             </div>

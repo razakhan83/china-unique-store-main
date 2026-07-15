@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { getMetadataBase } from "@/lib/siteUrl";
@@ -7,11 +7,8 @@ import AuthProvider from "@/components/AuthProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const socialPreviewAlt = 'China Unique Store social preview image';
@@ -71,7 +68,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${geistSans.variable} antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="bottom-center" richColors />
