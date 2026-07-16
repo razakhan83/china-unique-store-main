@@ -4,7 +4,6 @@ import path from 'node:path';
 import { getStoreSettings } from '@/lib/data';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 async function readFallbackFavicon() {
   const faviconPath = path.join(process.cwd(), 'src', 'app', 'favicon.ico');
