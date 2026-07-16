@@ -44,6 +44,27 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-shimmer: shimmer 2.2s infinite linear;
+  --animate-marquee-up: marquee-up 35s linear infinite;
+  --animate-marquee-down: marquee-down 35s linear infinite;
+  --animate-marquee-left: marquee-left 35s linear infinite;
+  --animate-marquee-right: marquee-right 35s linear infinite;
+
+  @keyframes marquee-up {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-50% - 0.75rem)); } /* -50% minus half the gap */
+  }
+  @keyframes marquee-down {
+    from { transform: translateY(calc(-50% - 0.75rem)); }
+    to { transform: translateY(0); }
+  }
+  @keyframes marquee-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-50% - 0.75rem)); } /* -50% minus half the gap */
+  }
+  @keyframes marquee-right {
+    from { transform: translateX(calc(-50% - 0.75rem)); }
+    to { transform: translateX(0); }
+  }
 
   @keyframes accordion-down {
     from { height: 0; }
