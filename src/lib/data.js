@@ -399,6 +399,10 @@ function toOrderSummaryRow(order) {
 }
 
 async function getLiveProductsRaw() {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'categories');
+
   return measureDataAccess('getLiveProductsRaw', async () => {
     await mongooseConnect();
 
