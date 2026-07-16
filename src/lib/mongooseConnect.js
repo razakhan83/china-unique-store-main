@@ -32,17 +32,21 @@ const connectionOptions = {
 };
 
 async function createConnection() {
-  const startedAt = Date.now();
+  const startedAt = isBuildPhase ? 0 : Date.now();
 
   return mongoose.connect(MONGODB_URI, connectionOptions)
     .then((mongooseInstance) => {
-      if (isDev) {
+      if (isDev && !isBuildPhase) {
         console.log(`[DB] MongoDB connected in ${Date.now() - startedAt}ms`);
       }
       return mongooseInstance;
     })
     .catch((err) => {
-      console.error(`[DB] MongoDB connection error after ${Date.now() - startedAt}ms:`, err.message);
+      if (!isBuildPhase) {
+        console.error(`[DB] MongoDB connection error after ${Date.now() - startedAt}ms:`, err.message);
+      } else {
+        console.error(`[DB] MongoDB connection error:`, err.message);
+      }
       cached.promise = null;
       throw err;
     });
