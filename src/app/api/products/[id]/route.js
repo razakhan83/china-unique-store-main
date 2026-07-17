@@ -64,12 +64,24 @@ export async function PUT(request, { params }) {
         if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'showOnStore')) {
             existingProduct.showOnStore = body.showOnStore === true || body.showOnStore === 'true';
             await existingProduct.save();
-            revalidateTag('products', 'max');
+            revalidateTag('products');
             if (existingProduct.slug) {
-                revalidateTag(`product-${existingProduct.slug}`, 'max');
+                revalidateTag(`product-${existingProduct.slug}`);
+                revalidatePath(`/products/${existingProduct.slug}`);
+                revalidatePath(`/products/${existingProduct._id.toString()}`);
             }
-            revalidateTag('admin-dashboard', 'max');
+            revalidateTag('admin-dashboard');
             revalidateTag('home-sections');
+            revalidatePath('/admin/products');
+            revalidatePath('/products');
+            revalidatePath('/');
+            return NextResponse.json({
+                success: true,
+                data: {
+                    _id: existingProduct._id.toString(),
+                    showOnStore: existingProduct.showOnStore,
+                }
+            });
         }
 
         if (Object.keys(body).length > 1) {

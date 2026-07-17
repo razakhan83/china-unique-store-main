@@ -171,6 +171,8 @@ export async function POST(req) {
         revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
+        revalidatePath(`/products/${uniqueSlug}`);
+        revalidatePath(`/products/${product._id.toString()}`);
         return NextResponse.json({
             success: true,
             data: {

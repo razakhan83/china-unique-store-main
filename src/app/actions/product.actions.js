@@ -60,7 +60,8 @@ export async function toggleProductLiveAction(productId, nextValue) {
   revalidateTag('products');
   if (product.slug) {
     updateTag(`product-${product.slug}`);
-    revalidatePath(`/product/${product.slug}`);
+    revalidatePath(`/products/${product.slug}`);
+    revalidatePath(`/products/${product._id.toString()}`);
   }
   revalidateTag('admin-dashboard');
   revalidateTag('home-sections');
@@ -84,9 +85,14 @@ export async function deleteProductAction(productId) {
   revalidateTag('products');
   if (product.slug) {
     revalidateTag(`product-${product.slug}`);
+    revalidatePath(`/products/${product.slug}`);
+    revalidatePath(`/products/${product._id.toString()}`);
   }
   revalidateTag('admin-dashboard');
   revalidateTag('home-sections');
+  revalidatePath('/admin/products');
+  revalidatePath('/products');
+  revalidatePath('/');
 
   return { success: true };
 }
@@ -96,7 +102,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   await mongooseConnect();
   const Product = (await import('@/models/Product')).default;
 
-  const product = await Product.findById(productId).lean();
+  const product = await Product.findById(productId);
   if (!product) {
     throw new Error('Product not found');
   }
@@ -104,6 +110,14 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   const pct = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
   product.discountPercentage = pct;
   product.isDiscounted = pct > 0;
+  
+  // Compute discountedPrice if needed
+  if (product.isDiscounted) {
+    product.discountedPrice = Math.round(Number(product.Price) * (1 - pct / 100));
+  } else {
+    product.discountedPrice = null;
+  }
+  
   await product.save();
 
   // Use revalidateTag (hard/immediate flush) not updateTag (lazy background)
@@ -111,10 +125,13 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   revalidateTag('products');
   if (product.slug) {
     revalidateTag(`product-${product.slug}`);
+    revalidatePath(`/products/${product.slug}`);
+    revalidatePath(`/products/${product._id.toString()}`);
   }
   revalidateTag('admin-dashboard');
   revalidateTag('home-sections');
   revalidatePath('/admin/products');
+  revalidatePath('/products');
   revalidatePath('/');
 
   return { success: true, discountPercentage: product.discountPercentage, isDiscounted: product.isDiscounted };
