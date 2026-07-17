@@ -87,15 +87,26 @@ export default function LayoutWrapper({ children, categories, settings }) {
           <TiltedProductMarquee />
         </Suspense>
 
-        <footer className="border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)] md:pb-6">
+        <style dangerouslySetInnerHTML={{__html: `
+          #store-footer {
+            padding-bottom: 3rem !important;
+          }
+          @media (max-width: 767px) {
+            #store-footer {
+              padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 58px + 1.75rem) !important;
+            }
+          }
+        `}} />
+
+        <footer id="store-footer" className="border-t border-border bg-card pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
           <div className="container mx-auto max-w-7xl px-4">
 
             {/* ── Trust Badge Strip ── */}
             <div className="mb-10 grid grid-cols-2 gap-5 border-b border-border/60 pb-10 md:grid-cols-4 md:gap-6">
               {TRUST_BADGES.map(({ icon: Icon, title, sub }) => (
                 <div key={title} className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-5" />
+                  <div className="flex shrink-0 items-center justify-center text-primary pt-0.5">
+                    <Icon className="size-7" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-foreground">{title}</p>
@@ -205,22 +216,25 @@ export default function LayoutWrapper({ children, categories, settings }) {
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 text-xs text-muted-foreground md:flex-row">
-              <p>&copy; China Unique Store. All rights reserved.</p>
+            <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row">
+              <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
               <div className="flex items-center gap-3">
-                <div className="group flex cursor-default items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary shadow-sm transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_-3px_color-mix(in_oklab,var(--color-primary)_50%,transparent)]">
-                    <Code className="size-5" />
-                  </span>
-                  <div className="flex flex-col items-start gap-1 leading-none">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/60 transition-colors group-hover:text-muted-foreground/90">
-                      Powered by
+                <a
+                  href="https://github.com/razakhan83"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2.5 rounded-xl border border-border/50 bg-background/50 px-3.5 py-1.5 text-xs transition-all duration-300 hover:border-primary/30 hover:bg-primary/5 hover:shadow-[0_4px_12px_-3px_rgba(0,0,0,0.05)]"
+                >
+                  <Code className="size-5 text-primary transition-transform duration-300 group-hover:scale-110" />
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors group-hover:text-muted-foreground/90">
+                      Developer
                     </span>
-                    <span className="text-lg font-bold tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                    <span className="font-bold text-foreground transition-colors group-hover:text-primary">
                       Ahmed Raza
                     </span>
                   </div>
-                </div>
+                </a>
               </div>
             </div>
           </div>

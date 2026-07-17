@@ -42,7 +42,7 @@ export async function PATCH(request) {
     const body = await request.json();
     const validation = userProfileSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.issues?.[0]?.message || 'Validation failed' }, { status: 400 });
     }
     const { name, phone, city, address, landmark } = validation.data;
 

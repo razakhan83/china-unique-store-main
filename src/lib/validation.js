@@ -11,14 +11,14 @@ const notesSchema = z.string().trim().max(1000, 'Notes are too long').optional()
 const urlSchema = z.string().trim().url('Invalid URL').max(500).optional().or(z.literal(''));
 
 export const orderItemSchema = z.object({
-  productId: z.string().min(1, 'Product ID is required').max(100),
-  slug: z.string().max(200).optional(),
-  packLabel: z.string().max(100).optional(),
+  productId: z.string().min(1, 'Product ID is required').max(500),
+  slug: z.string().max(500).optional(),
+  packLabel: z.string().max(200).optional(),
   quantity: z.number().int().positive('Quantity must be positive').default(1),
   price: z.number().nonnegative('Price cannot be negative').optional(),
-  name: z.string().max(200).optional(),
-  image: z.string().max(500).optional(),
-  vendor: z.string().max(100).optional(),
+  name: z.string().max(500).optional(),
+  image: z.string().max(2000).optional(),
+  vendor: z.string().max(300).optional(),
 });
 
 export const submitOrderSchema = z.object({

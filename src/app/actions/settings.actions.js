@@ -81,7 +81,7 @@ export async function saveStoreSettingsAction(nextSettings) {
 
   const validation = storeSettingsSchema.safeParse(nextSettings);
   if (!validation.success) {
-    return { success: false, error: validation.error.errors[0].message };
+    return { success: false, error: validation.error.issues?.[0]?.message || 'Validation failed' };
   }
   const validatedData = validation.data;
 

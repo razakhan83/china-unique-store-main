@@ -123,7 +123,7 @@ export async function submitOrderAction(input) {
   try {
     const validation = submitOrderSchema.safeParse(input);
     if (!validation.success) {
-      return { success: false, error: validation.error.errors[0].message };
+      return { success: false, error: validation.error.issues?.[0]?.message || 'Validation failed' };
     }
     const validatedData = validation.data;
 
@@ -388,7 +388,7 @@ export async function linkOrdersAction(phone) {
 
   const validation = linkOrdersSchema.safeParse({ phone });
   if (!validation.success) {
-    return { success: false, message: validation.error.errors[0].message };
+    return { success: false, message: validation.error.issues?.[0]?.message || 'Validation failed' };
   }
   
   const userEmail = normalizeEmail(session.user.email);
@@ -434,7 +434,7 @@ export async function linkOrdersAction(phone) {
 export async function trackGuestOrderAction(input = {}) {
   const validation = trackGuestOrderSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, message: validation.error.errors[0].message };
+    return { success: false, message: validation.error.issues?.[0]?.message || 'Validation failed' };
   }
   
   const safeOrderId = validation.data.orderId.toUpperCase();
@@ -474,7 +474,7 @@ export async function createDraftOrderAction(input = {}) {
 
   const validation = draftOrderSchema.safeParse(input);
   if (!validation.success) {
-    return { success: false, error: validation.error.errors[0].message };
+    return { success: false, error: validation.error.issues?.[0]?.message || 'Validation failed' };
   }
   const validatedData = validation.data;
 
@@ -555,7 +555,7 @@ export async function updateOrderAction(id, updates) {
   
   const validation = updateOrderSchema.safeParse(updates);
   if (!validation.success) {
-    return { success: false, error: validation.error.errors[0].message };
+    return { success: false, error: validation.error.issues?.[0]?.message || 'Validation failed' };
   }
   const validatedData = validation.data;
 

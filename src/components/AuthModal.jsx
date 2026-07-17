@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-export default function AuthModal({ open, onOpenChange, callbackUrl }) {
+function AuthModalInner({ open, onOpenChange, callbackUrl }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -17,4 +17,12 @@ export default function AuthModal({ open, onOpenChange, callbackUrl }) {
   }, [open, router, callbackUrl, pathname, searchParams, onOpenChange]);
 
   return null;
+}
+
+export default function AuthModal(props) {
+  return (
+    <Suspense fallback={null}>
+      <AuthModalInner {...props} />
+    </Suspense>
+  );
 }
