@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, ChevronRight, CreditCard, MapPin, RefreshCcw, ShieldCheck, Truck, Code } from 'lucide-react';
+import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck, Code } from 'lucide-react';
 
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
@@ -10,6 +11,7 @@ import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import AnimatedStats from '@/components/AnimatedStats';
 import TiltedProductMarquee from '@/components/TiltedProductMarquee';
+import FaqAccordion from '@/components/FaqAccordion';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -22,6 +24,57 @@ const TRUST_BADGES = [
   { icon: Truck, title: 'Fast Delivery', sub: 'Nationwide shipping' },
   { icon: RefreshCcw, title: 'Easy Returns', sub: 'Hassle-free process' },
   { icon: BadgeCheck, title: '100% Authentic', sub: 'Verified quality items' },
+];
+
+const FAQ_ITEMS = [
+  {
+    id: 'fq1',
+    question: 'What products do you sell?',
+    answer:
+      'We sell imported kitchenware, home gadgets, personal care devices, storage products, baby items, lighting, tools, and everyday lifestyle accessories — sourced directly from verified Chinese manufacturers at the best prices in Pakistan.',
+  },
+  {
+    id: 'fq2',
+    question: 'How do I order and how long does delivery take?',
+    answer:
+      'Add items to cart and complete checkout in under 2 minutes. We deliver nationwide in 3–6 working days. Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Faisalabad, Multan, and all other cities are covered.',
+  },
+  {
+    id: 'fq3',
+    question: 'Do you offer Cash on Delivery (COD)?',
+    answer:
+      'Yes — Cash on Delivery is available everywhere in Pakistan. You pay only when the parcel arrives at your door. Bank transfer and card payment are also accepted at checkout.',
+  },
+  {
+    id: 'fq4',
+    question: 'How do I track my order?',
+    answer:
+      'After your order ships, you receive a tracking number via WhatsApp or SMS. You can also log in and check real-time order status under "My Orders" at any time.',
+  },
+  {
+    id: 'fq5',
+    question: 'What if my item arrives damaged or is wrong?',
+    answer:
+      'Message us on WhatsApp within 48 hours with your order number and a photo. We will send a replacement or issue a full refund — no lengthy back-and-forth required.',
+  },
+  {
+    id: 'fq6',
+    question: 'Are the products original and good quality?',
+    answer:
+      'Every item is sourced from verified Chinese manufacturers and inspected before dispatch. We only list products we stand behind — and we have thousands of happy customers across Pakistan to back that up.',
+  },
+  {
+    id: 'fq7',
+    question: 'Can I save items and buy later?',
+    answer:
+      'Yes — tap the heart icon on any product to add it to your Wishlist. Your saved items stay there until you are ready to buy.',
+  },
+  {
+    id: 'fq8',
+    question: 'Do you offer bulk or wholesale pricing?',
+    answer:
+      'Yes — we supply retailers and resellers across Pakistan. Message us on WhatsApp with your product list and quantity, and we will send you wholesale pricing and terms within a few hours.',
+  },
 ];
 
 export default function LayoutWrapper({ children, categories, settings }) {
@@ -86,6 +139,75 @@ export default function LayoutWrapper({ children, categories, settings }) {
         <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
           <TiltedProductMarquee />
         </Suspense>
+
+        {/* ── FAQ Section ── */}
+        <section className="border-t border-border bg-background px-4 py-12 sm:py-16">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
+
+              {/* Left: Q&A */}
+              <div className="flex-1 min-w-0">
+                <div className="mb-8 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                      Got Questions?
+                    </p>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                      Frequently Asked
+                    </h2>
+                  </div>
+                  <Link
+                    href="/faq"
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-foreground underline underline-offset-4 hover:text-primary sm:mt-0"
+                  >
+                    All questions
+                    <ChevronRight className="size-3.5" />
+                  </Link>
+                </div>
+
+                <FaqAccordion items={FAQ_ITEMS} />
+
+                {/* Mobile trust strip — shown below FAQ on small screens */}
+                <div className="mt-8 grid grid-cols-2 gap-3 rounded-xl border border-border/60 bg-muted/30 p-4 sm:hidden">
+                  {TRUST_BADGES.map((badge) => (
+                    <div key={badge.title} className="flex items-start gap-2">
+                      <badge.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="text-[12px] font-semibold text-foreground">{badge.title}</p>
+                        <p className="text-[11px] text-muted-foreground">{badge.sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <p className="text-sm text-muted-foreground">
+                    Still need help?{' '}
+                    <Link href="/faq" className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                      View all questions
+                    </Link>
+                    {' '}or message us on WhatsApp.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Illustration — desktop only */}
+              <div className="hidden lg:flex lg:w-[320px] lg:shrink-0 lg:items-start lg:justify-center">
+                <div className="sticky top-28">
+                  <Image
+                    src="/undraw_questions_52ic.svg"
+                    alt="Frequently asked questions illustration"
+                    width={300}
+                    height={300}
+                    className="h-auto w-full max-w-[300px] select-none opacity-90"
+                    priority={false}
+                  />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
 
         <style dangerouslySetInnerHTML={{__html: `
           #store-footer {
@@ -153,6 +275,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
               <div>
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Links</h3>
                 <ul className="flex flex-col gap-3 text-muted-foreground">
+
                   {quickLinks.length > 0 ? (
                     quickLinks.map((item) => (
                       <li key={item.slug}>

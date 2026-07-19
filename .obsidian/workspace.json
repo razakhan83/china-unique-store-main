@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/TODO.md",
+                "file": "node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-viewport.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "TODO"
+              "title": "generate-viewport"
             }
           }
         ]
@@ -185,6 +185,12 @@
   },
   "active": "1a1fc4abb735a673",
   "lastOpenFiles": [
+    "node_modules/next/dist/docs/02-pages/04-api-reference/05-cli/index.md",
+    "node_modules/next/dist/docs/01-app/03-api-reference/05-config/03-eslint.md",
+    "node_modules/next/dist/docs/01-app/02-guides/authentication.md",
+    "docs/rules/no-is-mounted.md",
+    "docs/rules",
+    "docs/TODO.md",
     "node_modules/@formkit/auto-animate/react/index.mjs",
     "node_modules/@formkit/auto-animate/react/index.d.ts",
     "node_modules/@formkit/auto-animate/react",
@@ -192,11 +198,8 @@
     "node_modules/@formkit/auto-animate",
     "node_modules/@formkit",
     "test-search.js",
-    "docs/TODO.md",
     "src/lib/validation.js",
     "node_modules/zod/src/v4/classic/tests/preprocess-types.test.ts",
-    "node_modules/zod/v4/locales/ro.d.cts",
-    "node_modules/zod/v4/locales/ro.cjs",
     "docs/Index.md",
     "docs/API-Routes-and-Models.md",
     "docs/messages/no-css-tags.md",

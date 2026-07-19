@@ -241,7 +241,7 @@ export async function generateMetadata({ params }) {
 
 export default function ProductPage({ params }) {
   return (
-    <div className="product-detail-shell min-h-screen bg-background">
+    <div className="product-detail-shell min-h-screen bg-gray-50">
       <ProductPageScrollReset />
 
       <div className="container mx-auto max-w-7xl px-4 pb-1 pt-3 md:pt-7">
@@ -266,6 +266,7 @@ export default function ProductPage({ params }) {
     </div>
   );
 }
+
 
 async function ProductBreadcrumb({ paramsPromise }) {
   const { id: slug } = await paramsPromise;
@@ -320,7 +321,7 @@ async function ProductHeroSection({ paramsPromise }) {
   const primaryCategory = getProductCategories(product)[0];
   const categoryLabel = primaryCategory?.name || '';
   const reviewSummary = await getProductReviewSummarySafe(product._id);
-  const colors = getCategoryColor(categoryLabel);
+  const colors = getCategoryColor(categoryLabel); // colors contains bg, text, etc.
   const productJsonLd = getProductJsonLd({ product });
   const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';

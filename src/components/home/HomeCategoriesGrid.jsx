@@ -23,7 +23,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 
-import { getCategoryColor } from '@/lib/categoryColors';
+import { getCategoryColor, getCategoryColorByIndex } from '@/lib/categoryColors';
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
@@ -121,7 +121,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
             aria-roledescription="carousel"
           >
             {categories.map((category, index) => {
-              const colors = getCategoryColor(category.label);
+              const colors = getCategoryColorByIndex(index);
               const Icon = getCategoryIcon(category.label);
               const imageSrc = category.image
                 ? optimizeCloudinaryUrl(category.image, CLOUDINARY_IMAGE_PRESETS.categoryCircle)
@@ -136,7 +136,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                     <span
                       className="mac-dock-circle relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] md:h-[8.5rem] md:w-[8.5rem]"
                       style={{
-                        background: `radial-gradient(circle at 30% 25%, white, ${colors.hex})`,
+                        background: `radial-gradient(circle at 30% 25%, white 10%, ${colors.hex})`,
                       }}
                     >
                       {imageSrc ? (
@@ -150,7 +150,10 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                           {...getBlurPlaceholderProps(category.blurDataURL)}
                         />
                       ) : (
-                        <span className={`flex size-full items-center justify-center rounded-full ${colors.bg}`}>
+                        <span
+                          className="flex size-full items-center justify-center rounded-full"
+                          style={colors.style}
+                        >
                           <Icon className={`${colors.text} size-8 md:size-12`} />
                         </span>
                       )}
@@ -163,6 +166,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
                 </div>
               );
             })}
+
           </div>
         </div>
 

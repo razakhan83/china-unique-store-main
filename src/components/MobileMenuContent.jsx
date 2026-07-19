@@ -8,6 +8,7 @@ import {
   Store,
   Tag,
   X,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 import {
@@ -39,6 +40,7 @@ export default function MobileMenuContent({
   setIsSidebarOpen,
   setIsAuthModalOpen,
   mobileMenuButtonClass,
+  onOpenSuggestions = () => {},
 }) {
   return (
     <Tabs defaultValue="menu" className="flex h-full w-full flex-col">
@@ -96,6 +98,7 @@ export default function MobileMenuContent({
                     <span className="text-[14px] tracking-tight">Contact Us</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
               </SidebarMenu>
             </SidebarContent>
           </Sidebar>

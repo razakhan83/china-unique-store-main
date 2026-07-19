@@ -1,21 +1,113 @@
 import Link from 'next/link';
-import { CircleHelp, FileText, Lock, RotateCcw, Store, Truck } from 'lucide-react';
+import { ArrowUpRight, CircleHelp, FileText, Lock, RotateCcw, Store, Truck } from 'lucide-react';
+import FaqAccordion from '@/components/FaqAccordion';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-
-const PAGE_ICON_MAP = {
-  'about-us': Store,
-  faq: CircleHelp,
-  'privacy-policy': Lock,
-  'refund-policy': RotateCcw,
-  'shipping-policy': Truck,
+const PAGE_META = {
+  'about-us': { Icon: Store, label: 'Our Story' },
+  faq: { Icon: CircleHelp, label: 'Help Center' },
+  'privacy-policy': { Icon: Lock, label: 'Legal' },
+  'refund-policy': { Icon: RotateCcw, label: 'Policy' },
+  'shipping-policy': { Icon: Truck, label: 'Shipping' },
 };
+
+/* 15 comprehensive Q&As for the standalone /faq page */
+const FULL_FAQ = [
+  {
+    id: 'f1',
+    question: 'What kind of products does China Unique Store sell?',
+    answer:
+      'We sell a wide range of imported goods: kitchen appliances, home décor, personal care gadgets, lighting, storage solutions, baby products, tools, and lifestyle accessories. All products are directly sourced from verified Chinese manufacturers.',
+  },
+  {
+    id: 'f2',
+    question: 'How do I browse and shop on the website?',
+    answer:
+      'Use the top navigation or search bar to find products by category or keyword. Click any product to see details, images, and pricing. Add to cart and proceed to checkout — the whole process takes under 2 minutes.',
+  },
+  {
+    id: 'f3',
+    question: 'Can I search for a specific product?',
+    answer:
+      'Yes. The search bar at the top of every page lets you search by product name, category, or keyword. Results update in real time as you type.',
+  },
+  {
+    id: 'f4',
+    question: 'Do you deliver all over Pakistan?',
+    answer:
+      'Yes — we ship to all major cities and towns across Pakistan including Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, and beyond. Delivery typically takes 3–6 working days.',
+  },
+  {
+    id: 'f5',
+    question: 'How much does delivery cost?',
+    answer:
+      'Delivery charges depend on your location and order size. Exact charges are shown at checkout before you confirm your order. We also run free shipping promotions on qualifying orders.',
+  },
+  {
+    id: 'f6',
+    question: 'What payment methods do you accept?',
+    answer:
+      'We accept Cash on Delivery (COD) across Pakistan — you pay when the parcel arrives at your door. Bank transfer and online payment are also available at checkout.',
+  },
+  {
+    id: 'f7',
+    question: 'Is it safe to order online from your store?',
+    answer:
+      'Completely safe. Our website uses HTTPS encryption. For COD orders, you don\'t share any card details — just your name, phone, and address. Your information is never sold or shared.',
+  },
+  {
+    id: 'f8',
+    question: 'Can I save products to buy later?',
+    answer:
+      'Yes — use the wishlist button (heart icon) on any product to save it. You can view and manage your wishlist from the account menu. Wishlist syncs across your session.',
+  },
+  {
+    id: 'f9',
+    question: 'How do I track my order?',
+    answer:
+      'Once your order ships, you\'ll receive a tracking number via WhatsApp or SMS. You can use it to track your parcel on the courier\'s website. You can also check order status in your account under "My Orders".',
+  },
+  {
+    id: 'f10',
+    question: 'What if I receive a wrong or damaged item?',
+    answer:
+      'Contact us within 48 hours of delivery via WhatsApp with your order number and a photo of the item. We\'ll either send a replacement or issue a full refund — no arguments, no hassle.',
+  },
+  {
+    id: 'f11',
+    question: 'Can I cancel or change my order after placing it?',
+    answer:
+      'Yes, but only before the order is dispatched. Message us on WhatsApp as soon as possible with your order number. Once the parcel has shipped, cancellation is not possible.',
+  },
+  {
+    id: 'f12',
+    question: 'Are your products authentic and good quality?',
+    answer:
+      'Every product listed is sourced from verified suppliers and checked for quality before listing. We\'ve been importing directly from China for years — quality is not negotiable for us.',
+  },
+  {
+    id: 'f13',
+    question: 'Do you offer deals or discounts?',
+    answer:
+      'Yes! Check the Deals section on our website for current promotions. We also run WhatsApp-exclusive flash sales — follow us on WhatsApp or Instagram to be first to know.',
+  },
+  {
+    id: 'f14',
+    question: 'Do you offer wholesale or bulk ordering?',
+    answer:
+      'Yes — we supply retailers, resellers, and wholesalers. Chat with us on WhatsApp with your product requirements and quantities. We offer competitive B2B pricing with flexible payment terms.',
+  },
+  {
+    id: 'f15',
+    question: 'How do I contact customer support?',
+    answer:
+      'The fastest way is WhatsApp — tap the chat button on any page. We\'re also reachable at our Gul Tijarah Mall shop in Karachi. We respond to most messages within a few hours during business hours.',
+  },
+];
 
 function getContentBlocks(content = '') {
   return String(content || '')
     .split(/\n{2,}/)
-    .map((block) => block.trim())
+    .map((b) => b.trim())
     .filter(Boolean);
 }
 
@@ -25,163 +117,122 @@ function getFaqItems(content = '') {
     .map((block) => block.trim())
     .filter(Boolean)
     .map((block, index) => {
-      const lines = block
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-      if (lines.length === 0) return null;
-
-      const questionLine = lines[0];
-      const question = questionLine.replace(/^q\s*:\s*/i, '').trim();
-      const answer = lines
-        .slice(1)
-        .join(' ')
-        .replace(/^a\s*:\s*/i, '')
-        .trim();
-
+      const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (!lines.length) return null;
+      const question = lines[0].replace(/^q\s*:\s*/i, '').trim();
+      const answer = lines.slice(1).join(' ').replace(/^a\s*:\s*/i, '').trim();
       if (!question || !answer) return null;
-
-      return {
-        id: `faq-${index + 1}`,
-        question,
-        answer,
-      };
+      return { id: `faq-${index + 1}`, question, answer };
     })
     .filter(Boolean);
 }
 
+/* ─── Section heading used inside policy articles ─── */
+function SectionHeading({ children }) {
+  return (
+    <h2 className="mb-3 mt-10 text-base font-semibold text-foreground first:mt-0">
+      {children}
+    </h2>
+  );
+}
+
 export default function StoreCustomPage({ page, storeName = 'China Unique Store' }) {
-  const Icon = PAGE_ICON_MAP[page?.slug] || FileText;
+  const meta = PAGE_META[page?.slug] || { Icon: FileText, label: 'Info' };
+  const { Icon, label } = meta;
+
   const blocks = getContentBlocks(page?.content);
-  const faqItems = page?.slug === 'faq' ? getFaqItems(page?.content) : [];
-  const isFaqPage = page?.slug === 'faq' && faqItems.length > 0;
-  const leadBlock = !isFaqPage ? blocks[0] || '' : '';
-  const bodyBlocks = !isFaqPage ? blocks.slice(1) : [];
+  const cmsItems = page?.slug === 'faq' ? getFaqItems(page?.content) : [];
+  const isFaqPage = page?.slug === 'faq';
+  const faqItems = isFaqPage ? (cmsItems.length > 0 ? cmsItems : FULL_FAQ) : [];
 
   return (
-    <div className="bg-background pb-16 pt-20 md:pt-24">
-      <div className="container mx-auto max-w-4xl px-4">
-        <header className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            <Icon className="size-3.5 text-primary" />
-            {storeName}
+    <div className="bg-background pb-24 pt-14 md:pt-18">
+      <div className="container mx-auto max-w-2xl px-5 sm:px-6">
+
+        {/* ── Page badge ── */}
+        <div className="mb-6 flex items-center gap-2">
+          <Icon className="size-4 text-primary" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+            {label}
+          </span>
+        </div>
+
+        {/* ── Title ── */}
+        <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-foreground sm:text-[2.4rem]">
+          {page?.title || 'Store Page'}
+        </h1>
+
+        {page?.description ? (
+          <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+            {page.description}
+          </p>
+        ) : null}
+
+        {/* ── Thin rule ── */}
+        <div className="mt-8 mb-8 h-px bg-border" />
+
+        {/* ── Body ── */}
+        {isFaqPage ? (
+          /* FAQ page */
+          <div>
+            <FaqAccordion items={faqItems} />
+
+            <div className="mt-12 border-t border-border pt-8">
+              <p className="text-sm text-muted-foreground">
+                Still have a question?{' '}
+                <a
+                  href="https://wa.me/"
+                  className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
+                >
+                  Message us on WhatsApp
+                </a>{' '}
+                — we reply quickly.
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-foreground md:text-5xl">
-            {page?.title || 'Store Page'}
-          </h1>
-          {page?.description ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-              {page.description}
-            </p>
-          ) : null}
-          {!isFaqPage ? (
-            <div className="mt-6 flex justify-center">
-              <div className="h-px w-24 bg-border" />
-            </div>
-          ) : null}
-        </header>
-
-        <article className="mx-auto mt-8 max-w-3xl">
-          {isFaqPage ? (
-            <div className="rounded-3xl border border-border bg-card/70 px-5 py-4 shadow-[0_18px_48px_rgba(16,24,40,0.04)] md:px-8 md:py-6">
-              <div className="flex flex-col">
-                {faqItems.map((item, index) => (
-                  <details
-                    key={item.id}
-                    className={index === faqItems.length - 1 ? 'group py-1' : 'group border-b border-border/70 py-1'}
-                  >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-semibold text-foreground marker:hidden">
-                      <span className="pr-3">{item.question}</span>
-                      <span className="text-lg leading-none text-muted-foreground transition-transform group-open:rotate-45">+</span>
-                    </summary>
-                    <div className="pb-4 text-[15px] leading-8 text-foreground/80">
-                      {item.answer}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </div>
-          ) : blocks.length > 0 ? (
-            <div className="rounded-[2rem] border border-border/85 bg-card px-5 py-6 shadow-[0_22px_60px_rgba(16,24,40,0.05)] md:px-8 md:py-8">
-              {leadBlock ? (
-                <div className="border-b border-border/70 pb-6">
-                  <p className="text-lg leading-9 text-foreground/95 md:text-[1.15rem]">
-                    {leadBlock}
-                  </p>
-                </div>
-              ) : null}
-
-              {bodyBlocks.length > 0 ? (
-                <div className="flex flex-col gap-6 pt-6">
-                  {bodyBlocks.map((block, index) => (
-                    <section
-                      key={`${page?.slug || 'page'}-${index + 1}`}
-                      className="rounded-2xl border border-border/70 bg-background px-5 py-5"
-                    >
-                      <div className="mb-3 flex items-center gap-3">
-                        <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em]">
-                          {String(index + 2).padStart(2, '0')}
-                        </Badge>
-                        <div className="h-px flex-1 bg-border/70" />
-                      </div>
-                      <p className="whitespace-pre-wrap text-[15px] leading-8 text-foreground/88 md:text-base">
-                        {block}
-                      </p>
-                    </section>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="mt-8 rounded-2xl border border-border/70 bg-background px-5 py-5">
-                <p className="text-sm font-semibold text-foreground">Need help with anything else?</p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  Our team is available for product questions, delivery support, and order updates.
+        ) : blocks.length > 0 ? (
+          /* Policy / About page */
+          <article className="text-[15px] leading-[1.85] text-foreground/80">
+            {blocks.map((block, i) => {
+              /* Simple heuristic: short blocks (< 90 chars) that don't end in '.'
+                 are likely section headings entered by the admin */
+              const looksLikeHeading = block.length < 90 && !block.endsWith('.');
+              if (i > 0 && looksLikeHeading) {
+                return <SectionHeading key={i}>{block}</SectionHeading>;
+              }
+              return (
+                <p key={i} className={i > 0 ? 'mt-5' : ''}>
+                  {block}
                 </p>
-                <div className="mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl px-4"
-                    render={<Link href="/products" />}
-                    nativeButton={false}
+              );
+            })}
+
+            <div className="mt-14 border-t border-border pt-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Questions about this policy?{' '}
+                  <a
+                    href="https://wa.me/"
+                    className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
                   >
-                    Continue Shopping
-                  </Button>
-                </div>
+                    Ask us on WhatsApp
+                  </a>
+                  .
+                </p>
+                <Link
+                  href="/products"
+                  className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-foreground underline underline-offset-4 hover:text-primary"
+                >
+                  Browse Products
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
               </div>
             </div>
-          ) : (
-            <div className="rounded-3xl border border-dashed border-border bg-card/60 px-6 py-10 text-center text-muted-foreground">
-              Content for this page has not been added yet.
-            </div>
-          )}
-        </article>
-
-        {!isFaqPage ? (
-          <div className="mt-8 flex justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-xl px-4 text-muted-foreground hover:text-foreground"
-              render={<Link href="/products" />}
-              nativeButton={false}
-            >
-              Browse Products
-            </Button>
-          </div>
+          </article>
         ) : (
-          <div className="mt-8 flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl px-4"
-              render={<Link href="/products" />}
-              nativeButton={false}
-            >
-              Browse Products
-            </Button>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            This page hasn&apos;t been set up yet — check back soon.
+          </p>
         )}
       </div>
     </div>

@@ -162,8 +162,6 @@ function readStoredSuccessfulOrder() {
     const parsed = JSON.parse(raw);
     if (!parsed?.orderId) return null;
 
-    window.__addToCart = addToCart;
-
     return {
       orderId: String(parsed.orderId),
       whatsappUrl: String(parsed.whatsappUrl || ''),
@@ -390,6 +388,17 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__addToCart = addToCart;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__addToCart;
+      }
+    };
+  }, [addToCart]);
 
   useEffect(() => {
     if (hasHydratedCachedProfile) return;
@@ -714,6 +723,83 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     return <CheckoutPageSkeleton />;
   }
 
+  if (orderState.orderId) {
+    return (
+      <div className="flex min-h-[90vh] items-center justify-center bg-gray-50/50 px-4 py-12">
+        <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
+          <DialogContent className={cn('p-6 text-center sm:p-8 sm:max-w-md', styles.dialogPanel)} hideClose>
+            {/* Happy Illustration (increased size, floating background-free) */}
+            <div className="mx-auto mb-5 flex h-36 sm:h-56 w-full max-w-[220px] sm:max-w-[340px] items-center justify-center bg-transparent pt-3">
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes slowFloat {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-7px); }
+                }
+                .animate-slow-float {
+                  animation: slowFloat 4.5s ease-in-out infinite;
+                }
+              `}} />
+              <Image
+                src="/undraw_happy_fsrv.svg"
+                alt="Order Confirmed Successfully"
+                width={300}
+                height={300}
+                className="h-full w-full object-contain select-none animate-slow-float"
+                priority
+              />
+            </div>
+
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-extrabold text-foreground tracking-tight sm:text-3xl [text-wrap:balance]">
+                Order Confirmed! 🎉
+              </DialogTitle>
+              <DialogDescription className="pt-2 text-sm text-muted-foreground sm:text-base [text-wrap:pretty] leading-relaxed">
+                Your order has been placed! Delivery takes <span className="font-semibold text-foreground">2 to 3 working days</span>.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 space-y-4">
+              <div className={cn('p-4', styles.orderIdPanel)}>
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order ID</span>
+                <div className="flex items-center justify-center gap-3">
+                  <span className={cn('font-mono text-lg font-bold text-foreground', styles.orderIdValue)}>{orderState.orderId}</span>
+                  <Button
+                    onClick={copyToClipboard}
+                    variant="outline"
+                    size="icon-sm"
+                    className="text-muted-foreground transition-[transform,color,background-color] duration-200 ease-out hover:text-foreground active:scale-[0.96]"
+                    aria-label="Copy Order ID"
+                    title="Copy Order ID"
+                  >
+                    {copied ? <Check className="text-success" /> : <Copy />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <Button
+                  size="lg"
+                  className={cn('flex-1 px-2.5 text-xs sm:text-sm font-bold active:scale-[0.96] h-11 sm:h-12 rounded-xl', styles.dialogCtaButton)}
+                  onClick={handleViewOrders}
+                >
+                  View My Orders
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1 px-2.5 text-xs sm:text-sm font-semibold active:scale-[0.96] h-11 sm:h-12 rounded-xl" 
+                  onClick={handleModalClose}
+                >
+                  Continue Shopping
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
   const summaryProps = {
     cart,
     pricing,
@@ -731,53 +817,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   return (
     <>
-      {/* ── Success dialog ── */}
-      <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
-        <DialogContent className={cn('p-8 text-center sm:max-w-md', styles.dialogPanel)} hideClose>
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-[1.35rem] bg-success/10 text-success shadow-[0_18px_32px_-26px_color-mix(in_oklab,var(--color-success)_52%,transparent)]">
-            <CheckCircle2 className="size-10" />
-          </div>
-
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-foreground [text-wrap:balance]">Thank You for Your Order!</DialogTitle>
-            <DialogDescription className="pt-2 text-base text-muted-foreground [text-wrap:pretty]">
-              Your order will be delivered within 2 to 3 working days.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-6 space-y-4">
-            <div className={cn('p-4', styles.orderIdPanel)}>
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order ID</span>
-              <div className="flex items-center justify-center gap-3">
-                <span className={cn('font-mono text-lg font-bold text-foreground', styles.orderIdValue)}>{orderState.orderId}</span>
-                <Button
-                  onClick={copyToClipboard}
-                  variant="outline"
-                  size="icon-sm"
-                  className="text-muted-foreground transition-[transform,color,background-color] duration-200 ease-out hover:text-foreground active:scale-[0.96]"
-                  aria-label="Copy Order ID"
-                  title="Copy Order ID"
-                >
-                  {copied ? <Check className="text-success" /> : <Copy />}
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid gap-3 pt-2">
-              <Button
-                size="lg"
-                className={cn('w-full font-semibold active:scale-[0.96]', styles.dialogCtaButton)}
-                onClick={handleViewOrders}
-              >
-                View My Orders
-              </Button>
-              <Button variant="outline" size="lg" className="w-full active:scale-[0.96]" onClick={handleModalClose}>
-                Continue Shopping
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
 

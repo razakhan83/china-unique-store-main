@@ -57,7 +57,14 @@ function getFeatureBadge(product) {
   return null;
 }
 
-export default function ProductCard({ product, className = "" }) {
+import { getProductCategories } from "@/lib/productCategories";
+import { getCategoryColor } from "@/lib/categoryColors";
+
+export default function ProductCard({ product, className = "", imageBg }) {
+  const categories = getProductCategories(product);
+  const primaryCategoryName = categories[0]?.name || categories[0]?.label || "";
+  const resolvedBg = imageBg || getCategoryColor(primaryCategoryName).hex || '#e1f2ed';
+
   const productName = product.Name || product.name || "Unknown";
   const normalizedImages = normalizeProductImages(product?.Images);
   const primaryImage = normalizedImages[0] || null;
@@ -141,7 +148,7 @@ export default function ProductCard({ product, className = "" }) {
           href={productHref}
           scroll={true}
           className="relative block aspect-square w-full overflow-hidden rounded-t-[11px]"
-          style={{ backgroundColor: '#e1f2ed' }}
+          style={{ backgroundColor: resolvedBg }}
           draggable={false}
         >
           {primaryImageSrc ? (
@@ -191,7 +198,7 @@ export default function ProductCard({ product, className = "" }) {
               )}
             </>
           ) : (
-             <div className="flex size-full items-center justify-center" style={{ backgroundColor: '#e1f2ed' }}>
+             <div className="flex size-full items-center justify-center" style={{ backgroundColor: resolvedBg }}>
               <ShoppingCart className="size-10 text-muted-foreground/30" />
             </div>
           )}

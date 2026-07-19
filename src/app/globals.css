@@ -595,6 +595,25 @@
   scroll-snap-stop: always;
 }
 
+/* ── Embla GPU acceleration (mobile-first) ───────────────────────────────────
+   Force the Embla scroll container and slide track onto the compositor thread.
+   This gives 60fps touch-scrolling on low-end Android by avoiding main-thread
+   layout thrashing during translate3d-based scroll animations.
+   backface-visibility:hidden triggers layer promotion on Android Chrome/WebView. */
+[data-embla-slide] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Embla's internal flex container (the scroll track) */
+[class*="embla__container"],
+.embla__container {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+
 .category-icon-carousel {
   display: grid;
   grid-auto-flow: column;

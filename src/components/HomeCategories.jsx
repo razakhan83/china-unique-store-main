@@ -1,6 +1,6 @@
 import ProductCard from '@/components/ProductCard';
-
 import CategoryProductSlider from '@/components/CategoryProductSlider';
+import { getCategoryColorByIndex } from '@/lib/categoryColors';
 
 export default function HomeCategories({ sections = [] }) {
   if (sections.length === 0) {
@@ -15,14 +15,15 @@ export default function HomeCategories({ sections = [] }) {
 
   return (
     <div className="flex flex-col">
-      {sections.map((section, index) => {
-        const sectionClassName =
-          index % 2 === 0 ? 'bg-card/50' : 'bg-transparent';
-
+      {sections.map((section, idx) => {
+        // Use position index so adjacent sections always have different colors.
+        // This is independent of category name matching or Tailwind JIT scanning.
+        const palette = getCategoryColorByIndex(idx);
         return (
           <section
             key={section.category.id}
-            className={`home-lazy-section py-8 md:py-11 ${sectionClassName}`}
+            className="home-lazy-section py-8 md:py-11"
+            style={{ backgroundColor: palette.hex }}
           >
             <div className="mx-auto w-full max-w-7xl px-4">
               <CategoryProductSlider
@@ -34,6 +35,7 @@ export default function HomeCategories({ sections = [] }) {
                     key={`${product.slug || product._id || product.id || 'item'}-${productIndex}`}
                     product={product}
                     className="h-full shadow-none"
+                    imageBg={palette.hex}
                   />
                 ))}
               </CategoryProductSlider>
@@ -44,3 +46,5 @@ export default function HomeCategories({ sections = [] }) {
     </div>
   );
 }
+
+

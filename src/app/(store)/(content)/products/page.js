@@ -90,13 +90,14 @@ async function ProductsPageContent({ searchParams }) {
           initialSort={resolvedSearchParams.sort || 'newest'}
           activeCategory={resolvedSearchParams.category || 'all'}
         />
-        <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 md:px-8 lg:px-10 xl:px-14">
-          <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-start relative">
+        {/* overflow-x-hidden prevents any child from bleeding past the screen edge on mobile */}
+        <section className="mx-auto w-full max-w-[1600px] overflow-x-hidden px-3 py-2 sm:overflow-x-visible sm:px-6 md:px-8 lg:px-10 xl:px-14">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-8 items-start relative">
             <ProductsSidebar 
               categories={categories} 
               activeCategory={resolvedSearchParams.category || 'all'} 
             />
-            <div className="flex-1 min-w-0">
+            <div className="w-full min-w-0 flex-1">
               <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
                 <ProductsResultsContent 
                   productsPromise={productsPromise} 
@@ -122,17 +123,17 @@ async function ProductsResultsContent({ productsPromise, layout }) {
   let gridClassName;
   if (layout === '1col') {
     // Dense layout: 1 mobile, 3 tablet, 4/5/6 PC
-    gridClassName = "grid auto-rows-max grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
+    gridClassName = "grid auto-rows-max grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
   } else {
     // Default layout: 2 mobile, 3 tablet, 3/4 PC
-    gridClassName = "grid auto-rows-max grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
+    gridClassName = "grid auto-rows-max grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
   }
 
   return (
     <>
       <ProductsPendingResults>
-        <div className="products-page-results-meta mb-4 flex items-center justify-between gap-3 px-1">
-          <p className="text-sm font-medium text-muted-foreground">
+        <div className="products-page-results-meta mb-3 flex min-w-0 items-center justify-between gap-3 px-1 sm:mb-4">
+          <p className="truncate text-sm font-medium text-muted-foreground">
             {data.total} items
           </p>
         </div>
@@ -142,7 +143,7 @@ async function ProductsResultsContent({ productsPromise, layout }) {
             {data.items.map((product, index) => (
               <div
                 key={`${product.slug || product._id || product.id || 'product'}-${index}`}
-                className="products-grid-card"
+                className="products-grid-card w-full min-w-0"
                 style={{ '--products-card-delay': `${Math.min(index, 7) * 48}ms` }}
               >
                 <ProductCard

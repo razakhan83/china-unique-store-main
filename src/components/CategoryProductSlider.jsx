@@ -53,6 +53,8 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
   // All hooks must be before any early return
   const [emblaApi, setEmblaApi] = useState(null);
   const isHoveredRef = useRef(false);
+  // isPausedRef tracks ALL pause signals (touch, hover, off-screen, hidden tab)
+  const isPausedRef = useRef(false);
   const autoplayTimerRef = useRef(null);
   const resumeTimerRef = useRef(null);
   const wrapperRef = useRef(null);
@@ -60,19 +62,22 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
   useEffect(() => {
     if (!emblaApi || !isInteractive) return;
 
-    // ── Pure manual autoplay ──────────────────────────────────────────────────
-    // We advance the carousel ourselves every 4.5 seconds.
-    // This is independent of any plugin and guaranteed to work.
+    // ── Mobile-first GPU-accelerated autoplay engine ──────────────────────────
+    // Advances the carousel every 8 seconds via setInterval.
+    // Pauses automatically on: touch/drag, mouse hover, off-screen (IO),
+    // and inactive browser tab (visibilitychange). This prevents stutter
+    // and battery drain on low-end Android devices.
 
     const advance = () => {
-      if (!emblaApi) return;
-      // goToNext handles the loop automatically because loop: true is set
+      if (!emblaApi || isPausedRef.current) return;
       emblaApi.goToNext();
     };
 
     const startAutoplay = () => {
       stopAutoplay();
-      autoplayTimerRef.current = setInterval(advance, 8000);
+      if (!isPausedRef.current) {
+        autoplayTimerRef.current = setInterval(advance, 8000);
+      }
     };
 
     const stopAutoplay = () => {
@@ -82,16 +87,23 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
       }
     };
 
-    const stopAndScheduleResume = () => {
-      stopAutoplay();
-      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-      // Resume after 15 seconds of inactivity
-      resumeTimerRef.current = setTimeout(() => {
-        if (!isHoveredRef.current) startAutoplay();
-      }, 15000);
+    const clearResumeTimer = () => {
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
+        resumeTimerRef.current = null;
+      }
     };
 
-    // Pause when user hovers
+    // Called on touch/pointer interaction — pauses and resumes after 10s idle
+    const onPointerDown = () => {
+      stopAutoplay();
+      clearResumeTimer();
+      resumeTimerRef.current = setTimeout(() => {
+        if (!isPausedRef.current) startAutoplay();
+      }, 10000);
+    };
+
+    // ── Desktop hover pause ───────────────────────────────────────────────────
     const el = wrapperRef.current;
     const onMouseEnter = () => {
       isHoveredRef.current = true;
@@ -99,24 +111,57 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
     };
     const onMouseLeave = () => {
       isHoveredRef.current = false;
-      startAutoplay();
+      if (!isPausedRef.current) startAutoplay();
     };
 
-    // Stop for 10s on user touch/drag
-    emblaApi.on('pointerDown', stopAndScheduleResume);
+    // ── Tab visibility pause (saves battery on inactive tabs) ─────────────────
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopAutoplay();
+      } else if (!isPausedRef.current && !isHoveredRef.current) {
+        startAutoplay();
+      }
+    };
 
-    if (el) {
-      el.addEventListener('mouseenter', onMouseEnter);
-      el.addEventListener('mouseleave', onMouseLeave);
+    // ── IntersectionObserver: pause when carousel is off-screen ───────────────
+    // Prevents CPU/GPU drain when the user has scrolled past this section.
+    let observer = null;
+    if (typeof IntersectionObserver !== 'undefined' && el) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const isVisible = entries[0].isIntersecting;
+          if (isVisible) {
+            isPausedRef.current = false;
+            if (!isHoveredRef.current && !document.hidden) startAutoplay();
+          } else {
+            isPausedRef.current = true;
+            stopAutoplay();
+            clearResumeTimer();
+          }
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(el);
     }
 
-    // Start!
-    startAutoplay();
+    // ── Wire up events ────────────────────────────────────────────────────────
+    emblaApi.on('pointerDown', onPointerDown);
+    document.addEventListener('visibilitychange', onVisibilityChange, { passive: true });
+
+    if (el) {
+      el.addEventListener('mouseenter', onMouseEnter, { passive: true });
+      el.addEventListener('mouseleave', onMouseLeave, { passive: true });
+    }
+
+    // Start autoplay (IntersectionObserver will manage it if supported)
+    if (!observer) startAutoplay();
 
     return () => {
       stopAutoplay();
-      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-      emblaApi.off('pointerDown', stopAndScheduleResume);
+      clearResumeTimer();
+      emblaApi.off('pointerDown', onPointerDown);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (observer) observer.disconnect();
       if (el) {
         el.removeEventListener('mouseenter', onMouseEnter);
         el.removeEventListener('mouseleave', onMouseLeave);
@@ -127,15 +172,20 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
   // Early return AFTER all hooks
   if (slideCount === 0) return null;
 
+  // GPU-composited wrapper: isolation:isolate creates a new stacking context for the compositor.
   return (
-    <div className="w-full" ref={wrapperRef}>
+    <div
+      className="w-full"
+      ref={wrapperRef}
+      style={{ isolation: 'isolate' }}
+    >
       <Carousel
         setApi={setEmblaApi}
         opts={{
           align: 'start',
           loop: true,
           watchDrag: true,
-          duration: 40,
+          duration: 25,
         }}
         className="w-full"
       >

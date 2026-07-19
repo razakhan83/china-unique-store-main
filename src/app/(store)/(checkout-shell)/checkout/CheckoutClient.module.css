@@ -784,8 +784,6 @@
 }
 
 .dialogCtaButton {
-  min-height: 3.25rem;
-  border-radius: 0.25rem;
   font-weight: 600;
   background: var(--color-primary);
   color: var(--color-primary-foreground);

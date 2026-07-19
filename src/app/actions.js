@@ -18,3 +18,4 @@ export * from './actions/product.actions';
 export * from './actions/order.actions';
 export * from './actions/coupon.actions';
 export * from './actions/settings.actions';
+export * from './actions/feedback.actions';

@@ -219,11 +219,18 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                 </SidebarGroup>
               ) : (
                 <SidebarGroup className="p-0">
-                  <Empty className="surface-card min-h-[16rem] rounded-[1.35rem] px-6 py-12 shadow-[0_24px_44px_-38px_color-mix(in_oklab,var(--color-primary)_26%,transparent)]">
+                  <Empty className="surface-card min-h-[16rem] rounded-[1.35rem] px-6 py-10 shadow-[0_24px_44px_-38px_color-mix(in_oklab,var(--color-primary)_26%,transparent)]">
                     <EmptyHeader>
-                      <EmptyMedia variant="icon" className="size-16 rounded-[1.1rem] bg-primary/10 text-primary shadow-[0_16px_28px_-24px_color-mix(in_oklab,var(--color-primary)_42%,transparent)]">
-                        <ShoppingBag className="size-7" />
-                      </EmptyMedia>
+                      <div className="mb-2 flex items-center justify-center">
+                        <Image
+                          src="/undraw_empty-cart_574u.svg"
+                          alt="Empty cart illustration"
+                          width={130}
+                          height={130}
+                          className="h-auto w-[130px] select-none"
+                          priority={false}
+                        />
+                      </div>
                       <EmptyTitle className="text-lg font-semibold text-foreground [text-wrap:balance]">Your cart is empty</EmptyTitle>
                       <EmptyDescription className="max-w-xs [text-wrap:pretty]">
                         Start adding premium kitchenware and decor to build your order.
