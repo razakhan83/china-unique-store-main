@@ -106,7 +106,7 @@ export default async function TiltedProductMarquee() {
 
       {/* Title / Intro */}
       <div className="container relative z-20 mx-auto px-4 mb-6 text-center max-w-2xl">
-        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-foreground mb-1.5">
+        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1.5">
           Discover Trending Products
         </h2>
         <p className="text-muted-foreground text-xs md:text-sm">
