@@ -57,14 +57,15 @@ export async function toggleProductLiveAction(productId, nextValue) {
 
   console.log(`toggleProductLiveAction: updated ${productId} to ${isLive}. Matched: ${updateResult.matchedCount}, Modified: ${updateResult.modifiedCount}`);
 
-  revalidateTag('products');
+  updateTag('products');
   if (product.slug) {
     updateTag(`product-${product.slug}`);
-    revalidatePath(`/products/${product.slug}`);
-    revalidatePath(`/products/${product._id.toString()}`);
   }
-  revalidateTag('admin-dashboard');
-  revalidateTag('home-sections');
+  updateTag(`product-${product._id.toString()}`);
+  updateTag('admin-dashboard');
+  updateTag('home-sections');
+  revalidatePath(`/products/${product.slug}`);
+  revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath('/');
@@ -82,14 +83,15 @@ export async function deleteProductAction(productId) {
     throw new Error('Product not found');
   }
 
-  revalidateTag('products');
+  updateTag('products');
   if (product.slug) {
-    revalidateTag(`product-${product.slug}`);
-    revalidatePath(`/products/${product.slug}`);
-    revalidatePath(`/products/${product._id.toString()}`);
+    updateTag(`product-${product.slug}`);
   }
-  revalidateTag('admin-dashboard');
-  revalidateTag('home-sections');
+  updateTag(`product-${product._id.toString()}`);
+  updateTag('admin-dashboard');
+  updateTag('home-sections');
+  revalidatePath(`/products/${product.slug}`);
+  revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath('/');
@@ -122,14 +124,15 @@ export async function setProductDiscountAction(productId, discountPercentage) {
 
   // Use revalidateTag (hard/immediate flush) not updateTag (lazy background)
   // so the admin page re-render after this action gets fresh data from MongoDB
-  revalidateTag('products');
+  updateTag('products');
   if (product.slug) {
-    revalidateTag(`product-${product.slug}`);
-    revalidatePath(`/products/${product.slug}`);
-    revalidatePath(`/products/${product._id.toString()}`);
+    updateTag(`product-${product.slug}`);
   }
-  revalidateTag('admin-dashboard');
-  revalidateTag('home-sections');
+  updateTag(`product-${product._id.toString()}`);
+  updateTag('admin-dashboard');
+  updateTag('home-sections');
+  revalidatePath(`/products/${product.slug}`);
+  revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath('/');

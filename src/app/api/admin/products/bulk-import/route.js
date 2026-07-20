@@ -151,9 +151,10 @@ export async function POST(req) {
 
         await Product.insertMany(productsToInsert);
 
-        revalidateTag('products');
-        revalidateTag('admin-dashboard');
-        revalidateTag('categories');
+        revalidateTag('products', { expire: 0 });
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('categories', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
         revalidatePath('/admin/products');
 
         return NextResponse.json({ 

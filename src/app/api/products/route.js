@@ -165,10 +165,11 @@ export async function POST(req) {
 
         await product.populate({ path: 'Category', select: 'name slug' });
 
-        revalidateTag('products');
-        revalidateTag(`product-${uniqueSlug}`);
-        revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
+        revalidateTag('products', { expire: 0 });
+        revalidateTag(`product-${uniqueSlug}`, { expire: 0 });
+        revalidateTag(`product-${product._id.toString()}`, { expire: 0 });
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
         revalidatePath('/admin/products');
         revalidatePath('/products');
         revalidatePath(`/products/${uniqueSlug}`);

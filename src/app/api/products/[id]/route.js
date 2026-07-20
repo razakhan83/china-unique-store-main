@@ -64,14 +64,15 @@ export async function PUT(request, { params }) {
         if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'showOnStore')) {
             existingProduct.showOnStore = body.showOnStore === true || body.showOnStore === 'true';
             await existingProduct.save();
-            revalidateTag('products');
+            revalidateTag('products', { expire: 0 });
             if (existingProduct.slug) {
-                revalidateTag(`product-${existingProduct.slug}`);
-                revalidatePath(`/products/${existingProduct.slug}`);
-                revalidatePath(`/products/${existingProduct._id.toString()}`);
+                revalidateTag(`product-${existingProduct.slug}`, { expire: 0 });
             }
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
+            revalidateTag(`product-${existingProduct._id.toString()}`, { expire: 0 });
+            revalidatePath(`/products/${existingProduct.slug}`);
+            revalidatePath(`/products/${existingProduct._id.toString()}`);
+            revalidateTag('admin-dashboard', { expire: 0 });
+            revalidateTag('home-sections', { expire: 0 });
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -138,7 +139,7 @@ export async function PUT(request, { params }) {
 
         await existingProduct.save();
         await existingProduct.populate({ path: 'Category', select: 'name slug' });
-        revalidateTag('products', 'max');
+        revalidateTag('products', { expire: 0 });
         if (previousSlug) {
             revalidateTag(`product-${previousSlug}`, { expire: 0 });
             revalidatePath(`/products/${previousSlug}`);
@@ -147,8 +148,10 @@ export async function PUT(request, { params }) {
             revalidateTag(`product-${existingProduct.slug}`, { expire: 0 });
             revalidatePath(`/products/${existingProduct.slug}`);
         }
-        revalidateTag('admin-dashboard', 'max');
-        revalidateTag('home-sections');
+        revalidateTag(`product-${existingProduct._id.toString()}`, { expire: 0 });
+        revalidatePath(`/products/${existingProduct._id.toString()}`);
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
         revalidatePath('/admin/products');
         revalidatePath('/products');
 
@@ -197,13 +200,15 @@ export async function PATCH(request, { params }) {
                 { new: true, runValidators: false, strict: false }
             ).lean();
 
-            revalidateTag('products');
+            revalidateTag('products', { expire: 0 });
             if (updatedProduct.slug) {
-                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidateTag(`product-${updatedProduct.slug}`, { expire: 0 });
                 revalidatePath(`/products/${updatedProduct.slug}`);
             }
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
+            revalidateTag(`product-${updatedProduct._id.toString()}`, { expire: 0 });
+            revalidatePath(`/products/${updatedProduct._id.toString()}`);
+            revalidateTag('admin-dashboard', { expire: 0 });
+            revalidateTag('home-sections', { expire: 0 });
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -226,13 +231,15 @@ export async function PATCH(request, { params }) {
                 { new: true, runValidators: false, strict: false }
             ).lean();
 
-            revalidateTag('products');
+            revalidateTag('products', { expire: 0 });
             if (updatedProduct.slug) {
-                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidateTag(`product-${updatedProduct.slug}`, { expire: 0 });
                 revalidatePath(`/products/${updatedProduct.slug}`);
             }
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
+            revalidateTag(`product-${updatedProduct._id.toString()}`, { expire: 0 });
+            revalidatePath(`/products/${updatedProduct._id.toString()}`);
+            revalidateTag('admin-dashboard', { expire: 0 });
+            revalidateTag('home-sections', { expire: 0 });
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -259,13 +266,15 @@ export async function PATCH(request, { params }) {
                 { new: true, runValidators: false, strict: false }
             ).lean();
 
-            revalidateTag('products');
+            revalidateTag('products', { expire: 0 });
             if (updatedProduct.slug) {
-                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidateTag(`product-${updatedProduct.slug}`, { expire: 0 });
                 revalidatePath(`/products/${updatedProduct.slug}`);
             }
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
+            revalidateTag(`product-${updatedProduct._id.toString()}`, { expire: 0 });
+            revalidatePath(`/products/${updatedProduct._id.toString()}`);
+            revalidateTag('admin-dashboard', { expire: 0 });
+            revalidateTag('home-sections', { expire: 0 });
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -311,13 +320,15 @@ export async function PATCH(request, { params }) {
         }));
 
         // Hard-flush all caches so the storefront reflects changes immediately
-        revalidateTag('products');
+        revalidateTag('products', { expire: 0 });
         if (updatedProduct.slug) {
-            revalidateTag(`product-${updatedProduct.slug}`);
+            revalidateTag(`product-${updatedProduct.slug}`, { expire: 0 });
             revalidatePath(`/products/${updatedProduct.slug}`);
         }
-        revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
+        revalidateTag(`product-${updatedProduct._id.toString()}`, { expire: 0 });
+        revalidatePath(`/products/${updatedProduct._id.toString()}`);
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
         revalidatePath('/admin/products');
         revalidatePath('/products');
         revalidatePath('/');
@@ -354,13 +365,15 @@ export async function DELETE(_request, { params }) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        revalidateTag('products', 'max');
+        revalidateTag('products', { expire: 0 });
         if (deletedProduct.slug) {
             revalidateTag(`product-${deletedProduct.slug}`, { expire: 0 });
             revalidatePath(`/products/${deletedProduct.slug}`);
         }
-        revalidateTag('admin-dashboard', 'max');
-        revalidateTag('home-sections');
+        revalidateTag(`product-${deletedProduct._id.toString()}`, { expire: 0 });
+        revalidatePath(`/products/${deletedProduct._id.toString()}`);
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
         revalidatePath('/admin/products');
         revalidatePath('/products');
 

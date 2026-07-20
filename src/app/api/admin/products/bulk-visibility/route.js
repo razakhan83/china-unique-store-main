@@ -26,8 +26,9 @@ export async function PATCH(req) {
         // Update all products
         const result = await Product.updateMany({}, { $set: { showOnStore } });
 
-        revalidateTag('products');
-        revalidateTag('admin-dashboard');
+        revalidateTag('products', { expire: 0 });
+        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('home-sections', { expire: 0 });
 
         return NextResponse.json({
             success: true,
