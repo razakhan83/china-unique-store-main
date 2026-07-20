@@ -20,8 +20,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import {
-  Sidebar,
-  SidebarContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -53,55 +51,53 @@ export default function MobileMenuContent({
 
       <TabsContent value="menu" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-left-4 duration-300 ease-out">
         <ScrollArea className="flex-1">
-          <Sidebar className="bg-transparent border-0 shadow-none w-full">
-            <SidebarContent className="px-0 py-2">
-              <SidebarMenu className="px-4 gap-1">
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={pathname === '/'}
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                    render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
-                  >
-                    <Store className="size-4 text-foreground" />
-                    <span className="text-[14px] tracking-tight">Home</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={pathname === '/products'}
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/products' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                    render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
-                  >
-                    <LayoutGrid className="size-4 text-foreground" />
-                    <span className="text-[14px] tracking-tight">All Products</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem className="flex items-center">
-                  <MyOrdersButton
-                    isMobile
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/orders') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                  />
-                </SidebarMenuItem>
-                <SidebarMenuItem className="flex items-center">
-                  <MyWishlistButton
-                    isMobile
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/wishlist') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                  />
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={pathname === '/contact'}
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/contact' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                    render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
-                  >
-                    <Phone className="size-4 text-foreground" />
-                    <span className="text-[14px] tracking-tight">Contact Us</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+          <div className="py-2">
+            <SidebarMenu className="px-4 gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === '/'}
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                  render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
+                >
+                  <Store className="size-4 text-foreground" />
+                  <span className="text-[14px] tracking-tight">Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === '/products'}
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/products' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                  render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
+                >
+                  <LayoutGrid className="size-4 text-foreground" />
+                  <span className="text-[14px] tracking-tight">All Products</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex items-center">
+                <MyOrdersButton
+                  isMobile
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/orders') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex items-center">
+                <MyWishlistButton
+                  isMobile
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 w-full transition-all duration-300 active:scale-[0.98] text-foreground ${pathname.startsWith('/wishlist') ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === '/contact'}
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${pathname === '/contact' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                  render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
+                >
+                  <Phone className="size-4 text-foreground" />
+                  <span className="text-[14px] tracking-tight">Contact Us</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
+            </SidebarMenu>
+          </div>
         </ScrollArea>
 
         <div className="mt-auto flex flex-col gap-4 border-t border-border p-4 bg-background">
@@ -133,44 +129,42 @@ export default function MobileMenuContent({
 
       <TabsContent value="categories" className="m-0 flex flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-right-4 duration-300 ease-out">
         <ScrollArea className="flex-1">
-          <Sidebar className="bg-transparent border-0 shadow-none w-full">
-            <SidebarContent className="px-0 py-0">
-              <SidebarMenu className="px-4 gap-1">
-                <SidebarMenuItem>
+          <div className="py-2">
+            <SidebarMenu className="px-4 gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeCategory === 'new-arrivals'}
+                  onClick={() => handleCategoryClick('new-arrivals')}
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'new-arrivals' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                >
+                  <Sparkles className="size-4 text-foreground" />
+                  <span className="text-[14px] tracking-tight">New Arrivals</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeCategory === 'special-offers'}
+                  onClick={() => handleCategoryClick('special-offers')}
+                  className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'special-offers' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                >
+                  <Tag className="size-4 text-foreground" />
+                  <span className="text-[14px] tracking-tight">Special Offers</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                <SidebarMenuItem key={category.id}>
                   <SidebarMenuButton
-                    isActive={activeCategory === 'new-arrivals'}
-                    onClick={() => handleCategoryClick('new-arrivals')}
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'new-arrivals' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                  >
-                    <Sparkles className="size-4 text-foreground" />
-                    <span className="text-[14px] tracking-tight">New Arrivals</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={activeCategory === 'special-offers'}
-                    onClick={() => handleCategoryClick('special-offers')}
-                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'special-offers' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
+                    isActive={activeCategory === category.id}
+                    onClick={() => handleCategoryClick(category.id)}
+                    className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === category.id ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
                   >
                     <Tag className="size-4 text-foreground" />
-                    <span className="text-[14px] tracking-tight">Special Offers</span>
+                    <span className="text-[14px] tracking-tight">{category.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
-                  <SidebarMenuItem key={category.id}>
-                    <SidebarMenuButton
-                      isActive={activeCategory === category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                      className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === category.id ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-                    >
-                      <Tag className="size-4 text-foreground" />
-                      <span className="text-[14px] tracking-tight">{category.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
+              ))}
+            </SidebarMenu>
+          </div>
         </ScrollArea>
       </TabsContent>
     </Tabs>

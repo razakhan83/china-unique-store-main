@@ -65,6 +65,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import StoreLogo from '@/components/StoreLogo';
+import MobileMenuContent from '@/components/MobileMenuContent';
 import { cn } from '@/lib/utils';
 
 const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), {
@@ -101,26 +102,39 @@ const MobileBottomNav = dynamic(() => import('@/components/MobileBottomNav'), {
   loading: () => null,
 });
 
-const MobileMenuContent = dynamic(() => import('@/components/MobileMenuContent'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full flex-col p-4 animate-pulse">
-      <div className="flex w-full items-center pb-2 mb-2">
-        <div className="grid h-10 w-full grid-cols-2 gap-2">
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-10 w-full rounded-md" />
+function MobileMenuSkeleton() {
+  return (
+    <div className="flex h-full w-full flex-col bg-sidebar">
+      {/* Tabs list skeleton */}
+      <div className="flex w-full items-center p-4 pb-2">
+        <div className="grid h-10 w-full grid-cols-2 gap-2 rounded-lg bg-muted/40 p-1">
+          <Skeleton className="h-8 w-full rounded-md bg-muted/60" />
+          <Skeleton className="h-8 w-full rounded-md bg-transparent" />
         </div>
       </div>
-      <div className="flex-1 space-y-3 mt-4">
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
+
+      {/* Menu items skeleton */}
+      <div className="flex-1 px-4 py-2 space-y-2.5">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex h-9 items-center gap-4 rounded-lg bg-gray-50/50 px-3 py-1.5 border border-transparent">
+            <Skeleton className="size-4 rounded bg-muted/65 shrink-0" />
+            <Skeleton className="h-3.5 w-24 rounded bg-muted/50" />
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom section skeleton */}
+      <div className="mt-auto flex flex-col gap-4 border-t border-border p-4 bg-background">
+        <div className="flex justify-center gap-5 pb-5 pt-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="size-[18px] rounded-full bg-muted/60" />
+          ))}
+        </div>
+        <Skeleton className="h-9 w-full rounded-lg bg-muted/50" />
       </div>
     </div>
-  ),
-});
+  );
+}
 
 function normalizeAnnouncementItems(messages = [], announcementText = '') {
   const rawMessages = Array.isArray(messages) && messages.length > 0
@@ -204,6 +218,8 @@ function NavbarContent({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
+  const [isMenuCached, setIsMenuCached] = useState(false);
+  const [isMenuLoading, setIsMenuLoading] = useState(false);
   const { data: session } = useSession() || {};
   
   const searchPlaceholders = categories?.length > 0 
@@ -230,6 +246,33 @@ function NavbarContent({
       }
     };
   }, []);
+
+  // On mount, check if menu SVGs are already cached/loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('menu_svgs_loaded') === 'true';
+      if (cached) {
+        setIsMenuCached(true);
+      }
+    }
+  }, []);
+
+  // When sidebar opens, if not cached, trigger loading skeleton
+  useEffect(() => {
+    if (isSidebarOpen && !isMenuCached) {
+      setIsMenuLoading(true);
+      const timer = setTimeout(() => {
+        setIsMenuLoading(false);
+        setIsMenuCached(true);
+        try {
+          localStorage.setItem('menu_svgs_loaded', 'true');
+        } catch (e) {
+          console.error('Failed to save menu cache state', e);
+        }
+      }, 600); // 600ms skeleton time for the first load
+      return () => clearTimeout(timer);
+    }
+  }, [isSidebarOpen, isMenuCached]);
 
   function revealNavbar() {
     if (isNavbarHiddenRef.current) {
@@ -577,15 +620,35 @@ function NavbarContent({
             )}
           >
             {isSidebarOpen && (
-              <MobileMenuContent
-                pathname={pathname}
-                categories={categories}
-                activeCategory={activeCategory}
-                handleCategoryClick={handleCategoryClick}
-                setIsSidebarOpen={setIsSidebarOpen}
-                setIsAuthModalOpen={setIsAuthModalOpen}
-                mobileMenuButtonClass={mobileMenuButtonClass}
-              />
+              <>
+                {isMenuLoading ? (
+                  <MobileMenuSkeleton />
+                ) : (
+                  <MobileMenuContent
+                    pathname={pathname}
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    handleCategoryClick={handleCategoryClick}
+                    setIsSidebarOpen={setIsSidebarOpen}
+                    setIsAuthModalOpen={setIsAuthModalOpen}
+                    mobileMenuButtonClass={mobileMenuButtonClass}
+                  />
+                )}
+                {/* Mount the actual content invisibly during loading so browser loads SVGs/assets */}
+                {isMenuLoading && (
+                  <div className="absolute inset-0 opacity-0 pointer-events-none overflow-hidden h-0 w-0" aria-hidden="true">
+                    <MobileMenuContent
+                      pathname={pathname}
+                      categories={categories}
+                      activeCategory={activeCategory}
+                      handleCategoryClick={handleCategoryClick}
+                      setIsSidebarOpen={() => {}}
+                      setIsAuthModalOpen={() => {}}
+                      mobileMenuButtonClass={mobileMenuButtonClass}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </SheetContent>
         </Sheet>
