@@ -300,6 +300,7 @@ export default function MobileBottomNav({
                     </Button>
                   </>
                 )}
+                <div className="md:hidden w-full shrink-0" style={{ height: 'calc(env(safe-area-inset-bottom) + 3.5rem)' }} />
               </div>
             </div>
           </div>
@@ -307,15 +308,19 @@ export default function MobileBottomNav({
       </Drawer>
 
       <AlertDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You will be signed out on this device and can sign back in anytime with Google.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+        <AlertDialogContent className="max-w-[300px] p-5 rounded-[1.5rem] gap-4">
+          <div className="flex justify-between items-start">
+            <AlertDialogTitle className="text-base font-semibold">Are you sure to logout?</AlertDialogTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="size-7 rounded-full -mt-1.5 -mr-1.5 text-muted-foreground hover:bg-muted"
+              onClick={() => setLogoutConfirmOpen(false)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+          <AlertDialogFooter className="mt-2">
             <Button
               type="button"
               variant="destructive"
@@ -324,10 +329,9 @@ export default function MobileBottomNav({
                 onAccountOpenChange(false);
                 signOut();
               }}
-              className="w-full sm:w-auto"
+              className="w-full rounded-xl font-semibold"
             >
-              <LogOut data-icon="inline-start" />
-              Log out
+              Logout
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

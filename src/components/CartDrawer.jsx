@@ -275,6 +275,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                   <span className="truncate">Checkout</span> <ArrowRight className="ml-1.5 size-4 shrink-0" />
                 </Link>
               </div>
+              <div className="md:hidden w-full shrink-0" style={{ height: 'calc(env(safe-area-inset-bottom) + 3.5rem)' }} />
             </SidebarFooter>
           ) : null}
         </Sidebar>

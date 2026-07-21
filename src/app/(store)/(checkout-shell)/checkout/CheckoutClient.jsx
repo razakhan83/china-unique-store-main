@@ -376,12 +376,19 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [orderState, setOrderState] = useState(() => readStoredSuccessfulOrder() || { orderId: '', whatsappUrl: '' });
+  const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const submissionLockRef = useRef(false);
+
+  useEffect(() => {
+    const stored = readStoredSuccessfulOrder();
+    if (stored) {
+      setOrderState(stored);
+    }
+  }, []);
 
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
