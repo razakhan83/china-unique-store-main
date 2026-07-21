@@ -11,7 +11,7 @@ function MarqueeCard({ product }) {
   return (
     <Link 
       href={`/products/${product.slug || product.id}`} 
-      className="block relative aspect-[4/5] rounded-xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 w-[120px] sm:w-[150px] md:w-[180px] shrink-0 group/card flex flex-col"
+      className="block relative aspect-[4/5] rounded-xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.02] transition-[transform,box-shadow,border-color,opacity] duration-300 w-[120px] sm:w-[150px] md:w-[180px] shrink-0 group/card flex flex-col"
     >
       {/* Product Image Area */}
       <div className="relative w-full aspect-square bg-white flex items-center justify-center p-2.5 shrink-0 border-b border-border/10">

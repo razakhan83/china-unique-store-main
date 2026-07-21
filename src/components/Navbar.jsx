@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -33,6 +34,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogPortal,
+  DialogOverlay,
+} from '@/components/ui/dialog';
 import {
   Accordion,
   AccordionContent,
@@ -85,6 +94,10 @@ const AuthModal = dynamic(() => import('@/components/AuthModal'), {
 
 const NavbarSearchPanel = dynamic(() => import('@/components/NavbarSearchPanel'), {
   loading: () => <Skeleton className="min-h-12 w-full rounded-xl" aria-hidden="true" />,
+});
+
+const MobileSearchOverlay = dynamic(() => import('@/components/MobileSearchOverlay'), {
+  ssr: false,
 });
 
 const NavbarDesktopAccountControl = dynamic(() => import('@/components/NavbarDesktopAccountControl'), {
@@ -218,8 +231,6 @@ function NavbarContent({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
-  const [isMenuCached, setIsMenuCached] = useState(false);
-  const [isMenuLoading, setIsMenuLoading] = useState(false);
   const { data: session } = useSession() || {};
   
   const searchPlaceholders = categories?.length > 0 
@@ -247,32 +258,7 @@ function NavbarContent({
     };
   }, []);
 
-  // On mount, check if menu SVGs are already cached/loaded
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('menu_svgs_loaded') === 'true';
-      if (cached) {
-        setIsMenuCached(true);
-      }
-    }
-  }, []);
-
-  // When sidebar opens, if not cached, trigger loading skeleton
-  useEffect(() => {
-    if (isSidebarOpen && !isMenuCached) {
-      setIsMenuLoading(true);
-      const timer = setTimeout(() => {
-        setIsMenuLoading(false);
-        setIsMenuCached(true);
-        try {
-          localStorage.setItem('menu_svgs_loaded', 'true');
-        } catch (e) {
-          console.error('Failed to save menu cache state', e);
-        }
-      }, 600); // 600ms skeleton time for the first load
-      return () => clearTimeout(timer);
-    }
-  }, [isSidebarOpen, isMenuCached]);
+  // Removed artificial 600ms loading skeleton to ensure menu opens instantly
 
   function revealNavbar() {
     if (isNavbarHiddenRef.current) {
@@ -282,6 +268,12 @@ function NavbarContent({
 
     scrollAnchorYRef.current = window.scrollY;
   }
+
+  useEffect(() => {
+    if (isCartOpen) {
+      revealNavbar();
+    }
+  }, [isCartOpen]);
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
@@ -454,7 +446,7 @@ function NavbarContent({
       ) : null}
 
       <div className="relative z-50">
-          <header className="relative z-20 mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+          <header className="relative z-[60] mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
             <div className="flex items-center gap-4 lg:gap-8 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
                 <span className="relative flex size-6 items-center justify-center">
@@ -521,20 +513,13 @@ function NavbarContent({
             </div>
           </header>
 
-          {/* Mobile Search Panel */}
-          {isSearchOpen && (
-            <div className="md:hidden px-4 pb-3 animate-in slide-in-from-top-2 fade-in-0 duration-300">
-              <NavbarSearchPanel
-                open={isSearchOpen}
-                onOpenChange={setIsSearchOpen}
-                placeholder={searchPlaceholders[placeholderIndex]}
-                autoFocus={true}
-              />
-            </div>
-          )}
+          <MobileSearchOverlay 
+            open={isSearchOpen}
+            onOpenChange={setIsSearchOpen}
+          />
 
           {/* Top Secondary Navbar (now below header) */}
-          <div className="hidden md:flex relative z-50 bg-muted/30 py-2.5 border-y border-border/50">
+          <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
             <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-muted-foreground/90">
               <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
                 <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
@@ -620,35 +605,15 @@ function NavbarContent({
             )}
           >
             {isSidebarOpen && (
-              <>
-                {isMenuLoading ? (
-                  <MobileMenuSkeleton />
-                ) : (
-                  <MobileMenuContent
-                    pathname={pathname}
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    handleCategoryClick={handleCategoryClick}
-                    setIsSidebarOpen={setIsSidebarOpen}
-                    setIsAuthModalOpen={setIsAuthModalOpen}
-                    mobileMenuButtonClass={mobileMenuButtonClass}
-                  />
-                )}
-                {/* Mount the actual content invisibly during loading so browser loads SVGs/assets */}
-                {isMenuLoading && (
-                  <div className="absolute inset-0 opacity-0 pointer-events-none overflow-hidden h-0 w-0" aria-hidden="true">
-                    <MobileMenuContent
-                      pathname={pathname}
-                      categories={categories}
-                      activeCategory={activeCategory}
-                      handleCategoryClick={handleCategoryClick}
-                      setIsSidebarOpen={() => {}}
-                      setIsAuthModalOpen={() => {}}
-                      mobileMenuButtonClass={mobileMenuButtonClass}
-                    />
-                  </div>
-                )}
-              </>
+              <MobileMenuContent
+                pathname={pathname}
+                categories={categories}
+                activeCategory={activeCategory}
+                handleCategoryClick={handleCategoryClick}
+                setIsSidebarOpen={setIsSidebarOpen}
+                setIsAuthModalOpen={setIsAuthModalOpen}
+                mobileMenuButtonClass={mobileMenuButtonClass}
+              />
             )}
           </SheetContent>
         </Sheet>

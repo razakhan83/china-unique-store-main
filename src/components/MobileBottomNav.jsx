@@ -38,25 +38,23 @@ function MobileNavButton({
   iconSwap,
 }) {
   const content = (
-    <div className="relative flex flex-col items-center gap-1">
+    <div className="relative flex flex-col items-center gap-1 justify-center w-full h-full">
       <span
         className={cn(
-          'transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] flex items-center justify-center',
+          'transition-transform duration-300 ease-out flex items-center justify-center',
           active ? 'scale-110 text-primary' : 'scale-100 text-muted-foreground'
         )}
       >
         {iconSwap ? (
           iconSwap
         ) : (
-          <Icon
-            className={cn('size-5 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.25]')}
-          />
+          <Icon className={cn('w-6 h-6 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.5]')} />
         )}
       </span>
       <span
         className={cn(
-          'text-[10px] font-bold transition-colors duration-200',
-          active ? 'text-primary' : 'text-muted-foreground'
+          'text-[10px] font-medium transition-colors duration-200',
+          active ? 'text-primary font-bold' : 'text-muted-foreground'
         )}
       >
         {label}
@@ -64,7 +62,7 @@ function MobileNavButton({
     </div>
   );
 
-  const baseClassName = 'relative flex flex-1 flex-col items-center justify-center pt-2 pb-1 outline-none';
+  const baseClassName = 'relative flex flex-1 flex-col items-center justify-center pt-2 pb-1.5 outline-none w-full h-full min-h-[50px]';
 
   if (href) {
     return (
@@ -162,11 +160,11 @@ export default function MobileBottomNav({
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="pointer-events-auto relative z-[1] mx-auto w-full max-w-xl">
+      <div className="fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)]" style={{ zIndex: 400 }}>
+        <div className="mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
-            className="grid grid-cols-4 items-stretch gap-1 overflow-visible border-t border-border/70 bg-background px-1 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1 shadow-[0_-8px_22px_rgba(15,23,42,0.06)]"
+            className="flex items-stretch justify-around px-1 pb-[calc(env(safe-area-inset-bottom)+0.4rem)]"
           >
             <MobileNavButton
               icon={Home}

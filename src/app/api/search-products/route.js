@@ -38,7 +38,7 @@ export async function GET(req) {
                     ...(categoryIds.length ? [{ Category: { $in: categoryIds } }] : []),
                 ],
             },
-            'Name Category Images slug _id'
+            'Name Category Images slug _id Price price isDiscounted discountPercentage discountedPrice compareAtPrice isBestSelling reviewCount averageRating StockStatus showOnStore'
         )
         .populate({ path: 'Category', select: 'name slug' })
         .sort({ createdAt: -1 })

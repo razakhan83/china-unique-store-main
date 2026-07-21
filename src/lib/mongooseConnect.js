@@ -22,8 +22,9 @@ if (!cached) {
 
 const connectionOptions = {
   bufferCommands: false,
-  // Keep one shared pool size that is stable for local dev, builds, and deploys.
-  maxPoolSize: 10,
+  // Scaled down pool size for Serverless (Vercel) to prevent connection exhaustion 
+  // under traffic spikes, while keeping 10 for local dev/VPS.
+  maxPoolSize: isServerlessLike ? 3 : 10,
   minPoolSize: 0,
   maxIdleTimeMS: isServerlessLike ? 15000 : 30000,
   serverSelectionTimeoutMS: useFastRuntimeTimeouts ? 5000 : 15000,

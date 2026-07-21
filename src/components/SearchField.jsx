@@ -33,10 +33,11 @@ export default function SearchField({
   isLoading = false,
   placeholder = "Search for premium products...",
   autoFocus = false,
+  inlineSuggestions = false,
 }) {
   return (
-    <div className={cn("relative", className)}>
-      <form onSubmit={onSubmit} className="flex items-center">
+    <div className={cn("relative w-full", className)}>
+      <form onSubmit={onSubmit} className="flex w-full items-center">
         <InputGroup
           className={cn(
             "min-h-12 rounded-xl border border-muted-foreground/20 bg-muted/40 transition-all hover:bg-muted/60 hover:border-muted-foreground/30 focus-within:bg-background focus-within:border-primary/40 focus-within:shadow-[0_0_0_1px_rgba(1,83,71,0.2)]"
@@ -91,7 +92,14 @@ export default function SearchField({
       </form>
 
       {showSuggestions && isFocused && value.trim() ? (
-        <div className="absolute top-full z-40 mt-3 w-full overflow-hidden rounded-xl border border-border/80 bg-popover/98 shadow-lg backdrop-blur">
+        <div 
+          className={cn(
+            "w-full overflow-hidden",
+            inlineSuggestions
+              ? "mt-3 bg-transparent border-0 shadow-none"
+              : "absolute top-full z-40 mt-3 rounded-xl border border-border/80 bg-popover/98 shadow-lg backdrop-blur"
+          )}
+        >
           {isLoading ? (
             <ul className="divide-y divide-border/70">
               {[1, 2, 3, 4].map((i) => (
