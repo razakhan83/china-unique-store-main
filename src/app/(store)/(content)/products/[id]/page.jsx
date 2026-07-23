@@ -28,8 +28,10 @@ import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getProductPrerenderParams, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
+import { getProductTagById } from '@/lib/productTags';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { cn } from '@/lib/utils';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 const getSellingPrice = (product) =>
@@ -356,7 +358,7 @@ async function ProductHeroSection({ paramsPromise }) {
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-10">
         <div className="w-full md:w-[45%] lg:w-[42%]">
-          <ProductGallery images={product.Images} />
+          <ProductGallery images={product.Images} primaryTag={product.primaryTag} />
         </div>
 
         <div className="w-full md:w-[55%] lg:w-[58%]">
@@ -383,6 +385,26 @@ async function ProductHeroSection({ paramsPromise }) {
                 </h1>
                 <ProductSocialActions product={product} className="md:hidden shrink-0 mt-0.5" />
               </div>
+
+              {Array.isArray(product.tags) && product.tags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  {product.tags.filter(tagId => tagId !== product.primaryTag).map(tagId => {
+                    const tag = getProductTagById(tagId);
+                    if (!tag) return null;
+                    const Icon = tag.icon;
+                    return (
+                      <Badge 
+                        key={tag.id}
+                        variant="outline" 
+                        className={cn("text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md border-0 shadow-sm flex items-center gap-1.5", tag.bgColor, tag.color)}
+                      >
+                        <Icon className="size-3.5" />
+                        {tag.label}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
 
               <a 
                 href="#product-reviews"

@@ -20,6 +20,7 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { sanitizeRichTextHtml, stripHtmlTags } from '@/lib/richText';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { cn } from '@/lib/utils';
+import { PRODUCT_TAGS } from '@/lib/productTags';
 
 const selectionChipClass = (selected) =>
   cn(
@@ -51,6 +52,8 @@ export default function EditProduct({ id }) {
   const [showOnStore, setIsLive] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(false);
   const [isBestSelling, setIsBestSelling] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [primaryTag, setPrimaryTag] = useState("");
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
@@ -127,6 +130,8 @@ export default function EditProduct({ id }) {
           setIsLive(p.showOnStore ?? false);
           setIsNewArrival(p.isNewArrival === true);
           setIsBestSelling(p.isBestSelling === true);
+          setTags(Array.isArray(p.tags) ? p.tags : []);
+          setPrimaryTag(p.primaryTag || '');
         } else {
           showToast('Product not found', 'error');
         }
@@ -306,6 +311,8 @@ export default function EditProduct({ id }) {
           showOnStore,
           isNewArrival,
           isBestSelling,
+          tags,
+          primaryTag,
         }),
       });
       const data = await res.json();
@@ -627,6 +634,76 @@ export default function EditProduct({ id }) {
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-best">Best Selling</Label>
                 <Switch id="toggle-best" checked={isBestSelling} onCheckedChange={setIsBestSelling} />
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-border/50">
+              <p className="text-sm font-semibold text-foreground mb-1">Main Picture Badge (Home Page)</p>
+              <p className="text-xs text-muted-foreground mb-3">Select one icon to display over the product image on the home page.</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPrimaryTag("")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
+                    primaryTag === ""
+                      ? `border-border bg-foreground text-background shadow-sm`
+                      : "border-border bg-background text-muted-foreground hover:border-border hover:bg-muted"
+                  )}
+                >
+                  None
+                </button>
+                {PRODUCT_TAGS.map((tag) => {
+                  const isSelected = primaryTag === tag.id;
+                  const Icon = tag.icon;
+                  return (
+                    <button
+                      key={`primary-${tag.id}`}
+                      type="button"
+                      onClick={() => setPrimaryTag(tag.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
+                        isSelected
+                          ? `border-border ${tag.bgColor} ${tag.color} shadow-sm`
+                          : "border-border bg-background text-muted-foreground hover:border-border hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="size-3.5" />
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border/50">
+              <p className="text-sm font-semibold text-foreground mb-1">Detail Page Badges</p>
+              <p className="text-xs text-muted-foreground mb-3">Select multiple tags to display below the product name.</p>
+              <div className="flex flex-wrap gap-2">
+                {PRODUCT_TAGS.map((tag) => {
+                  const isSelected = tags.includes(tag.id);
+                  const Icon = tag.icon;
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        setTags((prev) =>
+                          prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
+                        );
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
+                        isSelected
+                          ? `border-border ${tag.bgColor} ${tag.color} shadow-sm`
+                          : "border-border bg-background text-muted-foreground hover:border-border hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="size-3.5" />
+                      {tag.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

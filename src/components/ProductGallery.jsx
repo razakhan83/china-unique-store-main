@@ -6,8 +6,10 @@ import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carouse
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { normalizeProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import { getProductTagById } from '@/lib/productTags';
+import { cn } from '@/lib/utils';
 
-export default function ProductGallery({ images }) {
+export default function ProductGallery({ images, primaryTag }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mainApi, setMainApi] = useState();
   const [thumbsApi, setThumbsApi] = useState();
@@ -79,9 +81,22 @@ export default function ProductGallery({ images }) {
     mainApi?.goTo(index);
   };
 
+  const mainTag = primaryTag ? getProductTagById(primaryTag) : null;
+
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#ffffff' }}>
+        
+        {mainTag && (
+          <div 
+            className={cn("absolute right-3 top-3 z-20 pointer-events-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-md backdrop-blur-md border border-white/30 text-xs font-semibold", mainTag.bgColor, mainTag.color)}
+            title={mainTag.label}
+          >
+            <mainTag.icon className="size-4 drop-shadow-sm" />
+            {mainTag.label}
+          </div>
+        )}
+
         <Carousel
           setApi={setMainApi}
           opts={mainOptions}

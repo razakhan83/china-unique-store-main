@@ -78,6 +78,8 @@ const PRODUCT_CARD_PROJECTION = [
   'discountedPrice',
   'isNewArrival',
   'isBestSelling',
+  'tags',
+  'primaryTag',
 ].join(' ');
 const PRODUCT_DETAIL_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
@@ -188,6 +190,8 @@ function serializeProduct(product) {
     updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
     isNewArrival: safeProduct.isNewArrival === true,
     isBestSelling: safeProduct.isBestSelling === true,
+    tags: Array.isArray(safeProduct.tags) ? safeProduct.tags : [],
+    primaryTag: safeProduct.primaryTag || '',
   };
 }
 
@@ -213,6 +217,8 @@ function toProductCardItem(product) {
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    tags: Array.isArray(product.tags) ? product.tags : [],
+    primaryTag: product.primaryTag || '',
   };
 }
 
@@ -239,6 +245,8 @@ function toProductDetailView(product) {
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
+    tags: Array.isArray(product.tags) ? product.tags : [],
+    primaryTag: product.primaryTag || '',
   };
 }
 
@@ -266,6 +274,8 @@ function toAdminProductRow(product) {
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
+    tags: Array.isArray(product.tags) ? product.tags : [],
+    primaryTag: product.primaryTag || '',
   };
 }
 

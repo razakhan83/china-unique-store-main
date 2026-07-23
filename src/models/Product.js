@@ -203,6 +203,14 @@ const ProductSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        tags: {
+            type: [String],
+            default: [],
+        },
+        primaryTag: {
+            type: String,
+            default: '',
+        },
     },
     {
         timestamps: true,
@@ -233,7 +241,9 @@ if (
         !cachedProduct.schema.path('vendors').schema?.path('whatsappNumber') ||
         !cachedProduct.schema.path('vendors').schema?.path('email') ||
         !cachedProduct.schema.path('vendors').schema?.path('address') ||
-        !cachedProduct.schema.path('packOptions')
+        !cachedProduct.schema.path('packOptions') ||
+        !cachedProduct.schema.path('tags') ||
+        !cachedProduct.schema.path('primaryTag')
     )
 ) {
     delete mongoose.models.Product;

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
+import { getProductTagById } from "@/lib/productTags";
 
 const formatPrice = (raw) => {
   let cleanNumbers = String(raw).replace(/[^\d.]/g, "");
@@ -92,6 +93,8 @@ export default function ProductCard({ product, className = "", imageBg }) {
   const averageRating = Number(product.averageRating || 0);
   const ratingLabel = reviewCount > 0 && averageRating > 0 ? averageRating.toFixed(1) : "";
   const isUnavailable = product.StockStatus === "Out of Stock" || product.showOnStore === false;
+  
+  const primaryTag = product.primaryTag ? getProductTagById(product.primaryTag) : null;
 
   return (
     <Card
@@ -114,6 +117,15 @@ export default function ProductCard({ product, className = "", imageBg }) {
               {ratingLabel}
             </Badge>
           ) : null}
+
+          {primaryTag && (
+            <div 
+              className={cn("pointer-events-auto flex items-center justify-center rounded-full p-1.5 shadow-sm backdrop-blur-md border border-white/20", primaryTag.bgColor, primaryTag.color)}
+              title={primaryTag.label}
+            >
+              <primaryTag.icon className="size-4 drop-shadow-sm" />
+            </div>
+          )}
 
           {featureBadge && (
             <Badge className={cn(featureBadge.className)}>

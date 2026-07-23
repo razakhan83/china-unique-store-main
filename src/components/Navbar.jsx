@@ -231,7 +231,12 @@ function NavbarContent({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
   const [isNavbarHidden, setIsNavbarHidden] = useState(false);
-  const { data: session } = useSession() || {};
+  const [mounted, setMounted] = useState(false);
+  const { data: session, status } = useSession() || {};
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const searchPlaceholders = categories?.length > 0 
     ? categories.map(c => `What are you finding? ${c.label}`)
@@ -569,7 +574,9 @@ function NavbarContent({
                 <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <ShoppingBag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> All Products
                 </Link>
-                {session ? (
+                {!mounted || status === 'loading' ? (
+                  <div className="h-[38px] w-32 rounded-full bg-muted/40 animate-pulse" />
+                ) : session ? (
                   <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                     <Package className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> My Orders
                   </Link>

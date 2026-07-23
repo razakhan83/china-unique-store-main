@@ -27,7 +27,7 @@ export async function GET() {
     try {
         await mongooseConnect();
         const products = await Product.find({})
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug' })
             .sort({ createdAt: -1 })
             .lean();
@@ -87,6 +87,8 @@ export async function POST(req) {
             isBestSelling,
             vendors,
             packOptions,
+            tags,
+            primaryTag,
         } = body;
 
         if (!Name || !Price || !categoryInput) {
@@ -161,6 +163,8 @@ export async function POST(req) {
             isNewArrival: isNewArrival === true || isNewArrival === 'true',
             isBestSelling: isBestSelling === true || isBestSelling === 'true',
             packOptions: Array.isArray(packOptions) ? packOptions : [],
+            tags: Array.isArray(tags) ? tags : [],
+            primaryTag: primaryTag || '',
         });
 
         await product.populate({ path: 'Category', select: 'name slug' });
