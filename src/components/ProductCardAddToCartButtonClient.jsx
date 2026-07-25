@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProductCardAddToCartButtonClient({ product, isOutOfStock = false, mode = "full" }) {
   const router = useRouter();
-  const { addToCart } = useCartActions();
+  const { addToCart } = useCartActions() || {};
   const [animationState, setAnimationState] = useState('idle');
   const settleTimeoutRef = useRef(null);
 
@@ -33,7 +33,7 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
     event.preventDefault();
     event.stopPropagation();
 
-    if (isOutOfStock || isBusy) return;
+    if (isOutOfStock || isBusy || !addToCart) return;
 
     setAnimationState('loading');
     try {

@@ -13,12 +13,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import ProductCard from "@/components/ProductCard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import ProductRichTextEditor from "@/components/admin/ProductRichTextEditor";
 import VendorAssignmentsEditor from "@/components/admin/VendorAssignmentsEditor";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
@@ -362,30 +364,55 @@ export default function AddProduct() {
       ? Math.round(priceValue * (1 - discountValue / 100))
       : priceValue;
 
-  return (
-    <div className="w-full pb-6 md:pb-10">
-      <div className="mb-4 flex items-center gap-3 md:mb-8 md:gap-4">
-        <Link
-          href="/admin/products"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "icon-sm" }),
-            "rounded-xl"
-          )}
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">
-            Add New Product
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create a launch-ready product with pricing, inventory, and SEO in one pass.
-          </p>
-        </div>
-      </div>
+  const mockProduct = {
+    _id: "preview",
+    slug: "preview",
+    Name: Name || "Product Name",
+    Price: Number(Price) || 0,
+    compareAtPrice: Number(compareAtPrice) || 0,
+    Images: images,
+    Categories: Categories.map(id => ({ _id: id, name: allCategories?.find(c => c._id === id)?.name || "Category" })),
+    StockStatus: stockStatus,
+    showOnStore: showOnStore,
+    primaryTag: primaryTag,
+    tags: tags,
+    reviewCount: 0,
+    averageRating: 0,
+  };
 
-      <div className="surface-card w-full rounded-xl p-3 shadow-lg md:p-8">
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+  return (
+    <div className="w-full pb-20">
+      <form onSubmit={handleSubmit}>
+        {/* Sticky Header */}
+        <div className="sticky top-4 z-50 mb-6 flex items-center justify-between rounded-xl border border-border bg-background/95 px-4 py-3 shadow-md backdrop-blur-md md:px-6">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/products" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background transition-colors hover:bg-muted">
+              <ArrowLeft className="size-4" />
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
+                Add New Product
+              </h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 mr-1 sm:mr-2">
+              <Label htmlFor="top-visibility" className="text-xs font-semibold hidden sm:inline-block">
+                 {showOnStore ? 'Live' : 'Draft'}
+              </Label>
+              <Switch id="top-visibility" checked={showOnStore} onCheckedChange={setIsLive} />
+            </div>
+            <Link href="/admin/products" className="hidden sm:block">
+              <Button variant="outline" size="sm" className="rounded-lg font-semibold" type="button">Cancel</Button>
+            </Link>
+            <Button type="submit" disabled={saving} size="sm" className="rounded-lg font-semibold shadow-sm">
+              {saving ? <><Loader2 className="mr-2 size-4 animate-spin" /> Saving...</> : "Create Product"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="surface-card w-full space-y-6 rounded-xl p-4 shadow-lg md:p-8">
           <div>
             <Label className="mb-2">Product Name</Label>
             <Input
@@ -437,38 +464,6 @@ export default function AddProduct() {
                 className="h-11 px-4"
                 placeholder="0"
               />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border bg-muted/35 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Pricing Preview
-            </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-4">
-              <p className="text-sm text-muted-foreground">
-                Base price
-                <span className="mt-1 block font-semibold text-foreground">
-                  Rs {priceValue || 0}
-                </span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Compare at
-                <span className="mt-1 block font-semibold text-foreground">
-                  Rs {compareAtValue || 0}
-                </span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Discount
-                <span className="mt-1 block font-semibold text-foreground">
-                  {discountValue}%
-                </span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Customer pays
-                <span className="mt-1 block text-base font-semibold text-foreground">
-                  Rs {discountedPreview || 0}
-                </span>
-              </p>
             </div>
           </div>
 
@@ -549,7 +544,10 @@ export default function AddProduct() {
                 <PlusCircle className="size-3.5" /> Manage Categories
               </Link>
             </div>
-            <div className="flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
+            
+            {/* Desktop View */}
+            <div className="hidden sm:flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
+
               {allCategories.length === 0 ? (
                 <p className="self-center text-xs text-muted-foreground">
                   No categories found. Add one.
@@ -570,7 +568,46 @@ export default function AddProduct() {
                   );
                 })
               )}
+
             </div>
+
+            {/* Mobile View */}
+            <div className="sm:hidden">
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="categories" className="rounded-xl border border-border bg-muted/35 px-4 shadow-sm">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <span className="text-sm font-semibold">Select Categories ({Categories.length})</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4 pt-1">
+                    <div className="flex flex-wrap gap-2">
+
+              {allCategories.length === 0 ? (
+                <p className="self-center text-xs text-muted-foreground">
+                  No categories found. Add one.
+                </p>
+              ) : (
+                allCategories.map((cat) => {
+                  const selected = Categories.includes(cat._id);
+                  return (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      onClick={() => toggleCategory(cat._id)}
+                      className={selectionChipClass(selected)}
+                    >
+                      {selected && <Check className="mr-1 size-3" />}
+                      {cat.name}
+                    </button>
+                  );
+                })
+              )}
+
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
             {Categories.length === 0 && (
               <p className="mt-1 text-xs text-destructive/80">
                 Please select at least one category.
@@ -578,13 +615,115 @@ export default function AddProduct() {
             )}
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/35 p-4">
+                    <div>
+            <div className="mb-2 flex items-center justify-between">
+              <Label>Product Images</Label>
+              <div className={uploadActionClass}>
+                <PlusCircle className="size-3.5" /> Add Images
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </div>
+            </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {images.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40"
+                >
+                  <Image
+                    src={img.url}
+                    alt="Preview"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                    className="object-cover"
+                    {...getBlurPlaceholderProps(img.blurDataURL)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-destructive shadow-sm opacity-0 transition-all hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                  {idx !== 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => makeImagePrimary(idx)}
+                      className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-border hover:bg-muted group-hover:opacity-100"
+                    >
+                      Set Main
+                    </button>
+                  ) : (
+                    <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">
+                      Main Image
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                "relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200",
+                isDragOver
+                  ? "border-border bg-muted/60"
+                  : "border-border bg-muted/20 hover:border-border hover:bg-muted/35"
+              )}
+            >
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+              <div className="space-y-3">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
+                  <CloudUpload className="size-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Drag & Drop Images Here
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    or click to browse multiple files
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    PNG, JPG up to 10MB each. Use &quot;Set Main&quot; to control the hero image.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Accordion type="multiple" className="w-full space-y-4">
+          
+          <AccordionItem value="vendor" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Vendor Assignments</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Assign this product to specific vendors and storefronts.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <VendorAssignmentsEditor
               vendors={allVendors}
               value={vendorAssignments}
               onChange={setVendorAssignments}
             />
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
           <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
             <div>
@@ -621,19 +760,17 @@ export default function AddProduct() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/35 p-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Visibility</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {showOnStore
-                  ? "Live and visible to customers immediately."
-                  : "Saved as draft and hidden from the storefront."}
-              </p>
-            </div>
-            <Switch checked={showOnStore} onCheckedChange={setIsLive} />
-          </div>
+          
 
-          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+          <AccordionItem value="marketing" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Marketing Flags & Badges</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Set product as New Arrival, Best Selling, and configure badges.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
@@ -726,98 +863,21 @@ export default function AddProduct() {
               </div>
             </div>
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <Label>Product Images</Label>
-              <div className={uploadActionClass}>
-                <PlusCircle className="size-3.5" /> Add Images
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
+
+
+          
+          <AccordionItem value="description" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Product Description</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Add formatted text, images, and HTML for the main product details.</span>
               </div>
-            </div>
-
-            <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40"
-                >
-                  <Image
-                    src={img.url}
-                    alt="Preview"
-                    fill
-                    sizes="(max-width: 640px) 50vw, 25vw"
-                    className="object-cover"
-                    {...getBlurPlaceholderProps(img.blurDataURL)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-destructive shadow-sm opacity-0 transition-all hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                  {idx !== 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => makeImagePrimary(idx)}
-                      className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-border hover:bg-muted group-hover:opacity-100"
-                    >
-                      Set Main
-                    </button>
-                  ) : (
-                    <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">
-                      Main Image
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={cn(
-                "relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200",
-                isDragOver
-                  ? "border-border bg-muted/60"
-                  : "border-border bg-muted/20 hover:border-border hover:bg-muted/35"
-              )}
-            >
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              />
-              <div className="space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
-                  <CloudUpload className="size-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Drag & Drop Images Here
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    or click to browse multiple files
-                  </p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    PNG, JPG up to 10MB each. Use &quot;Set Main&quot; to control the hero image.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div>
             <Label className="mb-2">Description</Label>
             <ProductRichTextEditor
               value={Description}
@@ -825,8 +885,19 @@ export default function AddProduct() {
               placeholder="Create a polished product description with formatting, images, videos, and HTML."
             />
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          <div className="space-y-4 rounded-xl border border-border bg-muted/35 p-4 md:p-5">
+          
+          <AccordionItem value="seo" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">SEO & Metadata</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Optimize search titles, descriptions, and keywords.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-semibold text-foreground">SEO & Metadata</h2>
@@ -976,36 +1047,19 @@ export default function AddProduct() {
               </div>
             </div>
           </div>
+            </AccordionContent>
+          </AccordionItem>
+          </Accordion>
 
-          <div className="mt-6 flex gap-4 md:mt-8">
-            <Button
-              type="submit"
-              disabled={saving}
-              size="lg"
-              className="flex-1 rounded-xl font-bold"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Product"
-              )}
-            </Button>
-            <Link href="/admin/products" className="flex-1">
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full rounded-xl font-bold"
-                type="button"
-              >
-                Cancel
-              </Button>
-            </Link>
           </div>
-        </form>
-      </div>
+
+          {/* Right Column: Live PC Preview */}
+          <div className="hidden lg:block sticky top-28">
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Live PC Preview</p>
+            <ProductCard product={mockProduct} className="pointer-events-none" isPreviewMode={true} />
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check, CloudUpload, Loader2, Plus, PlusCircle, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import ProductCard from "@/components/ProductCard";
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import ProductRichTextEditor from '@/components/admin/ProductRichTextEditor';
 import VendorAssignmentsEditor from '@/components/admin/VendorAssignmentsEditor';
 import { AdminEditProductSkeleton } from '@/components/AdminDashboardSkeleton';
@@ -54,6 +56,7 @@ export default function EditProduct({ id }) {
   const [isBestSelling, setIsBestSelling] = useState(false);
   const [tags, setTags] = useState([]);
   const [primaryTag, setPrimaryTag] = useState("");
+  const stockStatus = 'in_stock';
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
@@ -415,25 +418,55 @@ export default function EditProduct({ id }) {
     : seoCooldownRemaining > 0
       ? `Cooling down... ${seoCooldownRemaining}s`
       : '✨ AI Auto-SEO';
+  const mockProduct = {
+    _id: "preview",
+    slug: "preview",
+    Name: Name || "Product Name",
+    Price: Number(Price) || 0,
+    compareAtPrice: Number(compareAtPrice) || 0,
+    Images: images,
+    Categories: Categories.map(id => ({ _id: id, name: allCategories?.find(c => c._id === id)?.name || "Category" })),
+    StockStatus: stockStatus,
+    showOnStore: showOnStore,
+    primaryTag: primaryTag,
+    tags: tags,
+    reviewCount: 0,
+    averageRating: 0,
+  };
 
   return (
-    <div className="w-full pb-6 md:pb-10">
-
-
-      {/* Page Header */}
-      <div className="mb-4 flex items-center gap-3 md:mb-8 md:gap-4">
-        <Link href="/admin/products" className={cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }), 'rounded-xl')}>
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">Edit Product</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Update product details.</p>
+    <div className="w-full pb-20">
+      <form onSubmit={handleSubmit}>
+        {/* Sticky Header */}
+        <div className="sticky top-4 z-50 mb-6 flex items-center justify-between rounded-xl border border-border bg-background/95 px-4 py-3 shadow-md backdrop-blur-md md:px-6">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/products" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background transition-colors hover:bg-muted">
+              <ArrowLeft className="size-4" />
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
+                Edit Product
+              </h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 mr-1 sm:mr-2">
+              <Label htmlFor="top-visibility" className="text-xs font-semibold hidden sm:inline-block">
+                 {showOnStore ? 'Live' : 'Draft'}
+              </Label>
+              <Switch id="top-visibility" checked={showOnStore} onCheckedChange={setIsLive} />
+            </div>
+            <Link href="/admin/products" className="hidden sm:block">
+              <Button variant="outline" size="sm" className="rounded-lg font-semibold" type="button">Cancel</Button>
+            </Link>
+            <Button type="submit" disabled={saving} size="sm" className="rounded-lg font-semibold shadow-sm">
+              {saving ? <><Loader2 className="mr-2 size-4 animate-spin" /> Saving...</> : "Save Changes"}
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Form Card */}
-      <div className="surface-card w-full rounded-xl p-3 shadow-lg md:p-8">
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="surface-card w-full space-y-6 rounded-xl p-4 shadow-lg md:p-8">
           {/* Product Name */}
           <div>
             <Label className="mb-2">Product Name</Label>
@@ -475,33 +508,164 @@ export default function EditProduct({ id }) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/35 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Pricing Preview
-            </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <p className="text-sm text-muted-foreground">
-                Base price
-                <span className="mt-1 block font-semibold text-foreground">
-                  Rs {Number(Price) || 0}
-                </span>
+
+
+                    <div>
+            <div className="mb-2 flex items-center justify-between">
+              <Label>Categories</Label>
+              <Link
+                href="/admin/categories"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground transition-colors hover:text-foreground/80"
+              >
+                <PlusCircle className="size-3.5" /> Manage Categories
+              </Link>
+            </div>
+            
+            {/* Desktop View */}
+            <div className="hidden sm:flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
+
+              {allCategories.length === 0 ? (
+                <p className="self-center text-xs text-muted-foreground">No categories found. Add one.</p>
+              ) : (
+                allCategories.map((cat) => {
+                  const selected = Categories.includes(cat._id);
+                  return (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      onClick={() => toggleCategory(cat._id)}
+                      className={selectionChipClass(selected)}
+                    >
+                      {selected && <Check className="mr-1 size-3" />}
+                      {cat.name}
+                    </button>
+                  );
+                })
+              )}
+
+            </div>
+
+            {/* Mobile View */}
+            <div className="sm:hidden">
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="categories" className="rounded-xl border border-border bg-muted/35 px-4 shadow-sm">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <span className="text-sm font-semibold">Select Categories ({Categories.length})</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4 pt-1">
+                    <div className="flex flex-wrap gap-2">
+
+              {allCategories.length === 0 ? (
+                <p className="self-center text-xs text-muted-foreground">No categories found. Add one.</p>
+              ) : (
+                allCategories.map((cat) => {
+                  const selected = Categories.includes(cat._id);
+                  return (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      onClick={() => toggleCategory(cat._id)}
+                      className={selectionChipClass(selected)}
+                    >
+                      {selected && <Check className="mr-1 size-3" />}
+                      {cat.name}
+                    </button>
+                  );
+                })
+              )}
+
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            {Categories.length === 0 && (
+              <p className="mt-1 text-xs text-destructive/80">
+                Please select at least one category.
               </p>
-              <p className="text-sm text-muted-foreground">
-                Compare at
-                <span className="mt-1 block font-semibold text-foreground">
-                  Rs {compareAtPreviewValue || 0}
-                </span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Visible strike-through
-                <span className="mt-1 block font-semibold text-foreground">
-                  {compareAtPreviewValue > (Number(Price) || 0) ? 'Yes' : 'No'}
-                </span>
-              </p>
+            )}
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+                <Label>Product Images</Label>
+                <div className={uploadActionClass}>
+                    <PlusCircle className="size-3.5" /> Add More Images
+                    <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                {images.map((img, idx) => (
+                    <div key={idx} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40">
+                        <Image
+                          src={img.url}
+                          alt="Preview"
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="object-cover"
+                          {...getBlurPlaceholderProps(img.blurDataURL)}
+                        />
+                        <button 
+                            type="button" 
+                            onClick={() => removeImage(idx)} 
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-destructive shadow-sm opacity-0 transition-all hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                        >
+                            <Trash2 className="size-3.5" />
+                        </button>
+                        {idx !== 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => makeImagePrimary(idx)}
+                            className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-border hover:bg-muted group-hover:opacity-100"
+                          >
+                            Set Main
+                          </button>
+                        ) : null}
+                        {idx === 0 ? <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">Main Image</span> : null}
+                    </div>
+                ))}
+            </div>
+
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                'relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200',
+                isDragOver
+                  ? 'border-border bg-muted/60'
+                  : 'border-border bg-muted/20 hover:border-border hover:bg-muted/35',
+              )}
+            >
+              <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <div className="space-y-3">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
+                  <CloudUpload className="size-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Drag & Drop Images Here</p>
+                  <p className="text-xs text-muted-foreground">or click to browse multiple files</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG up to 10MB each</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Use &quot;Set Main&quot; on a preview to move it to the first slot.</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+          <Accordion type="multiple" className="w-full space-y-4">
+                    
+          <AccordionItem value="pack" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Pack Variations</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Define different pack sizes and their prices.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <div>
               <p className="text-sm font-semibold text-foreground">Pack Variations</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -558,8 +722,19 @@ export default function EditProduct({ id }) {
               Add More Pack Option
             </Button>
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          <div>
+          
+          <AccordionItem value="short-description" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Short Description</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">A brief summary displayed right below the price.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div>
             <Label className="mb-2">Short Description</Label>
             <ProductRichTextEditor
               value={shortDescription}
@@ -567,64 +742,41 @@ export default function EditProduct({ id }) {
               placeholder="A brief summary displayed right below the price on the product page..."
             />
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* Category - Multi-select */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>Categories</Label>
-              <Link
-                href="/admin/categories"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-foreground transition-colors hover:text-foreground/80"
-              >
-                <PlusCircle className="size-3.5" /> Manage Categories
-              </Link>
-            </div>
-            <div className="flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
-              {allCategories.length === 0 ? (
-                <p className="self-center text-xs text-muted-foreground">No categories found. Add one.</p>
-              ) : (
-                allCategories.map((cat) => {
-                  const selected = Categories.includes(cat._id);
-                  return (
-                    <button
-                      key={cat._id}
-                      type="button"
-                      onClick={() => toggleCategory(cat._id)}
-                      className={selectionChipClass(selected)}
-                    >
-                      {selected && <Check className="mr-1 size-3" />}
-                      {cat.name}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            {Categories.length === 0 && (
-              <p className="mt-1 text-xs text-destructive/80">Please select at least one category.</p>
-            )}
-          </div>
 
-          <div className="rounded-xl border border-border bg-muted/35 p-4">
+
+          
+          <AccordionItem value="vendor" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Vendor Assignments</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Assign this product to specific vendors and storefronts.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <VendorAssignmentsEditor
               vendors={allVendors}
               value={vendorAssignments}
               onChange={setVendorAssignments}
             />
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* showOnStore Toggle */}
-          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/35 p-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Visibility</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {showOnStore ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
-              </p>
-            </div>
-            <Switch checked={showOnStore} onCheckedChange={setIsLive} />
-          </div>
 
-          {/* Marketing Flags */}
-          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+          <AccordionItem value="marketing" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Marketing Flags & Badges</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Set product as New Arrival, Best Selling, and configure badges.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+                        {/* Marketing Flags */}
+          <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
@@ -707,76 +859,21 @@ export default function EditProduct({ id }) {
               </div>
             </div>
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* Image Upload */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-                <Label>Product Images</Label>
-                <div className={uploadActionClass}>
-                    <PlusCircle className="size-3.5" /> Add More Images
-                    <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                </div>
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                {images.map((img, idx) => (
-                    <div key={idx} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40">
-                        <Image
-                          src={img.url}
-                          alt="Preview"
-                          fill
-                          sizes="(max-width: 640px) 50vw, 25vw"
-                          className="object-cover"
-                          {...getBlurPlaceholderProps(img.blurDataURL)}
-                        />
-                        <button 
-                            type="button" 
-                            onClick={() => removeImage(idx)} 
-                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-destructive shadow-sm opacity-0 transition-all hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
-                        >
-                            <Trash2 className="size-3.5" />
-                        </button>
-                        {idx !== 0 ? (
-                          <button
-                            type="button"
-                            onClick={() => makeImagePrimary(idx)}
-                            className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-border hover:bg-muted group-hover:opacity-100"
-                          >
-                            Set Main
-                          </button>
-                        ) : null}
-                        {idx === 0 ? <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">Main Image</span> : null}
-                    </div>
-                ))}
-            </div>
 
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={cn(
-                'relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200',
-                isDragOver
-                  ? 'border-border bg-muted/60'
-                  : 'border-border bg-muted/20 hover:border-border hover:bg-muted/35',
-              )}
-            >
-              <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-              <div className="space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted text-foreground">
-                  <CloudUpload className="size-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Drag & Drop Images Here</p>
-                  <p className="text-xs text-muted-foreground">or click to browse multiple files</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG up to 10MB each</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">Use &quot;Set Main&quot; on a preview to move it to the first slot.</p>
-                </div>
+
+
+          <AccordionItem value="description" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">Product Description</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Add formatted text, images, and HTML for the main product details.</span>
               </div>
-            </div>
-          </div>
-
-          {/* Description */}
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+                        {/* Description */}
           <div>
             <Label className="mb-2">Description</Label>
             <ProductRichTextEditor
@@ -785,8 +882,19 @@ export default function EditProduct({ id }) {
               placeholder="Create a polished product description with formatting, images, videos, and HTML."
             />
           </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          <div className="space-y-4 rounded-xl border border-border bg-muted/35 p-4 md:p-5">
+          
+          <AccordionItem value="seo" className="rounded-xl border border-border bg-background shadow-sm px-4">
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold text-foreground">SEO & Metadata</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Optimize search titles, descriptions, and keywords.</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="pt-2">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-semibold text-foreground">SEO & Metadata</h2>
@@ -917,33 +1025,21 @@ export default function EditProduct({ id }) {
               </div>
             </div>
           </div>
+            </AccordionContent>
+          </AccordionItem>
+          </Accordion>
 
 
-          {/* Buttons */}
-          <div className="flex gap-4 mt-6 md:mt-8">
-            <Button
-              type="submit"
-              disabled={saving}
-              size="lg"
-              className="flex-1 rounded-xl font-bold"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-            <Link href="/admin/products" className="flex-1">
-              <Button variant="outline" size="lg" className="w-full rounded-xl font-bold" type="button">
-                Cancel
-              </Button>
-            </Link>
+
           </div>
-        </form>
-      </div>
+
+          {/* Right Column: Live PC Preview */}
+          <div className="hidden lg:block sticky top-28">
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Live PC Preview</p>
+            <ProductCard product={mockProduct} className="pointer-events-none" isPreviewMode={true} />
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

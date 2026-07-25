@@ -61,7 +61,7 @@ function getFeatureBadge(product) {
 import { getProductCategories } from "@/lib/productCategories";
 import { getCategoryColor } from "@/lib/categoryColors";
 
-export default function ProductCard({ product, className = "", imageBg }) {
+export default function ProductCard({ product, className = "", imageBg, isPreviewMode = false }) {
   const categories = getProductCategories(product);
   const primaryCategoryName = categories[0]?.name || categories[0]?.label || "";
   const resolvedBg = imageBg || getCategoryColor(primaryCategoryName).hex || '#e1f2ed';
@@ -234,30 +234,34 @@ export default function ProductCard({ product, className = "", imageBg }) {
             </Link>
 
             <div className="mt-auto flex items-center justify-between gap-2 pt-2 sm:pt-3">
-              <div className="flex flex-row items-center gap-1.5 sm:gap-2 flex-wrap flex-1">
-                <p
-                  className="text-[15px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[16px] sm:text-[18px]"
-                  draggable={false}
-                >
-                  {formatPrice(sellingPrice)}
-                </p>
-                {compareAtPrice ? (
-                  <>
+              {!isPreviewMode && (
+                <>
+                  <div className="flex flex-row items-center gap-1.5 sm:gap-2 flex-wrap flex-1">
                     <p
-                      className="text-[13px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[14px] sm:text-[15px]"
+                      className="text-[15px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[16px] sm:text-[18px]"
                       draggable={false}
                     >
-                      {formatPrice(compareAtPrice)}
+                      {formatPrice(sellingPrice)}
                     </p>
-                    <Badge className="pointer-events-auto w-fit rounded bg-emerald-100/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[22px] inline-flex items-center sm:px-2 sm:text-[12px] sm:h-[24px]">
-                      Save {formatPrice(compareAtPrice - sellingPrice)}
-                    </Badge>
-                  </>
-                ) : null}
-              </div>
-              <div className="shrink-0">
-                <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
-              </div>
+                    {compareAtPrice ? (
+                      <>
+                        <p
+                          className="text-[13px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[14px] sm:text-[15px]"
+                          draggable={false}
+                        >
+                          {formatPrice(compareAtPrice)}
+                        </p>
+                        <Badge className="pointer-events-auto w-fit rounded bg-emerald-100/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[22px] inline-flex items-center sm:px-2 sm:text-[12px] sm:h-[24px]">
+                          Save {formatPrice(compareAtPrice - sellingPrice)}
+                        </Badge>
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="shrink-0">
+                    <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
+                  </div>
+                </>
+              )}
             </div>
           </>
       </CardContent>
