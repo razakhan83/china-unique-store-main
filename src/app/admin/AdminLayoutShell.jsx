@@ -81,6 +81,7 @@ const ordersNavItems = [
 // 4. Customers
 const customersNavItems = [
   { href: '/admin/users', label: 'Customer List / Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
+  { href: '/admin/manual-customers', label: 'Manual Customers', icon: Users, match: (pathname) => pathname.startsWith('/admin/manual-customers') },
 ];
 
 // 5. Marketing
@@ -134,7 +135,7 @@ const compactDesktopNavItems = [
   ...primaryNavItems,
   { href: '/admin/products', label: 'Products', icon: Box, match: (pathname) => productNavItems.some(i => i.match(pathname)) },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => ordersNavItems.some(i => i.match(pathname)) },
-  ...customersNavItems,
+  { href: '/admin/users', label: 'Customers', icon: Users, match: (pathname) => customersNavItems.some(i => i.match(pathname)) },
   { href: '/admin/marketing/coupons', label: 'Marketing', icon: Megaphone, match: (pathname) => marketingNavItems.some(i => i.match(pathname)) },
   { href: '/admin/analytics/sales', label: 'Analytics', icon: ChartColumn, match: (pathname) => analyticsNavItems.some(i => i.match(pathname)) },
   { href: '/admin/home-page', label: 'Website', icon: Globe, match: (pathname) => websiteNavItems.some(i => i.match(pathname)) },
@@ -154,6 +155,7 @@ function getOpenSections(pathname) {
   return [
     productNavItems.some((item) => item.match(pathname)) ? 'products' : null,
     ordersNavItems.some((item) => item.match(pathname)) ? 'orders' : null,
+    customersNavItems.some((item) => item.match(pathname)) ? 'customers' : null,
     marketingNavItems.some((item) => item.match(pathname)) ? 'marketing' : null,
     analyticsNavItems.some((item) => item.match(pathname)) ? 'analytics' : null,
     websiteNavItems.some((item) => item.match(pathname)) ? 'website' : null,
@@ -373,16 +375,16 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
 
-            {customersNavItems.map((item) => renderPrimaryNavLink(item))}
+              <AccordionItem value="customers" className="border-none">
+                {renderSectionTrigger({ icon: Users, label: 'Customers', value: 'customers' })}
+                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
+                  <div className="ml-5 flex flex-col gap-1">
+                    {customersNavItems.map((item) => renderNestedNavLink(item))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            <Accordion
-              key={pathname + "-2"}
-              multiple
-              defaultValue={getOpenSections(pathname)}
-              className="flex w-full flex-col gap-1.5 mt-1.5"
-            >
               <AccordionItem value="marketing" className="border-none">
                 {renderSectionTrigger({ icon: Megaphone, label: 'Marketing', value: 'marketing' })}
                 <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">

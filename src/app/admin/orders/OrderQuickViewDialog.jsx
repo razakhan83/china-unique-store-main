@@ -146,58 +146,51 @@ export default function OrderQuickViewDialog({
           {/* The ref'd card — this is what gets captured */}
           <div ref={cardRef} className="bg-white p-4 sm:p-5">
             {/* Order meta */}
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-[13px] font-bold text-foreground">{order?.orderId}</p>
-              <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-semibold', statusClass)}>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[18px] font-semibold text-foreground">{order?.orderId}</h2>
+                <p className="mt-1.5 text-[12px] text-muted-foreground">{formatDate(order?.createdAt)}</p>
+              </div>
+              <span className={cn('shrink-0 rounded-full border px-3 py-1 text-[11px] font-medium shadow-sm', statusClass)}>
                 {statusLabel}
               </span>
             </div>
-            <p className="mb-4 text-[11px] text-muted-foreground">{formatDate(order?.createdAt)}</p>
 
             {/* ── 3-column info strip ── */}
-            <div className="mb-4 grid grid-cols-3 gap-2">
+            <div className="mb-6 grid grid-cols-1 gap-0 overflow-hidden rounded-2xl border border-border/60 bg-muted/10 sm:grid-cols-3">
               {/* Customer */}
-              <div className="rounded-xl border border-border bg-muted/20 p-2.5">
-                <div className="mb-1 flex items-center gap-1 text-muted-foreground">
-                  <User className="size-3" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Customer</span>
-                </div>
-                <p className="text-[12px] font-semibold leading-tight text-foreground">{order?.customerName || '—'}</p>
-                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Phone className="size-2.5" />
+              <div className="flex flex-col p-4 sm:p-5">
+                <span className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Customer</span>
+                <p className="text-[13px] font-medium text-foreground">{order?.customerName || '—'}</p>
+                <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                  <Phone className="size-3.5" />
                   {order?.customerPhone || '—'}
                 </p>
                 {order?.customerEmail && (
-                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{order.customerEmail}</p>
+                  <p className="mt-1 truncate text-[11px] text-muted-foreground">{order.customerEmail}</p>
                 )}
               </div>
 
               {/* Delivery */}
-              <div className="rounded-xl border border-border bg-muted/20 p-2.5">
-                <div className="mb-1 flex items-center gap-1 text-muted-foreground">
-                  <MapPin className="size-3" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Delivery</span>
-                </div>
-                <p className="text-[12px] font-semibold leading-tight text-foreground">{order?.customerCity || '—'}</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">{order?.customerAddress || '—'}</p>
+              <div className="flex flex-col border-t border-border/60 p-4 sm:border-l sm:border-t-0 sm:p-5">
+                <span className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Delivery</span>
+                <p className="text-[13px] font-medium text-foreground">{order?.customerCity || '—'}</p>
+                <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground">{order?.customerAddress || '—'}</p>
                 {order?.landmark && (
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">📍 {order.landmark}</p>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">📍 {order.landmark}</p>
                 )}
               </div>
 
               {/* Payment */}
-              <div className="rounded-xl border border-border bg-muted/20 p-2.5">
-                <div className="mb-1 flex items-center gap-1 text-muted-foreground">
-                  <Package className="size-3" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Payment</span>
-                </div>
-                <p className="text-[12px] font-bold leading-tight text-foreground">{formatPrice(codAmount)}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{order?.paymentStatus || 'COD'}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
+              <div className="flex flex-col border-t border-border/60 p-4 sm:border-l sm:border-t-0 sm:p-5">
+                <span className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Payment</span>
+                <p className="text-[14px] font-medium text-foreground">{formatPrice(codAmount)}</p>
+                <p className="mt-1.5 text-[12px] font-medium text-foreground">{order?.paymentStatus || 'COD'}</p>
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
                   {Number(order?.weight || 2)} kg · {totalUnits} unit{totalUnits === 1 ? '' : 's'}
                 </p>
                 {order?.trackingNumber && (
-                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">📦 {order.trackingNumber}</p>
+                  <p className="mt-1.5 truncate text-[11px] font-medium text-muted-foreground">📦 Tracking: {order.trackingNumber}</p>
                 )}
               </div>
             </div>
@@ -217,10 +210,11 @@ export default function OrderQuickViewDialog({
             )}
 
             {/* ── Product list ── */}
-            <div className="overflow-hidden rounded-xl border border-border">
-              <div className="border-b border-border bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Items ({items.length})
-              </div>
+            <div>
+              <h3 className="mb-3 pl-1 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+                Order Items
+              </h3>
+              <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
               {items.length === 0 ? (
                 <div className="px-4 py-6 text-center text-[12px] text-muted-foreground">No items found.</div>
               ) : (
@@ -243,7 +237,7 @@ export default function OrderQuickViewDialog({
                               className="object-cover"
                             />
                           ) : (
-                            <div className="flex size-full items-center justify-center text-[9px] font-semibold uppercase text-muted-foreground">
+                            <div className="flex size-full items-center justify-center text-[9px] font-medium uppercase text-muted-foreground">
                               N/A
                             </div>
                           )}
@@ -251,7 +245,7 @@ export default function OrderQuickViewDialog({
 
                         {/* Details */}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-semibold text-foreground">
+                          <p className="truncate text-[12px] font-medium text-foreground">
                             {item?.name || 'Unnamed product'}
                           </p>
                           <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -260,7 +254,7 @@ export default function OrderQuickViewDialog({
                         </div>
 
                         {/* Line total */}
-                        <p className="shrink-0 text-[12px] font-bold tabular-nums text-foreground">
+                        <p className="shrink-0 text-[12px] font-medium tabular-nums text-foreground">
                           {formatPrice(lineTotal)}
                         </p>
                       </div>
@@ -270,9 +264,9 @@ export default function OrderQuickViewDialog({
               )}
 
               {/* Footer totals */}
-              <div className="border-t border-border bg-muted/20 px-3 py-2.5">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>Items total</span>
+              <div className="border-t border-border/60 bg-muted/10 px-4 py-4 sm:px-5">
+                <div className="flex items-center justify-between text-[12px] font-medium text-muted-foreground">
+                  <span>Subtotal</span>
                   <span className="tabular-nums">{formatPrice(itemsTotal)}</span>
                 </div>
                 {order?.shippingAmount != null ? (
@@ -292,11 +286,12 @@ export default function OrderQuickViewDialog({
                     <span className="tabular-nums">-{formatPrice(order.discountAmount)}</span>
                   </div>
                 )}
-                <div className="mt-1 flex items-center justify-between border-t border-border/50 pt-1.5">
-                  <span className="text-[12px] font-bold text-foreground">Total Amount</span>
-                  <span className="text-[14px] font-bold tabular-nums text-foreground">{formatPrice(codAmount)}</span>
+                <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
+                  <span className="text-[13px] font-medium uppercase tracking-wider text-foreground">Total Amount</span>
+                  <span className="text-[16px] font-semibold tabular-nums text-foreground">{formatPrice(codAmount)}</span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>

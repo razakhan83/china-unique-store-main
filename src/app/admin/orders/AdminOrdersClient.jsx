@@ -59,11 +59,9 @@ const DRAFT_TAB_ID = 'draft';
 const TRASH_TAB_ID = 'trash';
 const DRAFT_SOURCE_OPTIONS = [
   { value: 'WhatsApp', label: 'WhatsApp' },
-  { value: 'Instagram', label: 'Instagram' },
-  { value: 'Website', label: 'Website' },
   { value: 'Facebook', label: 'Facebook' },
-  { value: 'Call', label: 'Call' },
-  { value: 'Walk In', label: 'Walk In' },
+  { value: 'Insta', label: 'Insta' },
+  { value: 'Others', label: 'Others' },
 ];
 
 // Deterministic city → pastel color mapping for visual scanning
@@ -99,6 +97,14 @@ const getCodAmount = (order) => {
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
+
+const isNewOrder = (dateStr) => {
+  if (!dateStr) return false;
+  const orderDate = new Date(dateStr);
+  const now = new Date();
+  const diffHours = (now - orderDate) / (1000 * 60 * 60);
+  return diffHours <= 24;
+};
 
 function sanitizePdfText(value) {
   return String(value || '')
@@ -422,9 +428,13 @@ export default function AdminOrdersClient({
   const [createSourceOpen, setCreateSourceOpen] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [citySuggestionsOpen, setCitySuggestionsOpen] = useState(false);
+  const [customerSuggestionsOpen, setCustomerSuggestionsOpen] = useState(false);
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
+  const searchTimeoutRef = useRef(null);
+  const defaultUnknownItem = { productId: 'unknown-default', isCustom: true, name: 'Unknown item', price: 100, quantity: 1 };
   const [draftForm, setDraftForm] = useState({
     customerName: '',
-    customerEmail: '',
     customerPhone: '',
     customerAddress: '',
     customerCity: '',
@@ -437,7 +447,7 @@ export default function AdminOrdersClient({
     customItemName: '',
     customItemPrice: '',
   });
-  const [draftItems, setDraftItems] = useState([]);
+  const [draftItems, setDraftItems] = useState([defaultUnknownItem]);
   
   // Modals & Popovers State
   const [editingOrder, setEditingOrder] = useState(null);
@@ -563,7 +573,6 @@ export default function AdminOrdersClient({
   const resetDraftComposer = () => {
     setDraftForm({
       customerName: '',
-      customerEmail: '',
       customerPhone: '',
       customerAddress: '',
       customerCity: '',
@@ -576,7 +585,7 @@ export default function AdminOrdersClient({
       customItemName: '',
       customItemPrice: '',
     });
-    setDraftItems([]);
+    setDraftItems([{ productId: 'unknown-default', isCustom: true, name: 'Unknown item', price: 100, quantity: 1 }]);
     setCreateSourceOpen(false);
     setProductPickerOpen(false);
     setCitySuggestionsOpen(false);
@@ -1208,8 +1217,19 @@ export default function AdminOrdersClient({
   };
 
   const handleGenerateCourierSheet = async () => {
-    const ordersToExport = validateSelectedOrders('Packed', 'Generate Courier Sheet');
-    if (!ordersToExport) return;
+    const isDraftContext = statusFilter === DRAFT_TAB_ID;
+    let ordersToExport = [];
+    
+    if (isDraftContext) {
+      ordersToExport = getSelectedOrders();
+      if (ordersToExport.length === 0) {
+        toast.error("Select at least one draft order to generate courier sheet.");
+        return;
+      }
+    } else {
+      ordersToExport = validateSelectedOrders('Packed', 'Generate Courier Sheet');
+      if (!ordersToExport) return;
+    }
 
     setPendingWorkflowAction('courier');
 
@@ -1289,8 +1309,8 @@ export default function AdminOrdersClient({
 
       const buffer = await workbook.xlsx.writeBuffer();
       const statusMoved = await moveSelectedOrdersToStatus('Shipped', {
-        allowedCurrentStatuses: ['Packed'],
-        logReason: 'Courier sheet generated. Status moved from Packed to Shipped.',
+        allowedCurrentStatuses: isDraftContext ? [] : ['Packed'],
+        logReason: isDraftContext ? 'Courier sheet generated from Draft. Status moved to Shipped.' : 'Courier sheet generated. Status moved from Packed to Shipped.',
       });
 
       if (!statusMoved) return;
@@ -1743,8 +1763,53 @@ export default function AdminOrdersClient({
     setIsUpdating(false);
   };
 
+  const fetchCustomerSuggestions = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setCustomerSuggestions([]);
+      setCustomerSuggestionsOpen(false);
+      return;
+    }
+    setIsSearchingCustomers(true);
+    try {
+      const res = await fetch(`/api/admin/manual-customers/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomerSuggestions(data.customers || []);
+        setCustomerSuggestionsOpen(true);
+      }
+    } catch (err) {
+      console.error('Failed to search customers:', err);
+    } finally {
+      setIsSearchingCustomers(false);
+    }
+  };
+
+  const onCustomerNameChange = (val) => {
+    updateDraftField('customerName', val);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchCustomerSuggestions(val);
+    }, 300);
+  };
+
+  const selectCustomer = (customer) => {
+    setDraftForm(prev => ({
+      ...prev,
+      customerName: customer.name,
+      customerPhone: customer.phone || prev.customerPhone,
+      customerAddress: customer.address || prev.customerAddress,
+      customerCity: customer.city || prev.customerCity
+    }));
+    setCustomerSuggestionsOpen(false);
+  };
+
   const handleCreateDraftOrder = async (event) => {
     event.preventDefault();
+
+    if (!/^03\d{9}$/.test(draftForm.customerPhone)) {
+      toast.error('Phone number must be exactly 11 digits starting with 03 (e.g., 03xxxxxxxxx)');
+      return;
+    }
 
     if (draftItems.length === 0) {
       toast.error('Add at least one item before creating the order.');
@@ -1755,7 +1820,6 @@ export default function AdminOrdersClient({
     try {
       const result = await createDraftOrderAction({
         customerName: draftForm.customerName,
-        customerEmail: draftForm.customerEmail,
         customerPhone: draftForm.customerPhone,
         customerAddress: draftForm.customerAddress,
         customerCity: draftForm.customerCity,
@@ -2079,17 +2143,7 @@ export default function AdminOrdersClient({
                 {pendingWorkflowAction === 'sourcing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'sourcing-print' ? 'Opening...' : 'Print'}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handleGenerateSourcingSlip({ moveToNextStep: true })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'sourcing-move' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-                {pendingWorkflowAction === 'sourcing-move' ? 'Generating...' : 'Download & Move'}
-              </Button>
+
               <Button
                 type="button"
                 size="sm"
@@ -2126,17 +2180,7 @@ export default function AdminOrdersClient({
                 {pendingWorkflowAction === 'packing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
                 {pendingWorkflowAction === 'packing-print' ? 'Opening...' : 'Print'}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handleGeneratePackingSlip({ moveToNextStep: true })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'packing-move' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-                {pendingWorkflowAction === 'packing-move' ? 'Generating...' : 'Download & Move'}
-              </Button>
+
               <Button
                 type="button"
                 size="sm"
@@ -2150,7 +2194,7 @@ export default function AdminOrdersClient({
               </Button>
             </div>
           ) : null}
-          {statusFilter === 'Packed' ? (
+          {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
             <Button
               type="button"
               size="sm"
@@ -2291,9 +2335,16 @@ export default function AdminOrdersClient({
                       />
                     </td>
                     <td className="px-3 py-2">
-                      <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
-                        {order.orderId}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
+                          {order.orderId}
+                        </Link>
+                        {isNewOrder(order.createdAt) && (
+                          <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-400">
+                            New
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex flex-col">
@@ -2454,7 +2505,14 @@ export default function AdminOrdersClient({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-[13px] font-semibold tabular-nums text-foreground">{order.orderId}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[13px] font-semibold tabular-nums text-foreground">{order.orderId}</p>
+                          {isNewOrder(order.createdAt) && (
+                            <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-400">
+                              New
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[12px] font-medium text-foreground">{order.customerName}</p>
                         <p className="text-[11px] text-muted-foreground">{order.customerPhone}</p>
                         {(order.isDraft || order.sourceTag) ? (
@@ -2602,51 +2660,85 @@ export default function AdminOrdersClient({
           }
         }}
       >
-        <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] overflow-x-hidden overflow-y-auto p-3 sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:p-5 lg:max-w-5xl lg:p-6 xl:max-w-6xl">
+        <DialogContent className="max-h-[100dvh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-none border-0 p-3 sm:max-h-[90vh] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:rounded-2xl sm:border sm:p-5 lg:max-w-5xl lg:p-6 xl:max-w-6xl">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">Create Draft Order</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-3 py-1 sm:gap-4">
-            {/* Field legend */}
-            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-destructive">*</span> Required fields &nbsp;&middot;&nbsp; <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span> fields are shown with a badge.</p>
+          <form onSubmit={handleCreateDraftOrder} className="flex flex-col gap-3 py-1 sm:gap-4" autoComplete="off">
+            {/* Form start */}
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:items-start lg:gap-4">
-              <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="min-w-0 space-y-3">
+                <div className="relative z-20 min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">Basic details and delivery information.</p>
                   </div>
                 </div>
 
                 <FieldGroup className="grid gap-3 md:grid-cols-2">
                   <Field>
                     <FieldLabel className="flex items-center gap-1.5 text-[12px]">Full Name <span className="text-destructive">*</span></FieldLabel>
-                    <Input
-                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerName && 'ring-1 ring-destructive/25')}
-                      value={draftForm.customerName}
-                      onChange={(event) => updateDraftField('customerName', event.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerName && 'border-destructive/80 ring-1 ring-destructive/80')}
+                        value={draftForm.customerName}
+                        onChange={(event) => onCustomerNameChange(event.target.value)}
+                        onFocus={() => {
+                          if (customerSuggestions.length > 0) setCustomerSuggestionsOpen(true);
+                        }}
+                        onBlur={() => {
+                          window.setTimeout(() => setCustomerSuggestionsOpen(false), 150);
+                        }}
+                        autoComplete="new-password"
+                        required
+                      />
+                      {isSearchingCustomers && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Spinner className="h-3 w-3" />
+                        </div>
+                      )}
+                      {customerSuggestionsOpen && customerSuggestions.length > 0 ? (
+                        <div className="absolute top-full z-[120] mt-1 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+                          <div className="max-h-56 overflow-y-auto p-1">
+                            {customerSuggestions.map((cust) => (
+                              <button
+                                key={cust._id}
+                                type="button"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  selectCustomer(cust);
+                                }}
+                                className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted"
+                              >
+                                <span className="font-medium">{cust.name}</span>
+                                <span className="text-[11px] text-muted-foreground">{cust.phone} {cust.city ? `- ${cust.city}` : ''}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </Field>
                   <Field>
                     <FieldLabel className="flex items-center gap-1.5 text-[12px]">Phone <span className="text-destructive">*</span></FieldLabel>
                     <Input
-                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerPhone && 'ring-1 ring-destructive/25')}
+                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerPhone && 'border-destructive/80 ring-1 ring-destructive/80')}
                       value={draftForm.customerPhone}
                       onChange={(event) => updateDraftField('customerPhone', event.target.value)}
+                      autoComplete="new-password"
+                      placeholder="03xxxxxxxxx"
+                      pattern="^03[0-9]{9}$"
+                      title="Format: 03xxxxxxxxx (11 digits)"
                       required
                     />
-                  </Field>
-                  <Field className="md:col-span-2">
-                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Email <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
-                    <Input type="email" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.customerEmail} onChange={(event) => updateDraftField('customerEmail', event.target.value)} />
                   </Field>
                   <Field>
                     <FieldLabel className="flex items-center gap-1.5 text-[12px]">City <span className="text-destructive">*</span></FieldLabel>
                     <div className="relative">
                       <Input
-                        className="h-9 rounded-xl px-3 text-[13px]"
+                        className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerCity && 'border-destructive/80 ring-1 ring-destructive/80')}
                         value={draftForm.customerCity}
+                        autoComplete="new-password"
                         onChange={(event) => {
                           updateDraftField('customerCity', event.target.value);
                           setCitySuggestionsOpen(true);
@@ -2656,6 +2748,7 @@ export default function AdminOrdersClient({
                           window.setTimeout(() => setCitySuggestionsOpen(false), 120);
                         }}
                         placeholder="Start typing city"
+                        required
                       />
                       {citySuggestionsOpen && filteredDraftCities.length > 0 ? (
                         <div className="absolute top-full z-[120] mt-1 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
@@ -2680,111 +2773,87 @@ export default function AdminOrdersClient({
                     </div>
                   </Field>
                   <Field>
-                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Landmark <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
-                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} />
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Landmark</FieldLabel>
+                    <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.landmark} onChange={(event) => updateDraftField('landmark', event.target.value)} autoComplete="new-password" />
                   </Field>
                   <Field className="md:col-span-2">
                     <FieldLabel className="flex items-center gap-1.5 text-[12px]">Full Address <span className="text-destructive">*</span></FieldLabel>
                     <Input
-                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerAddress && 'ring-1 ring-destructive/25')}
+                      className={cn('h-9 rounded-xl px-3 text-[13px]', !draftForm.customerAddress && 'border-destructive/80 ring-1 ring-destructive/80')}
                       value={draftForm.customerAddress}
                       onChange={(event) => updateDraftField('customerAddress', event.target.value)}
+                      autoComplete="new-password"
                       required
                     />
                   </Field>
                   <Field className="md:col-span-2">
-                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Notes <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
+                    <FieldLabel className="flex items-center gap-1.5 text-[12px]">Notes</FieldLabel>
                     <Textarea rows={3} className="min-h-24 rounded-xl px-3 py-2 text-[13px]" value={draftForm.notes} onChange={(event) => updateDraftField('notes', event.target.value)} placeholder="Internal note" />
                   </Field>
                 </FieldGroup>
               </div>
 
-              <div className="min-w-0 space-y-3">
-                <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
-                  <div className="mb-3">
+              <div className="relative z-10 min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
+                <div className="mb-3">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order Setup</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">Choose source, parcel details, and add products.</p>
                   </div>
 
                   <FieldGroup className="grid gap-3">
-                    <Field>
-                      <FieldLabel className="flex items-center gap-1.5 text-[12px]">Source Tag <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
-                      <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-                        <Popover open={createSourceOpen} onOpenChange={setCreateSourceOpen}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="h-9 w-full justify-between rounded-xl px-3 text-[13px] font-normal">
-                              <span className="truncate">{draftForm.sourceTag || 'Pick source...'}</span>
-                              <ChevronsUpDown data-icon="inline-end" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="z-[120] w-[min(18rem,calc(100vw-2rem))] p-0" align="start">
-                            <Command>
-                              <CommandInput placeholder="Search source..." />
-                              <CommandList>
-                                <CommandEmpty>No source found.</CommandEmpty>
-                                <CommandGroup>
-                                  {DRAFT_SOURCE_OPTIONS.map((option) => (
-                                    <CommandItem
-                                      key={option.value}
-                                      value={option.value}
-                                      onSelect={(value) => {
-                                        updateDraftField('sourceTag', value);
-                                        setCreateSourceOpen(false);
-                                      }}
-                                    >
-                                      <Check className={cn(draftForm.sourceTag === option.value ? 'opacity-100' : 'opacity-0')} data-icon="inline-start" />
-                                      {option.label}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        <Input
-                          className="h-9 rounded-xl px-3 text-[13px]"
-                          value={draftForm.sourceTag}
-                          onChange={(event) => updateDraftField('sourceTag', event.target.value)}
-                          placeholder="Or type custom source"
-                        />
-                      </div>
-                      <FieldDescription className="text-[11px]">Choose a source or type your own.</FieldDescription>
-                    </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field>
-                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Item Type <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">COD Amount</FieldLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          className="h-9 rounded-xl px-3 text-[13px]"
+                          value={draftForm.manualCodAmount}
+                          onChange={(event) => updateDraftField('manualCodAmount', event.target.value)}
+                          placeholder={`Auto (= ${formatPrice(draftTotalAmount || 0)})`}
+                        />
+                        <FieldDescription className="mt-1 text-[11px] text-muted-foreground line-clamp-1">
+                          {draftForm.manualCodAmount
+                            ? `COD will be: ${formatPrice(draftForm.manualCodAmount)}`
+                            : `Auto-calculate: COD = ${formatPrice(draftTotalAmount || 0)}`
+                          }
+                        </FieldDescription>
+                      </Field>
+                      <Field>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Source Tag</FieldLabel>
+                        <Select value={draftForm.sourceTag || undefined} onValueChange={(value) => updateDraftField('sourceTag', value)}>
+                          <SelectTrigger className="h-9 rounded-xl px-3 text-[13px]">
+                            <SelectValue placeholder="Pick source..." />
+                          </SelectTrigger>
+                          <SelectContent className="z-[300]">
+                            <SelectGroup>
+                              {DRAFT_SOURCE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value} className="text-[13px]">
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Item Type</FieldLabel>
                         <Input className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.itemType} onChange={(event) => updateDraftField('itemType', event.target.value)} />
                       </Field>
                       <Field>
-                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Weight (kg) <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
+                        <FieldLabel className="flex items-center gap-1.5 text-[12px]">Weight (kg)</FieldLabel>
                         <Input type="number" step="0.5" min="0.5" className="h-9 rounded-xl px-3 text-[13px]" value={draftForm.weight} onChange={(event) => updateDraftField('weight', event.target.value)} />
                       </Field>
                     </div>
-                    <Field>
-                      <FieldLabel className="flex items-center gap-1.5 text-[12px]">COD Amount <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span></FieldLabel>
-                      <Input
-                        type="number"
-                        min="0"
-                        className="h-9 rounded-xl px-3 text-[13px]"
-                        value={draftForm.manualCodAmount}
-                        onChange={(event) => updateDraftField('manualCodAmount', event.target.value)}
-                        placeholder={`Auto (= ${formatPrice(draftTotalAmount || 0)})`}
-                      />
-                      <FieldDescription className="mt-1 text-[11px] text-muted-foreground">
-                        {draftForm.manualCodAmount
-                          ? `COD will be: ${formatPrice(draftForm.manualCodAmount)}`
-                          : `Auto-calculate: COD = ${formatPrice(draftTotalAmount || 0)}`
-                        }
-                      </FieldDescription>
-                    </Field>
                   </FieldGroup>
                 </div>
+              </div>
 
+              <div className="min-w-0 space-y-3">
                 <div className="min-w-0 rounded-2xl border border-border/80 bg-card p-3 shadow-[0_14px_30px_-32px_rgba(15,23,42,0.4)] lg:p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Items</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">Search products with images and categories, then add them to the draft.</p>
                     </div>
                     <span className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
                       {draftItems.length} item{draftItems.length === 1 ? '' : 's'}
@@ -2800,7 +2869,7 @@ export default function AdminOrdersClient({
                             <Plus data-icon="inline-end" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-(--anchor-width) max-w-(--available-width) overflow-hidden p-0" align="start">
+                        <PopoverContent className="z-[300] w-[min(24rem,calc(100vw-2rem))] overflow-hidden p-0" align="start">
                           <Command>
                             <CommandInput placeholder="Search product..." />
                           <CommandList>
@@ -2854,34 +2923,6 @@ export default function AdminOrdersClient({
                       </PopoverContent>
                     </Popover>
                   </Field>
-
-                  {/* Quick Add chips */}
-                  {quickAddProducts.length > 0 && (
-                    <div className="mb-3">
-                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Quick Add</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {quickAddProducts.map((product) => {
-                          const img = getPrimaryProductImage(product);
-                          return (
-                            <button
-                              key={product._id}
-                              type="button"
-                              onClick={() => addDraftProduct(product)}
-                              className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5 text-left text-[12px] hover:border-primary/40 hover:bg-muted/40 transition-colors"
-                            >
-                              {img?.url ? (
-                                <div className="relative size-7 shrink-0 overflow-hidden rounded-lg">
-                                  <Image src={img.url} alt={product.Name} fill sizes="28px" className="object-cover" />
-                                </div>
-                              ) : <div className="size-7 shrink-0 rounded-lg bg-muted" />}
-                              <span className="max-w-[120px] truncate font-medium text-foreground">{product.Name}</span>
-                              <span className="shrink-0 text-[10px] text-muted-foreground">{formatPrice(product.discountedPrice ?? product.Price ?? 0)}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Custom Item */}
                   <div className="mb-3 rounded-xl border border-dashed border-border bg-muted/20 p-2.5">
@@ -3009,7 +3050,7 @@ export default function AdminOrdersClient({
               </div>
             </div>
 
-            <DialogFooter className="gap-1.5 sm:gap-0">
+            <DialogFooter className="sticky bottom-0 z-[100] -mx-3 -mb-3 mt-4 bg-card/95 pb-3 pl-3 pr-3 pt-4 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur sm:-mx-5 sm:-mb-5 sm:pb-5 sm:pl-5 sm:pr-5 sm:pt-4 lg:-mx-6 lg:-mb-6 lg:pb-6 lg:pl-6 lg:pr-6 gap-1.5 sm:gap-2">
               <Button type="button" variant="ghost" size="sm" onClick={() => { setIsCreateModalOpen(false); resetDraftComposer(); }} className="admin-cta-button">
                 Cancel
               </Button>

@@ -530,6 +530,24 @@ export async function createDraftOrderAction(input = {}) {
       ...(manualCodAmount !== undefined && { manualCodAmount }),
     });
 
+    try {
+      const ManualCustomer = (await import('@/models/ManualCustomer')).default;
+      await ManualCustomer.findOneAndUpdate(
+        { phone: customerPhone },
+        { 
+          $set: { 
+            name: customerName,
+            email: customerEmail || undefined,
+            address: customerAddress,
+            city: customerCity
+          } 
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    } catch (err) {
+      console.error('Failed to upsert manual customer:', err);
+    }
+
     const session = await getServerSession(authOptions);
     await OrderLog.create({
       orderId: order._id,
@@ -602,6 +620,26 @@ export async function updateOrderAction(id, updates) {
     }
 
     await order.save();
+
+    try {
+      if (order.customerPhone && order.customerName) {
+        const ManualCustomer = (await import('@/models/ManualCustomer')).default;
+        await ManualCustomer.findOneAndUpdate(
+          { phone: order.customerPhone },
+          { 
+            $set: { 
+              name: order.customerName,
+              email: order.customerEmail || undefined,
+              address: order.customerAddress,
+              city: order.customerCity
+            } 
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
+    } catch (err) {
+      console.error('Failed to upsert manual customer on update:', err);
+    }
 
     if (wasDraft && order.isDraft === false) {
       await applyInventoryAdjustments(order.items);

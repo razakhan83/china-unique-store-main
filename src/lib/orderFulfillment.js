@@ -55,6 +55,9 @@ export async function buildOrderItemsWithSourcing(items = []) {
       productId: toCleanId(item.slug || item.productId || item._id || item.id),
       quantity: Math.max(1, toSafeNumber(item.quantity, 1)),
       packLabel: toCleanString(item.packLabel || ''),
+      name: toCleanString(item.name || ''),
+      price: toSafeNumber(item.price, 0),
+      image: toCleanString(item.image || ''),
     }))
     .filter((item) => item.productId);
 
@@ -62,7 +65,26 @@ export async function buildOrderItemsWithSourcing(items = []) {
     return [];
   }
 
-  const productIdentifiers = Array.from(new Set(requestedItems.map((item) => item.productId)));
+  const customItems = [];
+  const dbItems = [];
+
+  requestedItems.forEach(item => {
+    if (item.productId.startsWith('custom-') || item.productId.startsWith('unknown-')) {
+      customItems.push({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        packLabel: item.packLabel,
+        quantity: item.quantity,
+        image: item.image,
+        sourcingVendors: [],
+      });
+    } else {
+      dbItems.push(item);
+    }
+  });
+
+  const productIdentifiers = Array.from(new Set(dbItems.map((item) => item.productId)));
   const objectIds = productIdentifiers.filter((value) => mongoose.Types.ObjectId.isValid(value));
   const products = await Product.find({
     $or: [
@@ -74,7 +96,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
     .lean();
   const productMap = buildProductLookupMap(products);
 
-  const missingProductIds = requestedItems
+  const missingProductIds = dbItems
     .map((item) => item.productId)
     .filter((productId) => !productMap.has(productId));
   if (missingProductIds.length > 0) {
@@ -122,7 +144,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
     }
   });
 
-  return requestedItems.map((item) => {
+  const resolvedDbItems = dbItems.map((item) => {
     const product = productMap.get(item.productId);
     const images = normalizeProductImages(product.Images);
     
@@ -141,6 +163,8 @@ export async function buildOrderItemsWithSourcing(items = []) {
       sourcingVendors: sourcingMap.get(item.productId) || [],
     };
   });
+
+  return [...resolvedDbItems, ...customItems];
 }
 
 export function calculateOrderTotal(orderItems = []) {
