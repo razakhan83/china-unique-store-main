@@ -39,6 +39,93 @@ function CarouselArrows() {
   );
 }
 
+// ─── Carousel Dots ────────────────────────────────────────────────────────────
+
+function CarouselDots({ slideCount }) {
+  const { api, scrollTo, goTo } = useCarousel();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState([]);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const updateSnaps = () => {
+      try {
+        const snaps = typeof api.scrollSnapList === 'function' 
+          ? api.scrollSnapList() 
+          : typeof api.snapList === 'function' 
+          ? api.snapList() 
+          : api.internalEngine()?.scrollSnaps || [];
+        setScrollSnaps(snaps);
+      } catch {
+        setScrollSnaps([]);
+      }
+    };
+
+    const updateSelect = () => {
+      try {
+        setSelectedIndex(api.selectedSnap());
+      } catch {
+        // ignore
+      }
+    };
+
+    updateSnaps();
+    updateSelect();
+
+    api.on('init', updateSnaps);
+    api.on('reInit', updateSnaps);
+    api.on('select', updateSelect);
+
+    return () => {
+      try {
+        api.off('init', updateSnaps);
+        api.off('reInit', updateSnaps);
+        api.off('select', updateSelect);
+      } catch {
+        // ignore
+      }
+    };
+  }, [api]);
+
+  const snapCount = scrollSnaps.length > 0 ? scrollSnaps.length : (slideCount > 1 ? slideCount : 0);
+
+  if (snapCount <= 1) return null;
+
+  const handleGoTo = (idx) => {
+    try {
+      if (typeof scrollTo === 'function') {
+        scrollTo(idx);
+      } else if (typeof goTo === 'function') {
+        goTo(idx);
+      } else if (api && typeof api.goTo === 'function') {
+        api.goTo(idx);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="relative z-30 mt-6 flex items-center justify-center gap-1.5 pt-3 pb-1">
+      {Array.from({ length: snapCount }, (_, idx) => (
+        <button
+          key={idx}
+          type="button"
+          aria-label={`Go to slide page ${idx + 1}`}
+          onClick={() => handleGoTo(idx)}
+          className={cn(
+            'rounded-full transition-all duration-300 ease-out cursor-pointer',
+            idx === selectedIndex
+              ? 'w-6 h-2.5 bg-primary'
+              : 'size-2.5 bg-background border-2 border-primary/60 hover:bg-primary/20'
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CategoryProductSlider({ categoryLabel, children, viewAllHref }) {
@@ -63,11 +150,6 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
     if (!emblaApi || !isInteractive) return;
 
     // ── Mobile-first GPU-accelerated autoplay engine ──────────────────────────
-    // Advances the carousel every 8 seconds via setInterval.
-    // Pauses automatically on: touch/drag, mouse hover, off-screen (IO),
-    // and inactive browser tab (visibilitychange). This prevents stutter
-    // and battery drain on low-end Android devices.
-
     const advance = () => {
       if (!emblaApi || isPausedRef.current) return;
       emblaApi.goToNext();
@@ -124,7 +206,6 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
     };
 
     // ── IntersectionObserver: pause when carousel is off-screen ───────────────
-    // Prevents CPU/GPU drain when the user has scrolled past this section.
     let observer = null;
     if (typeof IntersectionObserver !== 'undefined' && el) {
       observer = new IntersectionObserver(
@@ -153,7 +234,6 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
       el.addEventListener('mouseleave', onMouseLeave, { passive: true });
     }
 
-    // Start autoplay (IntersectionObserver will manage it if supported)
     if (!observer) startAutoplay();
 
     return () => {
@@ -172,7 +252,6 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
   // Early return AFTER all hooks
   if (slideCount === 0) return null;
 
-  // GPU-composited wrapper: isolation:isolate creates a new stacking context for the compositor.
   return (
     <div
       className="w-full"
@@ -223,6 +302,9 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
             </CarouselItem>
           ))}
         </CarouselContent>
+
+        {/* Carousel Dots */}
+        <CarouselDots slideCount={slideCount} />
       </Carousel>
 
       {/* Desktop "View All" */}

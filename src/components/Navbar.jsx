@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 import {
   ChevronDown,
   LayoutGrid,
-  Menu,
+
   Phone,
   Search,
   ShoppingBag,
@@ -455,7 +455,11 @@ function NavbarContent({
             <div className="flex items-center gap-4 lg:gap-8 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
                 <span className="relative flex size-6 items-center justify-center">
-                  <Menu strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')}>
+                    <line x1="4" y1="6" x2="16" y2="6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                    <line x1="4" y1="18" x2="18" y2="18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  </svg>
                   <X strokeWidth={2.2} className={cn('absolute inset-0 size-full transition-all duration-300', isSidebarOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
               </Button>
