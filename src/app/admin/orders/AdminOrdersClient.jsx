@@ -363,30 +363,22 @@ function OrdersTablePendingSkeleton() {
 
 function OrdersMobilePendingSkeleton() {
   return (
-    <div className="flex flex-col gap-2 md:hidden">
+    <div className="flex flex-col divide-y divide-border border-y border-border bg-card md:hidden">
       {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="rounded-xl border border-border bg-card p-3">
-          <div className="flex items-start gap-2.5">
-            <Skeleton className="mt-0.5 size-4 rounded-sm" />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-20 rounded-md" />
-                  <Skeleton className="h-4 w-28 rounded-md" />
-                  <Skeleton className="h-3 w-24 rounded-md" />
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                  <Skeleton className="size-8 rounded-full" />
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
-                <Skeleton className="h-4 w-20 rounded-md" />
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-7 w-16 rounded-md" />
-                  <Skeleton className="h-7 w-20 rounded-md" />
-                </div>
-              </div>
+        <div key={index} className="flex items-center gap-3 p-3">
+          <Skeleton className="size-4 rounded-sm shrink-0" />
+          <div className="flex-1 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3 w-32 rounded-md" />
+              <Skeleton className="h-4 w-12 rounded-md" />
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <Skeleton className="h-3 w-20 rounded-md" />
+              <Skeleton className="h-6 w-14 rounded-md" />
             </div>
           </div>
         </div>
@@ -1879,8 +1871,8 @@ export default function AdminOrdersClient({
         </Button>
       </div>
 
-      {/* Status Filter Tabs — Compact pills */}
-        <div className="flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
+      {/* Status Filter Tabs / Select (Responsive) */}
+      <div className="hidden md:flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {[
           { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
           { id: DEFAULT_ORDER_STATUS, label: `Order Confirmed (${summary.orderConfirmedCount})` },
@@ -1929,6 +1921,70 @@ export default function AdminOrdersClient({
         >
           <Trash2 className="mr-1 size-3" />
           Trash ({summary.trashCount || trashOrders.length})
+        </Button>
+      </div>
+
+      {/* Mobile Status + Move Row */}
+      <div className="md:hidden flex flex-row items-center gap-2">
+        <Select
+          value={statusFilter}
+          disabled={isPending}
+          onValueChange={(val) => {
+            setStatusFilter(val);
+            navigate({ status: val, page: null });
+          }}
+        >
+          <SelectTrigger className="flex-1 h-8 rounded-lg bg-background border-border/70 text-[12px] shadow-none">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {[
+              { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
+              { id: DEFAULT_ORDER_STATUS, label: `Order Confirmed (${summary.orderConfirmedCount})` },
+              { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
+              { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
+              { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
+              { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
+              { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
+              { id: 'Returned', label: `Returned (${summary.returnedCount})` },
+              { id: 'all', label: `All (${summary.allCount})` },
+              { id: TRASH_TAB_ID, label: `Trash (${summary.trashCount || trashOrders.length})` },
+            ].map((tab) => (
+              <SelectItem key={tab.id} value={tab.id} className="text-[13px]">
+                {tab.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={bulkStatus} onValueChange={setBulkStatus}>
+          <SelectTrigger
+            disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
+            className="h-8 w-[120px] shrink-0 rounded-lg text-[11px]"
+          >
+            <SelectValue placeholder="Move to..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {BULK_STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status} value={status} className="text-[12px]">
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
+          disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
+          className="admin-cta-button h-8 text-[11px] shrink-0 px-2"
+        >
+          {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
+          Move
         </Button>
       </div>
 
@@ -2039,7 +2095,7 @@ export default function AdminOrdersClient({
 
       {/* Filters Bar — Compact */}
       <form
-        className="admin-filter-shell flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between"
+        className="admin-filter-shell flex flex-col gap-2 md:flex-row md:items-center md:gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           navigate({
@@ -2050,54 +2106,62 @@ export default function AdminOrdersClient({
           });
         }}
       >
-        <FieldGroup className="flex flex-col gap-2 md:min-w-0 md:flex-1 md:flex-row md:items-center">
-          <div className="flex items-center gap-2 md:shrink-0">
-            <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background px-2.5 py-1.5">
-              <Calendar className="size-3.5 shrink-0 text-muted-foreground" />
-              <Field>
-                <FieldLabel htmlFor="orders-start-date" className="sr-only">From date</FieldLabel>
-                <Input
-                  id="orders-start-date"
-                  type="date"
-                  className="h-6 min-w-0 border-0 bg-transparent px-0 text-[12px] shadow-none"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </Field>
-              <span className="text-[11px] text-muted-foreground">to</span>
-              <Field>
-                <FieldLabel htmlFor="orders-end-date" className="sr-only">To date</FieldLabel>
-                <Input
-                  id="orders-end-date"
-                  type="date"
-                  className="h-6 min-w-0 border-0 bg-transparent px-0 text-[12px] shadow-none"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </Field>
-            </div>
-          </div>
+        <div className="flex flex-row gap-2 items-center flex-1 min-w-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" type="button" className="h-8 w-8 shrink-0 rounded-lg border-border/70 bg-background shadow-none relative">
+                <Calendar className="size-3.5 text-muted-foreground" />
+                {(startDate || endDate) && <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-4 rounded-xl shadow-lg border-border/70">
+              <div className="flex flex-col gap-3">
+                <p className="text-[13px] font-medium text-foreground">Filter by Date</p>
+                <div className="flex items-center gap-2">
+                  <Field>
+                    <FieldLabel htmlFor="orders-start-date" className="sr-only">From date</FieldLabel>
+                    <Input
+                      id="orders-start-date"
+                      type="date"
+                      className="h-8 min-w-[120px] text-[12px]"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </Field>
+                  <span className="text-[11px] text-muted-foreground">to</span>
+                  <Field>
+                    <FieldLabel htmlFor="orders-end-date" className="sr-only">To date</FieldLabel>
+                    <Input
+                      id="orders-end-date"
+                      type="date"
+                      className="h-8 min-w-[120px] text-[12px]"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-          <Field className="md:min-w-0 md:flex-1">
+          <Field className="flex-1 min-w-0">
             <FieldLabel className="sr-only">Search orders</FieldLabel>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" data-icon />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" data-icon />
               <Input
                 placeholder="Search orders"
-                className="h-9 rounded-xl border-border/70 bg-background pl-9 text-[13px] shadow-none"
+                className="h-8 rounded-lg border-border/70 bg-background pl-9 text-[12px] shadow-none w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </Field>
-        </FieldGroup>
 
-        <div className="flex items-center gap-2 md:shrink-0">
           <Button
             type="submit"
             size="sm"
             disabled={!canApplyFilters}
-            className="admin-cta-button"
+            className="admin-cta-button h-8 text-[11px] shrink-0"
           >
             <Search data-icon="inline-start" />
             Apply
@@ -2109,7 +2173,7 @@ export default function AdminOrdersClient({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="admin-cta-button text-muted-foreground hover:text-foreground"
+              className="admin-cta-button h-8 text-[11px] text-muted-foreground hover:text-foreground shrink-0"
             >
               <X data-icon="inline-start" />
               Clear
@@ -2118,162 +2182,162 @@ export default function AdminOrdersClient({
         </div>
       </form>
 
-      <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,240px)_auto] lg:items-start">
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          {statusFilter === DEFAULT_ORDER_STATUS ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-                {pendingWorkflowAction === 'sourcing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handlePrintSourcingSlip({ moveToNextStep: false })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'sourcing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-                {pendingWorkflowAction === 'sourcing-print' ? 'Opening...' : 'Print'}
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handleGenerateSourcingSlip({ moveToNextStep: false })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'sourcing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-                {pendingWorkflowAction === 'sourcing-download' ? 'Generating...' : 'Download'}
-              </Button>
-            </div>
-          ) : null}
-          {statusFilter === 'In Process' ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-                {pendingWorkflowAction === 'packing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handlePrintPackingSlip({ moveToNextStep: false })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'packing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-                {pendingWorkflowAction === 'packing-print' ? 'Opening...' : 'Print'}
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handleGeneratePackingSlip({ moveToNextStep: false })}
-                disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-                className="admin-cta-button"
-              >
-                {pendingWorkflowAction === 'packing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-                {pendingWorkflowAction === 'packing-download' ? 'Generating...' : 'Download'}
-              </Button>
-            </div>
-          ) : null}
-          {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
+      <div className="flex flex-row flex-wrap items-center gap-2 border-t border-border/50 pt-2 md:border-0 md:pt-0">
+        {statusFilter === DEFAULT_ORDER_STATUS ? (
+          <div className="flex flex-row flex-wrap items-center gap-1.5">
             <Button
               type="button"
               size="sm"
-              variant="secondary"
-              onClick={handleGenerateCourierSheet}
+              onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
               disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button"
+              className="admin-cta-button h-7 text-[11px]"
             >
-              {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
-              {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+              {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+              {pendingWorkflowAction === 'sourcing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
             </Button>
-          ) : null}
-          {statusFilter === 'all' ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="admin-cta-button">
-                  <Zap data-icon="inline-start" />
-                  Reports
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="end">
-                <div className="flex flex-col gap-1.5">
-                  <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 justify-start gap-1.5 text-[12px] font-medium"
-                    onClick={() => handleExportMonthlySales('excel')}
-                  >
-                    <Download data-icon="inline-start" />
-                    Excel (.xlsx)
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
-                    onClick={() => handleExportMonthlySales('pdf')}
-                  >
-                    <Download data-icon="inline-start" />
-                    PDF (.pdf)
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : null}
-        </div>
-
-        <Select value={bulkStatus} onValueChange={setBulkStatus}>
-          <SelectTrigger
-            disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
-            className="h-9 w-full rounded-xl text-[12px]"
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handlePrintSourcingSlip({ moveToNextStep: false })}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="admin-cta-button h-7 text-[11px]"
+            >
+              {pendingWorkflowAction === 'sourcing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+              {pendingWorkflowAction === 'sourcing-print' ? 'Opening...' : 'Print'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handleGenerateSourcingSlip({ moveToNextStep: false })}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="admin-cta-button h-7 text-[11px] hidden sm:flex"
+            >
+              {pendingWorkflowAction === 'sourcing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+              {pendingWorkflowAction === 'sourcing-download' ? 'Generating...' : 'Download'}
+            </Button>
+          </div>
+        ) : null}
+        {statusFilter === 'In Process' ? (
+          <div className="flex flex-row flex-wrap items-center gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="admin-cta-button h-7 text-[11px]"
+            >
+              {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+              {pendingWorkflowAction === 'packing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handlePrintPackingSlip({ moveToNextStep: false })}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="admin-cta-button h-7 text-[11px]"
+            >
+              {pendingWorkflowAction === 'packing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+              {pendingWorkflowAction === 'packing-print' ? 'Opening...' : 'Print'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => handleGeneratePackingSlip({ moveToNextStep: false })}
+              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+              className="admin-cta-button h-7 text-[11px] hidden sm:flex"
+            >
+              {pendingWorkflowAction === 'packing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+              {pendingWorkflowAction === 'packing-download' ? 'Generating...' : 'Download'}
+            </Button>
+          </div>
+        ) : null}
+        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={handleGenerateCourierSheet}
+            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+            className="admin-cta-button h-7 text-[11px] hidden md:flex"
           >
-            <SelectValue placeholder="Move selected to..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {BULK_STATUS_OPTIONS.map((status) => (
-                <SelectItem key={status} value={status} className="text-[12px]">
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
+            {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+          </Button>
+        ) : null}
+        {statusFilter === 'all' ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="admin-cta-button h-7 text-[11px]">
+                <Zap data-icon="inline-start" />
+                Reports
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="end">
+              <div className="flex flex-col gap-1.5">
+                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
+                  onClick={() => handleExportMonthlySales('excel')}
+                >
+                  <Download data-icon="inline-start" />
+                  Excel (.xlsx)
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
+                  onClick={() => handleExportMonthlySales('pdf')}
+                >
+                  <Download data-icon="inline-start" />
+                  PDF (.pdf)
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : null}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
-          disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
-          className="admin-cta-button"
-        >
-          {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
-          Move Selected{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
-        </Button>
+        <div className="ml-auto hidden md:flex flex-row items-center gap-1.5">
+          <Select value={bulkStatus} onValueChange={setBulkStatus}>
+            <SelectTrigger
+              disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
+              className="h-7 w-[180px] rounded-lg text-[11px]"
+            >
+              <SelectValue placeholder="Move to..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {BULK_STATUS_OPTIONS.map((status) => (
+                  <SelectItem key={status} value={status} className="text-[12px]">
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
+            disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
+            className="admin-cta-button h-7 text-[11px] shrink-0"
+          >
+            {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
+            <span className="hidden sm:inline">Move{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}</span>
+            <span className="sm:hidden">Move</span>
+          </Button>
+        </div>
       </div>
 
       {appliedFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="hidden md:flex flex-wrap items-center gap-1.5">
           {appliedFilters.map((filter) => (
             <Badge key={filter} variant="outline" className="rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
               {filter}
@@ -2350,20 +2414,6 @@ export default function AdminOrdersClient({
                       <div className="flex flex-col">
                         <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
                         <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
-                        {(order.isDraft || order.sourceTag) ? (
-                          <div className="mt-1 flex flex-wrap items-center gap-1">
-                            {order.isDraft ? (
-                              <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide">
-                                Draft
-                              </Badge>
-                            ) : null}
-                            {order.sourceTag ? (
-                              <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[9px] font-medium">
-                                {order.sourceTag}
-                              </Badge>
-                            ) : null}
-                          </div>
-                        ) : null}
                       </div>
                     </td>
                     <td className="px-3 py-2">
@@ -2460,9 +2510,9 @@ export default function AdminOrdersClient({
 
       {/* ── Mobile Cards ── */}
       {isPending ? <OrdersMobilePendingSkeleton /> : (
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col md:hidden">
         {displayOrders.length > 0 && (
-          <div className="flex items-center justify-between px-1 py-1 mb-0.5">
+          <div className="flex items-center justify-between px-3 py-2 border-y border-border bg-muted/20">
             <div className="flex items-center gap-2">
               <Checkbox 
                 checked={isAllPaginatedSelected} 
@@ -2471,15 +2521,30 @@ export default function AdminOrdersClient({
               />
               <p className="text-[12px] font-medium text-muted-foreground cursor-pointer" onClick={() => handleSelectAll(!isAllPaginatedSelected)}>Select all on page</p>
             </div>
-            {selectedOrders.length > 0 && (
-              <span className="text-[11px] font-semibold text-foreground">{selectedOrders.length} selected</span>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedOrders.length > 0 && (
+                <span className="text-[11px] font-semibold text-foreground">{selectedOrders.length} selected</span>
+              )}
+              {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleGenerateCourierSheet}
+                  disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
+                  className="admin-cta-button h-7 text-[11px] px-2"
+                >
+                  {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
+                  Courier
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
         {displayOrders.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card px-3 py-8 text-center">
-            <Receipt className="mx-auto mb-2 text-muted-foreground/30" />
+          <div className="border-y border-border bg-card px-3 py-8 text-center">
+            <Receipt className="mx-auto mb-2 text-muted-foreground/30 size-8" />
             <p className="text-sm font-medium text-foreground">No orders found</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
             {hasActiveFilters && (
@@ -2489,141 +2554,103 @@ export default function AdminOrdersClient({
             )}
           </div>
         ) : (
-          displayOrders.map((order) => {
-            if (!order) return null;
+          <div className="flex flex-col divide-y divide-border border-b border-border bg-card">
+            {displayOrders.map((order) => {
+              if (!order) return null;
 
-            return (
-              <div key={order._id} className="rounded-xl border border-border bg-card p-3">
-                <div className="flex items-start gap-2.5">
+              return (
+                <div key={order._id} className="flex items-start gap-2.5 p-2.5 hover:bg-muted/30 transition-colors">
                   <Checkbox
                     checked={selectedOrders.includes(order._id)}
                     onCheckedChange={(checked) => handleSelectOne(checked, order._id)}
                     aria-label={`Select order ${order.orderId}`}
-                    className="mt-0.5"
+                    className="shrink-0 size-3.5 rounded-sm mt-0.5"
                   />
-
-                  <div className="min-w-0 flex-1">
+                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-semibold tabular-nums text-foreground">{order.orderId}</p>
-                          {isNewOrder(order.createdAt) && (
-                            <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-400">
-                              New
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[12px] font-medium text-foreground">{order.customerName}</p>
-                        <p className="text-[11px] text-muted-foreground">{order.customerPhone}</p>
-                        {(order.isDraft || order.sourceTag) ? (
-                          <div className="mt-1 flex flex-wrap items-center gap-1">
-                            {order.isDraft ? (
-                              <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide">
-                                Draft
-                              </Badge>
-                            ) : null}
-                            {order.sourceTag ? (
-                              <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[9px] font-medium">
-                                {order.sourceTag}
-                              </Badge>
-                            ) : null}
-                          </div>
-                        ) : null}
-                        {/* Mobile info strip — visible inline, no hunting in dropdown */}
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
-                            {order.customerCity || 'N/A'}
-                          </Badge>
-                          <span className="text-[11px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</span>
-                          <span className="text-[10px] text-muted-foreground">{order.paymentStatus || 'COD'} · {formatWeight(order.weight)}</span>
-                          {order.trackingNumber && <span className="text-[10px] text-muted-foreground">📦 {order.trackingNumber}</span>}
-                        </div>
+                      <div className="flex items-center gap-1.5 min-w-0 mt-[1px]">
+                        <p className="text-[12px] font-semibold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
+                        {isNewOrder(order.createdAt) && (
+                          <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded-sm shrink-0 leading-none">
+                            NEW
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-start gap-1.5">
-                        <Badge
-                          variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                          className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
-                        >
-                          {getOrderDisplayStatus(order)}
-                        </Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="admin-touch-target size-8 rounded-full text-muted-foreground">
-                              <MoreHorizontal />
-                              <span className="sr-only">Order actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52">
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem disabled className="text-[11px]">City: {order.customerCity || 'N/A'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled className="text-[11px]">Total: {formatPrice(getCodAmount(order))}</DropdownMenuItem>
-                              <DropdownMenuItem disabled className="text-[11px]">Payment: {order.paymentStatus || 'COD'}</DropdownMenuItem>
-                              <DropdownMenuItem disabled className="text-[11px]">Weight: {formatWeight(order.weight)}</DropdownMenuItem>
-                              <DropdownMenuItem disabled className="text-[11px]">Tracking: {order.trackingNumber || '—'}</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
-                                <Receipt data-icon="inline-start" />
-                                Order details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setQuickActionOrder(order._id);
-                                  setQuickStatus(order.status);
-                                  setQuickTracking(order.trackingNumber || '');
-                                  setEditingOrder(order);
-                                }}
-                              >
-                                <Zap data-icon="inline-start" />
-                                Quick Update
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setEditingOrder(order);
-                                  setIsEditModalOpen(true);
-                                }}
-                              >
-                                <Edit data-icon="inline-start" />
-                                Edit Order
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteOrder(order)}
-                            >
-                              <Trash2 data-icon="inline-start" />
-                              Move to Trash
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 rounded text-muted-foreground -mr-1 -mt-1 shrink-0">
+                            <MoreHorizontal className="size-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
+                              <Receipt data-icon="inline-start" />
+                              Order details
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setQuickActionOrder(order._id);
+                                setQuickStatus(order.status);
+                                setQuickTracking(order.trackingNumber || '');
+                                setEditingOrder(order);
+                              }}
+                            >
+                              <Zap data-icon="inline-start" />
+                              Quick Update
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingOrder(order);
+                                setIsEditModalOpen(true);
+                              }}
+                            >
+                              <Edit data-icon="inline-start" />
+                              Edit Order
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleDeleteOrder(order)}
+                          >
+                            <Trash2 data-icon="inline-start" />
+                            Move to Trash
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <p className="text-[11px] text-muted-foreground truncate leading-none">
+                        <span className="font-medium text-foreground">{order.customerName}</span>
+                        {order.customerCity ? ` • ${order.customerCity}` : ''}
+                      </p>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
-                       <span className="text-[12px] font-bold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</span>
-                       <div className="flex items-center gap-1.5">
-                         <OrderQuickViewDialog
-                           order={order}
-                           triggerLabel="View"
-                           triggerSize="sm"
-                           triggerClassName="admin-cta-button"
-                         />
-                         <Button
-                            variant="secondary"
-                            size="sm"
-                            render={<Link href={`/admin/orders/${order._id}`} />}
-                            nativeButton={false}
-                            className="admin-cta-button"
-                         >
-                            View order
-                         </Button>
-                       </div>
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {order.sourceTag ? (
+                          <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 inline-flex items-center justify-center leading-none font-medium rounded-sm">
+                            {order.sourceTag}
+                          </Badge>
+                        ) : null}
+                        <span className="text-[9px] font-medium text-muted-foreground leading-none">{formatDate(order.createdAt)}</span>
+                      </div>
+                      
+                      <OrderQuickViewDialog
+                        order={order}
+                        triggerLabel="View"
+                        triggerSize="sm"
+                        triggerClassName="h-6 px-3 text-[10px] rounded border border-border shadow-sm font-medium shrink-0"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
       )}

@@ -104,7 +104,7 @@ export default function OrderQuickViewDialog({
           <Button
             variant={triggerVariant}
             size={triggerSize}
-            className={cn('w-full sm:w-auto', triggerClassName)}
+            className={cn(triggerClassName)}
           />
         }
       >
