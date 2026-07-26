@@ -139,28 +139,19 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
 
   // All hooks must be before any early return
   const [emblaApi, setEmblaApi] = useState(null);
+
+  // Visibility & interaction flags stored in refs to avoid re-renders
+  const isInViewportRef = useRef(false);
   const isHoveredRef = useRef(false);
-  // isPausedRef tracks ALL pause signals (touch, hover, off-screen, hidden tab)
-  const isPausedRef = useRef(false);
+  const isTouchPausedRef = useRef(false);
+
+  // Timer refs
   const autoplayTimerRef = useRef(null);
   const resumeTimerRef = useRef(null);
   const wrapperRef = useRef(null);
 
   useEffect(() => {
     if (!emblaApi || !isInteractive) return;
-
-    // ── Mobile-first GPU-accelerated autoplay engine ──────────────────────────
-    const advance = () => {
-      if (!emblaApi || isPausedRef.current) return;
-      emblaApi.goToNext();
-    };
-
-    const startAutoplay = () => {
-      stopAutoplay();
-      if (!isPausedRef.current) {
-        autoplayTimerRef.current = setInterval(advance, 8000);
-      }
-    };
 
     const stopAutoplay = () => {
       if (autoplayTimerRef.current) {
@@ -176,56 +167,90 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
       }
     };
 
+    const advance = () => {
+      if (!emblaApi) return;
+      emblaApi.goToNext();
+    };
+
+    // Evaluates all play conditions: viewport, hover, touch pause, tab visibility
+    const updateAutoplayState = () => {
+      const isDocumentVisible = typeof document !== 'undefined' ? !document.hidden : true;
+      const shouldPlay =
+        isInViewportRef.current &&
+        !isHoveredRef.current &&
+        !isTouchPausedRef.current &&
+        isDocumentVisible;
+
+      if (shouldPlay) {
+        if (!autoplayTimerRef.current) {
+          autoplayTimerRef.current = setInterval(advance, 8000);
+        }
+      } else {
+        stopAutoplay();
+      }
+    };
+
     // Called on touch/pointer interaction — pauses and resumes after 10s idle
     const onPointerDown = () => {
+      isTouchPausedRef.current = true;
       stopAutoplay();
       clearResumeTimer();
       resumeTimerRef.current = setTimeout(() => {
-        if (!isPausedRef.current) startAutoplay();
+        isTouchPausedRef.current = false;
+        updateAutoplayState();
       }, 10000);
     };
 
-    // ── Desktop hover pause ───────────────────────────────────────────────────
+    // Desktop hover pause
     const el = wrapperRef.current;
     const onMouseEnter = () => {
       isHoveredRef.current = true;
       stopAutoplay();
     };
+
     const onMouseLeave = () => {
       isHoveredRef.current = false;
-      if (!isPausedRef.current) startAutoplay();
+      updateAutoplayState();
     };
 
-    // ── Tab visibility pause (saves battery on inactive tabs) ─────────────────
+    // Tab visibility pause (saves battery and resources on inactive tabs)
     const onVisibilityChange = () => {
       if (document.hidden) {
         stopAutoplay();
-      } else if (!isPausedRef.current && !isHoveredRef.current) {
-        startAutoplay();
+        clearResumeTimer();
+      } else {
+        updateAutoplayState();
       }
     };
 
-    // ── IntersectionObserver: pause when carousel is off-screen ───────────────
+    // ── IntersectionObserver: freeze & pause when carousel is off-screen ─────
     let observer = null;
     if (typeof IntersectionObserver !== 'undefined' && el) {
       observer = new IntersectionObserver(
         (entries) => {
-          const isVisible = entries[0].isIntersecting;
-          if (isVisible) {
-            isPausedRef.current = false;
-            if (!isHoveredRef.current && !document.hidden) startAutoplay();
-          } else {
-            isPausedRef.current = true;
-            stopAutoplay();
+          const entry = entries[0];
+          const isVisible = Boolean(entry && entry.isIntersecting);
+          isInViewportRef.current = isVisible;
+
+          if (!isVisible) {
+            // Immediately freeze off-screen sliders
+            isTouchPausedRef.current = false;
             clearResumeTimer();
+            stopAutoplay();
+          } else {
+            updateAutoplayState();
           }
         },
         { threshold: 0.1 }
       );
       observer.observe(el);
+    } else {
+      // Fallback for environments without IntersectionObserver
+      isInViewportRef.current = true;
+      updateAutoplayState();
     }
 
-    // ── Wire up events ────────────────────────────────────────────────────────
+    // Wire up listeners
     emblaApi.on('pointerDown', onPointerDown);
     document.addEventListener('visibilitychange', onVisibilityChange, { passive: true });
 
@@ -234,14 +259,16 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
       el.addEventListener('mouseleave', onMouseLeave, { passive: true });
     }
 
-    if (!observer) startAutoplay();
-
     return () => {
       stopAutoplay();
       clearResumeTimer();
-      emblaApi.off('pointerDown', onPointerDown);
+      if (emblaApi && typeof emblaApi.off === 'function') {
+        emblaApi.off('pointerDown', onPointerDown);
+      }
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      if (observer) observer.disconnect();
+      if (observer) {
+        observer.disconnect();
+      }
       if (el) {
         el.removeEventListener('mouseenter', onMouseEnter);
         el.removeEventListener('mouseleave', onMouseLeave);

@@ -95,18 +95,43 @@ export default function HeroSlider({ slides = [] }) {
     else goToPrevSlide();
   }
 
+  const containerRef = useRef(null);
+  const isInViewportRef = useRef(true);
+
   useEffect(() => {
     if (resolvedSlides.length <= 1) return;
+
+    const el = containerRef.current;
+    let observer = null;
+
+    if (typeof IntersectionObserver !== 'undefined' && el) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          isInViewportRef.current = Boolean(entry && entry.isIntersecting);
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(el);
+    }
+
     const autoplayTimer = window.setTimeout(() => {
-      setActiveIndex((current) => (current + 1) % resolvedSlides.length);
+      if (isInViewportRef.current && typeof document !== 'undefined' && !document.hidden) {
+        setActiveIndex((current) => (current + 1) % resolvedSlides.length);
+      }
     }, HERO_AUTOPLAY_DELAY_MS);
-    return () => window.clearTimeout(autoplayTimer);
+
+    return () => {
+      window.clearTimeout(autoplayTimer);
+      if (observer) observer.disconnect();
+    };
   }, [resolvedSlides.length, safeActiveIndex]);
 
   if (resolvedSlides.length === 0) return null;
 
   return (
     <section
+      ref={containerRef}
       data-testid="hero-main-slider"
       className="relative w-full overflow-hidden bg-primary/10"
       onTouchStart={handleTouchStart}
