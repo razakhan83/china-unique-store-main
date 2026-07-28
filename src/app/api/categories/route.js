@@ -58,6 +58,9 @@ export async function GET() {
         ...category,
         _id: category._id.toString(),
         image: optimizeCloudinaryUrl(category.image || ''),
+        bgColor: category.bgColor || '',
+        secondaryImage: optimizeCloudinaryUrl(category.secondaryImage || ''),
+        tertiaryImage: optimizeCloudinaryUrl(category.tertiaryImage || ''),
         productCount: productCountMap.get(String(category._id)) || 0,
         showOnHome: category.showOnHome !== false,
       })),
@@ -94,6 +97,14 @@ export async function POST(req) {
     const imagePublicId = String(body.imagePublicId || "").trim();
     let blurDataURL = String(body.blurDataURL || "").trim();
 
+    const secondaryImage = String(body.secondaryImage || "").trim();
+    const secondaryImagePublicId = String(body.secondaryImagePublicId || "").trim();
+    let secondaryBlurDataURL = String(body.secondaryBlurDataURL || "").trim();
+
+    const tertiaryImage = String(body.tertiaryImage || "").trim();
+    const tertiaryImagePublicId = String(body.tertiaryImagePublicId || "").trim();
+    let tertiaryBlurDataURL = String(body.tertiaryBlurDataURL || "").trim();
+
     if (image && !blurDataURL && body.imageDataUrl) {
       blurDataURL = await generateBlurDataURLFromDataUrl(body.imageDataUrl);
     }
@@ -102,12 +113,35 @@ export async function POST(req) {
       blurDataURL = await generateBlurDataURLFromRemoteUrl(image);
     }
 
+    if (secondaryImage && !secondaryBlurDataURL && body.secondaryImageDataUrl) {
+      secondaryBlurDataURL = await generateBlurDataURLFromDataUrl(body.secondaryImageDataUrl);
+    }
+
+    if (secondaryImage && !secondaryBlurDataURL) {
+      secondaryBlurDataURL = await generateBlurDataURLFromRemoteUrl(secondaryImage);
+    }
+
+    if (tertiaryImage && !tertiaryBlurDataURL && body.tertiaryImageDataUrl) {
+      tertiaryBlurDataURL = await generateBlurDataURLFromDataUrl(body.tertiaryImageDataUrl);
+    }
+
+    if (tertiaryImage && !tertiaryBlurDataURL) {
+      tertiaryBlurDataURL = await generateBlurDataURLFromRemoteUrl(tertiaryImage);
+    }
+
     const category = await Category.create({
       name: body.name.trim(),
       slug: slugifyCategory(body.name),
       image,
       imagePublicId,
       blurDataURL,
+      secondaryImage,
+      secondaryImagePublicId,
+      secondaryBlurDataURL,
+      tertiaryImage,
+      tertiaryImagePublicId,
+      tertiaryBlurDataURL,
+      bgColor: String(body.bgColor || "").trim(),
       sortOrder: body.sortOrder ?? count,
       isEnabled: body.isEnabled !== false,
       showOnHome: body.showOnHome !== false,
@@ -123,6 +157,11 @@ export async function POST(req) {
           _id: category._id.toString(),
           image: optimizeCloudinaryUrl(category.image || ""),
           blurDataURL: category.blurDataURL || "",
+          secondaryImage: optimizeCloudinaryUrl(category.secondaryImage || ""),
+          secondaryBlurDataURL: category.secondaryBlurDataURL || "",
+          tertiaryImage: optimizeCloudinaryUrl(category.tertiaryImage || ""),
+          tertiaryBlurDataURL: category.tertiaryBlurDataURL || "",
+          bgColor: category.bgColor || "",
           productCount: 0,
           showOnHome: category.showOnHome !== false,
         },

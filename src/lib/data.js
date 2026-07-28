@@ -59,7 +59,7 @@ const HOME_PAGE_PRODUCT_COLLECTION_CONFIG = {
     viewAllHref: '',
   },
 };
-const PRODUCT_CATEGORY_POPULATE = { path: 'Category', select: 'name slug' };
+const PRODUCT_CATEGORY_POPULATE = { path: 'Category', select: 'name slug bgColor' };
 const PRODUCT_CARD_PROJECTION = [
   'Name',
   'Description',
@@ -569,6 +569,13 @@ async function getCategoriesRaw() {
       image: optimizeCloudinaryUrl(category.image || ''),
       imagePublicId: category.imagePublicId || '',
       blurDataURL: category.blurDataURL || '',
+      secondaryImage: optimizeCloudinaryUrl(category.secondaryImage || ''),
+      secondaryImagePublicId: category.secondaryImagePublicId || '',
+      secondaryBlurDataURL: category.secondaryBlurDataURL || '',
+      tertiaryImage: optimizeCloudinaryUrl(category.tertiaryImage || ''),
+      tertiaryImagePublicId: category.tertiaryImagePublicId || '',
+      tertiaryBlurDataURL: category.tertiaryBlurDataURL || '',
+      bgColor: category.bgColor || '',
       sortOrder: category.sortOrder ?? 0,
       isEnabled: category.isEnabled !== false,
       showOnHome: category.showOnHome !== false,

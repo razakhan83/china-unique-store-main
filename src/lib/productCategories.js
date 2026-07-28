@@ -38,6 +38,7 @@ function normalizeCategoryEntry(category) {
       slug: slug || normalizeCategoryId(name),
       name: name || String(category.label || category.slug || rawId || "").trim(),
       label: name || String(category.label || category.slug || rawId || "").trim(),
+      bgColor: category.bgColor || "",
     };
   }
 

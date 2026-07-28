@@ -700,15 +700,25 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   if (cart.length === 0 && !orderState.orderId) {
     return (
       <section className="flex min-h-[60vh] items-center justify-center px-4">
-        <Empty className="w-full max-w-md rounded-2xl border border-border/80 bg-card py-10">
+        <Empty className="flex w-full max-w-md flex-col items-center justify-center rounded-2xl bg-card py-10">
           <EmptyHeader>
+            <div className="mb-2 flex items-center justify-center">
+              <Image
+                src="/undraw_empty-cart_574u.svg"
+                alt="Empty cart illustration"
+                width={150}
+                height={150}
+                className="h-auto w-[150px] select-none"
+                priority={true}
+              />
+            </div>
             <EmptyTitle className="text-2xl font-bold text-foreground [text-wrap:balance]">Your cart is empty</EmptyTitle>
-            <EmptyDescription className="[text-wrap:pretty]">
-              Add a few products before heading to checkout.
+            <EmptyDescription className="max-w-xs text-center [text-wrap:pretty]">
+              Start adding premium kitchenware and decor to build your order.
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={() => router.push('/products')} className="min-h-12 rounded-xl px-5 active:scale-[0.96]">
+          <EmptyContent className="mt-6">
+            <Button onClick={() => router.push('/products')} className="min-h-12 rounded-xl px-6 active:scale-[0.96]">
               Continue Shopping
             </Button>
           </EmptyContent>

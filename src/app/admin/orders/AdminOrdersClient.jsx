@@ -2404,7 +2404,7 @@ export default function AdminOrdersClient({
                           {order.orderId}
                         </Link>
                         {isNewOrder(order.createdAt) && (
-                          <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-400">
+                          <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
                             New
                           </span>
                         )}
@@ -2571,7 +2571,7 @@ export default function AdminOrdersClient({
                       <div className="flex items-center gap-1.5 min-w-0 mt-[1px]">
                         <p className="text-[12px] font-semibold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
                         {isNewOrder(order.createdAt) && (
-                          <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded-sm shrink-0 leading-none">
+                          <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm shrink-0 leading-none">
                             NEW
                           </span>
                         )}

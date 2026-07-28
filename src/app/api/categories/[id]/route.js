@@ -49,12 +49,42 @@ export async function PATCH(req, { params }) {
     const imagePublicId = body.imagePublicId !== undefined ? String(body.imagePublicId).trim() : existingCategory.imagePublicId;
     let blurDataURL = body.blurDataURL !== undefined ? String(body.blurDataURL).trim() : existingCategory.blurDataURL;
 
+    const secondaryImage = body.secondaryImage !== undefined ? String(body.secondaryImage).trim() : existingCategory.secondaryImage;
+    const secondaryImagePublicId = body.secondaryImagePublicId !== undefined ? String(body.secondaryImagePublicId).trim() : existingCategory.secondaryImagePublicId;
+    let secondaryBlurDataURL = body.secondaryBlurDataURL !== undefined ? String(body.secondaryBlurDataURL).trim() : existingCategory.secondaryBlurDataURL;
+
+    const tertiaryImage = body.tertiaryImage !== undefined ? String(body.tertiaryImage).trim() : existingCategory.tertiaryImage;
+    const tertiaryImagePublicId = body.tertiaryImagePublicId !== undefined ? String(body.tertiaryImagePublicId).trim() : existingCategory.tertiaryImagePublicId;
+    let tertiaryBlurDataURL = body.tertiaryBlurDataURL !== undefined ? String(body.tertiaryBlurDataURL).trim() : existingCategory.tertiaryBlurDataURL;
+
     // Only regenerate blur URL if the image actually changed and no blur URL was explicitly provided
     if (body.image !== undefined && !body.blurDataURL) {
       if (body.imageDataUrl) {
          blurDataURL = await generateBlurDataURLFromDataUrl(body.imageDataUrl);
       } else if (image) {
          blurDataURL = await generateBlurDataURLFromRemoteUrl(image);
+      } else {
+         blurDataURL = "";
+      }
+    }
+
+    if (body.secondaryImage !== undefined && !body.secondaryBlurDataURL) {
+      if (body.secondaryImageDataUrl) {
+         secondaryBlurDataURL = await generateBlurDataURLFromDataUrl(body.secondaryImageDataUrl);
+      } else if (secondaryImage) {
+         secondaryBlurDataURL = await generateBlurDataURLFromRemoteUrl(secondaryImage);
+      } else {
+         secondaryBlurDataURL = "";
+      }
+    }
+
+    if (body.tertiaryImage !== undefined && !body.tertiaryBlurDataURL) {
+      if (body.tertiaryImageDataUrl) {
+         tertiaryBlurDataURL = await generateBlurDataURLFromDataUrl(body.tertiaryImageDataUrl);
+      } else if (tertiaryImage) {
+         tertiaryBlurDataURL = await generateBlurDataURLFromRemoteUrl(tertiaryImage);
+      } else {
+         tertiaryBlurDataURL = "";
       }
     }
 
@@ -72,6 +102,15 @@ export async function PATCH(req, { params }) {
     existingCategory.image = image;
     existingCategory.imagePublicId = imagePublicId;
     existingCategory.blurDataURL = blurDataURL;
+    existingCategory.secondaryImage = secondaryImage;
+    existingCategory.secondaryImagePublicId = secondaryImagePublicId;
+    existingCategory.secondaryBlurDataURL = secondaryBlurDataURL;
+    existingCategory.tertiaryImage = tertiaryImage;
+    existingCategory.tertiaryImagePublicId = tertiaryImagePublicId;
+    existingCategory.tertiaryBlurDataURL = tertiaryBlurDataURL;
+    if (body.bgColor !== undefined) {
+      existingCategory.bgColor = String(body.bgColor).trim();
+    }
     if (body.isEnabled !== undefined) {
       existingCategory.isEnabled = body.isEnabled === true || body.isEnabled === 'true';
     }
@@ -80,7 +119,8 @@ export async function PATCH(req, { params }) {
     }
 
     await existingCategory.save();
-    revalidateTag('categories', 'max');
+    revalidateTag('categories');
+    revalidateTag('products');
 
     const productCount = await Product.countDocuments({ Category: existingCategory._id });
 
@@ -92,6 +132,11 @@ export async function PATCH(req, { params }) {
           _id: existingCategory._id.toString(),
           image: optimizeCloudinaryUrl(existingCategory.image || ""),
           blurDataURL: existingCategory.blurDataURL || "",
+          secondaryImage: optimizeCloudinaryUrl(existingCategory.secondaryImage || ""),
+          secondaryBlurDataURL: existingCategory.secondaryBlurDataURL || "",
+          tertiaryImage: optimizeCloudinaryUrl(existingCategory.tertiaryImage || ""),
+          tertiaryBlurDataURL: existingCategory.tertiaryBlurDataURL || "",
+          bgColor: existingCategory.bgColor || "",
           productCount,
           showOnHome: existingCategory.showOnHome !== false,
         },

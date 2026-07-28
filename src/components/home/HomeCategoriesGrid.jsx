@@ -1,58 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
-import {
-  Armchair,
-  Beef,
-  Bolt,
-  Car,
-  ChevronLeft,
-  ChevronRight,
-  Dumbbell,
-  Flame,
-  Gamepad2,
-  Heart,
-  PawPrint,
-  PenTool,
-  Shirt,
-  Tag,
-  UtensilsCrossed,
-} from 'lucide-react';
-
-import { getCategoryColor, getCategoryColorByIndex } from '@/lib/categoryColors';
-import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
-import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
-
-const CATEGORY_ICONS = {
-  'kitchen accessories': UtensilsCrossed,
-  kitchen: Flame,
-  knives: UtensilsCrossed,
-  pots: Beef,
-  'home decor': Armchair,
-  'health & beauty': Heart,
-  stationery: PenTool,
-  'toys & games': Gamepad2,
-  electronics: Bolt,
-  fashion: Shirt,
-  'sports & fitness': Dumbbell,
-  'pet supplies': PawPrint,
-  automotive: Car,
-};
-
-function getCategoryIcon(name) {
-  return CATEGORY_ICONS[(name || '').toLowerCase().trim()] || Tag;
-}
+import CategoryPillCard from '@/components/home/CategoryPillCard';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function HomeCategoriesGrid({ title = 'Shop by Category', categories = [] }) {
   const carouselRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const carousel = carouselRef.current;
     if (!carousel) return undefined;
 
@@ -60,6 +23,12 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
       const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
       setCanScrollLeft(carousel.scrollLeft > 8);
       setCanScrollRight(maxScrollLeft - carousel.scrollLeft > 8);
+
+      if (maxScrollLeft > 0) {
+        setScrollProgress(carousel.scrollLeft / maxScrollLeft);
+      } else {
+        setScrollProgress(0);
+      }
     };
 
     updateScrollState();
@@ -85,29 +54,45 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
     });
   }
 
+  const numDots = 4;
+  const activeDotIndex = Math.min(
+    Math.max(Math.round(scrollProgress * (numDots - 1)), 0),
+    numDots - 1
+  );
+
   return (
     <section className="relative border-b border-border bg-card/70 py-6 md:py-7">
       <SectionDoodleBackground categoryLabel={title} />
       <div className="relative z-10 mx-auto max-w-7xl px-4">
-        <div className="mb-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Browse</p>
-          <h2 className="mt-2 text-[1.65rem] font-bold tracking-[-0.04em] text-primary md:text-[2.1rem]">
-            {title}
-          </h2>
+        <div className="mb-5 flex items-end justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Browse</p>
+            <h2 className="mt-1 text-[1.65rem] font-bold tracking-[-0.04em] text-primary md:text-[2.1rem]">
+              {title}
+            </h2>
+          </div>
+
+          <Link
+            href="/categories"
+            className="group inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm md:text-base font-semibold text-emerald-800 transition-colors duration-300 hover:text-emerald-950"
+          >
+            <span>View All</span>
+            <ArrowRight className="size-4 md:size-5 transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
         </div>
 
-        {/* The clipping box is expanded by 40px (2.5rem) on all sides to allow shadows to render on desktop, while preventing bleeding across the whole screen */}
-        <div className="relative md:-mx-10 -my-8 overflow-hidden py-8">
+        {/* The clipping box allows 3D card elevation while containing overflow */}
+        <div className="relative md:-mx-6 -my-4 overflow-visible py-4">
           <div
             className={cn(
-              "pointer-events-none absolute inset-y-8 left-0 z-10 w-10 transition-opacity duration-300",
+              "pointer-events-none absolute inset-y-4 left-0 z-10 w-8 transition-opacity duration-300",
               canScrollLeft ? "opacity-100" : "opacity-0"
             )}
             style={{ background: 'linear-gradient(to right, var(--color-card) 20%, transparent)' }}
           />
           <div
             className={cn(
-              "pointer-events-none absolute inset-y-8 right-0 z-10 w-10 transition-opacity duration-300",
+              "pointer-events-none absolute inset-y-4 right-0 z-10 w-8 transition-opacity duration-300",
               canScrollRight ? "opacity-100" : "opacity-0"
             )}
             style={{ background: 'linear-gradient(to left, var(--color-card) 20%, transparent)' }}
@@ -120,55 +105,28 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
             aria-label="Shop by category"
             aria-roledescription="carousel"
           >
-            {categories.map((category, index) => {
-              const colors = getCategoryColorByIndex(index);
-              const Icon = getCategoryIcon(category.label);
-              const imageSrc = category.image
-                ? optimizeCloudinaryUrl(category.image, CLOUDINARY_IMAGE_PRESETS.categoryCircle)
-                : '';
-
-              return (
-                <div key={`${category.id}-${index}`} className="category-icon-carousel-item">
-                  <Link
-                    href={`/products?category=${category.id}`}
-                    className="group flex w-full min-w-0 flex-col items-center gap-3 p-3 text-center"
-                  >
-                    <span
-                      className="mac-dock-circle relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-white/80 shadow-[0_14px_28px_rgba(10,61,46,0.08)] md:h-[8.5rem] md:w-[8.5rem]"
-                      style={{
-                        background: `radial-gradient(circle at 30% 25%, white 10%, ${colors.hex})`,
-                      }}
-                    >
-                      {imageSrc ? (
-                        <Image
-                          src={imageSrc}
-                          alt={category.label}
-                          fill
-                          sizes="(max-width: 768px) 96px, 136px"
-                          loading="lazy"
-                          className="object-cover"
-                          {...getBlurPlaceholderProps(category.blurDataURL)}
-                        />
-                      ) : (
-                        <span
-                          className="flex size-full items-center justify-center rounded-full"
-                          style={colors.style}
-                        >
-                          <Icon className={`${colors.text} size-8 md:size-12`} />
-                        </span>
-                      )}
-                    </span>
-
-                    <span className="line-clamp-2 min-h-10 max-w-[112px] text-sm font-medium leading-tight text-muted-foreground transition-colors group-hover:text-foreground md:max-w-[132px]">
-                      {category.label}
-                    </span>
-                  </Link>
-                </div>
-              );
-            })}
-
+            {categories.map((category, index) => (
+              <div key={`${category._id || category.id}-${index}`} className="category-icon-carousel-item">
+                <CategoryPillCard category={category} index={index} />
+              </div>
+            ))}
           </div>
         </div>
+
+        {/* Pagination Dots */}
+        {categories.length > 1 && isMounted && (
+          <div className="mt-8 flex items-center justify-center gap-2">
+            {Array.from({ length: numDots }).map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300",
+                  activeDotIndex === i ? "w-8 bg-emerald-600" : "w-2 bg-slate-200"
+                )}
+              />
+            ))}
+          </div>
+        )}
 
         {categories.length > 1 ? (
           <>
@@ -177,7 +135,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
               aria-label="Scroll categories left"
               onClick={() => scrollCategories('left')}
               disabled={!canScrollLeft}
-              className="pointer-events-auto absolute -left-4 top-[55%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-left-12"
+              className="pointer-events-auto absolute -left-4 top-[58%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-left-10"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -186,7 +144,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
               aria-label="Scroll categories right"
               onClick={() => scrollCategories('right')}
               disabled={!canScrollRight}
-              className="pointer-events-auto absolute -right-4 top-[55%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-right-12"
+              className="pointer-events-auto absolute -right-4 top-[58%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-white/92 text-foreground shadow-[0_12px_24px_rgba(10,61,46,0.16)] backdrop-blur-sm transition hover:scale-[1.03] hover:bg-white disabled:pointer-events-none disabled:opacity-0 lg:flex xl:-right-10"
             >
               <ChevronRight className="size-5" />
             </button>

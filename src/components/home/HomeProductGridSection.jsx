@@ -17,10 +17,11 @@ export default function HomeProductGridSection({
   const isGeneral = !category && (
     sectionLabel.toLowerCase().includes('arrival') || 
     sectionLabel.toLowerCase().includes('new') ||
-    sectionLabel.toLowerCase().includes('featured')
+    sectionLabel.toLowerCase().includes('featured') ||
+    sectionLabel.toLowerCase().includes('top rated')
   );
   
-  const sectionBg = isGeneral ? '#f4f4f5' : getCategoryColor(sectionLabel).hex;
+  const sectionBg = isGeneral ? '#f4f4f5' : (category?.bgColor || getCategoryColor(sectionLabel).hex);
 
   return (
     <section className="relative bg-transparent py-8 md:py-11 even:bg-card/50">

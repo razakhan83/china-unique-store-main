@@ -65,33 +65,6 @@ const nextConfig = {
     ],
   },
 
-  // ── Static Asset Cache Headers ───────────────────────────────────────────────
-  // FIX: Next.js uses path-to-regexp syntax — no capturing groups (\.) allowed.
-  // Use simple path prefixes instead of extension-matching regex.
-  async headers() {
-    return [
-      {
-        // Cache all Next.js static chunks for 1 year (content-hashed filenames)
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        // Cache Next.js optimized images for 30 days
-        source: '/_next/image',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=2592000, stale-while-revalidate=86400',
-          },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;

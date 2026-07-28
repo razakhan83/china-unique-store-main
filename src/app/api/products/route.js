@@ -28,7 +28,7 @@ export async function GET() {
         await mongooseConnect();
         const products = await Product.find({})
             .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
-            .populate({ path: 'Category', select: 'name slug' })
+            .populate({ path: 'Category', select: 'name slug bgColor' })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -167,7 +167,7 @@ export async function POST(req) {
             primaryTag: primaryTag || '',
         });
 
-        await product.populate({ path: 'Category', select: 'name slug' });
+        await product.populate({ path: 'Category', select: 'name slug bgColor' });
 
         revalidateTag('products', { expire: 0 });
         revalidateTag(`product-${uniqueSlug}`, { expire: 0 });

@@ -63,8 +63,9 @@ import { getCategoryColor } from "@/lib/categoryColors";
 
 export default function ProductCard({ product, className = "", imageBg, isPreviewMode = false }) {
   const categories = getProductCategories(product);
-  const primaryCategoryName = categories[0]?.name || categories[0]?.label || "";
-  const resolvedBg = imageBg || getCategoryColor(primaryCategoryName).hex || '#e1f2ed';
+  const primaryCategory = categories[0];
+  const primaryCategoryName = primaryCategory?.name || primaryCategory?.label || "";
+  const resolvedBg = imageBg || '#f4f4f5';
 
   const productName = product.Name || product.name || "Unknown";
   const normalizedImages = normalizeProductImages(product?.Images);
@@ -143,15 +144,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
             </Badge>
           )}
 
-          {isUnavailable && (
-            <Badge
-              className={cn(
-                "pointer-events-auto rounded-full border-transparent bg-zinc-900/90 px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-[0.1em] shadow-sm backdrop-blur-md"
-              )}
-            >
-              Out of Stock
-            </Badge>
-          )}
+
         </div>
 
         <ProductCardWishlistSlot product={product} />
@@ -180,12 +173,12 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                   "object-cover transition-all duration-500 ease-out",
                   (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
-                  isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
-                  secondaryImageSrc && "md:group-hover:opacity-0"
+                  isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75 blur-[2.5px]",
+                  (secondaryImageSrc && !isUnavailable) && "md:group-hover:opacity-0"
                 )}
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
               />
-              {secondaryImageSrc && (
+              {secondaryImageSrc && !isUnavailable && (
                 <>
                   {!secondaryImage.blurDataURL && !secondaryLoaded && (
                     <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
@@ -210,8 +203,18 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
               )}
             </>
           ) : (
-             <div className="flex size-full items-center justify-center" style={{ backgroundColor: resolvedBg }}>
+              <div className="flex size-full items-center justify-center" style={{ backgroundColor: resolvedBg }}>
               <ShoppingCart className="size-10 text-muted-foreground/30" />
+            </div>
+          )}
+
+          {isUnavailable && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/5">
+              <Badge
+                className="pointer-events-none rounded-full border border-white/20 bg-zinc-900/95 px-3.5 py-1.5 text-[11px] font-bold text-white uppercase tracking-[0.15em] shadow-xl backdrop-blur-md"
+              >
+                Out of Stock
+              </Badge>
             </div>
           )}
         </Link>

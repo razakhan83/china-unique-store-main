@@ -43,7 +43,7 @@
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-shimmer: shimmer 2.2s infinite linear;
+  --animate-shimmer: shimmer 1.4s infinite linear;
   --animate-marquee-up: marquee-up 35s linear infinite;
   --animate-marquee-down: marquee-down 35s linear infinite;
   --animate-marquee-left: marquee-left 35s linear infinite;
@@ -617,13 +617,14 @@
 .category-icon-carousel {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: max(28%, 104px);
+  /* Show ~2.5 items on mobile — cards have room, user sees there's more to scroll */
+  grid-auto-columns: calc((100% - 2 * 0.75rem) / 2.5);
   gap: 0.75rem;
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
   padding-block: 1rem;
   margin-block: -1rem;
   padding-inline: 0;
@@ -644,36 +645,14 @@
   scroll-snap-align: start;
 }
 
-/* macOS Dock Effect for Category Circles */
-.category-icon-carousel-item .mac-dock-circle {
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease-out;
-  transform-origin: bottom center;
-}
-
-@media (min-width: 768px) {
-  .category-icon-carousel-item:hover .mac-dock-circle {
-    transform: scale(1.12) translateY(-6px);
-    box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-primary), 0 14px 28px rgba(10, 61, 46, 0.15);
-    z-index: 20;
-  }
-
-  .category-icon-carousel-item:has(+ .category-icon-carousel-item:hover) .mac-dock-circle {
-    transform: scale(1.06) translateY(-2px) translateX(-8px);
-  }
-
-  .category-icon-carousel-item:hover + .category-icon-carousel-item .mac-dock-circle {
-    transform: scale(1.06) translateY(-2px) translateX(8px);
-  }
-}
-
 @media (min-width: 640px) {
   .category-product-carousel {
     grid-auto-columns: 46%;
   }
 
   .category-icon-carousel {
-    gap: 0.75rem;
-    grid-auto-columns: 24%;
+    gap: 0.5rem;
+    grid-auto-columns: calc((100% - 3 * 0.5rem) / 4);
   }
 }
 
@@ -684,11 +663,11 @@
   }
 
   .category-icon-carousel {
-    gap: 0.5rem;
+    gap: 0.75rem;
     padding-block: 2rem;
     margin-block: -2rem;
-    padding-inline: 2.5rem;
-    grid-auto-columns: 18%;
+    padding-inline: 0.5rem;
+    grid-auto-columns: calc((100% - 3 * 0.75rem) / 4);
   }
 }
 
@@ -698,7 +677,9 @@
   }
 
   .category-icon-carousel {
-    grid-auto-columns: 13.5%;
+    gap: 0.75rem;
+    padding-inline: 0.75rem;
+    grid-auto-columns: calc((100% - 4 * 0.75rem) / 5);
   }
 }
 
@@ -708,7 +689,8 @@
   }
 
   .category-icon-carousel {
-    grid-auto-columns: calc((100% - 7 * 0.75rem) / 8);
+    grid-auto-columns: calc((100% - 4 * 1rem) / 6);
+    gap: 1rem;
   }
 }
 

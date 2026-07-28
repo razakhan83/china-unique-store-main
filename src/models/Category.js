@@ -28,6 +28,41 @@ const CategorySchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    secondaryImage: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    secondaryImagePublicId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    secondaryBlurDataURL: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tertiaryImage: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tertiaryImagePublicId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tertiaryBlurDataURL: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    bgColor: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     sortOrder: {
       type: Number,
       default: 0,

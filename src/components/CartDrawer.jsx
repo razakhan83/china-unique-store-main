@@ -219,7 +219,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                 </SidebarGroup>
               ) : (
                 <SidebarGroup className="p-0">
-                  <Empty className="surface-card min-h-[16rem] rounded-[1.35rem] px-6 py-10 shadow-[0_24px_44px_-38px_color-mix(in_oklab,var(--color-primary)_26%,transparent)]">
+                  <Empty className="flex min-h-[16rem] flex-col items-center justify-center rounded-[1.35rem] px-6 py-10">
                     <EmptyHeader>
                       <div className="mb-2 flex items-center justify-center">
                         <Image

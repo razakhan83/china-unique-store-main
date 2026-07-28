@@ -19,7 +19,7 @@ export async function GET(_request, { params }) {
         const { id } = await params;
         const product = await Product.findById(id)
             .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors packOptions tags primaryTag')
-            .populate({ path: 'Category', select: 'name slug' })
+            .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
         if (!product) {
@@ -140,7 +140,7 @@ export async function PUT(request, { params }) {
         existingProduct.isDiscounted = discountPct > 0;
 
         await existingProduct.save();
-        await existingProduct.populate({ path: 'Category', select: 'name slug' });
+        await existingProduct.populate({ path: 'Category', select: 'name slug bgColor' });
         revalidateTag('products', { expire: 0 });
         if (previousSlug) {
             revalidateTag(`product-${previousSlug}`, { expire: 0 });
