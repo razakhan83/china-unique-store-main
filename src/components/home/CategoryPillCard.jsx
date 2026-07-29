@@ -70,7 +70,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
       {/* Main Container - Faded Background Box (Vertical Gradient) */}
       <div
         className={cn(
-          'relative flex items-center justify-center w-3/4 md:w-2/3 aspect-square mx-auto rounded-3xl',
+          'relative flex items-center justify-center w-[82%] md:w-2/3 aspect-square mx-auto rounded-full',
           'transition-all duration-300 ease-out border-none'
         )}
         style={{

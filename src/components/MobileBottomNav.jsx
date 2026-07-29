@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, LogOut, Home, Search, Settings, ShoppingBag, ShoppingCart, Package, User, UserPlus, X } from 'lucide-react';
 
@@ -129,11 +129,14 @@ export default function MobileBottomNav({
     }
   }, [router, session?.user?.email]);
 
+  const lastClosedTime = useRef(0);
+
   function closeSearch() {
     onSearchOpenChange?.(false);
   }
 
   function closeAccountPanel() {
+    lastClosedTime.current = Date.now();
     if (session) {
       onAccountOpenChange(false);
       return;
@@ -143,6 +146,8 @@ export default function MobileBottomNav({
   }
 
   function openAccountPanel() {
+    if (Date.now() - lastClosedTime.current < 300) return;
+    
     if (session) {
       onAccountOpenChange(true);
       return;
@@ -219,7 +224,14 @@ export default function MobileBottomNav({
         </div>
       </div>
 
-      <Drawer open={accountOpen} onOpenChange={onAccountOpenChange} shouldScaleBackground={false}>
+      <Drawer 
+        open={accountOpen} 
+        onOpenChange={(open) => {
+          if (!open) lastClosedTime.current = Date.now();
+          onAccountOpenChange?.(open);
+        }} 
+        shouldScaleBackground={false}
+      >
         <DrawerContent
           overlayClassName={mobileDrawerOverlayClassName}
           className={mobileDrawerContentClassName}
@@ -231,7 +243,7 @@ export default function MobileBottomNav({
                 <DrawerTitle>{session ? 'Your account' : 'Join China Unique'}</DrawerTitle>
                 <DrawerDescription>
                   {session
-                    ? 'Quick access to your orders, wishlist, and profile settings.'
+                    ? 'Manage your orders, wishlist, and settings.'
                     : 'Create an account to save favorites, track orders, and check out faster.'}
                 </DrawerDescription>
               </DrawerHeader>
@@ -275,13 +287,18 @@ export default function MobileBottomNav({
                         icon={LogOut}
                         label="Log out"
                         destructive
-                        onClick={() => setLogoutConfirmOpen(true)}
+                        onClick={() => {
+                          onAccountOpenChange(false);
+                          setTimeout(() => {
+                            setLogoutConfirmOpen(true);
+                          }, 350);
+                        }}
                       />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="rounded-[1.6rem] border border-border/70 bg-muted/45 px-4 py-4">
+                    <div className="rounded-2xl border border-border/70 bg-muted/45 px-4 py-4">
                       <p className="text-sm leading-6 text-muted-foreground">
                         Save the pieces you love, track your deliveries, and keep your next checkout effortless.
                       </p>
@@ -293,7 +310,7 @@ export default function MobileBottomNav({
                         onAccountOpenChange(false);
                         onAuthOpenChange?.(true);
                       }}
-                      className="h-12 rounded-2xl"
+                      className="h-12 rounded-xl"
                     >
                       <UserPlus data-icon="inline-start" />
                       Sign Up
@@ -308,13 +325,13 @@ export default function MobileBottomNav({
       </Drawer>
 
       <AlertDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <AlertDialogContent className="max-w-[300px] p-5 rounded-[1.5rem] gap-4">
+        <AlertDialogContent className="max-w-[300px] p-5 rounded-xl gap-4">
           <div className="flex justify-between items-start">
             <AlertDialogTitle className="text-base font-semibold">Are you sure to logout?</AlertDialogTitle>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="size-7 rounded-full -mt-1.5 -mr-1.5 text-muted-foreground hover:bg-muted"
+              className="size-7 rounded-md -mt-1.5 -mr-1.5 text-muted-foreground hover:bg-muted"
               onClick={() => setLogoutConfirmOpen(false)}
             >
               <X className="size-4" />
@@ -326,10 +343,9 @@ export default function MobileBottomNav({
               variant="destructive"
               onClick={() => {
                 setLogoutConfirmOpen(false);
-                onAccountOpenChange(false);
                 signOut();
               }}
-              className="w-full rounded-xl font-semibold"
+              className="w-full rounded-lg font-semibold"
             >
               Logout
             </Button>
