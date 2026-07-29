@@ -65,7 +65,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
   return (
     <Link
       href={targetHref}
-      className="group flex w-full h-full flex-col items-center justify-end text-center select-none pt-8 md:pt-10"
+      className="group flex w-full h-full flex-col items-center justify-start text-center select-none pt-8 md:pt-10"
     >
       {/* Main Container - Faded Background Box (Vertical Gradient) */}
       <div

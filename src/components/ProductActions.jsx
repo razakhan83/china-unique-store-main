@@ -13,6 +13,7 @@ import { BellRing, ShoppingCart, Share2, Minus, Plus, BadgeCheck, PackageCheck, 
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
+import { getProductTagById } from '@/lib/productTags';
 
 export function ProductSocialActions({ product, className = '' }) {
     const handleShare = async () => {
@@ -51,7 +52,7 @@ export function ProductSocialActions({ product, className = '' }) {
             <ProductWishlistButton
                 product={product}
                 mode="detail"
-                className={cn(secondaryActionClass, "size-11 shrink-0 px-0 [&>span]:hidden hover:text-red-500 hover:border-red-500/40 hover:bg-red-50/50 dark:hover:bg-red-500/10")}
+                className={cn(secondaryActionClass, "hidden md:inline-flex size-11 shrink-0 px-0 [&>span]:hidden hover:text-red-500 hover:border-red-500/40 hover:bg-red-50/50 dark:hover:bg-red-500/10")}
                 title="Save to Wishlist"
             />
         </div>
@@ -180,41 +181,52 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         <>
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                         {formatPrice(displayPrice)}
                     </span>
                     {displayComparePrice ? (
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2">
                             <span className="text-lg font-medium text-muted-foreground line-through">
                                 {formatPrice(displayComparePrice)}
                             </span>
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-sm font-bold tracking-wide">
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-none font-bold tracking-wide">
                                 Save {formatPrice(displayComparePrice - displayPrice)}
                             </Badge>
                         </div>
                     ) : null}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 text-primary">
-                        <Truck className="size-3.5 sm:size-4" />
-                        <span className="text-foreground whitespace-nowrap">Free Delivery</span>
-                    </div>
-                    <span className="text-border">|</span>
-                    <div className="flex items-center gap-1 text-primary">
-                        <BadgeCheck className="size-3.5 sm:size-4" />
-                        <span className="text-foreground whitespace-nowrap">COD Available</span>
-                    </div>
-                    <span className="text-border">|</span>
-                    <div className="flex items-center gap-1 text-primary">
-                        <PackageCheck className="size-3.5 sm:size-4" />
-                        <span className="text-foreground whitespace-nowrap">7-Day Return</span>
-                    </div>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {isOutOfStock ? (
+                        <Badge variant="destructive" className="text-[11px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-md shadow-none border-0">
+                            Out of Stock
+                        </Badge>
+                    ) : (
+                        <Badge variant="outline" className="text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-md border-border/50 bg-secondary/50 text-emerald-600 shadow-none tracking-wide flex items-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                            In Stock
+                        </Badge>
+                    )}
+                    {Array.isArray(product.tags) && product.tags.filter(tagId => tagId !== product.primaryTag).map(tagId => {
+                        const tag = getProductTagById(tagId);
+                        if (!tag) return null;
+                        const Icon = tag.icon;
+                        return (
+                            <Badge 
+                                key={tag.id}
+                                variant="outline" 
+                                className={cn("text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md border-0 shadow-none flex items-center gap-1.5", tag.bgColor, tag.color)}
+                            >
+                                <Icon className="size-3.5" />
+                                {tag.label}
+                            </Badge>
+                        );
+                    })}
                 </div>
             </div>
 
-            {packOptions.length > 0 && (
+            {packOptions.length > 1 && (
                 <div className="space-y-3">
                     <span className="text-sm font-semibold text-foreground">Pack Options</span>
                     <div className="flex flex-wrap gap-2">
@@ -223,10 +235,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 key={idx}
                                 onClick={() => setSelectedPack(pack)}
                                 className={cn(
-                                    "flex h-9 sm:h-10 flex-1 sm:flex-none sm:min-w-[100px] items-center justify-center whitespace-nowrap rounded-md border px-3 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                    "flex h-7 sm:h-8 flex-none min-w-[70px] items-center justify-center whitespace-nowrap rounded-md px-3 text-[11px] sm:text-xs font-medium transition-colors outline-none",
                                     selectedPack?.label === pack.label
-                                        ? "border-primary bg-primary text-primary-foreground shadow-[0_2px_10px_rgba(var(--color-primary),0.2)]"
-                                        : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:bg-muted/50 hover:text-foreground shadow-sm"
+                                        ? "border-2 border-primary text-foreground bg-transparent"
+                                        : "border border-border/60 bg-transparent text-muted-foreground hover:text-foreground hover:border-border"
                                 )}
                             >
                                 {pack.label}

@@ -13,6 +13,7 @@ import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 import ProductMetaTags from './ProductMetaTags';
 import ProductReviews from '@/components/ProductReviews';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
+import MobileBackButton from '@/components/MobileBackButton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -246,13 +247,18 @@ export default function ProductPage({ params }) {
     <div className="product-detail-shell min-h-screen bg-gray-50">
       <ProductPageScrollReset />
 
-      <div className="container mx-auto max-w-7xl px-4 pb-1 pt-3 md:pt-7">
-        <Suspense fallback={<ProductBreadcrumbSkeleton />}>
-          <ProductBreadcrumb paramsPromise={params} />
-        </Suspense>
+      <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
+        <div className="md:hidden">
+          <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
+        </div>
+        <div className="hidden md:block pb-1">
+          <Suspense fallback={<ProductBreadcrumbSkeleton />}>
+            <ProductBreadcrumb paramsPromise={params} />
+          </Suspense>
+        </div>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-1 md:pb-8 md:pt-4">
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-0 md:pb-8 md:pt-4">
         <Suspense fallback={<ProductHeroSkeleton />}>
           <ProductHeroSection paramsPromise={params} />
         </Suspense>
@@ -358,53 +364,18 @@ async function ProductHeroSection({ paramsPromise }) {
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-10">
         <div className="w-full md:w-[45%] lg:w-[42%]">
-          <ProductGallery images={product.Images} primaryTag={product.primaryTag} />
+          <ProductGallery images={product.Images} primaryTag={product.primaryTag} product={product} />
         </div>
 
         <div className="w-full md:w-[55%] lg:w-[58%]">
           <div className="flex flex-col gap-4 md:gap-6 md:sticky md:top-[164px]">
             <div className="space-y-2 md:space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="text-[11px] sm:text-xs font-medium px-2.5 py-0.5 rounded-md bg-muted/60 text-muted-foreground hover:bg-muted/80 border-0 shadow-sm">
-                  {categoryLabel || 'Premium Item'}
-                </Badge>
-                {isOutOfStock ? (
-                  <Badge variant="destructive" className="text-[11px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-md shadow-sm border-0">
-                    Out of Stock
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-md border-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 shadow-sm tracking-wide">
-                    In Stock
-                  </Badge>
-                )}
-              </div>
-
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 mt-2">
                 <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-2xl md:text-4xl leading-tight sm:leading-tight md:leading-tight">
                   {product.Name}
                 </h1>
                 <ProductSocialActions product={product} className="md:hidden shrink-0 mt-0.5" />
               </div>
-
-              {Array.isArray(product.tags) && product.tags.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  {product.tags.filter(tagId => tagId !== product.primaryTag).map(tagId => {
-                    const tag = getProductTagById(tagId);
-                    if (!tag) return null;
-                    const Icon = tag.icon;
-                    return (
-                      <Badge 
-                        key={tag.id}
-                        variant="outline" 
-                        className={cn("text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md border-0 shadow-sm flex items-center gap-1.5", tag.bgColor, tag.color)}
-                      >
-                        <Icon className="size-3.5" />
-                        {tag.label}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
 
               <a 
                 href="#product-reviews"
