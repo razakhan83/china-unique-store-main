@@ -136,7 +136,9 @@ export default function MobileBottomNav({
   }
 
   function closeAccountPanel() {
-    lastClosedTime.current = Date.now();
+    if (accountPanelOpen) {
+      lastClosedTime.current = Date.now();
+    }
     if (session) {
       onAccountOpenChange(false);
       return;
@@ -165,7 +167,7 @@ export default function MobileBottomNav({
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)]" style={{ zIndex: 400 }}>
+      <div className="fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)]" style={{ zIndex: 400, pointerEvents: 'auto' }}>
         <div className="mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"
@@ -325,7 +327,7 @@ export default function MobileBottomNav({
       </Drawer>
 
       <AlertDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <AlertDialogContent className="max-w-[300px] p-5 rounded-xl gap-4">
+        <AlertDialogContent className="max-w-[300px] p-5 rounded-xl gap-4" showCloseButton={false}>
           <div className="flex justify-between items-start">
             <AlertDialogTitle className="text-base font-semibold">Are you sure to logout?</AlertDialogTitle>
             <Button 
