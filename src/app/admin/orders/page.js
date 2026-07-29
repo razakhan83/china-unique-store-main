@@ -15,7 +15,7 @@ export default async function AdminOrdersPage({ searchParams }) {
   const initialCreateOrder = params?.createOrder === '1';
   
   // Disable pagination fully if searching via specific date boundaries
-  const limit = (startDate || endDate) ? 999999 : 12;
+  const limit = (startDate || endDate) ? 999999 : 15;
   
   const [orders, products, trashOrders] = await Promise.all([
     getAdminOrdersPage({ search, status, startDate, endDate, page, limit }),

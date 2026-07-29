@@ -537,6 +537,65 @@ export default function AdminOrdersClient({
     navigate({ search: null, status: null, startDate: null, endDate: null, page: null });
   };
 
+  const handleQuickDateFilter = (value) => {
+    let newStart = '';
+    let newEnd = '';
+    
+    const today = new Date();
+    
+    if (value === 'today') {
+      newStart = today.toISOString().split('T')[0];
+      newEnd = newStart;
+    } else if (value === 'yesterday') {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      newStart = yesterday.toISOString().split('T')[0];
+      newEnd = newStart;
+    } else if (value === 'lastWeek') {
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      newStart = lastWeek.toISOString().split('T')[0];
+      newEnd = today.toISOString().split('T')[0];
+    } else if (value === 'lastMonth') {
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      newStart = lastMonth.toISOString().split('T')[0];
+      newEnd = today.toISOString().split('T')[0];
+    }
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+    
+    navigate({
+      search: searchQuery.trim() || null,
+      startDate: newStart || null,
+      endDate: newEnd || null,
+      page: null,
+    });
+  };
+
+  const getQuickDateValue = () => {
+    if (!startDate && !endDate) return 'all';
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+    
+    if (startDate === todayStr && endDate === todayStr) return 'today';
+    if (startDate === yesterdayStr && endDate === yesterdayStr) return 'yesterday';
+    
+    const lastWeekDate = new Date();
+    lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+    if (startDate === lastWeekDate.toISOString().split('T')[0] && endDate === todayStr) return 'lastWeek';
+    
+    const lastMonthDate = new Date();
+    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+    if (startDate === lastMonthDate.toISOString().split('T')[0] && endDate === todayStr) return 'lastMonth';
+    
+    return 'custom';
+  };
+
   const isAllPaginatedSelected = displayOrders.length > 0 && displayOrders.every(o => o && selectedOrders.includes(o._id));
 
   const handleSelectAll = (checked) => {
@@ -1847,6 +1906,8 @@ export default function AdminOrdersClient({
 
   const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ORDER_STATUS || startDate || endDate;
   const canApplyFilters = Boolean(searchQuery.trim() || startDate || endDate);
+  const isFilterModified = searchQuery !== (initialSearchQuery || '') || startDate !== (initialStartDate || '') || endDate !== (initialEndDate || '');
+  const hasAppliedFilters = Boolean(initialSearchQuery || initialStartDate || initialEndDate);
   const appliedFilters = [
     statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter === TRASH_TAB_ID ? 'Trash' : statusFilter}` : null,
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
@@ -1864,7 +1925,7 @@ export default function AdminOrdersClient({
           type="button"
           size="sm"
           onClick={() => setIsCreateModalOpen(true)}
-          className="admin-cta-button"
+          className="admin-cta-button rounded-md"
         >
           <Plus data-icon="inline-start" />
           Create Order
@@ -2093,10 +2154,11 @@ export default function AdminOrdersClient({
         </DialogContent>
       </Dialog>
 
-      {/* Filters Bar — Compact */}
-      <form
-        className="admin-filter-shell flex flex-col gap-2 md:flex-row md:items-center md:gap-2"
-        onSubmit={(event) => {
+      {/* Filters & Actions Bar */}
+      <div className="admin-filter-shell flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
+        <form
+          className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2 flex-1 min-w-0"
+          onSubmit={(event) => {
           event.preventDefault();
           navigate({
             search: searchQuery.trim() || null,
@@ -2140,49 +2202,71 @@ export default function AdminOrdersClient({
                     />
                   </Field>
                 </div>
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="h-7 px-4 text-[11px] bg-black text-white hover:bg-black/90 rounded-md"
+                  >
+                    Search
+                  </Button>
+                </div>
               </div>
             </PopoverContent>
           </Popover>
 
-          <Field className="flex-1 min-w-0">
+          <Select value={getQuickDateValue()} onValueChange={handleQuickDateFilter}>
+            <SelectTrigger className="h-8 w-[130px] rounded-lg border-border/70 bg-background text-[12px] shadow-none shrink-0">
+              <SelectValue placeholder="Date Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="lastWeek">Last Week</SelectItem>
+              <SelectItem value="lastMonth">Last Month</SelectItem>
+              <SelectItem value="custom" className="hidden">Custom Range</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Field className="flex-1 min-w-0 md:max-w-sm">
             <FieldLabel className="sr-only">Search orders</FieldLabel>
-            <div className="relative">
+            <div className="relative flex items-center">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" data-icon />
               <Input
                 placeholder="Search orders"
-                className="h-8 rounded-lg border-border/70 bg-background pl-9 text-[12px] shadow-none w-full"
+                className="h-8 rounded-lg border-border/70 bg-background pl-9 pr-[64px] text-[12px] shadow-none w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                {!isFilterModified && hasAppliedFilters ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!canApplyFilters}
+                    className="h-6 px-2 text-[10px] bg-black text-white hover:bg-black/90 rounded-md"
+                  >
+                    Search
+                  </Button>
+                )}
+              </div>
             </div>
           </Field>
-
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!canApplyFilters}
-            className="admin-cta-button h-8 text-[11px] shrink-0"
-          >
-            <Search data-icon="inline-start" />
-            Apply
-          </Button>
-
-          {hasActiveFilters ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="admin-cta-button h-8 text-[11px] text-muted-foreground hover:text-foreground shrink-0"
-            >
-              <X data-icon="inline-start" />
-              Clear
-            </Button>
-          ) : null}
         </div>
       </form>
 
-      <div className="flex flex-row flex-wrap items-center gap-2 border-t border-border/50 pt-2 md:border-0 md:pt-0">
+      <div className="flex flex-row flex-wrap items-center gap-2 border-t border-border/50 pt-2 md:border-0 md:pt-0 shrink-0">
         {statusFilter === DEFAULT_ORDER_STATUS ? (
           <div className="flex flex-row flex-wrap items-center gap-1.5">
             <Button
@@ -2190,7 +2274,7 @@ export default function AdminOrdersClient({
               size="sm"
               onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
               disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px]"
+              className="h-7 px-3 text-[11px] bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-md font-medium shadow-sm"
             >
               {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
               {pendingWorkflowAction === 'sourcing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
@@ -2226,7 +2310,7 @@ export default function AdminOrdersClient({
               size="sm"
               onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
               disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px]"
+              className="h-7 px-3 text-[11px] bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-md font-medium shadow-sm"
             >
               {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
               {pendingWorkflowAction === 'packing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
@@ -2255,19 +2339,20 @@ export default function AdminOrdersClient({
             </Button>
           </div>
         ) : null}
+
         {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
           <Button
             type="button"
             size="sm"
-            variant="secondary"
             onClick={handleGenerateCourierSheet}
             disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-            className="admin-cta-button h-7 text-[11px] hidden md:flex"
+            className="h-7 px-3 text-[11px] bg-green-200 text-green-900 hover:bg-green-300 rounded-md font-medium shadow-sm hidden md:flex"
           >
-            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
-            {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+            {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier Sheet${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
           </Button>
         ) : null}
+
         {statusFilter === 'all' ? (
           <Popover>
             <PopoverTrigger asChild>
@@ -2334,6 +2419,7 @@ export default function AdminOrdersClient({
             <span className="sm:hidden">Move</span>
           </Button>
         </div>
+      </div>
       </div>
 
       {appliedFilters.length > 0 && (
@@ -2534,8 +2620,8 @@ export default function AdminOrdersClient({
                   disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
                   className="admin-cta-button h-7 text-[11px] px-2"
                 >
-                  {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Truck data-icon="inline-start" />}
-                  Courier
+                  {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+                  Courier Sheet
                 </Button>
               )}
             </div>

@@ -680,42 +680,25 @@ export function AdminCoverPhotosSkeleton() {
 
 export function AdminOrdersSkeleton() {
   return (
-    <div className="space-y-6">
-      <PageIntroSkeleton titleWidth="w-28" descriptionWidth="w-0" />
-      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
+    <div className="flex flex-col gap-4">
+      <PageIntroSkeleton titleWidth="w-28" descriptionWidth="w-0" action />
+      <div className="hidden md:flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
         {Array.from({ length: 7 }).map((_, index) => (
           <Skeleton key={index} className="h-9 w-32 rounded-full" />
         ))}
       </div>
-      <FilterToolbarSkeleton filters={0} showDateRange showActions={2} />
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-32 rounded-md" />
-              <Skeleton className="h-5 w-64 rounded-md" />
-              <Skeleton className="h-4 w-80 rounded-md" />
-            </div>
-            <Skeleton className="h-7 w-24 rounded-full" />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-8 w-40 rounded-xl" />
-            ))}
-          </div>
+      <div className="admin-filter-shell flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2 flex-1 min-w-0">
+          <Skeleton className="h-8 w-24 rounded-md shrink-0" />
+          <Skeleton className="h-8 w-full md:max-w-sm rounded-lg" />
         </div>
-        <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-28 rounded-md" />
-            <Skeleton className="h-5 w-56 rounded-md" />
-          </div>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <Skeleton className="h-9 flex-1 rounded-xl" />
-            <Skeleton className="h-9 w-36 rounded-xl" />
-          </div>
+        <div className="flex flex-row flex-wrap items-center gap-2 border-t border-border/50 pt-2 md:border-0 md:pt-0 shrink-0">
+          <Skeleton className="h-7 w-24 rounded-md" />
+          <Skeleton className="h-7 w-16 rounded-md" />
+          <Skeleton className="h-7 w-20 rounded-md hidden sm:flex" />
         </div>
       </div>
-      <TableSkeleton rows={8} columns={8} />
+      <TableSkeleton rows={8} columns={11} />
     </div>
   );
 }
