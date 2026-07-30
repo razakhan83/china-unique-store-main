@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart, LogOut, Home, Search, Settings, ShoppingBag, ShoppingCart, Package, User, UserPlus, X } from 'lucide-react';
+import { Heart, LogOut, Home, Search, Settings, ShoppingBag, ShoppingCart, Package, User, UserPlus, X, MapPin } from 'lucide-react';
 
 import { useCartActions } from '@/context/CartContext';
 
@@ -199,8 +199,8 @@ export default function MobileBottomNav({
               iconSwap={isSearchOpen ? <X className="size-5" strokeWidth={2.5} /> : undefined}
             />
             <MobileNavButton
-              icon={Package}
-              label="My Orders"
+              icon={session ? Package : MapPin}
+              label={session ? "My Orders" : "Track Order"}
               onClick={() => {
                 closeMobilePanels();
                 onNavigate?.('/orders');
