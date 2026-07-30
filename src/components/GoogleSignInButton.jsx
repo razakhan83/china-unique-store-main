@@ -26,7 +26,7 @@ function GoogleSignInButtonContent({ className, callbackUrl }) {
     <Button
       variant="outline"
       disabled={isLoading}
-      className={`relative flex w-full items-center justify-center gap-3 border-border/60 bg-background shadow-sm py-6 font-medium text-foreground transition-all duration-300 hover:bg-primary/5 hover:border-primary/20 hover:text-primary hover:shadow-md ${className}`}
+      className={`relative flex w-full items-center justify-center gap-3 border bg-background py-6 font-medium text-foreground transition-all duration-300 hover:bg-muted/50 shadow-none ${className}`}
       onClick={handleSignIn}
     >
       {isLoading ? (

@@ -65,7 +65,7 @@ export default function CategoryIconCarousel({ categories }) {
     <section className="relative border-b border-border bg-card/70 py-6 md:py-8">
       <div className="relative mx-auto max-w-7xl px-4">
         {/* Section header */}
-        <div className="mb-6 flex items-center justify-between gap-4 md:mb-8 md:items-end">
+        <div className="mb-[-12px] md:mb-8 flex items-center justify-between gap-4 md:items-end">
           <div className="min-w-0 flex-1">
             <h2 className="text-[1.25rem] leading-tight font-bold tracking-[-0.03em] text-primary [text-wrap:balance] sm:text-[1.5rem] md:text-[2.1rem]">
               Shop by Category
@@ -100,10 +100,10 @@ export default function CategoryIconCarousel({ categories }) {
             {/* Button "View All" Link */}
             <Link
               href="/categories"
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-4 text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]"
+              className="inline-flex h-8 md:h-10 shrink-0 items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-3 md:px-4 text-[13px] md:text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]"
             >
               View All
-              <ArrowRight className="ml-1 size-4" />
+              <ArrowRight className="ml-1 size-3.5 md:size-4" />
             </Link>
           </div>
         </div>

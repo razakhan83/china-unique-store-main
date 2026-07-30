@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import {
   LayoutGrid,
   Phone,
@@ -9,6 +10,7 @@ import {
   Tag,
   X,
   MessageSquarePlus,
+  LogOut,
 } from 'lucide-react';
 
 import {
@@ -28,7 +30,6 @@ import dynamic from 'next/dynamic';
 
 const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), { ssr: false });
 const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), { ssr: false });
-const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFooter'), { ssr: false });
 
 export default function MobileMenuContent({
   pathname,
@@ -40,6 +41,8 @@ export default function MobileMenuContent({
   mobileMenuButtonClass,
   onOpenSuggestions = () => {},
 }) {
+  const { data: session } = useSession();
+
   return (
     <Tabs defaultValue="menu" className="flex h-full w-full flex-col">
       <div className="flex w-full items-center p-4 pb-2">
@@ -101,6 +104,26 @@ export default function MobileMenuContent({
         </ScrollArea>
 
         <div className="mt-auto flex flex-col gap-4 border-t border-border p-4 bg-background">
+          {!session ? (
+            <Link href="/auth/signin" onClick={() => setIsSidebarOpen(false)}>
+              <Button className="w-full bg-[#006B5F] hover:bg-[#00554c] text-white rounded-lg h-10 font-medium">
+                Sign In
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                signOut();
+              }}
+              className="h-10 min-h-10 w-full justify-center rounded-lg px-3 py-2 text-[14px] font-medium transition-all duration-300 active:scale-[0.98] !bg-red-500/10 !text-red-500 hover:!bg-red-500/20 shadow-none border-0"
+            >
+              <LogOut className="mr-2 size-4" />
+              Logout
+            </Button>
+          )}
           <div className="flex justify-center gap-6 pb-5 pt-2">
             <Link href="#" className="transition-transform hover:scale-110 active:scale-95">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="#1877F2">
@@ -136,11 +159,6 @@ export default function MobileMenuContent({
               <span className="sr-only">TikTok</span>
             </Link>
           </div>
-          <NavbarSidebarFooter
-            mobileMenuButtonClass={mobileMenuButtonClass}
-            onCloseSidebar={() => setIsSidebarOpen(false)}
-            onOpenAuth={() => setIsAuthModalOpen(true)}
-          />
         </div>
       </TabsContent>
 
