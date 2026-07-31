@@ -21,18 +21,18 @@
 /* ── Left Panel (form side) ── */
 .leftPanel {
   background: var(--color-background);
-  padding: 2rem 1.25rem 10rem;
+  padding: 0.25rem 1.25rem 10rem;
 }
 
 @media (min-width: 640px) {
   .leftPanel {
-    padding: 2.5rem 2rem 10rem;
+    padding: 0.5rem 2rem 10rem;
   }
 }
 
 @media (min-width: 1024px) {
   .leftPanel {
-    padding: 3rem 3.5rem 3rem 2rem;
+    padding: 0.5rem 3.5rem 3rem 2rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -53,7 +53,7 @@
 .rightPanel {
   background: #f4f4f5;
   border-left: 1px solid oklch(0.91 0.008 95);
-  padding: 2rem 1.25rem 2rem;
+  padding: 1.5rem 1.25rem 2rem;
   display: none;
 }
 
@@ -61,7 +61,7 @@
   .rightPanel {
     display: flex;
     flex-direction: column;
-    padding: 3rem 2rem 3rem 3.5rem;
+    padding: 1.5rem 2rem 3rem 3.5rem;
     position: sticky;
     top: 0;
     max-height: 100vh;

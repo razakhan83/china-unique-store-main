@@ -29,6 +29,7 @@ import OrderSuccessModal from '@/components/OrderSuccessModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import StoreLogo from '@/components/StoreLogo';
 import CheckoutPageSkeleton from '@/components/CheckoutPageSkeleton';
 import {
   Combobox,
@@ -90,12 +91,12 @@ function FloatingLabelInput({ label, id, value, className, wrapperClassName, ...
         id={id}
         value={value}
         {...props}
-        className={cn(className, hasValue ? 'pt-[22px] pb-[6px]' : '')}
+        className={cn('h-[3.35rem] md:h-12 text-[16px] md:text-sm', className, hasValue ? 'pt-[24px] pb-[8px] md:pt-[22px] md:pb-[6px]' : '')}
       />
       <label
         htmlFor={id}
         className={cn(
-          'absolute left-3.5 top-1.5 text-[11px] font-medium text-muted-foreground/80 transition-all duration-200 pointer-events-none',
+          'absolute left-3.5 top-1.5 text-[11.5px] md:text-[11px] font-medium text-muted-foreground/80 transition-all duration-200 pointer-events-none',
           hasValue ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
         )}
       >
@@ -845,6 +846,33 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   return (
     <>
+      {/* ── TOP NAV BAR ── */}
+      <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center shadow-sm">
+        <div className="w-full max-w-[1130px] mx-auto relative flex items-center justify-between">
+          <button 
+            onClick={() => router.back()} 
+            className="inline-flex items-center gap-1.5 text-[0.95rem] font-medium text-foreground/90 hover:text-foreground hover:-translate-x-1 transition-all duration-200 ease-out z-10"
+          >
+            <ChevronLeft className="size-5" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+            <StoreLogo
+              storeName={settings.storeName}
+              lightLogoUrl={settings.lightLogoUrl}
+              darkLogoUrl={settings.darkLogoUrl}
+              logoScalePercent={settings.logoScalePercent}
+              compact
+            />
+          </div>
+
+          <div className="text-[1.1rem] sm:text-[1.35rem] font-medium text-foreground tracking-tight z-10 flex items-center gap-2">
+            Checkout
+          </div>
+        </div>
+      </div>
+
       <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
 
       {/* ══════════════════════════════════════════════
@@ -988,19 +1016,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   <FieldError>{errors.address}</FieldError>
                 </Field>
 
-                {/* Apartment */}
-                <Field>
-                  <FloatingLabelInput
-                    id="landmark"
-                    name="landmark"
-                    aria-label="Apartment, suite, etc. (optional)"
-                    label="Apartment, suite, etc."
-                    value={formData.landmark}
-                    onChange={handleChange}
-                    placeholder="Apartment, suite, etc. (optional)"
-                  />
-                </Field>
-
                 {/* City / Postal row */}
                 <div className={styles.inputRow2}>
                   <Field data-invalid={errors.city ? 'true' : undefined}>
@@ -1031,7 +1046,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                         )}
                         triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
                         className={cn(
-                          'h-11 rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
+                          'h-[3.35rem] md:h-12 text-[16px] md:text-sm rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
                           'hover:border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] hover:bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]',
                           'focus-within:border-[color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-border))] focus-within:bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] focus-within:ring-3 focus-within:ring-[color:color-mix(in_oklab,var(--color-primary)_10%,transparent)]',
                           '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
