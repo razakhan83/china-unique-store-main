@@ -18,6 +18,11 @@ const StockRequestSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    userName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     whatsappNumber: {
       type: String,
       default: '',

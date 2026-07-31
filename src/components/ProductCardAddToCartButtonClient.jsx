@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, BellRing } from 'lucide-react';
 
 import { useCartActions } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -67,16 +67,36 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
   }
 
   if (mode === 'icon') {
+    if (isOutOfStock) {
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const productSlug = product.slug || product._id || product.id;
+            router.push(`/products/${productSlug}`);
+          }}
+          className="inline-flex shrink-0 size-9 sm:size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 outline-none transition-all duration-300 ease-out hover:bg-slate-200 hover:text-slate-900 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50 shadow-sm"
+          aria-label="Notify Me"
+          title="Notify Me When In Stock"
+        >
+          <span className="relative block size-4.5 sm:size-5">
+            <BellRing className="absolute inset-0 size-4.5 sm:size-5 transition-all duration-300 ease-out" />
+          </span>
+        </button>
+      );
+    }
+
     return (
       <button
         type="button"
-        disabled={isBusy || isOutOfStock}
+        disabled={isBusy}
         onClick={handleAddToCart}
         data-state={animationState}
         aria-busy={isBusy}
         className={cn(
           "inline-flex shrink-0 size-9 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50",
-          isOutOfStock && "pointer-events-none opacity-40",
           (isBusy || isLoading) && "pointer-events-none opacity-60"
         )}
         aria-label="Add to cart"

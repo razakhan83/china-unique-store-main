@@ -67,6 +67,7 @@ const primaryNavItems = [
 const productNavItems = [
   { href: '/admin/products', label: 'Product List', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') && !pathname.startsWith('/admin/products/add') },
   { href: '/admin/products/add', label: 'Add Product', icon: CirclePlus, match: (pathname) => pathname.startsWith('/admin/products/add') },
+  { href: '/admin/restock-requests', label: 'Restock Requests', icon: Bell, match: (pathname) => pathname.startsWith('/admin/restock-requests') },
   { href: '/admin/vendors', label: 'Vendors', icon: Store, match: (pathname) => pathname.startsWith('/admin/vendors') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/reviews') },
@@ -171,6 +172,7 @@ function getPageMeta(pathname) {
   if (pathname.startsWith('/admin/vendors')) return { title: 'Vendors' };
   if (pathname.startsWith('/admin/categories')) return { title: 'Categories' };
   if (pathname.startsWith('/admin/reviews')) return { title: 'Reviews' };
+  if (pathname.startsWith('/admin/restock-requests')) return { title: 'Restock Requests' };
   if (pathname.startsWith('/admin/stock')) return { title: 'Stock Management' };
   if (pathname.startsWith('/admin/users')) return { title: 'Customers / Users' };
   if (pathname.startsWith('/admin/shipping')) return { title: 'Shipping Settings' };

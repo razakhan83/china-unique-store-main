@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { getAdminReviewsPage } from '@/lib/data';
 import AdminReviewsClient from './AdminReviewsClient';
@@ -15,13 +16,15 @@ export default async function AdminReviewsPage({ searchParams }) {
   const result = await getAdminReviewsPage({ search, page, limit: 12 });
 
   return (
-    <AdminReviewsClient
-      initialReviews={result.items}
-      total={result.total}
-      totalPages={result.totalPages}
-      currentPage={result.page}
-      initialSearchQuery={result.searchTerm}
-      summary={result.summary}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground animate-pulse">Loading reviews...</div>}>
+      <AdminReviewsClient
+        initialReviews={result.items}
+        total={result.total}
+        totalPages={result.totalPages}
+        currentPage={result.page}
+        initialSearchQuery={result.searchTerm}
+        summary={result.summary}
+      />
+    </Suspense>
   );
 }

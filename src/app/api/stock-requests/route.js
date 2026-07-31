@@ -4,6 +4,8 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import { normalizeEmail, normalizePhone } from '@/lib/admin';
 import Product from '@/models/Product';
 import StockRequest from '@/models/StockRequest';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,7 +15,12 @@ export async function POST(request) {
 
     const body = await request.json();
     const productId = String(body.productId || '').trim();
-    const email = normalizeEmail(body.email);
+    
+    // Optional: get session user if logged in
+    const session = await getServerSession(authOptions);
+    const sessionName = session?.user?.name || '';
+    
+    const email = normalizeEmail(body.email) || normalizeEmail(session?.user?.email);
     const whatsappNumber = normalizePhone(body.whatsappNumber);
 
     if (!productId) {
@@ -74,6 +81,7 @@ export async function POST(request) {
       productId: product._id,
       productSlug: product.slug || '',
       productName: product.Name,
+      userName: sessionName,
       whatsappNumber,
       email,
     });

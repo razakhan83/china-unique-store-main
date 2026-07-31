@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getAdminProductCategoryOptions, getAdminProductsPage } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
 
@@ -19,19 +20,21 @@ export default async function AdminProductsPage({ searchParams }) {
   ]);
 
   return (
-    <AdminProductsClient
-      initialProducts={result.items}
-      total={result.total}
-      totalPages={result.totalPages}
-      currentPage={result.page}
-      pageSize={result.limit}
-      initialSearchQuery={result.searchTerm}
-      initialStatusFilter={result.status}
-      initialStockFilter={result.stock}
-      initialCategoryFilter={result.category}
-      initialSortOption={result.sort}
-      categoryOptions={categoryOptions}
-      summary={result.summary}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground animate-pulse">Loading products...</div>}>
+      <AdminProductsClient
+        initialProducts={result.items}
+        total={result.total}
+        totalPages={result.totalPages}
+        currentPage={result.page}
+        pageSize={result.limit}
+        initialSearchQuery={result.searchTerm}
+        initialStatusFilter={result.status}
+        initialStockFilter={result.stock}
+        initialCategoryFilter={result.category}
+        initialSortOption={result.sort}
+        categoryOptions={categoryOptions}
+        summary={result.summary}
+      />
+    </Suspense>
   );
 }

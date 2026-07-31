@@ -2469,3 +2469,44 @@ export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
     totalPages: Math.ceil(total / limitNumber),
   };
 }
+
+export async function getAdminStockRequests({ page = 1, limit = 20, status = 'all', productSearch = '' } = {}) {
+  await mongooseConnect();
+  const StockRequest = (await import('@/models/StockRequest')).default;
+  
+  const query = {};
+  if (status !== 'all') {
+    query.status = status;
+  }
+  if (productSearch) {
+    query.productName = { $regex: productSearch, $options: 'i' };
+  }
+  
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.max(1, Number(limit) || 20);
+  const skip = (safePage - 1) * safeLimit;
+  
+  const [items, total] = await Promise.all([
+    StockRequest.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .lean(),
+    StockRequest.countDocuments(query),
+  ]);
+  
+  return {
+    items: items.map(item => ({
+      ...item,
+      _id: item._id.toString(),
+      productId: item.productId?.toString(),
+      createdAt: item.createdAt ? item.createdAt.toISOString() : null,
+      updatedAt: item.updatedAt ? item.updatedAt.toISOString() : null,
+    })),
+    total,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.ceil(total / safeLimit),
+  };
+}
+

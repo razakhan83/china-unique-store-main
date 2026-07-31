@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductCard from '@/components/ProductCard';
-import ProductActions, { ProductSocialActions } from '@/components/ProductActions';
+import ProductActions, { ProductSocialActions, ProductWhatsAppOrderButton } from '@/components/ProductActions';
 import ProductDescription from '@/components/ProductDescription';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductGallery from '@/components/ProductGallery';
@@ -248,8 +248,11 @@ export default function ProductPage({ params }) {
       <ProductPageScrollReset />
 
       <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
-        <div className="md:hidden">
+        <div className="flex items-center justify-between md:hidden">
           <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
+          <Suspense fallback={null}>
+            <ProductMobileStockTag paramsPromise={params} />
+          </Suspense>
         </div>
         <div className="hidden md:block pb-1">
           <Suspense fallback={<ProductBreadcrumbSkeleton />}>
@@ -275,6 +278,25 @@ export default function ProductPage({ params }) {
   );
 }
 
+async function ProductMobileStockTag({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
+  const pageData = await getCachedProductPageData(slug);
+  if (!pageData?.product) return null;
+  
+  const product = pageData.product;
+  const isOutOfStock = product.StockStatus === "Out of Stock" || product.showOnStore === false;
+  
+  return isOutOfStock ? (
+    <div className="rounded-md border border-destructive/20 bg-destructive/10 text-destructive px-2.5 py-1 text-[11px] font-bold">
+      Out of Stock
+    </div>
+  ) : (
+    <div className="rounded-md border border-emerald-500/20 bg-emerald-50 text-emerald-600 px-2.5 py-1 text-[11px] font-bold tracking-wide flex items-center">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+      In Stock
+    </div>
+  );
+}
 
 async function ProductBreadcrumb({ paramsPromise }) {
   const { id: slug } = await paramsPromise;
@@ -377,19 +399,21 @@ async function ProductHeroSection({ paramsPromise }) {
                 <ProductSocialActions product={product} className="md:hidden shrink-0 mt-0.5" />
               </div>
 
-              <a 
-                href="#product-reviews"
-                className="flex items-center gap-2 group w-fit -mt-1"
-              >
-                 <div className="flex items-center text-amber-400">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
-                    ))}
-                 </div>
-                 <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                   ({reviewSummary.reviewCount} reviews)
-                 </span>
-              </a>
+              {reviewSummary.reviewCount > 0 && (
+                <a 
+                  href="#product-reviews"
+                  className="flex items-center gap-2 group w-fit -mt-1"
+                >
+                   <div className="flex items-center text-amber-400">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
+                      ))}
+                   </div>
+                   <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                     ({reviewSummary.reviewCount} {reviewSummary.reviewCount === 1 ? 'review' : 'reviews'})
+                   </span>
+                </a>
+              )}
 
               <div className="hidden">
                 {/* Static price block moved to ProductActions for dynamic pack options */}
@@ -412,6 +436,14 @@ async function ProductHeroSection({ paramsPromise }) {
                 dangerouslySetInnerHTML={{ __html: product.shortDescription }}
               />
             ) : <Separator className="my-6" />}
+
+            <div className="mt-4">
+              <ProductWhatsAppOrderButton 
+                product={product} 
+                whatsappNumber={settings.whatsappNumber} 
+                storeName={settings.storeName} 
+              />
+            </div>
           </div>
         </div>
       </div>

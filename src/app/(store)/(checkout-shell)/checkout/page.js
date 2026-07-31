@@ -22,7 +22,7 @@ export default function CheckoutPage() {
 
 async function CheckoutContent() {
   const settings = await getStoreSettings();
-  const productsPromise = await getProductsList({ limit: 12 });
+  const productsPromise = await getProductsList({ limit: 36 });
   const relatedProducts = (productsPromise?.items || []).filter(p => p.StockStatus === 'In Stock' && p.showOnStore !== false);
   
   return <CheckoutClient settings={settings} relatedProducts={relatedProducts} />;

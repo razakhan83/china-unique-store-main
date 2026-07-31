@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { getAdminUsersPage } from '@/lib/data';
 import AdminUsersClient from './AdminUsersClient';
@@ -17,15 +18,17 @@ export default async function AdminUsersPage({ searchParams }) {
   const result = await getAdminUsersPage({ search, status, type, page, limit: 12 });
 
   return (
-    <AdminUsersClient
-      initialUsers={result.items}
-      total={result.total}
-      totalPages={result.totalPages}
-      currentPage={result.page}
-      initialSearchQuery={result.searchTerm}
-      initialStatusFilter={result.status}
-      initialTypeFilter={result.type}
-      summary={result.summary}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground animate-pulse">Loading users...</div>}>
+      <AdminUsersClient
+        initialUsers={result.items}
+        total={result.total}
+        totalPages={result.totalPages}
+        currentPage={result.page}
+        initialSearchQuery={result.searchTerm}
+        initialStatusFilter={result.status}
+        initialTypeFilter={result.type}
+        summary={result.summary}
+      />
+    </Suspense>
   );
 }

@@ -173,7 +173,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                   "object-cover transition-all duration-500 ease-out",
                   (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
-                  isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75 blur-[2.5px]",
+                  isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
                   (secondaryImageSrc && !isUnavailable) && "md:group-hover:opacity-0"
                 )}
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
@@ -209,12 +209,10 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
           )}
 
           {isUnavailable && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/5">
-              <Badge
-                className="pointer-events-none rounded-full border border-white/20 bg-zinc-900/95 px-3.5 py-1.5 text-[11px] font-bold text-white uppercase tracking-[0.15em] shadow-xl backdrop-blur-md"
-              >
+            <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
+              <div className="rounded-md border border-destructive/20 bg-red-50/95 text-destructive px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur-md">
                 Out of Stock
-              </Badge>
+              </div>
             </div>
           )}
         </Link>

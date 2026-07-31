@@ -2,7 +2,7 @@
 
 import { createContext, startTransition, useContext, useEffect, useMemo, useOptimistic, useState } from 'react';
 import { toast } from 'sonner';
-import { ShoppingCart } from 'lucide-react';
+import { CheckCircle2, ShoppingCart } from 'lucide-react';
 
 import { trackAddToCartEvent } from '@/lib/clientTracking';
 
@@ -164,29 +164,24 @@ function CartProviderContent({ children }) {
             }
 
             const toastId = toast(
-                <div className="flex items-center gap-3 w-full py-0.5 sm:py-1">
-                    <div className="relative size-12 sm:size-14 rounded-lg overflow-hidden bg-muted shrink-0 flex items-center justify-center border border-border/50 shadow-sm">
-                        {(normalized.Images?.[0]?.url || normalized.image || normalized.image_url) ? (
-                            <img src={normalized.Images?.[0]?.url || normalized.image || normalized.image_url} alt={normalized.Name || 'Product'} className="object-cover w-full h-full" />
-                        ) : (
-                            <ShoppingCart className="size-5 sm:size-6 text-muted-foreground" />
-                        )}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <CheckCircle2 className="size-4 text-emerald-500" />
+                        <span>Added to your cart</span>
                     </div>
-                    <div className="flex flex-col flex-1 min-w-0 pr-2">
-                        <p className="font-semibold text-sm sm:text-[15px] line-clamp-1 text-foreground leading-snug tracking-tight">{normalized.Name}</p>
-                        <p className="text-xs sm:text-[13px] font-medium text-muted-foreground mt-0.5">
-                            <span className="text-foreground/70">{normalized.quantity} ×</span> Rs. {(normalized.discountedPrice ?? normalized.Price).toLocaleString('en-PK')}
-                        </p>
-                    </div>
-                    <button type="button" onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} className="shrink-0 flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 text-[11px] sm:text-xs font-bold uppercase tracking-wide bg-primary text-primary-foreground rounded-lg shadow-sm transition-all hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
+                    <button 
+                        type="button" 
+                        onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} 
+                        className="text-[13px] font-bold text-primary hover:text-primary/80 transition-colors shrink-0 uppercase tracking-wide"
+                    >
                         View Cart
                     </button>
                 </div>,
                 { 
-                    position: 'top-center', 
-                    duration: 5000,
-                    className: '!max-w-none p-2 sm:p-3 rounded-[1.15rem]',
-                    style: { width: '100%', minWidth: 'min(420px, calc(100vw - 32px))' }
+                    position: 'bottom-center', 
+                    duration: 3500,
+                    className: 'mb-[72px] lg:mb-6 mx-auto rounded-full border border-border/60 shadow-lg !p-3 !px-4 !max-w-max !w-auto bg-background/95 backdrop-blur-md',
+                    style: { width: 'auto', minWidth: '0' }
                 }
             );
 

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getAdminOrderProductCatalog, getAdminOrdersPage, getAdminTrashOrders } from '@/lib/data';
 import { DEFAULT_ORDER_STATUS } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -24,20 +25,22 @@ export default async function AdminOrdersPage({ searchParams }) {
   ]);
 
   return (
-    <AdminOrdersClient
-      initialOrders={orders.items}
-      productCatalog={products}
-      total={orders.total}
-      totalPages={orders.totalPages}
-      currentPage={orders.page}
-      pageSize={orders.limit}
-      initialSearchQuery={orders.searchTerm}
-      initialStatusFilter={orders.status}
-      initialStartDate={orders.startDate}
-      initialEndDate={orders.endDate}
-      summary={orders.summary}
-      initialTrashOrders={trashOrders}
-      initialCreateOrder={initialCreateOrder}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground animate-pulse">Loading orders...</div>}>
+      <AdminOrdersClient
+        initialOrders={orders.items}
+        productCatalog={products}
+        total={orders.total}
+        totalPages={orders.totalPages}
+        currentPage={orders.page}
+        pageSize={orders.limit}
+        initialSearchQuery={orders.searchTerm}
+        initialStatusFilter={orders.status}
+        initialStartDate={orders.startDate}
+        initialEndDate={orders.endDate}
+        summary={orders.summary}
+        initialTrashOrders={trashOrders}
+        initialCreateOrder={initialCreateOrder}
+      />
+    </Suspense>
   );
 }
