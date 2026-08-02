@@ -153,7 +153,7 @@ function CartProviderContent({ children }) {
 
             try {
               trackAddToCartEvent({
-                productId: normalized._id || normalized.id || normalized.slug,
+                productId: normalized.slug || normalized._id || normalized.id,
                 name: normalized.Name,
                 category: Array.isArray(normalized.Category) ? normalized.Category.join(', ') : '',
                 value: normalized.discountedPrice ?? normalized.Price,

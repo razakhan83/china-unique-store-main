@@ -20,8 +20,8 @@ export async function GET(request) {
       <g:brand><![CDATA[${item.brand || feed.storeName}]]></g:brand>
       <g:condition><![CDATA[${item.condition || 'new'}]]></g:condition>
       <g:availability><![CDATA[${item.availability || 'in stock'}]]></g:availability>
-      <g:price><![CDATA[${item.price} PKR]]></g:price>
-      ${item.salePrice ? `<g:sale_price><![CDATA[${item.salePrice} PKR]]></g:sale_price>` : ''}
+      <g:price><![CDATA[${item.price}]]></g:price>
+      ${item.salePrice ? `<g:sale_price><![CDATA[${item.salePrice}]]></g:sale_price>` : ''}
       ${item.productType ? `<g:product_type><![CDATA[${item.productType}]]></g:product_type>` : ''}
     </item>`).join('')}
   </channel>
