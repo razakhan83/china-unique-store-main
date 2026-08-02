@@ -1348,7 +1348,7 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
     : null;
 
   return {
-    id: product.slug || product._id,
+    id: String(product._id),
     title: product.Name,
     description: stripHtml(product.Description || `Buy ${product.Name} from ${storeName}.`),
     availability: product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock',
