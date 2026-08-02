@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerAnimations';
 import {
   Table,
   TableBody,
@@ -333,6 +334,7 @@ export default function AdminUsersClient({
       </div>
 
       <div className={cn('admin-surface overflow-hidden rounded-[1.2rem] transition-opacity', isPending && 'opacity-70')}>
+        <StaggerContainer>
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -346,10 +348,12 @@ export default function AdminUsersClient({
           <TableBody>
             {users.length > 0 ? (
               users.map((user) => (
-                <TableRow
+                <StaggerItem
+                  as="tr"
                   key={user._id}
                   id={`user-${user._id}`}
                   className={cn(
+                    'border-b transition-colors data-[state=selected]:bg-muted',
                     'transition-all duration-700',
                     highlightedId === user._id ? 'bg-muted ring-1 ring-border' : 'hover:bg-muted/30',
                   )}
@@ -475,7 +479,7 @@ export default function AdminUsersClient({
                       </DropdownMenu>
                     )}
                   </TableCell>
-                </TableRow>
+                </StaggerItem>
               ))
             ) : (
               <TableRow>
@@ -492,6 +496,7 @@ export default function AdminUsersClient({
             )}
           </TableBody>
         </Table>
+        </StaggerContainer>
       </div>
 
       {totalPages > 1 && (
@@ -568,9 +573,9 @@ export default function AdminUsersClient({
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <StaggerContainer className="space-y-4">
                 {customerOrders.map((order) => (
-                  <div key={order._id} className="relative group rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm hover:border-border/80">
+                  <StaggerItem key={order._id} className="relative group rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm hover:border-border/80">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <Link href={`/admin/orders?search=${order.orderId}`} className="font-semibold text-foreground hover:underline flex items-center gap-1.5">
@@ -595,9 +600,9 @@ export default function AdminUsersClient({
                       <span className="text-sm font-medium text-muted-foreground">{order.orderQuantity} Item{order.orderQuantity === 1 ? '' : 's'}</span>
                       <span className="font-bold text-foreground">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
                     </div>
-                  </div>
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerContainer>
             )}
           </ScrollArea>
         </SheetContent>

@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerAnimations';
 import { SettingSection, ToggleField } from './settingsShared';
 
 function AdminAccessSection() {
@@ -108,14 +110,16 @@ function AdminAccessSection() {
       </form>
 
       {loadingList ? (
-        <div className="space-y-2 pt-2">
+        <StaggerContainer className="space-y-2 pt-2">
           {[1, 2].map((item) => (
-            <div key={item} className="h-11 animate-pulse rounded-lg bg-muted/50" />
+            <StaggerItem key={item}>
+              <Skeleton className="h-11 rounded-lg w-full" />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       ) : (
-        <div className="space-y-5 pt-1">
-          <div className="space-y-2">
+        <StaggerContainer className="space-y-5 pt-1">
+          <StaggerItem className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Configured admins</p>
             {configuredAdmins.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
@@ -139,9 +143,9 @@ function AdminAccessSection() {
                 ))}
               </ul>
             )}
-          </div>
+          </StaggerItem>
 
-          <div className="space-y-2">
+          <StaggerItem className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Additional admins</p>
             {dynamicAdmins.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
@@ -173,8 +177,8 @@ function AdminAccessSection() {
                 ))}
               </ul>
             )}
-          </div>
-        </div>
+          </StaggerItem>
+        </StaggerContainer>
       )}
     </SettingSection>
   );
@@ -231,7 +235,8 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
         </p>
       </div>
 
-      <div className="space-y-6">
+      <StaggerContainer className="space-y-6">
+        <StaggerItem>
         <SettingSection
           icon={Store}
           title="General Information"
@@ -300,7 +305,9 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             </Field>
           </FieldGroup>
         </SettingSection>
+        </StaggerItem>
 
+        <StaggerItem>
         <SettingSection
           icon={RadioTower}
           title="Social & Tracking"
@@ -394,8 +401,9 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             </Field>
           </FieldGroup>
         </SettingSection>
+        </StaggerItem>
 
-        <div className="flex items-center gap-4 pb-4">
+        <StaggerItem className="flex items-center gap-4 pb-4">
           <Button onClick={handleSave} disabled={saving} size="sm" className="admin-cta-button">
             {saving ? (
               <Loader2 className="animate-spin" data-icon="inline-start" />
@@ -405,10 +413,10 @@ export default function AdminSettingsClient({ initialSettings, isConfiguredAdmin
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
           </Button>
           {saved ? <span className="text-sm font-medium text-foreground">Settings updated successfully.</span> : null}
-        </div>
+        </StaggerItem>
 
-        {isConfiguredAdmin ? <AdminAccessSection /> : null}
-      </div>
+        {isConfiguredAdmin ? <StaggerItem><AdminAccessSection /></StaggerItem> : null}
+      </StaggerContainer>
     </div>
   );
 }

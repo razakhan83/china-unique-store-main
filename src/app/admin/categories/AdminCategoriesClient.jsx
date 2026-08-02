@@ -61,6 +61,7 @@ import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { cn } from "@/lib/utils";
 import CategoryPillCard from "@/components/home/CategoryPillCard";
 import { getCategoryColorByIndex } from "@/lib/categoryColors";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerAnimations";
 
 
 
@@ -870,17 +871,18 @@ export default function AdminCategoriesClient() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={orderedCategories.map((c) => c._id)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-3">
+            <StaggerContainer className="flex flex-col gap-3">
               {orderedCategories.map((category) => (
-                <CategoryCard
-                  key={category._id}
-                  category={category}
-                  onEdit={openEditModal}
-                  onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
-                  onToggleEnabled={toggleCategoryEnabled}
-                />
+                <StaggerItem key={category._id}>
+                  <CategoryCard
+                    category={category}
+                    onEdit={openEditModal}
+                    onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
+                    onToggleEnabled={toggleCategoryEnabled}
+                  />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </SortableContext>
         </DndContext>
       )}
