@@ -29,8 +29,28 @@ export function postMetaEvent(payload) {
 export function trackPageViewEvent() {
   const eventId = createEventId('pageview');
 
-  if (typeof window.fbq === 'function') {
-    window.fbq('track', 'PageView', {}, { eventID: eventId });
+  const fireClientEvent = () => {
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'PageView', {}, { eventID: eventId });
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    if (typeof window.fbq === 'function') {
+      fireClientEvent();
+    } else {
+      // Retry for up to 2 seconds if fbq isn't initialized yet
+      let retries = 0;
+      const interval = setInterval(() => {
+        retries++;
+        if (typeof window.fbq === 'function') {
+          fireClientEvent();
+          clearInterval(interval);
+        } else if (retries >= 20) {
+          clearInterval(interval);
+        }
+      }, 100);
+    }
   }
 
   postMetaEvent({
