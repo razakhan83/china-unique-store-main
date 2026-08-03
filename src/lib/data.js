@@ -1045,7 +1045,16 @@ export async function getStorefrontHomePage() {
       .map((section) => {
         if (section.type === 'HeroSlider') {
           const slides = Array.isArray(section.slides)
-            ? section.slides.filter((slide) => slide?.desktopImage?.url && slide?.mobileImage?.url)
+            ? section.slides.filter((slide) =>
+                Boolean(
+                  slide?.desktopImage?.url ||
+                  slide?.mobileImage?.url ||
+                  slide?.pcSrc ||
+                  slide?.mobileSrc ||
+                  slide?.image ||
+                  slide?.src
+                )
+              )
             : [];
 
           return slides.length > 0 ? { ...section, slides } : null;

@@ -13,8 +13,12 @@ function extractSlideImages(slide) {
   const desktopAsset = slide?.desktopImage || null;
   const mobileAsset = slide?.mobileImage || null;
 
-  const desktopSrc = desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '';
-  const mobileSrc = mobileAsset?.url || slide?.mobileSrc || desktopSrc || '';
+  const rawDesktopSrc = desktopAsset?.url || slide?.pcSrc || slide?.desktopSrc || '';
+  const rawMobileSrc = mobileAsset?.url || slide?.mobileSrc || '';
+  const fallbackSrc = rawDesktopSrc || rawMobileSrc || slide?.image || slide?.src || '';
+
+  const desktopSrc = rawDesktopSrc || fallbackSrc;
+  const mobileSrc = rawMobileSrc || fallbackSrc;
 
   return {
     desktopSrc,
@@ -145,23 +149,7 @@ export default function HeroSlider({ slides = [] }) {
             aria-hidden={safeActiveIndex !== index}
           >
             <SlideFrame href={slide.link}>
-              {/* Mobile Image */}
-              {slide.images.mobileSrc && (
-                <Image
-                  src={slide.images.mobileSrc}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover md:hidden"
-                  quality={85}
-                  {...getBlurPlaceholderProps(slide.images.mobileBlur)}
-                />
-              )}
-              {/* PC Image */}
-              {slide.images.desktopSrc && (
+              {slide.images.desktopSrc === slide.images.mobileSrc ? (
                 <Image
                   src={slide.images.desktopSrc}
                   alt={slide.alt}
@@ -170,10 +158,43 @@ export default function HeroSlider({ slides = [] }) {
                   priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
-                  className="hidden object-cover md:block"
+                  className="object-cover"
                   quality={85}
                   {...getBlurPlaceholderProps(slide.images.desktopBlur)}
                 />
+              ) : (
+                <>
+                  {/* Mobile Image */}
+                  {slide.images.mobileSrc && (
+                    <Image
+                      src={slide.images.mobileSrc}
+                      alt={slide.alt}
+                      fill
+                      sizes="100vw"
+                      priority={index === 0}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      className="object-cover md:hidden"
+                      quality={85}
+                      {...getBlurPlaceholderProps(slide.images.mobileBlur)}
+                    />
+                  )}
+                  {/* PC Image */}
+                  {slide.images.desktopSrc && (
+                    <Image
+                      src={slide.images.desktopSrc}
+                      alt={slide.alt}
+                      fill
+                      sizes="100vw"
+                      priority={index === 0}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      className="hidden object-cover md:block"
+                      quality={85}
+                      {...getBlurPlaceholderProps(slide.images.desktopBlur)}
+                    />
+                  )}
+                </>
               )}
             </SlideFrame>
 
