@@ -53,15 +53,15 @@ export default function GuestOrderLookupForm() {
   }
 
   return (
-    <Card className="border-border/60 shadow-lg bg-card/80 backdrop-blur-sm overflow-hidden">
-      <CardHeader className="pb-6 pt-8">
+    <Card className="border-none shadow-none bg-transparent sm:border-solid sm:border-border/60 sm:shadow-xl sm:bg-card/80 sm:backdrop-blur-sm overflow-hidden rounded-none sm:rounded-3xl">
+      <CardHeader className="pb-6 pt-8 px-2 sm:px-6">
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-inner">
-            <PackageSearch className="size-8" />
+          <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-inner">
+            <PackageSearch className="size-6 sm:size-8" />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold tracking-tight">Track Your Order</CardTitle>
-            <CardDescription className="text-base px-2 sm:px-6 leading-relaxed">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-foreground">Track Your Order</h1>
+            <CardDescription className="text-sm sm:text-base px-2 sm:px-6 leading-relaxed mt-1">
               Enter your order details below to check the current status and tracking information.
             </CardDescription>
           </div>
@@ -71,11 +71,11 @@ export default function GuestOrderLookupForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <FieldGroup className="space-y-5">
             <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-id" className="text-sm font-semibold text-foreground mb-1.5">Order ID</FieldLabel>
-              <InputGroup className="min-h-12 rounded-xl border-border/70 bg-background shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
-                <InputGroupAddon align="inline-start" className="pl-4 text-muted-foreground">
+              <FieldLabel htmlFor="guest-order-id" className="text-sm lg:text-base font-semibold text-foreground mb-2">Order ID</FieldLabel>
+              <InputGroup className="min-h-14 lg:min-h-16 rounded-xl lg:rounded-2xl border border-border/50 bg-background shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300">
+                <InputGroupAddon align="inline-start" className="pl-4 lg:pl-5 text-muted-foreground">
                   <InputGroupText>
-                    <ClipboardList className="size-5" />
+                    <ClipboardList className="size-5 lg:size-6" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
@@ -84,7 +84,7 @@ export default function GuestOrderLookupForm() {
                   placeholder="e.g. ORD-ABC123"
                   value={orderId}
                   onChange={(event) => setOrderId(event.target.value.toUpperCase())}
-                  className="h-12 px-3 text-base placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
+                  className="h-14 lg:h-16 px-3 lg:px-4 text-base lg:text-lg placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
                   disabled={isPending}
                   aria-invalid={Boolean(submitError)}
                   required
@@ -96,11 +96,11 @@ export default function GuestOrderLookupForm() {
             </Field>
 
             <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-phone" className="text-sm font-semibold text-foreground mb-1.5">Phone Number</FieldLabel>
-              <InputGroup className="min-h-12 rounded-xl border-border/70 bg-background shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
-                <InputGroupAddon align="inline-start" className="pl-4 text-muted-foreground">
+              <FieldLabel htmlFor="guest-order-phone" className="text-sm lg:text-base font-semibold text-foreground mb-2">Phone Number</FieldLabel>
+              <InputGroup className="min-h-14 lg:min-h-16 rounded-xl lg:rounded-2xl border border-border/50 bg-background shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300">
+                <InputGroupAddon align="inline-start" className="pl-4 lg:pl-5 text-muted-foreground">
                   <InputGroupText>
-                    <Phone className="size-5" />
+                    <Phone className="size-5 lg:size-6" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
@@ -109,7 +109,7 @@ export default function GuestOrderLookupForm() {
                   placeholder="e.g. 0300 1234567"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  className="h-12 px-3 text-base placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
+                  className="h-14 lg:h-16 px-3 lg:px-4 text-base lg:text-lg placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
                   disabled={isPending}
                   aria-invalid={Boolean(submitError)}
                   required
@@ -124,18 +124,18 @@ export default function GuestOrderLookupForm() {
 
           <Button 
             type="submit" 
-            className="w-full h-14 text-base font-semibold rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 mt-8"
+            className="w-full h-14 lg:h-16 text-base lg:text-lg font-bold rounded-xl lg:rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 mt-10"
             disabled={isPending || !orderId.trim() || !phone.trim()}
           >
             {isPending ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="size-5 animate-spin" />
+                <Loader2 className="size-5 lg:size-6 animate-spin" />
                 Searching...
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2 w-full">
                 Track Order
-                <ArrowRight className="size-5" />
+                <ArrowRight className="size-5 lg:size-6" />
               </span>
             )}
           </Button>

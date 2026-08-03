@@ -99,21 +99,19 @@ async function OrdersContent() {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-muted/10 pb-20 pt-10 sm:pt-16">
-        <div className="container mx-auto max-w-3xl px-4 sm:px-6">
-          <div className="mb-10 text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Track Your Order</h1>
-            <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-              Use your order ID and phone number to track your package as a guest, or sign in to your account to view your complete order history.
-            </p>
-          </div>
-
-          <div className="flex flex-col space-y-12">
-            <div className="w-full">
+      <main className="min-h-[calc(100vh-64px)] bg-background sm:bg-muted/10 py-8 sm:py-16 flex justify-center items-start lg:items-center">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 w-full">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-8 lg:gap-16 w-full">
+            <div className="w-full lg:w-7/12">
               <GuestOrderLookupForm />
             </div>
             
-            <div className="relative">
+            <div className="hidden lg:flex flex-col items-center justify-center relative w-16 shrink-0">
+              <span className="h-[300px] border-l border-border/60" />
+              <span className="absolute bg-muted/10 py-2 px-1 text-muted-foreground font-medium text-xs uppercase tracking-wider">Or</span>
+            </div>
+
+            <div className="relative lg:hidden">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border/60" />
               </div>
@@ -122,17 +120,17 @@ async function OrdersContent() {
               </div>
             </div>
 
-            <div className="w-full">
-              <Empty className="surface-card rounded-2xl border border-border/50 shadow-sm bg-background py-10 px-6 relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div className="w-full lg:flex-1">
+              <Empty className="h-full min-h-[300px] surface-card rounded-none sm:rounded-2xl border-none shadow-none bg-transparent sm:bg-background sm:border-solid sm:border-border/50 sm:shadow-sm sm:border py-6 sm:py-10 px-2 sm:px-6 relative overflow-hidden flex flex-col items-center justify-center text-center">
                 <div className="absolute -right-8 -top-8 size-32 rounded-full bg-primary/5 pointer-events-none blur-2xl"></div>
                 <div className="absolute -left-8 -bottom-8 size-32 rounded-full bg-primary/5 pointer-events-none blur-2xl"></div>
                 
                 <EmptyHeader className="relative z-10 w-full flex flex-col items-center">
-                  <EmptyMedia variant="icon" className="size-16 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm mb-4 mx-auto">
-                    <ShoppingBag className="size-8" />
+                  <EmptyMedia variant="icon" className="size-14 sm:size-16 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm mb-4 mx-auto">
+                    <ShoppingBag className="size-6 sm:size-8" />
                   </EmptyMedia>
-                  <EmptyTitle className="text-2xl font-bold text-foreground">Have an account?</EmptyTitle>
-                  <EmptyDescription className="text-base mt-3 max-w-md mx-auto leading-relaxed">
+                  <EmptyTitle className="text-xl sm:text-2xl font-bold text-foreground">Have an account?</EmptyTitle>
+                  <EmptyDescription className="text-sm sm:text-base mt-3 max-w-md mx-auto leading-relaxed">
                     Sign in to view all your past orders, save favorites, and enjoy a faster checkout experience.
                   </EmptyDescription>
                 </EmptyHeader>
