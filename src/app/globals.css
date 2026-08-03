@@ -555,11 +555,6 @@
   pointer-events: auto;
 }
 
-.hero-fade-slide img {
-  position: relative;
-  height: 100%;
-  width: 100%;
-}
 
 .category-product-carousel-shell {
   position: relative;
