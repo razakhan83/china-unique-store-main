@@ -3,7 +3,6 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import ManualCustomer from '@/models/ManualCustomer';
 import { requireAdmin } from '@/lib/requireAdmin';
 
-
 export async function GET(req) {
   try {
     await requireAdmin();

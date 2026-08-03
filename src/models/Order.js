@@ -146,6 +146,9 @@ const OrderSchema = new mongoose.Schema(
     }
 );
 
+OrderSchema.index({ customerPhone: 1, createdAt: -1 });
+OrderSchema.index({ normalizedPhone: 1, createdAt: -1 });
+OrderSchema.index({ isDraft: 1, isDeleted: 1, createdAt: -1 });
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ customerEmail: 1, createdAt: -1 });

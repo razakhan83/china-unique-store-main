@@ -25,7 +25,7 @@ export const authOptions = {
           await mongooseConnect();
           const Settings = (await import('@/models/Settings')).default;
           const settings = await Settings.findOne({ singletonKey: 'site-settings' }).lean();
-          if (settings && settings.guestModeEnabled === false) {
+          if (!settings || settings.guestModeEnabled !== true) {
              return null;
           }
           return { id: "guest", name: "Demo Guest", email: "guest@demo.com", isDemo: true };
