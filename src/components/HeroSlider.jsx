@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
 
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
@@ -17,8 +18,8 @@ function extractSlideImages(slide) {
   const rawMobileSrc = mobileAsset?.url || slide?.mobileSrc || '';
   const fallbackSrc = rawDesktopSrc || rawMobileSrc || slide?.image || slide?.src || '';
 
-  const desktopSrc = rawDesktopSrc || fallbackSrc;
-  const mobileSrc = rawMobileSrc || fallbackSrc;
+  const desktopSrc = optimizeCloudinaryUrl(rawDesktopSrc || fallbackSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
+  const mobileSrc = optimizeCloudinaryUrl(rawMobileSrc || fallbackSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile);
 
   return {
     desktopSrc,
@@ -258,7 +259,7 @@ export default function HeroSlider({ slides = [] }) {
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={safeActiveIndex === index}
                 onClick={() => goToSlide(index)}
-                className={`h-2.5 rounded-full shadow-md transition-[width,background-color] duration-300 ${
+                className={`h-2.5 rounded-full shadow-md transition-[transform,background-color] duration-300 origin-center ${
                   safeActiveIndex === index ? 'w-6 bg-white' : 'w-2.5 bg-white/55 hover:bg-white/80'
                 }`}
               />

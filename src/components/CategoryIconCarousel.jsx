@@ -20,25 +20,35 @@ export default function CategoryIconCarousel({ categories }) {
     const carousel = carouselRef.current;
     if (!carousel) return undefined;
 
-    const updateScrollState = () => {
-      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
-      setCanScrollLeft(carousel.scrollLeft > 8);
-      setCanScrollRight(maxScrollLeft - carousel.scrollLeft > 8);
+    let rAF = null;
 
-      if (maxScrollLeft > 0) {
-        setScrollProgress(carousel.scrollLeft / maxScrollLeft);
-      } else {
-        setScrollProgress(0);
-      }
+    const updateScrollState = () => {
+      if (rAF !== null) return;
+
+      rAF = window.requestAnimationFrame(() => {
+        rAF = null;
+        if (!carouselRef.current) return;
+        const el = carouselRef.current;
+        const maxScrollLeft = el.scrollWidth - el.clientWidth;
+        const nextCanLeft = el.scrollLeft > 8;
+        const nextCanRight = maxScrollLeft - el.scrollLeft > 8;
+
+        setCanScrollLeft((prev) => (prev !== nextCanLeft ? nextCanLeft : prev));
+        setCanScrollRight((prev) => (prev !== nextCanRight ? nextCanRight : prev));
+
+        const nextProgress = maxScrollLeft > 0 ? el.scrollLeft / maxScrollLeft : 0;
+        setScrollProgress((prev) => (Math.abs(prev - nextProgress) > 0.01 ? nextProgress : prev));
+      });
     };
 
     updateScrollState();
     carousel.addEventListener('scroll', updateScrollState, { passive: true });
-    window.addEventListener('resize', updateScrollState);
+    window.addEventListener('resize', updateScrollState, { passive: true });
 
     return () => {
       carousel.removeEventListener('scroll', updateScrollState);
       window.removeEventListener('resize', updateScrollState);
+      if (rAF !== null) window.cancelAnimationFrame(rAF);
     };
   }, [categoryCount]);
 

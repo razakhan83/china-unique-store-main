@@ -15,10 +15,8 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
   // Hero slider: full-width banner images
-  // Single image per slide (was 3 separate mobile/tablet/desktop images).
-  // Cloudinary delivers at full width; Next.js image sizing handles the rest.
-  // We request at 1400px max to cover large retina displays without waste.
   heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+  heroMobile: { width: 640, crop: 'fill', gravity: 'auto', format: 'avif', quality: 78 },
 
   // Product detail gallery — main zoom image
   productGalleryMain: { width: 1400, height: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 82 },

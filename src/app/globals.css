@@ -550,6 +550,8 @@
   transition: opacity 520ms ease;
 }
 
+.hero-fade-slide:first-child,
+.hero-fade-slide:first-of-type,
 .hero-fade-slide.is-active {
   opacity: 1;
   pointer-events: auto;

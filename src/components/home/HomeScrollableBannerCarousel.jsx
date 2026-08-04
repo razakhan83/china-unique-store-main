@@ -54,19 +54,32 @@ export default function HomeScrollableBannerCarousel({
     const carousel = carouselRef.current;
     if (!carousel) return undefined;
 
+    let rAF = null;
+
     const updateScrollState = () => {
-      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
-      setCanScrollLeft(carousel.scrollLeft > 8);
-      setCanScrollRight(maxScrollLeft - carousel.scrollLeft > 8);
+      if (rAF !== null) return;
+
+      rAF = window.requestAnimationFrame(() => {
+        rAF = null;
+        if (!carouselRef.current) return;
+        const el = carouselRef.current;
+        const maxScrollLeft = el.scrollWidth - el.clientWidth;
+        const nextCanLeft = el.scrollLeft > 8;
+        const nextCanRight = maxScrollLeft - el.scrollLeft > 8;
+
+        setCanScrollLeft((prev) => (prev !== nextCanLeft ? nextCanLeft : prev));
+        setCanScrollRight((prev) => (prev !== nextCanRight ? nextCanRight : prev));
+      });
     };
 
     updateScrollState();
     carousel.addEventListener('scroll', updateScrollState, { passive: true });
-    window.addEventListener('resize', updateScrollState);
+    window.addEventListener('resize', updateScrollState, { passive: true });
 
     return () => {
       carousel.removeEventListener('scroll', updateScrollState);
       window.removeEventListener('resize', updateScrollState);
+      if (rAF !== null) window.cancelAnimationFrame(rAF);
     };
   }, [visibleBanners.length]);
 

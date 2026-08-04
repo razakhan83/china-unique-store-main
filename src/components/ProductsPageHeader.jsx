@@ -88,19 +88,32 @@ export default function ProductsPageHeader({
     const nav = categoryNavRef.current;
     if (!nav) return;
 
+    let rAF = null;
+
     const updateScrollState = () => {
-      const maxScrollLeft = nav.scrollWidth - nav.clientWidth;
-      setCanScrollPrev(nav.scrollLeft > 4);
-      setCanScrollNext(maxScrollLeft - nav.scrollLeft > 4);
+      if (rAF !== null) return;
+
+      rAF = window.requestAnimationFrame(() => {
+        rAF = null;
+        if (!categoryNavRef.current) return;
+        const el = categoryNavRef.current;
+        const maxScrollLeft = el.scrollWidth - el.clientWidth;
+        const nextCanPrev = el.scrollLeft > 4;
+        const nextCanNext = maxScrollLeft - el.scrollLeft > 4;
+
+        setCanScrollPrev((prev) => (prev !== nextCanPrev ? nextCanPrev : prev));
+        setCanScrollNext((prev) => (prev !== nextCanNext ? nextCanNext : prev));
+      });
     };
 
     updateScrollState();
     nav.addEventListener("scroll", updateScrollState, { passive: true });
-    window.addEventListener("resize", updateScrollState);
+    window.addEventListener("resize", updateScrollState, { passive: true });
 
     return () => {
       nav.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
+      if (rAF !== null) window.cancelAnimationFrame(rAF);
     };
   }, [categoryButtons.length]);
 
