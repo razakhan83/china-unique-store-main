@@ -515,10 +515,10 @@
 }
 
 .product-card-cart-switch {
-  transition-property: width;
+  transition-property: transform, opacity;
   transition-duration: 240ms;
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
-  will-change: width;
+  will-change: transform, opacity;
 }
 
 .product-card-cart-switch__panel {

@@ -1,10 +1,11 @@
+import dynamic from 'next/dynamic';
 import HeroSlider from '@/components/HeroSlider';
 
-import HomeCategoriesGrid from '@/components/home/HomeCategoriesGrid';
-import HomeProductBanner from '@/components/home/HomeProductBanner';
-import HomeProductGridSection from '@/components/home/HomeProductGridSection';
-import HomeScrollableBannerCarousel from '@/components/home/HomeScrollableBannerCarousel';
-import HomeVideoCatalog from '@/components/home/HomeVideoCatalog';
+const HomeCategoriesGrid = dynamic(() => import('@/components/home/HomeCategoriesGrid'));
+const HomeProductBanner = dynamic(() => import('@/components/home/HomeProductBanner'));
+const HomeProductGridSection = dynamic(() => import('@/components/home/HomeProductGridSection'));
+const HomeScrollableBannerCarousel = dynamic(() => import('@/components/home/HomeScrollableBannerCarousel'));
+const HomeVideoCatalog = dynamic(() => import('@/components/home/HomeVideoCatalog'));
 
 export default function HomeSectionRenderer({ sections = [] }) {
   if (!sections.length) return null;

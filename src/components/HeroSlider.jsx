@@ -170,7 +170,7 @@ export default function HeroSlider({ slides = [] }) {
                       src={slide.images.mobileSrc}
                       alt={slide.alt}
                       fill
-                      sizes="100vw"
+                      sizes="(max-width: 767px) 100vw, 1px"
                       priority={index === 0}
                       fetchPriority={index === 0 ? 'high' : 'auto'}
                       loading={index === 0 ? 'eager' : 'lazy'}
@@ -185,11 +185,11 @@ export default function HeroSlider({ slides = [] }) {
                       src={slide.images.desktopSrc}
                       alt={slide.alt}
                       fill
-                      sizes="100vw"
+                      sizes="(min-width: 768px) 100vw, 1px"
                       priority={index === 0}
                       fetchPriority={index === 0 ? 'high' : 'auto'}
                       loading={index === 0 ? 'eager' : 'lazy'}
-                      className="hidden object-cover md:block"
+                      className="object-cover max-md:hidden"
                       quality={85}
                       {...getBlurPlaceholderProps(slide.images.desktopBlur)}
                     />

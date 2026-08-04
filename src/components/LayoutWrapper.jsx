@@ -3,6 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck, Code } from 'lucide-react';
 
+import dynamic from 'next/dynamic';
+
 import ConditionalLayoutElements from '@/components/ConditionalLayoutElements';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
@@ -10,11 +12,18 @@ import Navbar from '@/components/Navbar';
 import StoreDeferredChrome from '@/components/StoreDeferredChrome';
 import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
-import AnimatedStats from '@/components/AnimatedStats';
-import TiltedProductMarquee from '@/components/TiltedProductMarquee';
-import HomeFaqSection from '@/components/HomeFaqSection';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
+
+const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
+  loading: () => <div className="h-48 w-full bg-background" aria-hidden="true" />,
+});
+const TiltedProductMarquee = dynamic(() => import('@/components/TiltedProductMarquee'), {
+  loading: () => <div className="h-[700px] w-full bg-background" aria-hidden="true" />,
+});
+const HomeFaqSection = dynamic(() => import('@/components/HomeFaqSection'), {
+  loading: () => <div className="h-64 w-full bg-background" aria-hidden="true" />,
+});
 
 function NavbarFallback() {
   return <div className="sticky top-0 z-40 h-[100px] bg-card" aria-hidden="true" />;
