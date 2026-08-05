@@ -8,7 +8,16 @@ export default function HomeVideoCatalog({ title, pcVideo, mobileVideo }) {
   const [pcLoaded, setPcLoaded] = useState(false);
   const [mobileLoaded, setMobileLoaded] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 640px)');
+    setIsDesktop(mql.matches);
+    const handler = (e) => setIsDesktop(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -39,8 +48,8 @@ export default function HomeVideoCatalog({ title, pcVideo, mobileVideo }) {
     <section ref={containerRef} className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative overflow-hidden rounded-2xl bg-muted/20">
         {/* Desktop Video */}
-        {pcVideo?.url && (
-          <div className={cn("relative hidden sm:block aspect-[21/9] xl:aspect-[3/1]", !pcVideo.url && "hidden")}>
+        {pcVideo?.url && isDesktop && (
+          <div className="relative hidden sm:block aspect-[21/9] xl:aspect-[3/1]">
             {!pcLoaded && (
               <Skeleton className="absolute inset-0 z-10 h-full w-full" />
             )}
@@ -63,14 +72,14 @@ export default function HomeVideoCatalog({ title, pcVideo, mobileVideo }) {
         )}
 
         {/* Mobile Video */}
-        {mobileVideo?.url && (
-          <div className={cn("relative sm:hidden aspect-square", !mobileVideo.url && "hidden")}>
+        {(mobileVideo?.url || pcVideo?.url) && !isDesktop && (
+          <div className="relative sm:hidden aspect-square">
             {!mobileLoaded && (
               <Skeleton className="absolute inset-0 z-10 h-full w-full" />
             )}
             {shouldLoadVideo && (
               <video
-                src={mobileVideo.url}
+                src={mobileVideo?.url || pcVideo?.url}
                 autoPlay
                 loop
                 muted

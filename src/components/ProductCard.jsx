@@ -179,7 +179,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
               />
               {secondaryImageSrc && !isUnavailable && (
-                <>
+                <div className="hidden md:block">
                   {!secondaryImage.blurDataURL && !secondaryLoaded && (
                     <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
                   )}
@@ -188,7 +188,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     alt={`${productName} alternate view`}
                     fill
                     draggable={false}
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    sizes="(max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
                     onLoad={() => setSecondaryLoaded(true)}
                     className={cn(
@@ -199,7 +199,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     )}
                     {...getBlurPlaceholderProps(secondaryImage.blurDataURL)}
                   />
-                </>
+                </div>
               )}
             </>
           ) : (

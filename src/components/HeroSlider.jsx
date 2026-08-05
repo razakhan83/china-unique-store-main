@@ -164,38 +164,21 @@ export default function HeroSlider({ slides = [] }) {
                   {...getBlurPlaceholderProps(slide.images.desktopBlur)}
                 />
               ) : (
-                <>
-                  {/* Mobile Image */}
-                  {slide.images.mobileSrc && (
-                    <Image
-                      src={slide.images.mobileSrc}
-                      alt={slide.alt}
-                      fill
-                      sizes="(max-width: 767px) 100vw, 1px"
-                      priority={index === 0}
-                      fetchPriority={index === 0 ? 'high' : 'auto'}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      className="object-cover md:hidden"
-                      quality={85}
-                      {...getBlurPlaceholderProps(slide.images.mobileBlur)}
-                    />
-                  )}
-                  {/* PC Image */}
-                  {slide.images.desktopSrc && (
-                    <Image
-                      src={slide.images.desktopSrc}
-                      alt={slide.alt}
-                      fill
-                      sizes="(min-width: 768px) 100vw, 1px"
-                      priority={index === 0}
-                      fetchPriority={index === 0 ? 'high' : 'auto'}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      className="object-cover max-md:hidden"
-                      quality={85}
-                      {...getBlurPlaceholderProps(slide.images.desktopBlur)}
-                    />
-                  )}
-                </>
+                <picture className="relative block h-full w-full">
+                  {slide.images.mobileSrc ? (
+                    <source media="(max-width: 767px)" srcSet={slide.images.mobileSrc} />
+                  ) : null}
+                  {slide.images.desktopSrc ? (
+                    <source media="(min-width: 768px)" srcSet={slide.images.desktopSrc} />
+                  ) : null}
+                  <img
+                    src={slide.images.desktopSrc || slide.images.mobileSrc}
+                    alt={slide.alt}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    className="h-full w-full object-cover"
+                  />
+                </picture>
               )}
             </SlideFrame>
 
