@@ -3,6 +3,8 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { trackNocParcel } from '@/lib/nocCourier';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -67,6 +69,9 @@ export async function GET(request) {
       rawResponse: trackingResult,
     });
   } catch (error) {
+    if (error?.digest?.startsWith('NEXT_')) {
+      throw error;
+    }
     console.error('Error in courier track API:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Server error tracking courier parcel' },
