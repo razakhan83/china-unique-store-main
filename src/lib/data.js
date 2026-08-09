@@ -391,6 +391,9 @@ function toOrderSummaryRow(order) {
     notes: order.notes || '',
     courierName: order.courierName || '',
     trackingNumber: order.trackingNumber || '',
+    nocAccountId: order.nocAccountId || 'portal_1',
+    nocLabelUrl: order.nocLabelUrl || '',
+    courierBookingStatus: order.courierBookingStatus || 'none',
     items: Array.isArray(order.items)
       ? order.items.map((item) => ({
           ...item,

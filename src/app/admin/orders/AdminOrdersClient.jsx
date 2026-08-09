@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer } from 'lucide-react';
+import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer, Send, FileText } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import NocTrackingModal from '@/components/NocTrackingModal';
+import { NOC_PORTALS } from '@/lib/nocCourier';
 const OrderQuickViewDialog = dynamic(() => import('./OrderQuickViewDialog'));
 import {
   DropdownMenu,
@@ -453,6 +455,112 @@ export default function AdminOrdersClient({
   const [isQuickUpdating, setIsQuickUpdating] = useState(false);
   
   const [cityOpen, setCityOpen] = useState(false);
+
+  // NOC Courier Integration State
+  const [nocBookingOpen, setNocBookingOpen] = useState(false);
+  const [selectedNocPortal, setSelectedNocPortal] = useState('portal_1');
+  const [isBookingNoc, setIsBookingNoc] = useState(false);
+  const [nocTrackingOrder, setNocTrackingOrder] = useState(null);
+  const [nocPrintResult, setNocPrintResult] = useState(null);
+  const [nocPrintAccountModal, setNocPrintAccountModal] = useState(null);
+
+  const handleBulkNocBooking = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error('Please select at least one order to book with NOC Courier');
+      return;
+    }
+    setIsBookingNoc(true);
+    try {
+      const res = await fetch('/api/admin/courier/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderIds: selectedOrders,
+          portalKey: selectedNocPortal,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || `Successfully booked ${selectedOrders.length} parcel(s) with NOC Express!`);
+        setNocBookingOpen(false);
+        setNocPrintResult({
+          count: data.updatedOrders?.length || selectedOrders.length,
+          labelUrl: data.labelUrl || '',
+          parcelNumbers: data.parcelNumbers || [],
+          portalKey: data.portalKey || selectedNocPortal,
+        });
+
+        // Instantly filter out booked orders from Draft/Packed/In Process tabs so they move to Shipped!
+        const selectedSet = new Set(selectedOrders.map((id) => String(id)));
+        setOrders((prev) => {
+          if (statusFilter === DRAFT_TAB_ID || statusFilter === 'Packed' || statusFilter === 'In Process' || statusFilter === 'Order Confirmed') {
+            return prev.filter((o) => !selectedSet.has(String(o._id)) && !selectedSet.has(String(o.orderId)));
+          }
+          return prev.map((o) => {
+            const matches = selectedSet.has(String(o._id)) || selectedSet.has(String(o.orderId));
+            if (matches) {
+              const updatedItem = data.updatedOrders?.find((u) => String(u.orderId) === String(o.orderId));
+              return {
+                ...o,
+                status: 'Shipped',
+                isDraft: false,
+                courierName: 'NOC Express',
+                nocAccountId: selectedNocPortal,
+                nocLabelUrl: data.labelUrl || o.nocLabelUrl,
+                trackingNumber: updatedItem?.trackingNumber || o.trackingNumber,
+              };
+            }
+            return o;
+          });
+        });
+
+        setSelectedOrders([]);
+        router.refresh();
+      } else {
+        toast.error(data.error || 'Failed to book parcels with NOC Express');
+      }
+    } catch (error) {
+      console.error('NOC Booking Error:', error);
+      toast.error('Connection error while booking with NOC Express');
+    } finally {
+      setIsBookingNoc(false);
+    }
+  };
+
+  const handlePrintSelectedNocSlips = () => {
+    const selectedSet = new Set(selectedOrders.map((id) => String(id)));
+    const selectedObjList = orders.filter(
+      (o) => selectedSet.has(String(o._id)) || selectedSet.has(String(o.orderId))
+    );
+
+    const getOrderLabelUrl = (o) => {
+      if (o.nocLabelUrl && o.nocLabelUrl.trim().length > 0) return o.nocLabelUrl.trim();
+      return null;
+    };
+
+    const bookedOrders = selectedObjList.filter((o) => getOrderLabelUrl(o));
+
+    if (bookedOrders.length === 0) {
+      toast.error('No NOC shipping slip URL found for selected orders. Please book with NOC Express first.');
+      return;
+    }
+
+    const p1Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_1' || (!o.nocAccountId && getOrderLabelUrl(o)));
+    const p2Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_2');
+
+    const p1Urls = Array.from(new Set(p1Orders.map(getOrderLabelUrl).filter(Boolean)));
+    const p2Urls = Array.from(new Set(p2Orders.map(getOrderLabelUrl).filter(Boolean)));
+    const allUrls = Array.from(new Set(bookedOrders.map(getOrderLabelUrl).filter(Boolean)));
+
+    setNocPrintAccountModal({
+      p1Count: p1Orders.length,
+      p1Urls,
+      p2Count: p2Orders.length,
+      p2Urls,
+      allUrls,
+    });
+  };
 
   // Trash & Delete State
   const [trashOrders, setTrashOrders] = useState(initialTrashOrders);
@@ -2344,6 +2452,32 @@ export default function AdminOrdersClient({
           <Button
             type="button"
             size="sm"
+            onClick={() => setNocBookingOpen(true)}
+            disabled={selectedOrders.length === 0 || isBookingNoc}
+            className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5"
+          >
+            <Truck className="size-3.5" />
+            Send to NOC Express{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+          </Button>
+        ) : null}
+
+        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || statusFilter === 'Shipped') ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={handlePrintSelectedNocSlips}
+            disabled={selectedOrders.length === 0}
+            className="h-7 px-3 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5"
+          >
+            <Printer className="size-3.5" />
+            Print Slips{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+          </Button>
+        ) : null}
+
+        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
+          <Button
+            type="button"
+            size="sm"
             onClick={handleGenerateCourierSheet}
             disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
             className="h-7 px-3 text-[11px] bg-green-200 text-green-900 hover:bg-green-300 rounded-md font-medium shadow-sm hidden md:flex"
@@ -2515,8 +2649,23 @@ export default function AdminOrdersClient({
                     </td>
                     <td className="px-3 py-2 text-[12px] text-foreground">{order.paymentStatus || 'COD'}</td>
                     <td className="px-3 py-2">
-                      <div className="flex max-w-[140px] flex-col">
-                        <span className="truncate text-[12px] text-foreground">{order.trackingNumber || '—'}</span>
+                      <div className="flex max-w-[160px] flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-[12px] font-medium text-foreground">{order.trackingNumber || '—'}</span>
+                          {order.trackingNumber && (
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-1.5 py-0.5 text-[10px] font-black rounded border uppercase tracking-wider shrink-0 shadow-2xs',
+                                order.nocAccountId === 'portal_2'
+                                  ? 'bg-purple-100 text-purple-950 border-purple-400 dark:bg-purple-900/90 dark:text-purple-100 dark:border-purple-500'
+                                  : 'bg-sky-100 text-sky-950 border-sky-400 dark:bg-sky-900/90 dark:text-sky-100 dark:border-sky-500'
+                              )}
+                              title={order.nocAccountId === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)'}
+                            >
+                              {order.nocAccountId === 'portal_2' ? 'AS' : 'UI'}
+                            </span>
+                          )}
+                        </div>
                         <span className="truncate text-[11px] text-muted-foreground">{order.courierName || ''}</span>
                       </div>
                     </td>
@@ -2571,6 +2720,31 @@ export default function AdminOrdersClient({
                                 <Zap data-icon="inline-start" />
                                 Quick update
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setNocTrackingOrder(order)}
+                              >
+                                <Truck className="size-4 text-sky-600 mr-2" />
+                                Track Order
+                              </DropdownMenuItem>
+                              {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || (order.status !== 'Shipped' && order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Returned')) && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedOrders([order._id]);
+                                    setNocBookingOpen(true);
+                                  }}
+                                >
+                                  <Send className="size-4 text-sky-600 mr-2" />
+                                  Book NOC Express
+                                </DropdownMenuItem>
+                              )}
+                              {order.nocLabelUrl && (
+                                <DropdownMenuItem
+                                  onClick={() => window.open(order.nocLabelUrl, '_blank')}
+                                >
+                                  <FileText className="size-4 text-emerald-600 mr-2" />
+                                  Print NOC Slip
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -3354,6 +3528,213 @@ export default function AdminOrdersClient({
           />
         </div>
       )}
+
+      {/* NOC Express Bulk Booking Dialog */}
+      <Dialog open={nocBookingOpen} onOpenChange={setNocBookingOpen}>
+        <DialogContent className="max-w-md bg-white text-gray-900 rounded-2xl p-6 shadow-xl border border-gray-200">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <Truck className="size-5 text-sky-600" />
+              Book Selected with NOC Express
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-500">
+              Select NOC account to send {selectedOrders.length} selected order(s):
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">
+                NOC Account
+              </span>
+              <Select value={selectedNocPortal} onValueChange={setSelectedNocPortal}>
+                <SelectTrigger className="w-full h-11 text-sm font-semibold bg-white text-gray-900 border-gray-300 rounded-xl">
+                  <SelectValue placeholder="Select Account" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900 border-gray-200 rounded-xl">
+                  {NOC_PORTALS.map((portal) => (
+                    <SelectItem key={portal.id} value={portal.id} className="font-medium text-gray-900">
+                      {portal.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Simple White Light Summary Box */}
+            <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs flex items-center justify-between">
+              <span className="font-semibold text-gray-700">Selected Orders:</span>
+              <span className="font-bold text-sky-700 bg-sky-50 px-3 py-1 rounded-full border border-sky-200 text-xs">
+                {selectedOrders.length} Order(s)
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setNocBookingOpen(false)} className="rounded-xl h-10 px-4 text-gray-700 hover:bg-gray-100 border-gray-300">
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleBulkNocBooking}
+              disabled={isBookingNoc}
+              className="bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm"
+            >
+              {isBookingNoc ? <Spinner data-icon="inline-start" /> : <Send className="size-4 mr-1.5" />}
+              {isBookingNoc ? 'Booking...' : `Confirm & Book (${selectedOrders.length})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Shared NOC Live Tracking Modal */}
+      <NocTrackingModal
+        open={!!nocTrackingOrder}
+        onOpenChange={(open) => !open && setNocTrackingOrder(null)}
+        trackingNumber={nocTrackingOrder?.trackingNumber}
+        orderId={nocTrackingOrder?.orderId}
+        courierName={nocTrackingOrder?.courierName || 'NOC Express'}
+        nocLabelUrl={nocTrackingOrder?.nocLabelUrl}
+      />
+
+      {/* NOC Express Booking Success & Print Slips Popup Dialog */}
+      <Dialog open={!!nocPrintResult} onOpenChange={(open) => !open && setNocPrintResult(null)}>
+        <DialogContent className="max-w-md bg-white text-gray-900 rounded-2xl p-6 shadow-xl border border-gray-200">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <span className="text-xl">🎉</span>
+              Booking Successful!
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-600">
+              {nocPrintResult?.count || 0} order(s) successfully booked with NOC Express and moved to <strong className="text-gray-900">Shipped</strong> status.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-3">
+            {/* NOC Account Used Indicator */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-sky-50 border border-sky-200 text-xs">
+              <span className="font-semibold text-gray-700">Account Used:</span>
+              <span className="font-bold text-sky-900 bg-sky-100 px-3 py-1 rounded-full border border-sky-300">
+                {nocPrintResult?.portalKey === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)'}
+              </span>
+            </div>
+
+            {nocPrintResult?.parcelNumbers?.length > 0 && (
+              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-1">
+                <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">Assigned NOC Parcel No(s):</span>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {nocPrintResult.parcelNumbers.map((no, idx) => (
+                    <span key={idx} className="font-mono text-xs font-bold bg-sky-100 text-sky-900 px-2.5 py-1 rounded-md border border-sky-300">
+                      {no}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setNocPrintResult(null)}
+              className="rounded-xl h-10 px-4 text-gray-700 hover:bg-gray-100 border-gray-300 font-medium"
+            >
+              Close
+            </Button>
+            {nocPrintResult?.labelUrl && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  window.open(nocPrintResult.labelUrl, '_blank');
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm flex items-center gap-1.5"
+              >
+                <Printer className="size-4" />
+                Print Airway Slips
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* NOC Print Slips Account Selection Dialog */}
+      <Dialog open={!!nocPrintAccountModal} onOpenChange={(open) => !open && setNocPrintAccountModal(null)}>
+        <DialogContent className="max-w-md bg-white text-gray-900 rounded-2xl p-6 shadow-xl border border-gray-200">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <Printer className="size-5 text-emerald-600" />
+              Print Shipping Slips by Account
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-600">
+              Select which NOC Account slips you would like to open for printing:
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-3">
+            {/* Main Account Option */}
+            <div className="p-3.5 rounded-xl bg-sky-50/80 border border-sky-200 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-sky-900 block">Main Account (unique items)</span>
+                <span className="text-[11px] text-sky-700">{nocPrintAccountModal?.p1Count || 0} order slip(s) ready</span>
+              </div>
+              <Button
+                size="sm"
+                disabled={!nocPrintAccountModal?.p1Urls?.length}
+                onClick={() => {
+                  nocPrintAccountModal.p1Urls.forEach((url) => window.open(url, '_blank'));
+                  setNocPrintAccountModal(null);
+                }}
+                className="bg-sky-600 hover:bg-sky-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
+              >
+                Print ({nocPrintAccountModal?.p1Count || 0})
+              </Button>
+            </div>
+
+            {/* Secondary Account Option */}
+            <div className="p-3.5 rounded-xl bg-purple-50/80 border border-purple-200 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-purple-900 block">Secondary Account (aamsaman)</span>
+                <span className="text-[11px] text-purple-700">{nocPrintAccountModal?.p2Count || 0} order slip(s) ready</span>
+              </div>
+              <Button
+                size="sm"
+                disabled={!nocPrintAccountModal?.p2Urls?.length}
+                onClick={() => {
+                  nocPrintAccountModal.p2Urls.forEach((url) => window.open(url, '_blank'));
+                  setNocPrintAccountModal(null);
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
+              >
+                Print ({nocPrintAccountModal?.p2Count || 0})
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-between gap-2 border-t border-gray-100 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setNocPrintAccountModal(null)}
+              className="rounded-xl h-9 px-4 text-gray-700 border-gray-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={!nocPrintAccountModal?.allUrls?.length}
+              onClick={() => {
+                nocPrintAccountModal.allUrls.forEach((url) => window.open(url, '_blank'));
+                setNocPrintAccountModal(null);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-9 px-4 shadow-sm flex items-center gap-1.5"
+            >
+              <Printer className="size-3.5" />
+              Print All ({nocPrintAccountModal?.allUrls?.length || 0})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

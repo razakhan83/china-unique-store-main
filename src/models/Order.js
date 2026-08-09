@@ -111,6 +111,29 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        nocAccountId: {
+            type: String,
+            required: false,
+            default: 'portal_1',
+        },
+        nocLabelUrl: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        courierBookingStatus: {
+            type: String,
+            enum: ['none', 'booked', 'failed', 'cancelled'],
+            default: 'none',
+        },
+        courierBookingDate: {
+            type: Date,
+            default: null,
+        },
+        courierResponseDetails: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null,
+        },
         notes: {
             type: String,
             required: false,
@@ -153,6 +176,7 @@ OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ customerEmail: 1, createdAt: -1 });
 OrderSchema.index({ secureToken: 1 });
+OrderSchema.index({ trackingNumber: 1 });
 OrderSchema.index({ status: 1, customerEmail: 1, 'items.productId': 1, createdAt: -1 });
 // TTL index: auto-purge trashed orders 50 days after deletion
 OrderSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 50 * 24 * 60 * 60, partialFilterExpression: { isDeleted: true } });
@@ -166,20 +190,10 @@ if (cachedOrder) {
         cachedStatuses.length === ORDER_STATUSES.length &&
         ORDER_STATUSES.every((status) => cachedStatuses.includes(status));
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
-    const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
-    const hasSourcingVendors = !!cachedOrder.schema.path('items').schema.paths.sourcingVendors;
-    const hasWeight = !!cachedOrder.schema.paths.weight;
-    const hasItemType = !!cachedOrder.schema.paths.itemType;
-    const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
-    const hasIsDraft = !!cachedOrder.schema.paths.isDraft;
-    const hasSourceTag = !!cachedOrder.schema.paths.sourceTag;
-    const hasCouponCode = !!cachedOrder.schema.paths.couponCode;
-    const hasDiscountAmount = !!cachedOrder.schema.paths.discountAmount;
-    const hasIsDeleted = !!cachedOrder.schema.paths.isDeleted;
-    const hasPackLabel = !!cachedOrder.schema.path('items').schema.paths.packLabel;
-    const hasStatusHistory = !!cachedOrder.schema.paths.statusHistory;
+    const hasNocFields = !!cachedOrder.schema.paths.nocLabelUrl;
+    const hasNocAccountId = !!cachedOrder.schema.paths.nocAccountId;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasIsReviewed || !hasSourcingVendors || !hasWeight || !hasItemType || !hasSecureToken || !hasIsDraft || !hasSourceTag || !hasCouponCode || !hasDiscountAmount || !hasIsDeleted || !hasPackLabel || !hasStatusHistory) {
+    if (!hasExpectedStatuses || !hasTracking || !hasNocFields || !hasNocAccountId) {
         delete mongoose.models.Order;
     }
 }

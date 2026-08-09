@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/dialog';
 
 const ReviewModal = dynamic(() => import('@/components/ReviewModal'));
+import NocTrackingModal from '@/components/NocTrackingModal';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { cn } from '@/lib/utils';
 import CopyButton from '@/components/CopyButton';
@@ -59,18 +60,26 @@ const ProgressTracker = ({ status }) => {
   const steps = [
     { label: 'Order Confirmed', key: 'Order Confirmed', Icon: ClipboardCheck },
     { label: 'In Process', key: 'In Process', Icon: Clock },
-    { label: 'Packed', key: 'Packed', Icon: Package },
     { label: 'Shipped', key: 'Shipped', Icon: Truck },
-    { label: 'Out for delivery', key: 'Out For Delivery', Icon: MapPin },
+    { label: 'Delivered', key: 'Delivered', Icon: CheckCircle2 },
   ];
   
   const norm = normalizeOrderStatus(status);
-  let currentIndex = steps.findIndex(s => s.key === norm);
   const isDelivered = norm === 'Delivered';
-  if (isDelivered) currentIndex = 4; // all complete
   
-  if (currentIndex === -1 && !isDelivered) {
-    return null; // Don't render for cancelled/returned
+  let currentIndex = 0;
+  if (isDelivered) {
+    currentIndex = 3;
+  } else if (norm === 'Shipped') {
+    currentIndex = 2;
+  } else if (norm === 'In Process' || norm === 'Packed') {
+    currentIndex = 1;
+  } else {
+    currentIndex = 0; // 'Order Confirmed'
+  }
+  
+  if (norm === 'Cancelled' || norm === 'Returned') {
+    return null;
   }
   
   return (
@@ -420,27 +429,52 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                                 <MessageSquare className="size-4 mr-2" />
                                 Give feedback
                               </Button>
+                            )}                            {order.trackingNumber ? (
+                              <Button 
+                                variant="outline"
+                                onClick={() => setTrackingOrder(order)}
+                                className="border-sky-300 text-sky-700 bg-sky-50/60 hover:bg-sky-100 rounded-xl h-11 px-6 font-semibold w-full sm:w-auto flex items-center gap-2"
+                              >
+                                <Truck className="size-4 text-sky-600" />
+                                Track Package
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline"
+                                disabled
+                                className="border-gray-200 bg-gray-50 text-gray-400 rounded-xl h-11 px-6 font-semibold w-full sm:w-auto cursor-not-allowed flex items-center gap-2"
+                                title="Tracking details will activate once dispatched via courier"
+                              >
+                                <Truck className="size-4" />
+                                Track Package (Preparing)
+                              </Button>
                             )}
-                            <Button 
-                              variant="outline"
-                              onClick={() => setTrackingOrder(order)}
-                              className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-11 px-6 font-semibold w-full sm:w-auto"
-                            >
-                              Tracking history
-                            </Button>
                           </>
                         ) : (
                           <>
                             <Button render={<Link href={`/orders/${order._id}`} />} nativeButton={false} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 px-6 shadow-sm font-semibold transition-all active:scale-[0.98] w-full sm:w-auto">
                               View your items
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              className="h-11 px-6 rounded-xl border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold shadow-sm transition-all active:scale-[0.98] w-full sm:w-auto"
-                              onClick={() => setTrackingOrder(order)}
-                            >
-                              Track package
-                            </Button>
+                            {order.trackingNumber ? (
+                              <Button 
+                                variant="outline" 
+                                className="h-11 px-6 rounded-xl border-sky-300 bg-sky-50/60 hover:bg-sky-100 text-sky-700 font-semibold shadow-sm transition-all active:scale-[0.98] w-full sm:w-auto flex items-center gap-2"
+                                onClick={() => setTrackingOrder(order)}
+                              >
+                                <Truck className="size-4 text-sky-600" />
+                                Track Package
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                disabled
+                                className="h-11 px-6 rounded-xl border-gray-200 bg-gray-50 text-gray-400 font-semibold cursor-not-allowed w-full sm:w-auto flex items-center gap-2"
+                                title="Tracking details will activate once dispatched via courier"
+                              >
+                                <Truck className="size-4" />
+                                Track Package (Preparing)
+                              </Button>
+                            )}
                           </>
                         )}
                       </div>
@@ -483,75 +517,15 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
         </div>
       </div>
 
-      {/* Tracking Modal */}
-      <Dialog open={!!trackingOrder} onOpenChange={(open) => !open && setTrackingOrder(null)}>
-        <DialogContent className="max-w-[440px] md:max-w-[500px] w-full bg-white p-0 overflow-hidden rounded-[24px] border-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] gap-0 font-sans">
-          {trackingOrder && (
-             <div className="flex flex-col h-full relative">
-               {/* Elegant Header */}
-               <div className="px-7 md:px-9 pt-8 pb-5 flex flex-col gap-1 border-b border-gray-50 relative overflow-hidden">
-                  <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight z-10 relative">Track Order</DialogTitle>
-                  <DialogDescription className="text-xs font-bold text-gray-400 uppercase tracking-widest z-10 relative">#{trackingOrder.orderId}</DialogDescription>
-                  
-                  {normalizeOrderStatus(trackingOrder.status) === 'Delivered' && (
-                    <div className="absolute right-4 top-4 md:right-8 md:top-6 z-20 origin-top-right animate-in zoom-in-75 fade-in duration-500">
-                       <DeliveredStamp className="scale-100" />
-                    </div>
-                  )}
-               </div>
-               
-               {/* Tracking Info Area */}
-               {trackingOrder.trackingNumber ? (
-                 <div className="px-7 md:px-9 py-5 bg-gray-50/50 border-b border-gray-100 flex flex-col gap-3">
-                    <div className="flex items-center justify-between group">
-                      <div className="flex flex-col gap-1">
-                         <span className="text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5 cursor-pointer hover:text-primary/80 transition-colors"
-                           onClick={() => {
-                              navigator.clipboard.writeText(trackingOrder.courierName || 'Courier');
-                              toast?.success?.("Courier name copied!");
-                           }}
-                         >
-                           {trackingOrder.courierName || 'Courier'}
-                           <Copy className="size-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                         </span>
-                         <span 
-                           className="text-xl font-bold text-gray-900 tracking-tight font-mono cursor-pointer hover:text-gray-600 transition-colors flex items-center gap-2"
-                           onClick={() => {
-                             navigator.clipboard.writeText(trackingOrder.trackingNumber);
-                             const el = document.getElementById('copy-icon-' + trackingOrder.orderId);
-                             if(el) {
-                                el.classList.replace('text-gray-400', 'text-green-600');
-                                setTimeout(() => {
-                                  el.classList.replace('text-green-600', 'text-gray-400');
-                                }, 2000);
-                             }
-                           }}
-                         >
-                           {trackingOrder.trackingNumber}
-                           <Copy id={'copy-icon-' + trackingOrder.orderId} className="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95" />
-                         </span>
-                      </div>
-                    </div>
-                    <div className="text-[13px] font-medium text-gray-500 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                      Your package has been shipped and is on its way.
-                    </div>
-                 </div>
-               ) : (
-                 <div className="px-7 md:px-9 py-6 bg-gray-50/50 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed animate-in fade-in">
-                      Your order is currently being processed. Tracking details will appear here once your package ships.
-                    </p>
-                 </div>
-               )}
-               
-               {/* Timeline */}
-               <div className="px-7 md:px-9 py-8">
-                  <TrackingTimeline order={trackingOrder} mounted={mounted} />
-               </div>
-             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* NOC Tracking Modal */}
+      <NocTrackingModal
+        open={!!trackingOrder}
+        onOpenChange={(open) => !open && setTrackingOrder(null)}
+        trackingNumber={trackingOrder?.trackingNumber}
+        orderId={trackingOrder?.orderId}
+        courierName={trackingOrder?.courierName || 'NOC Express'}
+        nocLabelUrl={trackingOrder?.nocLabelUrl}
+      />
       
       {/* Feedback Modal */}
       {feedbackOrder && (
