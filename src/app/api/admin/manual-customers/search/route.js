@@ -29,6 +29,9 @@ export async function GET(req) {
 
     return NextResponse.json({ customers });
   } catch (error) {
+    if (error?.digest?.startsWith('NEXT_') || error?.digest === 'HANGING_PROMISE_REJECTION') {
+      throw error;
+    }
     console.error('Manual customer search error:', error);
     return NextResponse.json(
       { error: 'Failed to search manual customers' },

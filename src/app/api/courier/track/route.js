@@ -3,8 +3,6 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { trackNocParcel } from '@/lib/nocCourier';
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);

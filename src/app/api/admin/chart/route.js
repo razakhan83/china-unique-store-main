@@ -143,6 +143,9 @@ export async function GET(req) {
 
     return NextResponse.json({ success: true, data: finalData });
   } catch (error) {
+    if (error?.digest?.startsWith('NEXT_') || error?.digest === 'HANGING_PROMISE_REJECTION') {
+      throw error;
+    }
     console.error('Chart API Error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
