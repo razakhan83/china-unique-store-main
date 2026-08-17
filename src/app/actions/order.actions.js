@@ -213,6 +213,49 @@ export async function submitOrderAction(input) {
       await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
     }
 
+    // Auto-generate linked Invoice for 2-way sync
+    try {
+      const Invoice = (await import('@/models/Invoice')).default;
+      const { getNextInvoiceNumberAction } = await import('@/app/actions/invoice.actions');
+      const invoiceNumber = await getNextInvoiceNumberAction();
+
+      const invoiceItems = normalizedItems.map((it) => ({
+        productId: String(it.productId || ''),
+        name: String(it.name || 'Item'),
+        image: String(it.image || ''),
+        quantity: Math.max(1, Number(it.quantity) || 1),
+        price: Math.max(0, Number(it.price) || 0),
+        amount: (Math.max(1, Number(it.quantity) || 1)) * (Math.max(0, Number(it.price) || 0)),
+      }));
+
+      const subtotal = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
+
+      const invoice = await Invoice.create({
+        invoiceNumber,
+        orderId: order.orderId,
+        orderRef: order._id,
+        customerName,
+        customerPhone,
+        customerEmail: userEmail || '',
+        customerAddress,
+        customerCity,
+        items: invoiceItems,
+        subtotal,
+        discountAmount: pricing.discountAmount || 0,
+        shippingAmount: pricing.shipping || 0,
+        totalAmount: pricing.total,
+        paidAmount: 0,
+        balanceDue: pricing.total,
+        status: 'DRAFT',
+      });
+
+      order.invoiceId = invoice._id;
+      order.invoiceNumber = invoice.invoiceNumber;
+      await order.save();
+    } catch (invoiceErr) {
+      console.error('Auto-invoice creation error:', invoiceErr);
+    }
+
     await applyInventoryAdjustments(normalizedItems);
 
     revalidateTag('orders');
@@ -645,6 +688,26 @@ export async function updateOrderAction(id, updates) {
       await applyInventoryAdjustments(order.items);
     }
 
+    // Auto-sync: When order moves to Shipped/Delivered, automatically move linked DRAFT invoice to SENT
+    try {
+      if (['Shipped', 'Out For Delivery', 'Delivered'].includes(order.status)) {
+        const Invoice = (await import('@/models/Invoice')).default;
+        const invoiceQueries = [];
+        if (order.invoiceId) invoiceQueries.push({ _id: order.invoiceId });
+        if (order.invoiceNumber) invoiceQueries.push({ invoiceNumber: order.invoiceNumber });
+        if (order.orderId) invoiceQueries.push({ orderId: order.orderId });
+        invoiceQueries.push({ orderRef: order._id });
+
+        await Invoice.updateMany(
+          { $or: invoiceQueries, status: 'DRAFT', isDeleted: false },
+          { $set: { status: 'SENT' } }
+        );
+        revalidatePath('/admin/invoices');
+      }
+    } catch (invSyncErr) {
+      console.error('Failed to sync invoice status on order update:', invSyncErr);
+    }
+
     // Log the change
     try {
       const session = await getServerSession(authOptions);
@@ -789,6 +852,28 @@ export async function bulkUpdateOrderStatusAction({
       await OrderLog.insertMany(logs, { ordered: false });
     }
 
+    // Auto-sync invoices to SENT if orders were shipped
+    try {
+      if (['Shipped', 'Out For Delivery', 'Delivered'].includes(normalizedNextStatus) && updatedOrders.length > 0) {
+        const Invoice = (await import('@/models/Invoice')).default;
+        await Invoice.updateMany(
+          {
+            $or: [
+              { orderRef: { $in: updatedOrders } },
+              { orderId: { $in: orders.map((o) => o.orderId).filter(Boolean) } },
+              { _id: { $in: orders.map((o) => o.invoiceId).filter(Boolean) } },
+            ],
+            status: 'DRAFT',
+            isDeleted: false,
+          },
+          { $set: { status: 'SENT' } }
+        );
+        revalidatePath('/admin/invoices');
+      }
+    } catch (invBulkErr) {
+      console.error('Failed to sync invoices on bulk order update:', invBulkErr);
+    }
+
     revalidateTag('orders');
     revalidateTag('admin-dashboard');
     revalidatePath('/admin/orders');
@@ -819,6 +904,24 @@ export async function deleteOrderAction(id) {
     order.isDeleted = true;
     order.deletedAt = new Date();
     await order.save();
+
+    // 2-way sync: Also move linked invoice to trash
+    try {
+      const Invoice = (await import('@/models/Invoice')).default;
+      const invoiceQueries = [];
+      if (order.invoiceId) invoiceQueries.push({ _id: order.invoiceId });
+      if (order.invoiceNumber) invoiceQueries.push({ invoiceNumber: order.invoiceNumber });
+      if (order.orderId) invoiceQueries.push({ orderId: order.orderId });
+      invoiceQueries.push({ orderRef: order._id });
+
+      await Invoice.updateMany(
+        { $or: invoiceQueries, isDeleted: false },
+        { $set: { isDeleted: true, deletedAt: new Date() } }
+      );
+      revalidatePath('/admin/invoices');
+    } catch (invDelErr) {
+      console.error('Failed to sync invoice deletion on order delete:', invDelErr);
+    }
 
     const session = await getServerSession(authOptions);
     await OrderLog.create({
@@ -852,6 +955,24 @@ export async function restoreOrderAction(id) {
     order.isDeleted = false;
     order.deletedAt = null;
     await order.save();
+
+    // 2-way sync: Also restore linked invoice from trash
+    try {
+      const Invoice = (await import('@/models/Invoice')).default;
+      const invoiceQueries = [];
+      if (order.invoiceId) invoiceQueries.push({ _id: order.invoiceId });
+      if (order.invoiceNumber) invoiceQueries.push({ invoiceNumber: order.invoiceNumber });
+      if (order.orderId) invoiceQueries.push({ orderId: order.orderId });
+      invoiceQueries.push({ orderRef: order._id });
+
+      await Invoice.updateMany(
+        { $or: invoiceQueries, isDeleted: true },
+        { $set: { isDeleted: false, deletedAt: null } }
+      );
+      revalidatePath('/admin/invoices');
+    } catch (invResErr) {
+      console.error('Failed to sync invoice restore on order restore:', invResErr);
+    }
 
     const session = await getServerSession(authOptions);
     await OrderLog.create({

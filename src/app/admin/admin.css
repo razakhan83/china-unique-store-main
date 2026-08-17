@@ -8,38 +8,42 @@
 
 @layer utilities {
   .admin-theme {
-    --color-background: oklch(0.965 0.002 260);
-    --color-foreground: oklch(0.19 0.003 260);
-    --color-card: oklch(0.988 0.001 260);
-    --color-card-foreground: oklch(0.19 0.003 260);
-    --color-popover: oklch(0.99 0.001 260);
-    --color-popover-foreground: oklch(0.19 0.003 260);
-    --color-primary: oklch(0.23 0.002 260);
-    --color-primary-foreground: oklch(0.985 0.001 260);
-    --color-secondary: oklch(0.94 0.002 260);
-    --color-secondary-foreground: oklch(0.24 0.002 260);
-    --color-muted: oklch(0.952 0.001 260);
-    --color-muted-foreground: oklch(0.47 0.002 260);
-    --color-accent: oklch(0.91 0.001 260);
-    --color-accent-foreground: oklch(0.22 0.002 260);
-    --color-border: oklch(0.885 0.001 260);
-    --color-input: oklch(0.992 0.001 260);
-    --color-ring: oklch(0.36 0.002 260);
-    --color-success: oklch(0.4 0.002 260);
-    --color-success-foreground: oklch(0.985 0.001 260);
-    --color-sidebar: oklch(0.992 0.001 260);
-    --color-sidebar-foreground: oklch(0.18 0.002 260);
-    --color-sidebar-primary: oklch(0.18 0.002 260);
-    --color-sidebar-primary-foreground: oklch(0.985 0.001 260);
-    --color-sidebar-accent: oklch(0.95 0.001 260);
-    --color-sidebar-accent-foreground: oklch(0.2 0.002 260);
-    --color-sidebar-border: oklch(0.89 0.001 260);
-    --color-sidebar-ring: oklch(0.7 0.001 260);
+    --color-background: #f8fafc;
+    --color-foreground: #0f172a;
+    --color-card: #ffffff;
+    --color-card-foreground: #0f172a;
+    --color-popover: #ffffff;
+    --color-popover-foreground: #0f172a;
+    --color-primary: #0f172a;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #f1f5f9;
+    --color-secondary-foreground: #1e293b;
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #64748b;
+    --color-accent: #f1f5f9;
+    --color-accent-foreground: #0f172a;
+    --color-border: #e2e8f0;
+    --color-input: #ffffff;
+    --color-ring: #0f172a;
+    --color-success: #16a34a;
+    --color-success-foreground: #ffffff;
+    --color-sidebar: #ffffff;
+    --color-sidebar-foreground: #0f172a;
+    --color-sidebar-primary: #0f172a;
+    --color-sidebar-primary-foreground: #ffffff;
+    --color-sidebar-accent: #f8fafc;
+    --color-sidebar-accent-foreground: #0f172a;
+    --color-sidebar-border: #e2e8f0;
+    --color-sidebar-ring: #94a3b8;
 
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, black 6%, transparent), transparent 26%),
-      linear-gradient(180deg, color-mix(in oklch, var(--color-background) 92%, white), var(--color-background));
+    background: #f8fafc;
     color: var(--color-foreground);
+  }
+
+  body.admin-theme {
+    background-color: #f8fafc !important;
+    background-image: none !important;
+    overscroll-behavior-y: none;
   }
 
   .admin-page-stack {
@@ -78,30 +82,30 @@
   }
 
   .admin-filter-shell {
-    background: color-mix(in oklch, var(--color-card) 97%, white);
-    border: 1px solid color-mix(in oklch, var(--color-border) 92%, white);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 0.85rem;
     padding: clamp(0.65rem, 0.55rem + 0.4vw, 0.85rem);
-    box-shadow: 0 12px 36px -44px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .admin-stat-card {
-    background: color-mix(in oklch, var(--color-card) 98%, white);
-    border: 1px solid color-mix(in oklch, var(--color-border) 92%, white);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 0.85rem;
-    box-shadow: 0 12px 36px -44px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .admin-surface {
-    background: oklch(0.992 0.001 260);
-    border: 1px solid oklch(0.89 0.001 260);
-    box-shadow: 0 14px 40px -42px rgba(0, 0, 0, 0.22);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .admin-panel {
-    background: linear-gradient(180deg, oklch(0.994 0.001 260), oklch(0.978 0.001 260));
-    border: 1px solid oklch(0.89 0.001 260);
-    box-shadow: 0 14px 40px -42px rgba(0, 0, 0, 0.22);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .admin-shell-grid {
@@ -114,10 +118,8 @@
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    border-right: 1px solid color-mix(in oklch, var(--color-sidebar-border) 92%, white);
-    background:
-      linear-gradient(180deg, color-mix(in oklch, white 72%, var(--color-sidebar)) 28%, transparent),
-      var(--color-sidebar);
+    border-right: 1px solid #e2e8f0;
+    background: #ffffff;
     transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
@@ -130,9 +132,9 @@
   }
 
   .admin-mobile-nav {
-    background: color-mix(in oklch, var(--color-card) 97%, white);
+    background: #ffffff;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -8px 22px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.05);
   }
 
   .admin-mobile-nav__shell {

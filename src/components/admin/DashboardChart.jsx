@@ -1,24 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-import { ChartColumn, Loader2 } from 'lucide-react';
-
-import {
-  ChartContainer,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
-
-const chartConfig = {
-  revenue: {
-    label: 'Revenue',
-    color: 'hsl(var(--primary))',
-  },
-  orders: {
-    label: 'Orders',
-    color: 'hsl(var(--muted-foreground))', // distinctive neutral color 
-  }
-};
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, Loader2 } from 'lucide-react';
 
 export default function DashboardChart({ initialData = [], initialPeriod = 'monthly' }) {
   const [period, setPeriod] = useState(initialPeriod);
@@ -41,7 +25,7 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
         }
         const result = await res.json();
         if (result.success) {
-          setData(result.data);
+          setData(result.data || []);
         } else {
           setData([]);
         }
@@ -55,25 +39,36 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
     fetchChart();
   }, [initialData, initialPeriod, period]);
 
+  const totalPeriodRevenue = data.reduce((acc, curr) => acc + (Number(curr.revenue) || 0), 0);
+  const totalPeriodOrders = data.reduce((acc, curr) => acc + (Number(curr.orders) || 0), 0);
+
   return (
-    <div className="flex h-full flex-col w-full">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-1.5">
-          <ChartColumn className="size-4 text-muted-foreground" />
-          <h2 className="text-[13px] font-semibold text-foreground">
-            Performance
-          </h2>
+    <div className="flex h-full flex-col w-full min-h-[260px]">
+      {/* Clean Single Header */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="size-4 text-emerald-600" />
+            <h2 className="text-[13px] font-bold text-slate-900">Revenue Performance</h2>
+          </div>
+          <p className="text-[11.5px] text-slate-500 mt-0.5">
+            Total: <span className="font-semibold text-slate-900">PKR {totalPeriodRevenue.toLocaleString('en-PK')}</span>
+            <span className="mx-1.5">•</span>
+            <span className="font-medium text-slate-700">{totalPeriodOrders} Orders</span>
+          </p>
         </div>
-        
-        <div className="flex items-center gap-1 rounded-md border border-border bg-muted/20 p-0.5 self-start lg:self-auto">
+
+        {/* Toggle Pills */}
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50/80 p-0.5 self-start sm:self-auto">
           {['weekly', 'monthly', 'yearly'].map((p) => (
             <button
               key={p}
+              type="button"
               onClick={() => setPeriod(p)}
-              className={`rounded-[4px] px-2.5 py-1 text-[11px] font-medium capitalize transition-all ${
+              className={`rounded-md px-3 py-1 text-[11px] font-semibold capitalize transition-all ${
                 period === p
-                  ? 'bg-background text-foreground shadow-sm ring-1 ring-border/20'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? 'bg-white text-emerald-700 shadow-xs ring-1 ring-black/5 font-bold'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
               {p}
@@ -82,88 +77,79 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
         </div>
       </div>
 
-      <div className="relative flex-1 min-h-[160px] w-full mt-2">
+      {/* Chart Canvas */}
+      <div className="relative flex-1 min-h-[190px] w-full">
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
-            <Loader2 className="size-5 animate-spin text-muted-foreground/60" />
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-xs z-10">
+            <Loader2 className="size-5 animate-spin text-emerald-600" />
           </div>
         )}
         {!isLoading && data.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground z-10">
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400 z-10">
             No data available for selected period
           </div>
         )}
 
-        <ChartContainer config={chartConfig} className="h-full w-full">
-          <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
             <defs>
-              <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="fillOrders" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-orders)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-orders)" stopOpacity={0} />
+              <linearGradient id="emeraldRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.28} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={1} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={10}
-              minTickGap={25}
-              tickFormatter={(value) => value}
-              className="text-[10px] fill-muted-foreground"
+              minTickGap={24}
+              className="text-[11px] font-medium fill-slate-500"
             />
             <YAxis
-              yAxisId="left"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              width={35}
+              width={45}
               tickFormatter={(value) => {
                 if (value === 0) return '0';
                 if (value >= 1000) return `${value / 1000}k`;
                 return `${value}`;
               }}
-              className="text-[10px] fill-muted-foreground"
-            />
-            {/* Secondary YAxis strictly for Orders volume (scales independently over right side) */}
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              width={35}
-              className="text-[10px] fill-muted-foreground"
+              className="text-[11px] font-medium fill-slate-500"
             />
             <Tooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const revenueVal = payload[0]?.payload?.revenue || 0;
+                const ordersVal = payload[0]?.payload?.orders || 0;
+                return (
+                  <div className="rounded-lg border border-gray-200 bg-white p-2.5 shadow-md text-xs space-y-1">
+                    <p className="font-bold text-slate-800 border-b border-gray-100 pb-1">{label}</p>
+                    <div className="flex items-center justify-between gap-4 text-emerald-700 font-semibold">
+                      <span>Revenue:</span>
+                      <span>PKR {Number(revenueVal).toLocaleString('en-PK')}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 text-slate-600 font-medium">
+                      <span>Orders:</span>
+                      <span>{ordersVal} orders</span>
+                    </div>
+                  </div>
+                );
+              }}
             />
-            
             <Area
-              yAxisId="right"
-              dataKey="orders"
-              type="monotone"
-              fill="url(#fillOrders)"
-              fillOpacity={0.2}
-              stroke="var(--color-orders)"
-              strokeWidth={2}
-            />
-            <Area
-              yAxisId="left"
               dataKey="revenue"
               type="monotone"
-              fill="url(#fillRevenue)"
-              fillOpacity={0.4}
-              stroke="var(--color-revenue)"
-              strokeWidth={2}
+              fill="url(#emeraldRevenueGradient)"
+              stroke="#10b981"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, fill: '#059669', stroke: '#ffffff', strokeWidth: 2 }}
             />
           </AreaChart>
-        </ChartContainer>
+        </ResponsiveContainer>
       </div>
     </div>
   );

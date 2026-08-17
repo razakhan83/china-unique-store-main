@@ -91,6 +91,16 @@ const OrderSchema = new mongoose.Schema(
             default: '',
             trim: true,
         },
+        invoiceId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Invoice',
+            default: null,
+        },
+        invoiceNumber: {
+            type: String,
+            default: '',
+            trim: true,
+        },
         status: {
             type: String,
             enum: ORDER_STATUSES,

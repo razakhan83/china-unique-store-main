@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { bookNocParcels } from '@/lib/nocCourier';
@@ -17,9 +18,19 @@ export async function POST(request) {
 
     await mongooseConnect();
 
-    // Fetch target orders
+    // Fetch target orders safely without throwing CastError on string orderIds
+    const validObjectIds = orderIds
+      .filter((id) => mongoose.Types.ObjectId.isValid(id) && id.length === 24)
+      .map((id) => new mongoose.Types.ObjectId(id));
+    const orderIdStrings = orderIds.map(String);
+
+    const orConditions = [{ orderId: { $in: orderIdStrings } }];
+    if (validObjectIds.length > 0) {
+      orConditions.push({ _id: { $in: validObjectIds } });
+    }
+
     const orders = await Order.find({
-      $or: [{ _id: { $in: orderIds } }, { orderId: { $in: orderIds } }],
+      $or: orConditions,
       isDeleted: { $ne: true },
     });
 
@@ -30,8 +41,25 @@ export async function POST(request) {
       );
     }
 
-    // Build NOC API Parcels payload
-    const parcelsPayload = orders.map((order) => {
+    // Preserve requested order sequence
+    const orderMap = new Map();
+    orders.forEach((o) => {
+      orderMap.set(String(o._id), o);
+      if (o.orderId) orderMap.set(String(o.orderId), o);
+    });
+
+    const orderedList = [];
+    orderIds.forEach((id) => {
+      const found = orderMap.get(String(id));
+      if (found && !orderedList.some((m) => String(m._id) === String(found._id))) {
+        orderedList.push(found);
+      }
+    });
+
+    const targetOrders = orderedList.length > 0 ? orderedList : orders;
+
+    // Build NOC API Parcels payload for bulk booking
+    const parcelsPayload = targetOrders.map((order) => {
       const codVal =
         order.manualCodAmount != null && order.manualCodAmount !== ''
           ? Number(order.manualCodAmount)
@@ -54,7 +82,7 @@ export async function POST(request) {
       };
     });
 
-    // Call NOC BookParcel API
+    // Call NOC BookParcel API with all parcels so NOC returns the official combined LabelURL
     const apiResult = await bookNocParcels(parcelsPayload, portalKey);
 
     if (apiResult.Response !== 'success') {
@@ -69,7 +97,7 @@ export async function POST(request) {
     }
 
     // Parse returned Parcel Numbers from ErrorDescription
-    // Example string: "Parcel Booked Successfully :00000001, 00000002"
+    // Example string: "Parcel Booked Successfully :16216206417422, 16216206417423"
     const desc = apiResult.ErrorDescription || '';
     const colonIdx = desc.indexOf(':');
     let parcelNumbers = [];
@@ -82,13 +110,14 @@ export async function POST(request) {
         .filter(Boolean);
     }
 
+    // Official NOC Express combined Label URL (contains all slips in 1 official link from NOC!)
     const labelUrl = apiResult.LabelURL || '';
     const now = new Date();
     const updatedOrders = [];
 
-    // Update orders in DB
-    for (let i = 0; i < orders.length; i++) {
-      const order = orders[i];
+    // Update all target orders in DB
+    for (let i = 0; i < targetOrders.length; i++) {
+      const order = targetOrders[i];
       const trackingNo = parcelNumbers[i] || (parcelNumbers.length === 1 ? parcelNumbers[0] : '');
 
       order.courierName = 'NOC Express';
@@ -109,13 +138,14 @@ export async function POST(request) {
       updatedOrders.push({
         orderId: order.orderId,
         trackingNumber: trackingNo,
+        labelUrl: labelUrl,
         status: 'Shipped',
       });
     }
 
     return NextResponse.json({
       success: true,
-      message: `Successfully booked ${orders.length} parcel(s) with NOC Express (${portalKey === 'portal_2' ? 'Secondary Account' : 'Main Account'}).`,
+      message: `Successfully booked ${targetOrders.length} parcel(s) with NOC Express (${portalKey === 'portal_2' ? 'Secondary Account' : 'Main Account'}).`,
       labelUrl,
       parcelNumbers,
       portalKey,

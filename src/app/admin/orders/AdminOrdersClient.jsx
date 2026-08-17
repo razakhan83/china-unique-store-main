@@ -442,6 +442,7 @@ export default function AdminOrdersClient({
     customItemPrice: '',
   });
   const [draftItems, setDraftItems] = useState([defaultUnknownItem]);
+  const [createLinkedInvoice, setCreateLinkedInvoice] = useState(true); // default ON
   
   // Modals & Popovers State
   const [editingOrder, setEditingOrder] = useState(null);
@@ -486,9 +487,12 @@ export default function AdminOrdersClient({
         setNocBookingOpen(false);
         setNocPrintResult({
           count: data.updatedOrders?.length || selectedOrders.length,
+          orders: data.updatedOrders || [],
           labelUrl: data.labelUrl || '',
+          labelUrls: data.labelUrls || [],
           parcelNumbers: data.parcelNumbers || [],
           portalKey: data.portalKey || selectedNocPortal,
+          failedOrders: data.failedOrders || [],
         });
 
         // Instantly filter out booked orders from Draft/Packed/In Process tabs so they move to Shipped!
@@ -507,7 +511,7 @@ export default function AdminOrdersClient({
                 isDraft: false,
                 courierName: 'NOC Express',
                 nocAccountId: selectedNocPortal,
-                nocLabelUrl: data.labelUrl || o.nocLabelUrl,
+                nocLabelUrl: updatedItem?.labelUrl || o.nocLabelUrl,
                 trackingNumber: updatedItem?.trackingNumber || o.trackingNumber,
               };
             }
@@ -549,16 +553,16 @@ export default function AdminOrdersClient({
     const p1Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_1' || (!o.nocAccountId && getOrderLabelUrl(o)));
     const p2Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_2');
 
-    const p1Urls = Array.from(new Set(p1Orders.map(getOrderLabelUrl).filter(Boolean)));
-    const p2Urls = Array.from(new Set(p2Orders.map(getOrderLabelUrl).filter(Boolean)));
-    const allUrls = Array.from(new Set(bookedOrders.map(getOrderLabelUrl).filter(Boolean)));
+    const p1OrderIds = p1Orders.map((o) => o.orderId || o._id).filter(Boolean);
+    const p2OrderIds = p2Orders.map((o) => o.orderId || o._id).filter(Boolean);
+    const allOrderIds = bookedOrders.map((o) => o.orderId || o._id).filter(Boolean);
 
     setNocPrintAccountModal({
       p1Count: p1Orders.length,
-      p1Urls,
+      p1OrderIds,
       p2Count: p2Orders.length,
-      p2Urls,
-      allUrls,
+      p2OrderIds,
+      allOrderIds,
     });
   };
 
@@ -588,9 +592,23 @@ export default function AdminOrdersClient({
     setEndDate(initialEndDate);
   }, [initialSearchQuery, initialStatusFilter, initialStartDate, initialEndDate]);
 
+  const [catalog, setCatalog] = useState(productCatalog || []);
+  const catalogFetchedRef = useRef(false);
+
   useEffect(() => {
-    setTrashOrders(initialTrashOrders);
-  }, [initialTrashOrders]);
+    if (isCreateModalOpen && !catalogFetchedRef.current) {
+      catalogFetchedRef.current = true;
+      fetch('/api/admin/products/catalog')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.products) setCatalog(data.products);
+        })
+        .catch((err) => {
+          console.error(err);
+          catalogFetchedRef.current = false;
+        });
+    }
+  }, [isCreateModalOpen]);
 
   const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
   const filteredDraftCities = useMemo(() => {
@@ -604,7 +622,7 @@ export default function AdminOrdersClient({
   const availableDraftProducts = useMemo(() => {
     const selectedProductIds = new Set(draftItems.map((item) => item.productId));
 
-    return (Array.isArray(productCatalog) ? productCatalog : [])
+    return (Array.isArray(catalog) ? catalog : [])
       .filter((product) => !selectedProductIds.has(String(product?._id || product?.slug || '').trim()))
       .map((product) => {
         const categoryNames = getProductCategoryNames(product);
@@ -618,15 +636,15 @@ export default function AdminOrdersClient({
           searchValue: [product.Name, product.slug || '', ...categoryNames].filter(Boolean).join(' '),
         };
       });
-  }, [draftItems, productCatalog]);
+  }, [draftItems, catalog]);
 
   // Quick Add: first 3 products from catalog not already in draft
   const quickAddProducts = useMemo(() => {
     const selectedProductIds = new Set(draftItems.map((item) => item.productId));
-    return (Array.isArray(productCatalog) ? productCatalog : [])
+    return (Array.isArray(catalog) ? catalog : [])
       .filter((p) => !selectedProductIds.has(String(p?._id || p?.slug || '').trim()))
       .slice(0, 3);
-  }, [draftItems, productCatalog]);
+  }, [draftItems, catalog]);
 
   const displayOrders = orders;
 
@@ -2029,15 +2047,28 @@ export default function AdminOrdersClient({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Orders</h2>
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="admin-cta-button rounded-md"
-        >
-          <Plus data-icon="inline-start" />
-          Create Order
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/invoices">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-foreground hover:bg-muted"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              Invoices Management
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="admin-cta-button rounded-md"
+          >
+            <Plus data-icon="inline-start" />
+            Create Order
+          </Button>
+        </div>
       </div>
 
       {/* Status Filter Tabs / Select (Responsive) */}
@@ -3338,6 +3369,17 @@ export default function AdminOrdersClient({
             </div>
 
             <DialogFooter className="sticky bottom-0 z-[100] -mx-3 -mb-3 mt-4 bg-card/95 pb-3 pl-3 pr-3 pt-4 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur sm:-mx-5 sm:-mb-5 sm:pb-5 sm:pl-5 sm:pr-5 sm:pt-4 lg:-mx-6 lg:-mb-6 lg:pb-6 lg:pl-6 lg:pr-6 gap-1.5 sm:gap-2">
+              {/* Also create invoice checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer select-none mr-auto">
+                <input
+                  type="checkbox"
+                  checked={createLinkedInvoice}
+                  onChange={(e) => setCreateLinkedInvoice(e.target.checked)}
+                  className="w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+                />
+                <span className="text-xs font-medium text-foreground">Also create linked Invoice</span>
+                <span className="text-[10px] text-muted-foreground">(default: on)</span>
+              </label>
               <Button type="button" variant="ghost" size="sm" onClick={() => { setIsCreateModalOpen(false); resetDraftComposer(); }} className="admin-cta-button">
                 Cancel
               </Button>
@@ -3619,14 +3661,31 @@ export default function AdminOrdersClient({
               </span>
             </div>
 
-            {nocPrintResult?.parcelNumbers?.length > 0 && (
-              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-1">
-                <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">Assigned NOC Parcel No(s):</span>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {nocPrintResult.parcelNumbers.map((no, idx) => (
-                    <span key={idx} className="font-mono text-xs font-bold bg-sky-100 text-sky-900 px-2.5 py-1 rounded-md border border-sky-300">
-                      {no}
-                    </span>
+            {nocPrintResult?.orders?.length > 0 && (
+              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-2 max-h-48 overflow-y-auto">
+                <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">Booked Orders & Slips:</span>
+                <div className="space-y-1.5">
+                  {nocPrintResult.orders.map((o, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-gray-200 text-xs">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-gray-900">{o.orderId}</span>
+                        {o.trackingNumber && (
+                          <span className="ml-2 font-mono text-[11px] text-sky-800 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
+                            {o.trackingNumber}
+                          </span>
+                        )}
+                      </div>
+                      {o.labelUrl && (
+                        <button
+                          type="button"
+                          onClick={() => window.open(o.labelUrl, '_blank')}
+                          className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-md transition-colors"
+                        >
+                          <Printer className="size-3" />
+                          Print Slip
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -3642,18 +3701,19 @@ export default function AdminOrdersClient({
             >
               Close
             </Button>
-            {nocPrintResult?.labelUrl && (
+            {nocPrintResult?.labelUrl ? (
               <Button
                 size="sm"
                 onClick={() => {
                   window.open(nocPrintResult.labelUrl, '_blank');
+                  setNocPrintResult(null);
                 }}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm flex items-center gap-1.5"
               >
                 <Printer className="size-4" />
-                Print Airway Slips
+                Print Airway Slip
               </Button>
-            )}
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -3682,7 +3742,9 @@ export default function AdminOrdersClient({
                 size="sm"
                 disabled={!nocPrintAccountModal?.p1Urls?.length}
                 onClick={() => {
-                  nocPrintAccountModal.p1Urls.forEach((url) => window.open(url, '_blank'));
+                  nocPrintAccountModal.p1Urls.forEach((url) => {
+                    if (url) window.open(url, '_blank');
+                  });
                   setNocPrintAccountModal(null);
                 }}
                 className="bg-sky-600 hover:bg-sky-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
@@ -3701,7 +3763,9 @@ export default function AdminOrdersClient({
                 size="sm"
                 disabled={!nocPrintAccountModal?.p2Urls?.length}
                 onClick={() => {
-                  nocPrintAccountModal.p2Urls.forEach((url) => window.open(url, '_blank'));
+                  nocPrintAccountModal.p2Urls.forEach((url) => {
+                    if (url) window.open(url, '_blank');
+                  });
                   setNocPrintAccountModal(null);
                 }}
                 className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
@@ -3724,7 +3788,9 @@ export default function AdminOrdersClient({
               size="sm"
               disabled={!nocPrintAccountModal?.allUrls?.length}
               onClick={() => {
-                nocPrintAccountModal.allUrls.forEach((url) => window.open(url, '_blank'));
+                nocPrintAccountModal.allUrls.forEach((url) => {
+                  if (url) window.open(url, '_blank');
+                });
                 setNocPrintAccountModal(null);
               }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-9 px-4 shadow-sm flex items-center gap-1.5"

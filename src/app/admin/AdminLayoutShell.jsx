@@ -74,9 +74,11 @@ const productNavItems = [
   { href: '/admin/stock', label: 'Stock Management', icon: Box, match: (pathname) => pathname.startsWith('/admin/stock') },
 ];
 
-// 3. Orders Management
+// 3. Orders & Sales Management
 const ordersNavItems = [
   { href: '/admin/orders', label: 'View All Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
+  { href: '/admin/invoices', label: 'Invoices', icon: FileText, match: (pathname) => pathname.startsWith('/admin/invoices') },
+  { href: '/admin/payments', label: 'Payments Received', icon: CreditCard, match: (pathname) => pathname.startsWith('/admin/payments') },
 ];
 
 // 4. Customers
@@ -497,7 +499,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-border/80 bg-[color:color-mix(in_oklab,var(--color-card)_94%,white)]/95 backdrop-blur">
+          <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
             <div className="flex min-h-12 items-center justify-between gap-2 px-2.5 py-1.5 sm:px-3 md:min-h-13 md:px-5 xl:px-6">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="admin-touch-target size-9 md:hidden" onClick={() => setSidebarOpen(true)}>

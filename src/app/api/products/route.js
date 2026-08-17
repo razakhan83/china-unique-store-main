@@ -23,14 +23,37 @@ const slugify = (text) => {
 };
 
 // GET all products - used by both Public Store and Admin 
-export async function GET() {
+export async function GET(req) {
     try {
         await mongooseConnect();
-        const products = await Product.find({})
+
+        // Support ?search= and ?limit= for invoice product search
+        const { searchParams } = new URL(req.url);
+        const searchQuery = searchParams.get('search') || '';
+        const limit = parseInt(searchParams.get('limit') || '0', 10);
+
+        let filter = {};
+        if (searchQuery.trim()) {
+            const regex = new RegExp(searchQuery.trim(), 'i');
+            filter = {
+                $or: [
+                    { Name: regex },
+                    { shortDescription: regex },
+                    { tags: regex },
+                    { primaryTag: regex },
+                ],
+            };
+        }
+
+        let dbQuery = Product.find(filter)
             .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .sort({ createdAt: -1 })
             .lean();
+
+        if (limit > 0) dbQuery = dbQuery.limit(limit);
+
+        const products = await dbQuery;
 
         // Format objectId to string securely
         const safeProducts = products.map((p) => {
@@ -50,6 +73,7 @@ export async function GET() {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+
 
 // POST new product - Protected Admin Route
 export async function POST(req) {

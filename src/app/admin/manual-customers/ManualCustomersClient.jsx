@@ -8,6 +8,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
+import { PAKISTAN_CITIES } from '@/lib/cities';
+
+const ALLOWED_CITIES = Array.from(
+  new Set([
+    'Karachi',
+    'Lahore',
+    'Islamabad',
+    'Rawalpindi',
+    'Faisalabad',
+    'Multan',
+    'Hyderabad',
+    'Peshawar',
+    'Quetta',
+    'Gujranwala',
+    'Sialkot',
+    ...PAKISTAN_CITIES.map((c) => {
+      const trimmed = c.trim();
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+    }),
+  ])
+);
 
 
 export default function ManualCustomersClient() {
@@ -235,7 +256,17 @@ export default function ManualCustomersClient() {
               </Field>
               <Field>
                 <FieldLabel>City</FieldLabel>
-                <Input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                <Input
+                  list="manual-customer-cities"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Select or type city..."
+                />
+                <datalist id="manual-customer-cities">
+                  {ALLOWED_CITIES.map((city) => (
+                    <option key={city} value={city} />
+                  ))}
+                </datalist>
               </Field>
             </FieldGroup>
             <DialogFooter>

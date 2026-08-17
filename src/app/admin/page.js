@@ -103,7 +103,7 @@ async function DashboardContent({ session }) {
           <h1 className="text-2xl font-bold tracking-[-0.04em] text-foreground md:text-[1.75rem]">
             {getGreeting()}, {session?.user?.name?.split(' ')[0] || 'Admin'}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening with your store today.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Here&apos;s what&apos;s happening with your store today.</p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/admin/orders?createOrder=1" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
@@ -255,13 +255,7 @@ async function DashboardContent({ session }) {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr] mb-4">
         <div className="flex flex-col gap-4">
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4 h-full">
-             <div className="mb-4 flex items-center gap-2">
-                <CircleDollarSign className="size-4 text-muted-foreground" />
-                <h2 className="text-[13px] font-semibold text-foreground">Performance Overview</h2>
-             </div>
-             <div className="h-56 w-full mt-2">
-               <DashboardChart initialData={[]} initialPeriod="monthly" />
-             </div>
+            <DashboardChart initialData={[]} initialPeriod="monthly" />
           </div>
         </div>
 

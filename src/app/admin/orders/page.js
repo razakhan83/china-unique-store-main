@@ -16,20 +16,16 @@ export default async function AdminOrdersPage({ searchParams }) {
   const page = Math.max(1, Number(params?.page) || 1);
   const initialCreateOrder = params?.createOrder === '1';
   
-  // Disable pagination fully if searching via specific date boundaries
+  // Page size 15 for lightning fast loading
   const limit = (startDate || endDate) ? 999999 : 15;
   
-  const [orders, products, trashOrders] = await Promise.all([
-    getAdminOrdersPage({ search, status, startDate, endDate, page, limit }),
-    getAdminOrderProductCatalog(),
-    getAdminTrashOrders(),
-  ]);
+  // Fast single query for current page only
+  const orders = await getAdminOrdersPage({ search, status, startDate, endDate, page, limit });
 
   return (
     <Suspense fallback={<AdminOrdersSkeleton />}>
       <AdminOrdersClient
         initialOrders={orders.items}
-        productCatalog={products}
         total={orders.total}
         totalPages={orders.totalPages}
         currentPage={orders.page}
@@ -39,7 +35,6 @@ export default async function AdminOrdersPage({ searchParams }) {
         initialStartDate={orders.startDate}
         initialEndDate={orders.endDate}
         summary={orders.summary}
-        initialTrashOrders={trashOrders}
         initialCreateOrder={initialCreateOrder}
       />
     </Suspense>
