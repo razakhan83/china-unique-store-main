@@ -641,6 +641,12 @@
   margin-top: 1.25rem;
 }
 
+@media (max-width: 767px) {
+  .ctaButton {
+    display: none !important;
+  }
+}
+
 .ctaButton:hover {
   background: color-mix(in oklab, var(--color-primary) 90%, black);
 }

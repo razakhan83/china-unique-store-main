@@ -1,8 +1,14 @@
-import { Suspense } from 'react';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
+
+export async function generateStaticParams() {
+  const settings = await getStoreSettings();
+  const pages = settings?.customPages || [];
+  return pages.map((page) => ({ slug: page.slug })).filter((p) => Boolean(p.slug));
+}
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
@@ -18,15 +24,11 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function DynamicCustomPage({ params }) {
-  return (
-    <Suspense fallback={null}>
-      <CustomPageContent params={params} />
-    </Suspense>
-  );
-}
+export default async function DynamicCustomPage({ params }) {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('custom-pages', 'settings');
 
-async function CustomPageContent({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
 

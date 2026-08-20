@@ -946,3 +946,13 @@
   }
 }
 
+/* Hide store navbar and footer cleanly on checkout page */
+body:has(#checkout-root) #store-navbar-wrapper,
+body:has(#checkout-root) #store-animated-stats,
+body:has(#checkout-root) #store-wholesale-cta,
+body:has(#checkout-root) #store-footer,
+body:has(#checkout-root) .store-deferred-chrome {
+  display: none !important;
+}
+
+

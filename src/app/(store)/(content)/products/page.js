@@ -56,15 +56,7 @@ export async function generateMetadata({ searchParams }) {
   };
 }
 
-export default function ProductsPage({ searchParams }) {
-  return (
-    <Suspense fallback={<ProductsGridSkeleton />}>
-      <ProductsPageContent searchParams={searchParams} />
-    </Suspense>
-  );
-}
-
-async function ProductsPageContent({ searchParams }) {
+export default async function ProductsPage({ searchParams }) {
   const resolvedSearchParams = (await searchParams) || {};
   const categories = await getStoreCategories();
   const productsPromise = getProductsList({

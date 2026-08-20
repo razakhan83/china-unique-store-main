@@ -1,5 +1,3 @@
-import HomePageSkeleton from '@/components/HomePageSkeleton';
-
-export default function HomeLoading() {
-  return <HomePageSkeleton />;
+export default function ContentLoading() {
+  return null;
 }

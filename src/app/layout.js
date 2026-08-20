@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { getMetadataBase } from "@/lib/siteUrl";
 import AuthProvider from "@/components/AuthProvider";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -58,20 +59,22 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#0a3d2e',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" className="bg-[#fafafa]" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <meta name="google" content="notranslate" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body className={`${fontSans.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${fontSans.variable} bg-[#fafafa] text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="bottom-center" richColors />
+          <ServiceWorkerRegister />
         </AuthProvider>
       </body>
     </html>

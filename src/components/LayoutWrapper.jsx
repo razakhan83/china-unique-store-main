@@ -54,27 +54,24 @@ export default function LayoutWrapper({ children, categories, settings }) {
   return (
     <>
       <div className="flex min-h-screen flex-col bg-background">
-        <ConditionalLayoutElements>
-            <Suspense fallback={<NavbarFallback />}>
-              <Navbar
-                categories={categories}
-                storeName={settings.storeName}
-                lightLogoUrl={settings.lightLogoUrl}
-                darkLogoUrl={settings.darkLogoUrl}
-                logoScalePercent={settings.logoScalePercent}
-                announcementBarEnabled={settings.announcementBarEnabled}
-                announcementBarText={settings.announcementBarText}
-                announcementBarMessages={settings.announcementBarMessages}
-              />
-            </Suspense>
-        </ConditionalLayoutElements>
+        <div id="store-navbar-wrapper">
+          <Navbar
+            categories={categories}
+            storeName={settings.storeName}
+            lightLogoUrl={settings.lightLogoUrl}
+            darkLogoUrl={settings.darkLogoUrl}
+            logoScalePercent={settings.logoScalePercent}
+            announcementBarEnabled={settings.announcementBarEnabled}
+            announcementBarText={settings.announcementBarText}
+            announcementBarMessages={settings.announcementBarMessages}
+          />
+        </div>
 
         <main>{children}</main>
 
-        <ConditionalLayoutElements>
-          <div id="store-animated-stats">
-            <AnimatedStats />
-          </div>
+        <div id="store-animated-stats">
+          <AnimatedStats />
+        </div>
 
           {/* ── Wholesale CTA ── */}
           <div id="store-wholesale-cta" className="mt-auto border-t border-border bg-primary/5 px-4 py-14 sm:py-16 text-center">
@@ -271,7 +268,6 @@ export default function LayoutWrapper({ children, categories, settings }) {
               </div>
             </div>
           </footer>
-        </ConditionalLayoutElements>
       </div>
       <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} hasAnnouncementBar={hasAnnouncementBar} />
     </>

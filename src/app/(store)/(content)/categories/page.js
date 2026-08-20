@@ -1,4 +1,4 @@
-import { connection } from 'next/server';
+import { cacheLife, cacheTag } from 'next/cache';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
@@ -51,7 +51,10 @@ async function getCategoriesData() {
 }
 
 export default async function CategoriesPage() {
-  await connection();
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('categories');
+
   const categories = await getCategoriesData();
 
   return <CategoriesClientPage initialCategories={categories} />;

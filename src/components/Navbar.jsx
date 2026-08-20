@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -692,15 +692,17 @@ export default function Navbar({
   announcementBarMessages = [],
 }) {
   return (
-    <NavbarContent
-      categories={categories}
-      storeName={storeName}
-      lightLogoUrl={lightLogoUrl}
-      darkLogoUrl={darkLogoUrl}
-      logoScalePercent={logoScalePercent}
-      announcementBarEnabled={announcementBarEnabled}
-      announcementBarText={announcementBarText}
-      announcementBarMessages={announcementBarMessages}
-    />
+    <Suspense fallback={null}>
+      <NavbarContent
+        categories={categories}
+        storeName={storeName}
+        lightLogoUrl={lightLogoUrl}
+        darkLogoUrl={darkLogoUrl}
+        logoScalePercent={logoScalePercent}
+        announcementBarEnabled={announcementBarEnabled}
+        announcementBarText={announcementBarText}
+        announcementBarMessages={announcementBarMessages}
+      />
+    </Suspense>
   );
 }

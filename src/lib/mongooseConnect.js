@@ -22,15 +22,14 @@ if (!cached) {
 
 const connectionOptions = {
   bufferCommands: false,
-  autoIndex: isDev, // Disable expensive index builds at runtime in production
-  // Scaled pool size for Serverless (Vercel) to prevent connection exhaustion 
-  // under traffic bursts, while keeping 10 for local dev/VPS.
+  autoIndex: false, // Prevent costly runtime index recreation on each query
+  // Scaled pool size for Serverless (Vercel) vs local dev
   maxPoolSize: isServerlessLike ? 3 : 10,
-  minPoolSize: 0,
+  minPoolSize: isDev ? 2 : 0, // Pre-warm 2 connections in dev for instant <10ms queries
   maxConnecting: 2, // Prevent thundering herd connection storm during traffic spikes
-  maxIdleTimeMS: isServerlessLike ? 15000 : 30000,
-  serverSelectionTimeoutMS: useFastRuntimeTimeouts ? 5000 : 15000,
-  connectTimeoutMS: useFastRuntimeTimeouts ? 5000 : 15000,
+  maxIdleTimeMS: isDev ? 300000 : 15000, // 5 min keep-alive in dev, fast pruning in serverless
+  serverSelectionTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
+  connectTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
   socketTimeoutMS: 30000,
 };
 
