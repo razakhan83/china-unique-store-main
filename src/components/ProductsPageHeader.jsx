@@ -106,7 +106,12 @@ export default function ProductsPageHeader({
       });
     };
 
-    updateScrollState();
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(updateScrollState);
+    } else {
+      setTimeout(updateScrollState, 150);
+    }
+
     nav.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState, { passive: true });
 

@@ -40,7 +40,12 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
       });
     };
 
-    updateScrollState();
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(updateScrollState);
+    } else {
+      setTimeout(updateScrollState, 150);
+    }
+
     carousel.addEventListener('scroll', updateScrollState, { passive: true });
     window.addEventListener('resize', updateScrollState, { passive: true });
 

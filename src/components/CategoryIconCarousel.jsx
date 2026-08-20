@@ -41,7 +41,12 @@ export default function CategoryIconCarousel({ categories }) {
       });
     };
 
-    updateScrollState();
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(updateScrollState);
+    } else {
+      setTimeout(updateScrollState, 150);
+    }
+
     carousel.addEventListener('scroll', updateScrollState, { passive: true });
     window.addEventListener('resize', updateScrollState, { passive: true });
 
