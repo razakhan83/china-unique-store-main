@@ -92,7 +92,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border border-border/40 bg-card shadow-xs hover:-translate-y-0.5 hover:border-border/70 hover:shadow-sm transition-all duration-200 ease-out",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border-none ring-0 bg-card shadow-none hover:-translate-y-0.5 transition-all duration-200 ease-out",
         "py-0",
         className
       )}

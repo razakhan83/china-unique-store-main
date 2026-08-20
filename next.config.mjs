@@ -15,6 +15,7 @@ const nextConfig = {
   reactCompiler: true,
 
   experimental: {
+    inlineCss: true,
     turbopackFileSystemCacheForDev: true,
     turbopackFileSystemCacheForBuild: true,
     cachedNavigations: true,
