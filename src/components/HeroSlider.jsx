@@ -18,8 +18,8 @@ function extractSlideImages(slide) {
   const rawMobileSrc = mobileAsset?.url || slide?.mobileSrc || '';
   const fallbackSrc = rawDesktopSrc || rawMobileSrc || slide?.image || slide?.src || '';
 
-  const desktopSrc = optimizeCloudinaryUrl(rawDesktopSrc || fallbackSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
-  const mobileSrc = optimizeCloudinaryUrl(rawMobileSrc || fallbackSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile);
+  const desktopSrc = rawDesktopSrc || fallbackSrc;
+  const mobileSrc = rawMobileSrc || fallbackSrc;
 
   return {
     desktopSrc,
@@ -150,33 +150,18 @@ export default function HeroSlider({ slides = [] }) {
             aria-hidden={safeActiveIndex !== index}
           >
             <SlideFrame href={slide.link}>
-              {slide.images.desktopSrc === slide.images.mobileSrc || (!slide.images.mobileSrc || !slide.images.desktopSrc) ? (
-                <Image
-                  src={slide.images.desktopSrc || slide.images.mobileSrc}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  quality={85}
-                  {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
-                />
-              ) : (
-                <picture className="relative block h-full w-full">
-                  <source media="(max-width: 767px)" srcSet={slide.images.mobileSrc} />
-                  <source media="(min-width: 768px)" srcSet={slide.images.desktopSrc} />
-                  <img
-                    src={slide.images.desktopSrc || slide.images.mobileSrc}
-                    alt={slide.alt}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    decoding="async"
-                    className="h-full w-full object-cover"
-                  />
-                </picture>
-              )}
+              <Image
+                src={slide.images.desktopSrc || slide.images.mobileSrc}
+                alt={slide.alt}
+                fill
+                sizes="100vw"
+                priority={index === 0}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                className="object-cover"
+                quality={80}
+                {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
+              />
             </SlideFrame>
 
             {/* Gradient scrim for text legibility */}
@@ -239,8 +224,8 @@ export default function HeroSlider({ slides = [] }) {
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={safeActiveIndex === index}
                 onClick={() => goToSlide(index)}
-                className={`h-2.5 rounded-full shadow-md transition-[transform,background-color] duration-300 origin-center ${
-                  safeActiveIndex === index ? 'w-6 bg-white' : 'w-2.5 bg-white/55 hover:bg-white/80'
+                className={`h-2 rounded-full shadow-md transition-all duration-300 origin-center ${
+                  safeActiveIndex === index ? 'w-8 bg-white' : 'w-2 bg-white/55 hover:bg-white/80'
                 }`}
               />
             ))}
