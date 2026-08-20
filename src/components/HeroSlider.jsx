@@ -14,8 +14,17 @@ function extractSlideImages(slide) {
   const desktopAsset = slide?.desktopImage || null;
   const mobileAsset = slide?.mobileImage || null;
 
-  const rawDesktopSrc = desktopAsset?.url || slide?.pcSrc || slide?.desktopSrc || '';
-  const rawMobileSrc = mobileAsset?.url || slide?.mobileSrc || '';
+  const rawDesktopSrc =
+    (typeof desktopAsset === 'string' ? desktopAsset : desktopAsset?.url || desktopAsset?.image?.url) ||
+    slide?.pcSrc ||
+    slide?.desktopSrc ||
+    '';
+
+  const rawMobileSrc =
+    (typeof mobileAsset === 'string' ? mobileAsset : mobileAsset?.url || mobileAsset?.image?.url) ||
+    slide?.mobileSrc ||
+    '';
+
   const fallbackSrc = rawDesktopSrc || rawMobileSrc || slide?.image || slide?.src || '';
 
   const desktopSrc = rawDesktopSrc || fallbackSrc;
@@ -150,18 +159,37 @@ export default function HeroSlider({ slides = [] }) {
             aria-hidden={safeActiveIndex !== index}
           >
             <SlideFrame href={slide.link}>
-              <Image
-                src={slide.images.desktopSrc || slide.images.mobileSrc}
-                alt={slide.alt}
-                fill
-                sizes="100vw"
-                priority={index === 0}
-                fetchPriority={index === 0 ? 'high' : 'auto'}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                className="object-cover"
-                quality={80}
-                {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
-              />
+              {/* Mobile screen banner */}
+              <div className="relative h-full w-full md:hidden">
+                <Image
+                  src={slide.images.mobileSrc || slide.images.desktopSrc}
+                  alt={slide.alt}
+                  fill
+                  sizes="100vw"
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  className="object-cover"
+                  quality={80}
+                  {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
+                />
+              </div>
+
+              {/* Desktop screen banner */}
+              <div className="relative hidden h-full w-full md:block">
+                <Image
+                  src={slide.images.desktopSrc || slide.images.mobileSrc}
+                  alt={slide.alt}
+                  fill
+                  sizes="100vw"
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  className="object-cover"
+                  quality={85}
+                  {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
+                />
+              </div>
             </SlideFrame>
 
             {/* Gradient scrim for text legibility */}
