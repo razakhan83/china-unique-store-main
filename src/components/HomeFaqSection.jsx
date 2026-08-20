@@ -10,7 +10,10 @@ export default function HomeFaqSection() {
   const displayedFaqs = HOME_FAQS.slice(0, 5);
 
   return (
-    <section className="border-t border-border/70 bg-background py-12 sm:py-16 lg:py-20">
+    <section 
+      className="border-t border-border/70 bg-background py-12 sm:py-16 lg:py-20"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 350px' }}
+    >
       <div className="container mx-auto max-w-4xl px-4 sm:px-6">
         
         {/* ── Section Header ── */}

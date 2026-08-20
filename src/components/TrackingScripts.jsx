@@ -21,7 +21,7 @@ export default function TrackingScripts({
       cleanup();
     };
 
-    const events = ['scroll', 'touchstart', 'mousemove', 'keydown', 'click'];
+    const events = ['click', 'keydown', 'touchstart'];
     const addListeners = () => {
       events.forEach((evt) => window.addEventListener(evt, triggerLoad, { passive: true, once: true }));
     };
@@ -32,10 +32,10 @@ export default function TrackingScripts({
 
     if ('requestIdleCallback' in window) {
       window.requestIdleCallback(() => {
-        timer = setTimeout(triggerLoad, 3500);
-      }, { timeout: 4000 });
+        timer = setTimeout(triggerLoad, 5000);
+      }, { timeout: 6000 });
     } else {
-      timer = setTimeout(triggerLoad, 3500);
+      timer = setTimeout(triggerLoad, 5000);
     }
 
     addListeners();

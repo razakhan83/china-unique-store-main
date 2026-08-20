@@ -87,7 +87,10 @@ function StatItem({ stat, index }) {
 
 export default function AnimatedStats() {
   return (
-    <section className="relative w-full bg-background py-16 md:py-24 border-t border-border/40">
+    <section 
+      className="relative w-full bg-background py-16 md:py-24 border-t border-border/40"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 400px' }}
+    >
       <SectionDoodleBackground />
       <div className="relative z-10 container mx-auto max-w-7xl px-4">
         <div className="mb-14 md:mb-20 text-center">

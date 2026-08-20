@@ -150,7 +150,22 @@ export default function HeroSlider({ slides = [] }) {
             aria-hidden={safeActiveIndex !== index}
           >
             <SlideFrame href={slide.link}>
-              {slide.images.desktopSrc === slide.images.mobileSrc ? (
+              {slide.images.mobileSrc ? (
+                <Image
+                  src={slide.images.mobileSrc}
+                  alt={slide.alt}
+                  fill
+                  sizes="(max-width: 767px) 100vw, 100vw"
+                  priority={index === 0}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  className={`object-cover ${slide.images.desktopSrc && slide.images.desktopSrc !== slide.images.mobileSrc ? 'md:hidden' : ''}`}
+                  quality={80}
+                  {...getBlurPlaceholderProps(slide.images.mobileBlur)}
+                />
+              ) : null}
+
+              {slide.images.desktopSrc && slide.images.desktopSrc !== slide.images.mobileSrc ? (
                 <Image
                   src={slide.images.desktopSrc}
                   alt={slide.alt}
@@ -159,27 +174,11 @@ export default function HeroSlider({ slides = [] }) {
                   priority={index === 0}
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
+                  className="hidden md:block object-cover"
                   quality={85}
                   {...getBlurPlaceholderProps(slide.images.desktopBlur)}
                 />
-              ) : (
-                <picture className="relative block h-full w-full">
-                  {slide.images.mobileSrc ? (
-                    <source media="(max-width: 767px)" srcSet={slide.images.mobileSrc} />
-                  ) : null}
-                  {slide.images.desktopSrc ? (
-                    <source media="(min-width: 768px)" srcSet={slide.images.desktopSrc} />
-                  ) : null}
-                  <img
-                    src={slide.images.desktopSrc || slide.images.mobileSrc}
-                    alt={slide.alt}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    className="h-full w-full object-cover"
-                  />
-                </picture>
-              )}
+              ) : null}
             </SlideFrame>
 
             {/* Gradient scrim for text legibility */}

@@ -73,7 +73,10 @@ export default async function TiltedProductMarquee() {
   });
 
   return (
-    <section className="relative overflow-hidden w-full bg-background border-t border-border/50 py-8 md:py-12">
+    <section 
+      className="relative overflow-hidden w-full bg-background border-t border-border/50 py-8 md:py-12"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 600px' }}
+    >
       {/* Dynamic CSS Injection with optimized speed and responsive gaps */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
@@ -90,7 +93,6 @@ export default async function TiltedProductMarquee() {
         }
         @keyframes marquee-right {
           0% { transform: translateX(calc(-50% - var(--marquee-gap-half))); }
-          100% { transform: translateX(0); }
         }
         .animate-marquee-left-custom {
           animation: marquee-left 25s linear infinite;
@@ -125,7 +127,7 @@ export default async function TiltedProductMarquee() {
           <div className="flex flex-col gap-4 md:gap-5 w-full">
             <MarqueeRow products={row1.length > 0 ? row1 : products} direction="right" />
             <MarqueeRow products={row2.length > 0 ? row2 : products} direction="left" />
-            <MarqueeRow products={row3.length > 0 ? row3 : products} direction="right" />
+            <MarqueeRow className="hidden md:block" products={row3.length > 0 ? row3 : products} direction="right" />
           </div>
         </div>
       </div>

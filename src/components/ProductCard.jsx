@@ -1,7 +1,3 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,10 +80,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
 
-  const router = useRouter();
-  const [primaryLoaded, setPrimaryLoaded] = useState(false);
-  const [secondaryLoaded, setSecondaryLoaded] = useState(false);
-
   const discountLabel = getDiscountBadge(product);
   const featureBadge = getFeatureBadge(product);
   const reviewCount = Number(product.reviewCount || 0);
@@ -158,9 +150,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
         >
           {primaryImageSrc ? (
             <>
-              {!primaryImage.blurDataURL && !primaryLoaded && (
-                <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60" />
-              )}
               <Image
                 src={primaryImageSrc}
                 alt={productName}
@@ -168,10 +157,8 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 draggable={false}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
-                onLoad={() => setPrimaryLoaded(true)}
                 className={cn(
                   "object-cover transition-all duration-500 ease-out",
-                  (!primaryImage.blurDataURL && !primaryLoaded) ? "opacity-0" : "opacity-100",
                   "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
                   (secondaryImageSrc && !isUnavailable) && "md:group-hover:opacity-0"
@@ -180,9 +167,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
               />
               {secondaryImageSrc && !isUnavailable && (
                 <div className="hidden md:block">
-                  {!secondaryImage.blurDataURL && !secondaryLoaded && (
-                    <Skeleton className="absolute inset-0 z-0 rounded-none bg-muted/60 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
-                  )}
                   <Image
                     src={secondaryImageSrc}
                     alt={`${productName} alternate view`}
@@ -190,10 +174,8 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     draggable={false}
                     sizes="(max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
-                    onLoad={() => setSecondaryLoaded(true)}
                     className={cn(
                       "object-cover transition-all duration-500 ease-out absolute inset-0 opacity-0",
-                      (!secondaryImage.blurDataURL && !secondaryLoaded) ? "opacity-0" : "",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",
                       isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75"
                     )}
