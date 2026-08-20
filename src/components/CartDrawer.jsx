@@ -134,7 +134,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                             <div className="min-h-0">
                               <Card
                                 size="sm"
-                                className="gap-0 border-[color:color-mix(in_oklab,var(--color-sidebar-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-sidebar)_94%,white)] py-0 shadow-[0_1px_0_color-mix(in_oklab,white_72%,transparent),0_14px_24px_-34px_color-mix(in_oklab,black_18%,transparent)] transition-[transform,opacity,filter,background-color,border-color,box-shadow] duration-180 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-[color:color-mix(in_oklab,var(--color-sidebar)_98%,white)]"
+                                className="gap-0 border border-border/50 bg-card hover:border-border/80 py-0 shadow-2xs transition-[background-color,border-color] duration-150"
                               >
                                 <CardContent className="px-2.5 py-2">
                                   <div className="flex items-stretch gap-2.5">
@@ -248,34 +248,33 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
           </SidebarContent>
 
           {cart.length ? (
-            <SidebarFooter className="gap-2 md:gap-3 border-t border-sidebar-border bg-background px-5 pb-4 md:pb-5 pt-3 md:pt-4">
+            <SidebarFooter className="gap-2.5 border-t border-sidebar-border bg-background px-4 pt-3.5 pb-[calc(env(safe-area-inset-bottom,0.75rem)+0.75rem)] md:px-5 md:pt-4 md:pb-5">
               <Card size="sm" className="gap-0 border border-sidebar-border/80 bg-muted/30 py-0 shadow-[inset_0_1px_0_color-mix(in_oklab,white_72%,transparent)]">
-                <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 md:px-4 py-2.5 md:py-3">
-                  <CardTitle className="text-sm">Subtotal</CardTitle>
-                  <p className="text-lg font-semibold text-foreground tabular-nums">
+                <CardHeader className="flex flex-row items-center justify-between gap-3 px-3.5 py-2.5 md:px-4 md:py-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Subtotal</CardTitle>
+                  <p className="text-lg font-bold text-foreground tabular-nums">
                     Rs.&nbsp;{subtotal.toLocaleString('en-PK')}
                   </p>
                 </CardHeader>
               </Card>
-              <div className="flex items-center gap-2 md:gap-3 mt-1 md:mt-2">
+              <div className="flex items-center gap-2.5 mt-1">
                 <Button
                   variant="outline"
-                  className="flex-1 h-10 px-2 rounded-[var(--radius-md)] border-border bg-background hover:bg-muted text-foreground text-[0.8rem] sm:text-sm font-medium shadow-sm"
+                  className="flex-1 h-11 px-2.5 rounded-xl border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[12.5px] sm:text-sm font-semibold transition-all active:scale-[0.98]"
                   onClick={handleWhatsAppDirectCheckout}
                 >
-                  <WhatsAppIcon className="mr-1.5 size-4 shrink-0 text-[#25D366]" />
+                  <WhatsAppIcon className="mr-1.5 size-4.5 shrink-0 text-[#25D366]" />
                   <span className="truncate">Order on WhatsApp</span>
                 </Button>
                 
                 <Link 
                   href="/checkout" 
                   onClick={() => setIsCartOpen(false)} 
-                  className="flex-1 inline-flex h-10 px-2 items-center justify-center rounded-[var(--radius-md)] bg-primary text-[0.85rem] sm:text-[0.9rem] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                  className="flex-1 inline-flex h-11 px-2.5 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] sm:text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
                 >
                   <span className="truncate">Checkout</span> <ArrowRight className="ml-1.5 size-4 shrink-0" />
                 </Link>
               </div>
-              <div className="md:hidden w-full shrink-0" style={{ height: 'calc(env(safe-area-inset-bottom) + 3.5rem)' }} />
             </SidebarFooter>
           ) : null}
         </Sidebar>

@@ -42,7 +42,7 @@ const SETTINGS_KEY = 'site-settings';
 const COVER_PHOTOS_KEY = 'home-cover-photos';
 const HOME_MARKETING_SECTIONS = [
   { id: 'special-offers', label: 'Special Offer', iconName: 'Tag' },
-  { id: 'new-arrivals', label: 'New Arrivals', iconName: 'Sparkles' },
+  { id: 'new-arrivals', label: 'New Arrivals', iconName: 'Clock' },
   { id: 'best-selling', label: 'Best Selling', iconName: 'Trophy' },
 ];
 const HOME_PAGE_PRODUCT_COLLECTION_CONFIG = {
@@ -927,7 +927,7 @@ export async function getHomeSections() {
 
   // Add the dynamic marketing sections (New Arrivals, Trending, Best Selling)
   const marketingSections = [
-    { id: 'new-arrivals', label: 'New Arrivals', flag: 'isNewArrival', iconName: 'Sparkles' },
+    { id: 'new-arrivals', label: 'New Arrivals', flag: 'isNewArrival', iconName: 'Clock' },
     { id: 'best-selling', label: 'Best Selling', flag: 'isBestSelling', iconName: 'Trophy' },
   ].map(m => {
     const items = products

@@ -10,7 +10,7 @@ import {
   Truck, 
   Wallet, 
   ShieldCheck, 
-  Sparkles, 
+  Package, 
   MessageSquare,
   ChevronRight,
   ArrowRight
@@ -24,7 +24,8 @@ const ICON_MAP = {
   Truck: Truck,
   Wallet: Wallet,
   ShieldCheck: ShieldCheck,
-  Sparkles: Sparkles
+  HelpCircle: HelpCircle,
+  Package: Package,
 };
 
 export default function FaqPageClient({ whatsappNumber, storeName, pageTitle, pageDescription }) {

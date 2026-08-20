@@ -63,7 +63,7 @@ function GoogleSignInButtonContent({ className, callbackUrl }) {
 function GoogleSignInButtonCurrentUrl({ className }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const callbackUrl = `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
+  const callbackUrl = searchParams?.get('callbackUrl') || `${pathname || '/'}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
   return <GoogleSignInButtonContent className={className} callbackUrl={callbackUrl} />;
 }
 

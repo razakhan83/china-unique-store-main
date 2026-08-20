@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, LogOut, Home, Search, Settings, ShoppingBag, ShoppingCart, Package, User, UserPlus, X, MapPin } from 'lucide-react';
 
-import { useCartActions } from '@/context/CartContext';
+import { useCartActions, useCartUi } from '@/context/CartContext';
 
 import {
   AlertDialog,
@@ -100,6 +100,9 @@ function AccountMenuButton({ icon: Icon, label, onClick, destructive = false }) 
 
 export default function MobileBottomNav({
   pathname,
+  isNavbarHidden = false,
+  isSidebarOpen: isSidebarOpenProp,
+  isCartOpen: isCartOpenProp,
   isSearchOpen,
   onSearchOpenChange,
   onAccountOpenChange,
@@ -111,6 +114,14 @@ export default function MobileBottomNav({
   const { data: session } = useSession();
   const router = useRouter();
   const { setIsCartOpen = () => {}, setIsSidebarOpen = () => {} } = useCartActions() || {};
+  const { isCartOpen: isCartOpenCtx = false, isSidebarOpen: isSidebarOpenCtx = false } = useCartUi() || {};
+  const isSidebarOpen = isSidebarOpenProp ?? isSidebarOpenCtx;
+  const isCartOpen = isCartOpenProp ?? isCartOpenCtx;
+
+  const isScrollHidePage = pathname === '/' || pathname === '/products' || pathname.startsWith('/products');
+  const isHiddenOnScroll = isScrollHidePage && isNavbarHidden;
+  const isHidden = isSidebarOpen || isCartOpen || isHiddenOnScroll;
+
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const mobileDrawerReservedLane = 'calc(env(safe-area-inset-bottom) + var(--mobile-bottom-nav-offset))';
   const mobileDrawerOverlayClassName =
@@ -167,7 +178,13 @@ export default function MobileBottomNav({
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)]" style={{ zIndex: 400, pointerEvents: 'auto' }}>
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)] transition-all duration-300 ease-in-out",
+          isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100 pointer-events-auto"
+        )}
+        style={{ zIndex: 400 }}
+      >
         <div className="mx-auto w-full max-w-xl">
           <nav
             aria-label="Mobile navigation"

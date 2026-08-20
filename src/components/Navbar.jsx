@@ -14,7 +14,7 @@ import {
   Search,
   ShoppingBag,
   ShoppingCart,
-  Sparkles,
+  Clock,
   Store,
   Tag,
   X,
@@ -192,7 +192,7 @@ function AnnouncementMarquee({ items = [] }) {
                 <span className="announcement-marquee__label">{text}</span>
                 {index < marqueeItems.length - 1 ? (
                   <span className="announcement-marquee__separator" aria-hidden="true">
-                    <Sparkles className="size-3.5" />
+                    <span className="size-1 rounded-full bg-current opacity-60" />
                   </span>
                 ) : null}
               </span>
@@ -242,6 +242,17 @@ function NavbarContent({
     ? categories.map(c => `What are you finding? ${c.label}`)
     : ["What are you finding? Kitchen Accessories", "What are you finding? Stationeries", "What are you finding? Gadgets"];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isCartBumping, setIsCartBumping] = useState(false);
+
+  useEffect(() => {
+    function handleCartLanded() {
+      setIsCartBumping(true);
+      window.setTimeout(() => setIsCartBumping(false), 380);
+    }
+
+    window.addEventListener('cart-item-landed', handleCartLanded);
+    return () => window.removeEventListener('cart-item-landed', handleCartLanded);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -273,6 +284,15 @@ function NavbarContent({
 
     scrollAnchorYRef.current = window.scrollY;
   }
+
+  useEffect(() => {
+    function handleReveal() {
+      revealNavbar();
+    }
+
+    window.addEventListener('reveal-navbar', handleReveal);
+    return () => window.removeEventListener('reveal-navbar', handleReveal);
+  }, []);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -493,11 +513,18 @@ function NavbarContent({
             <div className="flex items-center gap-2 md:gap-4 shrink-0">
               {/* Combined Cart Button */}
               <Button
+                id="nav-cart-button"
+                data-cart-target="true"
                 type="button"
                 variant="ghost"
                 size="icon-lg"
                 onClick={() => isCartOpen ? setIsCartOpen(false) : openCart()}
-                className={cn('nav-cart-button overflow-visible rounded-full', navActionButtonClass, 'hover:!bg-[#E3FCEF] hover:!text-[#015347] hover:!border-[#E3FCEF] hover:!shadow-[0_8px_25px_rgba(227,252,239,0.9)]')}
+                className={cn(
+                  'nav-cart-button overflow-visible rounded-full transition-transform duration-300',
+                  navActionButtonClass,
+                  isCartBumping && 'animate-cart-bump',
+                  'hover:!bg-[#E3FCEF] hover:!text-[#015347] hover:!border-[#E3FCEF] hover:!shadow-[0_8px_25px_rgba(227,252,239,0.9)]'
+                )}
                 aria-label="Open cart"
                 title="Cart"
               >
@@ -507,7 +534,10 @@ function NavbarContent({
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (
-                    <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
+                    <span className={cn(
+                      "absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white transition-transform duration-200",
+                      isCartBumping && "scale-125"
+                    )}>
                       {cartCount}
                     </span>
                   ) : null
@@ -554,8 +584,8 @@ function NavbarContent({
                     onPointerEnter={cancelCategoriesClose}
                     onPointerLeave={scheduleCategoriesClose}
                   >
-                    <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('new-arrivals')}>
-                      <Sparkles className="text-accent-foreground" />
+                    <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('new-arrivals')}>
+                      <Clock className="text-accent-foreground size-4" />
                       <span>New Arrivals</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('special-offers')}>
@@ -611,7 +641,7 @@ function NavbarContent({
             side="left"
             showCloseButton={false}
             className={cn(
-              "w-[85vw] max-w-sm border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:w-[22rem] md:w-[min(76vw,22rem)] flex flex-col data-[state=closed]:duration-300 data-[state=open]:duration-300",
+              "w-[85vw] max-w-sm border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:w-[22rem] md:w-[min(76vw,22rem)] flex flex-col h-full max-h-[100dvh] overflow-hidden data-[state=closed]:duration-300 data-[state=open]:duration-300",
               showAnnouncementBar ? "pt-[96px]" : "pt-[64px]"
             )}
           >
@@ -634,6 +664,9 @@ function NavbarContent({
       {!pathname.startsWith('/checkout') && (
         <MobileBottomNav
           pathname={pathname}
+          isNavbarHidden={isNavbarHidden}
+          isSidebarOpen={isSidebarOpen}
+          isCartOpen={isCartOpen}
           isSearchOpen={isSearchOpen}
           onSearchOpenChange={handleSearchOpenChange}
           accountOpen={isAccountDrawerOpen}

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { connection } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Counter from '@/models/Counter';
 import Invoice from '@/models/Invoice';
@@ -726,18 +727,40 @@ export async function getInvoiceByIdAction(id) {
   const settingsDoc = await Settings.findOne({ key: 'site-settings' }).lean().catch(() => null);
   const logoUrl = settingsDoc?.branding?.darkLogoUrl || settingsDoc?.branding?.lightLogoUrl || '/Chaina-Store-Logo1.png';
 
-  // Populate missing item images from Product collection
-  const itemProductIds = (invoice.items || [])
+  // Populate missing item images from Product collection (safe for ObjectId and slug)
+  const rawItemProductIds = (invoice.items || [])
     .map((it) => it.productId)
     .filter(Boolean);
 
   let productImgMap = {};
-  if (itemProductIds.length > 0) {
-    const products = await Product.find({ _id: { $in: itemProductIds } }).select('Images images').lean();
-    products.forEach((p) => {
-      const imgUrl = p.Images?.[0]?.url || p.images?.[0]?.url || (typeof p.images?.[0] === 'string' ? p.images[0] : '');
-      if (imgUrl) productImgMap[p._id.toString()] = imgUrl;
-    });
+  if (rawItemProductIds.length > 0) {
+    const validObjectIds = rawItemProductIds.filter(
+      (id) => mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === String(id)
+    );
+    const stringIds = rawItemProductIds.map(String);
+
+    const orClauses = [];
+    if (validObjectIds.length > 0) {
+      orClauses.push({ _id: { $in: validObjectIds } });
+    }
+    if (stringIds.length > 0) {
+      orClauses.push({ slug: { $in: stringIds } });
+    }
+
+    if (orClauses.length > 0) {
+      const products = await Product.find({ $or: orClauses })
+        .select('Images images slug _id')
+        .lean()
+        .catch(() => []);
+
+      products.forEach((p) => {
+        const imgUrl = p.Images?.[0]?.url || p.images?.[0]?.url || (typeof p.images?.[0] === 'string' ? p.images[0] : '');
+        if (imgUrl) {
+          if (p._id) productImgMap[p._id.toString()] = imgUrl;
+          if (p.slug) productImgMap[p.slug] = imgUrl;
+        }
+      });
+    }
   }
 
   return {

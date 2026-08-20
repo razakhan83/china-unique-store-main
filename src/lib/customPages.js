@@ -91,6 +91,24 @@ A: You can reach us through the WhatsApp and contact options available on the st
     showInFooter: true,
     sortOrder: 4,
   },
+  {
+    slug: 'terms-of-service',
+    title: 'Terms of Service',
+    label: 'Terms of Service',
+    description: 'Read the terms and conditions governing purchases and use of China Unique Store.',
+    content: `Welcome to China Unique Store. By accessing our website, placing an order, or communicating with our store, you agree to the following terms and conditions:
+
+1. Ordering & Pricing: All prices are listed in Pakistani Rupees (PKR). We reserve the right to correct pricing errors or update product details prior to order confirmation.
+2. Cash on Delivery & Payment: For Cash on Delivery (COD) orders, full payment is required upon parcel receipt. Delivery verification is supported to ensure complete customer peace of mind.
+3. Order Confirmation: Orders are processed promptly upon confirmation. If an item is unavailable or out of stock, our team will notify you promptly.
+4. Returns & Replacements: We provide a 7-day exchange/replacement window for damaged or defective items as detailed in our Refund Policy.
+5. Customer Support: For any questions, order updates, or inquiries, reach out directly via our official WhatsApp and contact channels.`,
+    seoTitle: 'Terms of Service | China Unique Store',
+    seoDescription: 'Terms and conditions for shopping at China Unique Store.',
+    isEnabled: true,
+    showInFooter: true,
+    sortOrder: 5,
+  },
 ];
 
 export function normalizeCustomPageSlug(value = '') {
@@ -148,8 +166,10 @@ export function mergeCustomPages(pages = []) {
 }
 
 export function getCustomPageBySlug(pages = [], slug = '') {
-  const safeSlug = normalizeCustomPageSlug(slug);
+  let safeSlug = normalizeCustomPageSlug(slug);
   if (!safeSlug) return null;
+  if (safeSlug === 'terms') safeSlug = 'terms-of-service';
+  if (safeSlug === 'privacy') safeSlug = 'privacy-policy';
 
   return mergeCustomPages(pages).find((page) => page.slug === safeSlug) || null;
 }

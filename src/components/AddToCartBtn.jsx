@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { flyToCart } from '@/lib/flyToCart';
 
 export default function AddToCartBtn({ product, className }) {
     const { addToCart } = useCartActions();
@@ -13,7 +14,11 @@ export default function AddToCartBtn({ product, className }) {
     const [didJustAdd, setDidJustAdd] = useState(false);
     return (
         <Button
-            onClick={async () => {
+            onClick={async (event) => {
+                if (event?.currentTarget) {
+                    const imageSrc = product?.Images?.[0]?.url || product?.images?.[0]?.url || (typeof product?.images?.[0] === 'string' ? product.images[0] : '') || product?.image || '';
+                    flyToCart({ sourceEl: event.currentTarget, imageSrc });
+                }
                 setIsAdding(true);
                 const startedAt = performance.now();
                 try {

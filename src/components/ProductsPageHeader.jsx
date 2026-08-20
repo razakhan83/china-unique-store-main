@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2, Search, Sparkles, Tag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Clock, Tag } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -75,7 +75,7 @@ export default function ProductsPageHeader({
   const scrollAnchorYRef = useRef(0);
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search},
-    { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
+    { id: "new-arrivals", label: "New Arrivals", icon: Clock},
     { id: "special-offers", label: "Special Offers", icon: Tag},
     ...categories
       .filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals')

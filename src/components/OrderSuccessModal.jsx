@@ -39,14 +39,13 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
 
   const handleClose = () => {
     if (onClose) onClose();
-    // Refresh to home page immediately without waiting
-    window.location.href = '/';
+    router.push('/');
   };
 
   const handleLinkClick = (e, href) => {
     e.preventDefault();
     if (onClose) onClose();
-    window.location.href = href;
+    router.push(href);
   };
 
   return (
@@ -55,7 +54,7 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
     }}>
       <DialogContent 
         showCloseButton={false} 
-        className="sm:max-w-md p-0 overflow-hidden border-none bg-[#F7F8F7] text-center w-[92vw] max-w-[420px] rounded-[24px] shadow-2xl"
+        className="sm:max-w-md p-0 overflow-hidden border border-border/80 bg-card text-center w-[92vw] max-w-[420px] rounded-2xl shadow-lg"
       >
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes boom {
@@ -64,18 +63,18 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
           }
           @keyframes popIn {
             0% { transform: scale(0.5); opacity: 0; }
-            70% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(1.05); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
           }
           .particle {
-            animation: boom 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation: boom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
           }
           .pop-in {
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
           }
         `}} />
 
-        <div className="relative p-6 pt-14 pb-8 flex flex-col items-center overflow-hidden">
+        <div className="relative p-6 pt-12 pb-7 flex flex-col items-center overflow-hidden">
           
           {/* Party Boom / Confetti Effect SVG */}
           {showConfetti && (
@@ -96,32 +95,31 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
           {/* Close button */}
           <button 
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 hover:bg-black/5 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors z-10"
             aria-label="Close"
           >
-            <X className="size-5" />
+            <X className="size-4.5" />
           </button>
 
-          {/* Icon with glowing effect */}
-          <div className="relative mb-6 z-10 pop-in">
-            <div className="absolute inset-0 bg-[#D2FAE8] blur-[24px] opacity-60 rounded-full animate-pulse scale-150"></div>
-            <div className="relative bg-[#D2FAE8] text-primary rounded-full p-4 shadow-lg ring-4 ring-white">
-              <Check className="size-8 stroke-[3]" />
+          {/* Clean Success Icon Badge */}
+          <div className="relative mb-5 z-10 pop-in">
+            <div className="relative bg-emerald-50 text-primary rounded-full p-3.5 border border-emerald-200/60 shadow-xs">
+              <Check className="size-7 stroke-[2.5]" />
             </div>
           </div>
 
-          <DialogHeader className="mb-4 space-y-3 relative z-10">
-            <DialogTitle className="text-[22px] font-bold text-gray-900 mb-2">Order Confirmed!</DialogTitle>
-            <DialogDescription className="text-gray-800 text-[15px] max-w-[280px] mx-auto leading-relaxed flex flex-col items-center">
+          <DialogHeader className="mb-3 space-y-2 relative z-10">
+            <DialogTitle className="text-xl font-bold text-foreground">Order Confirmed!</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm max-w-[280px] mx-auto leading-relaxed flex flex-col items-center">
               Your order has been placed successfully.
-              <span className="flex items-center justify-between gap-3 mt-5 font-bold text-gray-800 text-[15px] tracking-wide bg-white border border-gray-200 px-4 py-2.5 rounded-xl w-full max-w-[260px] shadow-sm">
+              <span className="flex items-center justify-between gap-3 mt-4 font-semibold text-foreground text-sm tracking-wide bg-muted/40 border border-border/70 px-3.5 py-2 rounded-xl w-full max-w-[260px]">
                 <span className="font-mono">{orderId || '#123456789-054'}</span>
                 <button 
                   onClick={handleCopy} 
-                  className="flex items-center justify-center text-gray-500 hover:text-primary transition-all bg-gray-50 hover:bg-gray-100 p-2 rounded-lg border border-gray-200"
+                  className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-card hover:bg-muted p-1.5 rounded-lg border border-border/70 shadow-2xs"
                   aria-label="Copy Order ID"
                 >
-                  {copied ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
+                  {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
                 </button>
               </span>
             </DialogDescription>
@@ -131,43 +129,43 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
             Thank you for your purchase!
           </p>
 
-          <div className="w-full space-y-3 relative z-10">
+          <div className="w-full space-y-2.5 relative z-10">
             {isSignedIn ? (
               <>
-                <a 
-                  href="/"
+                <button 
+                  type="button"
                   onClick={(e) => handleLinkClick(e, '/')}
-                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-4 rounded-xl text-[15px] font-medium transition-all shadow-sm"
+                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer"
                 >
                   Continue Shopping
-                </a>
-                <a 
-                  href="/orders"
+                </button>
+                <button 
+                  type="button"
                   onClick={(e) => handleLinkClick(e, '/orders')}
-                  className="flex w-full items-center justify-center py-4 rounded-xl text-[15px] font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                  className="flex w-full items-center justify-center py-3.5 rounded-xl text-sm font-semibold border border-border/80 bg-background text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer"
                 >
                   View my order
-                </a>
+                </button>
               </>
             ) : (
               <>
-                <a 
-                  href="/orders"
+                <button 
+                  type="button"
                   onClick={(e) => handleLinkClick(e, '/orders')}
-                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-4 rounded-xl text-[15px] font-medium transition-all shadow-sm"
+                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer"
                 >
                   Track your order
-                </a>
+                </button>
                 
-                <div className="pt-3">
-                    <p className="text-[13px] text-gray-500 mb-3 font-medium text-center">Want to view full order history?</p>
-                    <a 
-                      href="/auth/signin?callbackUrl=/orders"
+                <div className="pt-2">
+                    <p className="text-xs text-muted-foreground mb-2.5 font-normal text-center">Want to view full order history?</p>
+                    <button 
+                      type="button"
                       onClick={(e) => handleLinkClick(e, '/auth/signin?callbackUrl=/orders')}
-                      className="flex w-full items-center justify-center py-3.5 rounded-xl text-[14px] font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                      className="flex w-full items-center justify-center py-3 rounded-xl text-xs font-semibold border border-border/80 bg-background text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer"
                     >
                       Sign in to your account
-                    </a>
+                    </button>
                 </div>
               </>
             )}

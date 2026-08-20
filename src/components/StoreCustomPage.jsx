@@ -22,7 +22,7 @@ const FULL_FAQ = [
     id: 'f2',
     question: 'How do I browse and shop on the website?',
     answer:
-      'Use the top navigation or search bar to find products by category or keyword. Click any product to see details, images, and pricing. Add to cart and proceed to checkout — the whole process takes under 2 minutes.',
+      'Use the top navigation or search bar to find products by category or keyword. Click any product to see details, images, and pricing. Add to cart and proceed to checkout: the whole process takes under 2 minutes.',
   },
   {
     id: 'f3',
@@ -34,7 +34,7 @@ const FULL_FAQ = [
     id: 'f4',
     question: 'Do you deliver all over Pakistan?',
     answer:
-      'Yes — we ship to all major cities and towns across Pakistan including Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, and beyond. Delivery typically takes 3–6 working days.',
+      'Yes, we ship to all major cities and towns across Pakistan including Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, and beyond. Delivery typically takes 3–6 working days.',
   },
   {
     id: 'f5',
@@ -46,19 +46,19 @@ const FULL_FAQ = [
     id: 'f6',
     question: 'What payment methods do you accept?',
     answer:
-      'We accept Cash on Delivery (COD) across Pakistan — you pay when the parcel arrives at your door. Bank transfer and online payment are also available at checkout.',
+      'We accept Cash on Delivery (COD) across Pakistan. You pay when the parcel arrives at your door. Bank transfer and online payment are also available at checkout.',
   },
   {
     id: 'f7',
     question: 'Is it safe to order online from your store?',
     answer:
-      'Completely safe. Our website uses HTTPS encryption. For COD orders, you don\'t share any card details — just your name, phone, and address. Your information is never sold or shared.',
+      'Completely safe. Our website uses HTTPS encryption. For COD orders, you don\'t share any card details: just your name, phone, and address. Your information is never sold or shared.',
   },
   {
     id: 'f8',
     question: 'Can I save products to buy later?',
     answer:
-      'Yes — use the wishlist button (heart icon) on any product to save it. You can view and manage your wishlist from the account menu. Wishlist syncs across your session.',
+      'Yes, use the wishlist button (heart icon) on any product to save it. You can view and manage your wishlist from the account menu. Wishlist syncs across your session.',
   },
   {
     id: 'f9',
@@ -70,7 +70,7 @@ const FULL_FAQ = [
     id: 'f10',
     question: 'What if I receive a wrong or damaged item?',
     answer:
-      'Contact us within 48 hours of delivery via WhatsApp with your order number and a photo of the item. We\'ll either send a replacement or issue a full refund — no arguments, no hassle.',
+      'Contact us within 48 hours of delivery via WhatsApp with your order number and a photo of the item. We will either send a replacement or issue a full refund with zero hassle.',
   },
   {
     id: 'f11',
@@ -82,25 +82,25 @@ const FULL_FAQ = [
     id: 'f12',
     question: 'Are your products authentic and good quality?',
     answer:
-      'Every product listed is sourced from verified suppliers and checked for quality before listing. We\'ve been importing directly from China for years — quality is not negotiable for us.',
+      'Every product listed is sourced from verified suppliers and checked for quality before listing. We have been importing directly from China for years: quality is our top priority.',
   },
   {
     id: 'f13',
     question: 'Do you offer deals or discounts?',
     answer:
-      'Yes! Check the Deals section on our website for current promotions. We also run WhatsApp-exclusive flash sales — follow us on WhatsApp or Instagram to be first to know.',
+      'Yes! Check the Deals section on our website for current promotions. We also run WhatsApp-exclusive flash sales: follow us on WhatsApp or Instagram to stay updated.',
   },
   {
     id: 'f14',
     question: 'Do you offer wholesale or bulk ordering?',
     answer:
-      'Yes — we supply retailers, resellers, and wholesalers. Chat with us on WhatsApp with your product requirements and quantities. We offer competitive B2B pricing with flexible payment terms.',
+      'Yes, we supply retailers, resellers, and wholesalers. Chat with us on WhatsApp with your product requirements and quantities. We offer competitive B2B pricing with flexible payment terms.',
   },
   {
     id: 'f15',
     question: 'How do I contact customer support?',
     answer:
-      'The fastest way is WhatsApp — tap the chat button on any page. We\'re also reachable at our Gul Tijarah Mall shop in Karachi. We respond to most messages within a few hours during business hours.',
+      'The fastest way is WhatsApp: tap the chat button on any page. We are also reachable at our Gul Tijarah Mall shop in Karachi. We respond promptly during business hours.',
   },
 ];
 
@@ -186,7 +186,7 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
                 >
                   Message us on WhatsApp
                 </a>{' '}
-                — we reply quickly.
+                for fast assistance.
               </p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
           </article>
         ) : (
           <p className="text-sm text-muted-foreground">
-            This page hasn&apos;t been set up yet — check back soon.
+            This page is being prepared. Please check back soon.
           </p>
         )}
       </div>

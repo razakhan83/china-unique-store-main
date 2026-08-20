@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import CategoryPillCard from '@/components/home/CategoryPillCard';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import Link from 'next/link';
-import { Search, Sparkles, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Search, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';

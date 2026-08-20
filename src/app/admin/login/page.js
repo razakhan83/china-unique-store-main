@@ -16,14 +16,8 @@ export default async function AdminLoginPage() {
   const guestModeEnabled = settings?.guestModeEnabled !== false;
 
   return (
-    <div className="relative flex h-[100dvh] w-full flex-col items-center justify-center bg-muted/10 p-0 sm:p-4 lg:p-8 overflow-hidden">
-      
-      {/* Background Doodle / Pattern */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="absolute h-full w-full bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_50%,transparent_100%)]"></div>
-      </div>
-
-      <div className="relative z-10 mx-auto flex w-full h-full max-h-[100dvh] sm:max-h-[700px] flex-col overflow-hidden sm:rounded-2xl border-x-0 border-y sm:border border-border bg-background lg:flex-row lg:max-w-[1200px] lg:h-[700px] lg:rounded-2xl">
+    <div className="relative flex h-[100dvh] w-full flex-col items-center justify-center bg-background p-0 sm:p-4 lg:p-8 overflow-hidden">
+      <div className="relative z-10 mx-auto flex w-full h-full max-h-[100dvh] sm:max-h-[700px] flex-col overflow-hidden sm:rounded-xl border sm:border border-border bg-card lg:flex-row lg:max-w-[1100px] lg:h-[680px] shadow-xs">
         
         {/* Mobile: Top / PC: Left - SVG Image */}
         <div className="relative flex w-full shrink-0 flex-col items-center justify-center bg-primary/5 p-4 sm:p-6 lg:w-1/2 lg:p-16">

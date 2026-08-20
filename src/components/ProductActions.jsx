@@ -15,6 +15,7 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 import { getProductTagById } from '@/lib/productTags';
+import { flyToCart } from '@/lib/flyToCart';
 
 export function ProductSocialActions({ product, className = '' }) {
     const handleShare = async () => {
@@ -108,8 +109,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const increment = () => setQuantity(q => q + 1);
     const decrement = () => setQuantity(q => (q > 1 ? q - 1 : 1));
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (event) => {
         if (isAdding || isOutOfStock) return;
+        if (event?.currentTarget) {
+            const imageSrc = product?.Images?.[0]?.url || product?.images?.[0]?.url || (typeof product?.images?.[0] === 'string' ? product.images[0] : '') || product?.image || '';
+            flyToCart({ sourceEl: event.currentTarget, imageSrc });
+        }
         setIsAdding(true);
         const startedAt = performance.now();
         try {

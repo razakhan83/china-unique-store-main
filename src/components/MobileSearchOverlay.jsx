@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, TrendingUp, Sparkles } from 'lucide-react';
+import { Search, X, TrendingUp, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProductCard from '@/components/ProductCard';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
@@ -156,7 +156,7 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
                 
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2 text-foreground/80">
-                    <Sparkles className="size-4.5 text-amber-500" />
+                    <LayoutGrid className="size-4 text-primary" />
                     <h3 className="font-semibold text-sm uppercase tracking-wider">Categories</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-2">

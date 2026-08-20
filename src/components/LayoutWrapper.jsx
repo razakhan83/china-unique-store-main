@@ -5,7 +5,7 @@ import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck, Code 
 
 import dynamic from 'next/dynamic';
 
-import ConditionalLayoutElements from '@/components/ConditionalLayoutElements';
+import ConditionalLayoutElements, { HomeOnlyLayoutElements } from '@/components/ConditionalLayoutElements';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import Navbar from '@/components/Navbar';
@@ -92,24 +92,26 @@ export default function LayoutWrapper({ children, categories, settings }) {
                 href={whatsappLink || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm ring-1 ring-inset ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#22c15c] hover:shadow-[0_10px_20px_-5px_rgba(37,211,102,0.6)] active:scale-[0.97] active:bg-[#1da851] active:shadow-sm"
+                className="group inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm border border-black/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#20ba59] active:translate-y-0 active:scale-[0.98]"
               >
-                <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-200 group-hover:scale-105" />
                 Chat on WhatsApp
               </a>
             </div>
           </div>
 
-          <div id="store-marquee-wrapper">
-            <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
-              <TiltedProductMarquee />
-            </Suspense>
-          </div>
+          <HomeOnlyLayoutElements>
+            <div id="store-marquee-wrapper">
+              <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
+                <TiltedProductMarquee />
+              </Suspense>
+            </div>
 
-          {/* ── FAQ Section ── */}
-          <div id="store-faq-wrapper">
-            <HomeFaqSection />
-          </div>
+            {/* ── FAQ Section ── */}
+            <div id="store-faq-wrapper">
+              <HomeFaqSection />
+            </div>
+          </HomeOnlyLayoutElements>
 
           <style dangerouslySetInnerHTML={{__html: `
             #store-footer {
@@ -241,26 +243,31 @@ export default function LayoutWrapper({ children, categories, settings }) {
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row">
-                <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
-                <div className="flex items-center gap-3">
+              <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-center sm:text-left">
+                  <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
+                  <span className="hidden sm:inline text-border">·</span>
+                  <div className="flex items-center gap-3">
+                    <Link href="/terms-of-service" className="transition-colors hover:text-foreground">
+                      Terms of Service
+                    </Link>
+                    <span className="size-1 rounded-full bg-border" />
+                    <Link href="/privacy-policy" className="transition-colors hover:text-foreground">
+                      Privacy Policy
+                    </Link>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Developed by{' '}
                   <a
                     href="https://github.com/razakhan83"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-2.5 rounded-xl border border-border/50 bg-background/50 px-3.5 py-1.5 text-xs transition-all duration-300 hover:border-primary/30 hover:bg-primary/5 hover:shadow-[0_4px_12px_-3px_rgba(0,0,0,0.05)]"
+                    className="font-medium text-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
                   >
-                    <Code className="size-5 text-primary transition-transform duration-300 group-hover:scale-110" />
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors group-hover:text-muted-foreground/90">
-                        Developer
-                      </span>
-                      <span className="font-bold text-foreground transition-colors group-hover:text-primary">
-                        Ahmed Raza
-                      </span>
-                    </div>
+                    Ahmed Raza
                   </a>
-                </div>
+                </p>
               </div>
             </div>
           </footer>

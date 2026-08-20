@@ -83,7 +83,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
 
           <Link
             href="/categories"
-            className="inline-flex h-8 md:h-10 shrink-0 items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-3 md:px-4 text-[13px] md:text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]"
+            className="inline-flex h-8 md:h-10 shrink-0 items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap rounded-lg border border-primary/20 bg-background px-3 md:px-4 text-[13px] md:text-sm font-semibold text-primary outline-none select-none shadow-xs transition-[transform,background-color,color,border-color] duration-200 focus-visible:border-ring focus-visible:ring-2 hover:border-primary hover:bg-primary hover:text-primary-foreground active:scale-[0.97]"
           >
             <span>View All</span>
             <ArrowRight className="ml-1 size-3.5 md:size-4" />

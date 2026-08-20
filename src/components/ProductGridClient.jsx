@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownWideNarrow, Search, SearchX, Sparkles } from "lucide-react";
+import { ArrowDownWideNarrow, Search, SearchX, Clock } from "lucide-react";
 
 import ProductCard from "@/components/ProductCard";
 import SearchField from "@/components/SearchField";
@@ -151,7 +151,7 @@ function ProductGridContent({
 
   const categoryButtons = [
     { id: "all", label: "All Items", icon: Search },
-    { id: "new-arrivals", label: "New Arrivals", icon: Sparkles },
+    { id: "new-arrivals", label: "New Arrivals", icon: Clock },
     ...dynamicCategories.map((category) => ({ ...category, icon: null })),
   ];
 

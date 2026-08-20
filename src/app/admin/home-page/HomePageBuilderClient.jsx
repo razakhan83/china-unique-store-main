@@ -36,7 +36,7 @@ import {
   Tag,
   Trash2,
   Upload,
-  Sparkles,
+  Clock,
   ChevronRight,
   Video,
 } from 'lucide-react';
@@ -112,7 +112,7 @@ const SECTION_TEMPLATES = [
     type: 'ProductCollection',
     collectionKey: 'new-arrivals',
     label: 'New Arrival Products',
-    icon: Sparkles,
+    icon: Clock,
   },
   {
     type: 'ProductCollection',

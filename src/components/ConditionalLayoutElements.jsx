@@ -17,3 +17,18 @@ export default function ConditionalLayoutElements({ children }) {
     </Suspense>
   );
 }
+
+function HomeOnlyLayoutInner({ children }) {
+  const pathname = usePathname();
+  if (pathname !== '/') return null;
+
+  return <>{children}</>;
+}
+
+export function HomeOnlyLayoutElements({ children }) {
+  return (
+    <Suspense fallback={null}>
+      <HomeOnlyLayoutInner>{children}</HomeOnlyLayoutInner>
+    </Suspense>
+  );
+}

@@ -45,7 +45,7 @@ export const CATEGORIES = [
   { id: 'delivery', label: 'Shipping & Delivery', icon: 'Truck' },
   { id: 'orders', label: 'Orders & Payments', icon: 'Wallet' },
   { id: 'returns', label: 'Returns & Guarantee', icon: 'ShieldCheck' },
-  { id: 'products', label: 'Product Support', icon: 'Sparkles' }
+  { id: 'products', label: 'Product Support', icon: 'HelpCircle' }
 ];
 
 export const FULL_FAQS = [

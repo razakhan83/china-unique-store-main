@@ -2,10 +2,10 @@
 @import "tw-animate-css";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), "Geist", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 
-  --color-background: #ffffff;
+  --color-background: #fafafa;
   --color-foreground: #0f172a;
   --color-card: #ffffff;
   --color-card-foreground: #0f172a;
@@ -47,6 +47,15 @@
   --animate-marquee-down: marquee-down 35s linear infinite;
   --animate-marquee-left: marquee-left 35s linear infinite;
   --animate-marquee-right: marquee-right 35s linear infinite;
+  --animate-cart-bump: cart-bump 360ms cubic-bezier(0.2, 0, 0, 1) forwards;
+
+  @keyframes cart-bump {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.22); }
+    50% { transform: scale(0.94); }
+    75% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
 
   @keyframes marquee-up {
     from { transform: translateY(0); }

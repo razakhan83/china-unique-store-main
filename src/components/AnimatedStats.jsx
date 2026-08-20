@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 
 
 const STATS = [
-  { target: 5000, label: 'Happy Customers', icon: Users, color: 'bg-orange-500/10', isNumeric: true, prefix: '', suffix: '+' },
-  { target: 8500, label: 'Orders Delivered', icon: Package, color: 'bg-green-500/10', isNumeric: true, prefix: '', suffix: '+' },
-  { target: 98, label: 'Positive Reviews', icon: Star, color: 'bg-blue-500/10', isNumeric: true, prefix: '', suffix: '%' },
-  { target: '24/7', label: 'Customer Support', icon: Clock, color: 'bg-purple-500/10', isNumeric: false, prefix: '', suffix: '' },
+  { target: 5000, label: 'Happy Customers', icon: Users, isNumeric: true, prefix: '', suffix: '+' },
+  { target: 8500, label: 'Orders Delivered', icon: Package, isNumeric: true, prefix: '', suffix: '+' },
+  { target: 98, label: 'Positive Reviews', icon: Star, isNumeric: true, prefix: '', suffix: '%' },
+  { target: '24/7', label: 'Customer Support', icon: Clock, isNumeric: false, prefix: '', suffix: '' },
 ];
 
 function StatItem({ stat, index }) {
@@ -40,13 +40,11 @@ function StatItem({ stat, index }) {
     if (!isVisible || !stat.isNumeric) return;
 
     let startTime;
-    const duration = 2000; // 2 seconds for a more normal, snappy count
+    const duration = 2000;
 
     const animate = (currentTime) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
-      
-      // Standard smooth easing function (easeOutQuad)
       const easeProgress = 1 - Math.pow(1 - progress, 2);
       
       setCount(Math.floor(easeProgress * stat.target));
@@ -67,28 +65,24 @@ function StatItem({ stat, index }) {
     <div
       ref={itemRef}
       className={cn(
-        'flex flex-col items-center justify-center p-5 sm:p-8 md:p-10 text-center',
-        stat.color,
-        'rounded-tl-3xl md:rounded-tl-[3rem] rounded-br-3xl md:rounded-br-[3rem] rounded-tr-lg md:rounded-tr-xl rounded-bl-lg md:rounded-bl-xl',
-        // Use only opacity + translateY — compositor-only properties, 60 FPS on mobile
-        // Removed: scale-95 (causes subpixel issues), transition-all (touches every prop)
-        'transition-[opacity,transform] duration-700 ease-out',
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        'flex flex-col items-center justify-center p-5 sm:p-7 md:p-8 text-center',
+        'bg-card border border-border/70 rounded-xl shadow-xs',
+        'transition-[opacity,transform] duration-500 ease-out',
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
       )}
-      style={{ transitionDelay: `${index * 150}ms` }}
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
-      <div className="mb-3 sm:mb-4 md:mb-6 flex items-center justify-center transition-transform duration-500 hover:scale-110 hover:-translate-y-1 text-foreground/80">
-        <stat.icon strokeWidth={1.5} className="size-8 sm:size-10 md:size-16" />
+      <div className="mb-3 flex items-center justify-center text-primary transition-transform duration-300 hover:scale-105">
+        <stat.icon strokeWidth={1.75} className="size-6 sm:size-7 md:size-8" />
       </div>
-      <div className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2 md:mb-3 tabular-nums">
+      <div className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-1 md:mb-1.5 tabular-nums">
         {displayValue}
       </div>
-      <div className="text-[0.65rem] sm:text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-wider max-w-[100px] md:max-w-[150px] mx-auto leading-tight md:leading-relaxed">
+      <div className="text-[0.7rem] sm:text-xs md:text-xs font-semibold text-muted-foreground uppercase tracking-wider max-w-[120px] md:max-w-[140px] mx-auto leading-tight">
         {stat.label}
       </div>
     </div>
   );
-
 }
 
 export default function AnimatedStats() {

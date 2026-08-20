@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Phone, Link as LinkIcon, Loader2, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { linkOrdersAction } from '@/app/actions';
 import { toast } from 'sonner';
 
 export default function LinkOrdersForm() {
+  const router = useRouter();
   const [phone, setPhone] = useState('');
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
@@ -32,10 +34,8 @@ export default function LinkOrdersForm() {
         if (result.success) {
           setIsSuccess(true);
           toast.success(result.message);
-          // Refresh the page to show new orders after a short delay
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          // Refresh data seamlessly via Next.js router
+          router.refresh();
         } else {
           const message = result.message || 'Could not find any orders with this phone number.';
           setSubmitError(message);

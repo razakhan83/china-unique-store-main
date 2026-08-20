@@ -13,6 +13,9 @@ import {
   Loader2,
   Lock,
   Plus,
+  Minus,
+  Trash2,
+  AlertTriangle,
   RefreshCw,
   ShoppingBag,
   Tag,
@@ -21,6 +24,7 @@ import {
   CreditCard,
   HelpCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { getLastOrderDetailsAction, submitOrderAction, validateCouponAction } from '@/app/actions';
 
@@ -42,7 +46,7 @@ import {
   ComboboxLabel,
   ComboboxList,
 } from '@/components/ui/combobox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Empty,
   EmptyContent,
@@ -227,7 +231,26 @@ function clearStoredSuccessfulOrder() {
 }
 
 // ─── Order Summary Panel (shared by mobile accordion + desktop sidebar) ────────
-function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, setCouponCodeInput, couponError, setCouponError, couponLoading, handleApplyCoupon, handleRemoveCoupon, relatedProducts = [], addToCart, relatedOffset, isRefreshingRelated, handleRefreshRelated }) {
+function OrderSummaryContent({
+  cart,
+  pricing,
+  appliedCoupon,
+  couponCodeInput,
+  setCouponCodeInput,
+  couponError,
+  setCouponError,
+  couponLoading,
+  handleApplyCoupon,
+  handleRemoveCoupon,
+  relatedProducts = [],
+  addToCart,
+  handleRequestRemove,
+  handleQuantityDecrease,
+  handleQuantityIncrease,
+  relatedOffset,
+  isRefreshingRelated,
+  handleRefreshRelated,
+}) {
   const { subtotal, shipping, total, isFreeShipping, discountAmount } = pricing;
 
   const availableRelated = relatedProducts
@@ -246,30 +269,89 @@ function OrderSummaryContent({ cart, pricing, appliedCoupon, couponCodeInput, se
   return (
     <>
       {/* Product list */}
-      <div className={styles.summaryProductList}>
+      <div className="flex flex-col divide-y divide-border/50 mb-4">
         {cart.map((item, index) => {
           const itemPrice = item.discountedPrice != null ? item.discountedPrice : item.Price || item.price;
           const lineTotal = formatPrice(itemPrice) * item.quantity;
           const imgUrl = getPrimaryProductImage(item)?.url;
 
           return (
-            <div key={`${item.id}-${index}`} className={styles.summaryProduct}>
-              <div className={styles.summaryProductThumbWrapper}>
-                <div className={styles.summaryProductThumb}>
-                  {imgUrl ? (
-                    <Image
-                      src={imgUrl}
-                      alt={item.Name || item.name}
-                      fill
-                      className="object-cover"
-                      {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
-                    />
-                  ) : null}
-                </div>
-                <span className={styles.summaryProductQtyBadge}>{item.quantity}</span>
+            <div key={`${item.id}-${index}`} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-1">
+              {/* Product Thumbnail */}
+              <div className="relative size-16 shrink-0 rounded-xl overflow-hidden border border-border/70 bg-card shadow-2xs">
+                {imgUrl ? (
+                  <Image
+                    src={imgUrl}
+                    alt={item.Name || item.name}
+                    fill
+                    className="object-cover"
+                    {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
+                  />
+                ) : null}
               </div>
-              <span className={styles.summaryProductName}>{item.Name || item.name}</span>
-              <span className={styles.summaryProductPrice}>{formatPriceLabel(lineTotal)}</span>
+
+              {/* Product Info & Actions */}
+              <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[13px] font-semibold text-foreground line-clamp-2 leading-snug">
+                      {item.Name || item.name}
+                    </span>
+                    <span className="text-[13px] font-bold text-foreground shrink-0 tabular-nums">
+                      {formatPriceLabel(lineTotal)}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <p className="text-[12px] text-muted-foreground font-medium">
+                      {formatPriceLabel(itemPrice)} each
+                    </p>
+                    {item.packLabel ? (
+                      <span className="inline-block text-[11px] font-medium text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded">
+                        {item.packLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-2.5">
+                  {/* Stepper Quantity Controls */}
+                  <div className="inline-flex items-center h-7 rounded-lg border border-border/80 bg-background shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => handleQuantityDecrease ? handleQuantityDecrease(item) : null}
+                      className="flex items-center justify-center size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-l-lg transition-colors active:scale-90"
+                      aria-label="Decrease quantity"
+                      title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                    >
+                      {item.quantity === 1 ? <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" /> : <Minus className="size-3" />}
+                    </button>
+                    <span className="inline-flex items-center justify-center px-2 text-[12px] font-bold tabular-nums min-w-[24px] text-foreground">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleQuantityIncrease ? handleQuantityIncrease(item) : null}
+                      className="flex items-center justify-center size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-r-lg transition-colors active:scale-90"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="size-3" />
+                    </button>
+                  </div>
+
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleRequestRemove ? handleRequestRemove(item) : null}
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors active:scale-95"
+                    aria-label="Remove item"
+                    title="Remove item"
+                  >
+                    <Trash2 className="size-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
             </div>
           );
         })}
@@ -421,7 +503,36 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { cart, isInitialized } = useCartItems();
-  const { clearCart, addToCart } = useCartActions();
+  const { clearCart, addToCart, removeFromCart, updateQuantity } = useCartActions();
+  const [itemToRemove, setItemToRemove] = useState(null);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+
+  const handleRequestRemove = (item) => {
+    setItemToRemove(item);
+    setIsRemoveModalOpen(true);
+  };
+
+  const handleConfirmRemove = () => {
+    if (itemToRemove) {
+      removeFromCart(itemToRemove);
+      toast.success(`${itemToRemove.Name || itemToRemove.name || 'Item'} removed from order`);
+    }
+    setIsRemoveModalOpen(false);
+    setItemToRemove(null);
+  };
+
+  const handleQuantityDecrease = (item) => {
+    if (item.quantity <= 1) {
+      handleRequestRemove(item);
+    } else {
+      updateQuantity(item, item.quantity - 1);
+    }
+  };
+
+  const handleQuantityIncrease = (item) => {
+    updateQuantity(item, item.quantity + 1);
+  };
+
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
   const [hasCachedProfile, setHasCachedProfile] = useState(false);
@@ -838,6 +949,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     handleApplyCoupon,
     handleRemoveCoupon,
     addToCart,
+    handleRequestRemove,
+    handleQuantityDecrease,
+    handleQuantityIncrease,
     relatedProducts: relatedProducts.map((p) => ({ ...p, id: p._id || p.id })),
     relatedOffset,
     isRefreshingRelated,
@@ -873,7 +987,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         </div>
       </div>
 
-      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/checkout" />
 
       {/* ══════════════════════════════════════════════
           MOBILE ORDER SUMMARY ACCORDION
@@ -952,11 +1066,42 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   <input
                     type="checkbox"
                     id="email-offers"
-                    className="size-4 rounded accent-primary"
+                    className="size-4 rounded accent-primary cursor-pointer"
                     defaultChecked={false}
                   />
-                  <label htmlFor="email-offers">Email me with news and offers</label>
+                  <label htmlFor="email-offers" className="cursor-pointer">Email me with news and offers</label>
                 </div>
+
+                {!session?.user && (
+                  <div 
+                    onClick={() => setShowAuthModal(true)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowAuthModal(true)}
+                    className="group flex items-start gap-3 p-3 mt-1 rounded-xl border border-primary/25 bg-primary/[0.04] hover:bg-primary/[0.08] hover:border-primary/50 transition-all duration-200 cursor-pointer shadow-2xs"
+                  >
+                    <div className="flex items-center h-5 mt-0.5 pointer-events-none">
+                      <input
+                        type="checkbox"
+                        id="track-order-history-prompt"
+                        checked={false}
+                        readOnly
+                        className="size-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <label htmlFor="track-order-history-prompt" className="font-semibold text-foreground cursor-pointer block text-[13px] leading-snug group-hover:text-primary transition-colors">
+                        Want live order tracking & full order history?
+                      </label>
+                      <p className="text-muted-foreground mt-0.5 text-[11.5px] leading-relaxed">
+                        Sign in with Google or Email to track parcels live, view past invoices, and auto-save delivery details.
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold text-primary underline-offset-4 group-hover:underline self-center hidden sm:inline">
+                      Sign in →
+                    </span>
+                  </div>
+                )}
               </FieldGroup>
             </div>
 
@@ -1294,6 +1439,68 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           </button>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════
+          REMOVE ITEM CONFIRMATION DIALOG
+      ══════════════════════════════════════════════ */}
+      <Dialog open={isRemoveModalOpen} onOpenChange={setIsRemoveModalOpen}>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+              <AlertTriangle className="size-5 text-amber-500 shrink-0" />
+              <span>Remove Item from Order?</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Are you sure you want to remove this item from your checkout?
+            </DialogDescription>
+          </DialogHeader>
+
+          {itemToRemove && (
+            <div className="flex items-center gap-3.5 p-3.5 my-2 rounded-xl border border-border/60 bg-muted/30">
+              <div className="relative size-14 shrink-0 rounded-lg overflow-hidden border border-border/40 bg-card">
+                {getPrimaryProductImage(itemToRemove)?.url ? (
+                  <Image
+                    src={getPrimaryProductImage(itemToRemove).url}
+                    alt={itemToRemove.Name || itemToRemove.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground line-clamp-1">
+                  {itemToRemove.Name || itemToRemove.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Qty: {itemToRemove.quantity} · {formatPriceLabel((itemToRemove.discountedPrice != null ? itemToRemove.discountedPrice : itemToRemove.Price || itemToRemove.price) * itemToRemove.quantity)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-row items-center justify-end gap-2.5 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsRemoveModalOpen(false);
+                setItemToRemove(null);
+              }}
+              className="rounded-xl px-4"
+            >
+              Keep Item
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmRemove}
+              className="rounded-xl px-4 font-semibold"
+            >
+              Yes, Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
