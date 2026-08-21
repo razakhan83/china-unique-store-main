@@ -237,6 +237,12 @@ function NavbarContent({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-nav-hidden', isNavbarHidden ? 'true' : 'false');
+    }
+  }, [isNavbarHidden]);
   
   const searchPlaceholders = categories?.length > 0 
     ? categories.map(c => `What are you finding? ${c.label}`)

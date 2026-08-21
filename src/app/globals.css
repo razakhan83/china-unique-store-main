@@ -955,4 +955,15 @@ body:has(#checkout-root) .store-deferred-chrome {
   display: none !important;
 }
 
+/* Product Detail Page Mobile Sticky Bar dynamic positioning */
+@media (max-width: 767px) {
+  html[data-nav-hidden="true"] .product-sticky-bar {
+    bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+  html:not([data-nav-hidden="true"]) .product-sticky-bar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobile-bottom-nav-offset, 58px)) !important;
+  }
+}
+
+
 

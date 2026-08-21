@@ -3,61 +3,83 @@ import { cn } from '@/lib/utils';
 import styles from '@/app/(store)/(checkout-shell)/checkout/CheckoutClient.module.css';
 
 /**
- * Rich Shopify-style checkout skeleton — perfectly mirrors the real layout
- * using the exact same CSS module classes as CheckoutClient.
+ * Pixel-perfect checkout skeleton mirroring the exact Shopify-style layout
  */
 export default function CheckoutPageSkeleton() {
   return (
     <>
-      {/* ── MOBILE ORDER SUMMARY (mobile only) ── */}
+      {/* ── TOP NAV BAR SKELETON ── */}
+      <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center shadow-xs">
+        <div className="w-full max-w-[1130px] mx-auto relative flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[0.95rem] font-medium text-muted-foreground">
+            <Skeleton className="size-5 rounded-md" />
+            <Skeleton className="h-4 w-10 rounded hidden sm:inline-block" />
+          </div>
+          
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+            <Skeleton className="h-7 w-32 rounded-lg" />
+          </div>
+
+          <div className="text-[1.1rem] sm:text-[1.35rem] font-medium text-foreground tracking-tight z-10 flex items-center gap-2">
+            Checkout
+          </div>
+        </div>
+      </div>
+
+      {/* ── MOBILE ORDER SUMMARY ACCORDION TRIGGER ── */}
       <div className={styles.mobileOrderSummary}>
         <div className={styles.mobileOrderSummaryTrigger}>
           <div className={styles.mobileOrderSummaryTriggerLeft}>
-            <Skeleton className="size-4 rounded-md" />
-            <Skeleton className="h-4 w-32 rounded" />
+            <Skeleton className="size-4 rounded-full" />
+            <Skeleton className="h-3.5 w-36 rounded" />
           </div>
-          <Skeleton className="h-5 w-20 rounded" />
+          <Skeleton className="h-4 w-20 rounded" />
         </div>
       </div>
 
       <div className={styles.checkoutShell}>
-        {/* ── LEFT PANEL ── */}
+        {/* ── LEFT PANEL (Forms) ── */}
         <div className={styles.leftPanel}>
           <div className={styles.leftPanelInner}>
-            {/* Contact section */}
+            
+            {/* Contact Section */}
             <div className={styles.sectionBlock}>
               <div className={styles.sectionTitleRow}>
-                <h2 className={styles.sectionTitle}><Skeleton className="h-6 w-24 rounded" /></h2>
+                <h2 className={styles.sectionTitle}>Contact</h2>
                 <Skeleton className="h-4 w-12 rounded" />
               </div>
-              <div className={styles.inputGroup}>
-                <Skeleton className="h-11 w-full rounded-md" />
+              <div className="space-y-3">
+                <Skeleton className="h-12 w-full rounded-xl" />
                 <div className={styles.checkboxRow}>
                   <Skeleton className="size-4 rounded" />
                   <Skeleton className="h-3.5 w-48 rounded" />
                 </div>
+                <div className="p-3 rounded-xl border border-primary/20 bg-primary/[0.03] flex items-start gap-3">
+                  <Skeleton className="size-4 rounded mt-0.5" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-3.5 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-5/6 rounded" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Delivery section */}
+            {/* Delivery Section */}
             <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}><Skeleton className="h-6 w-24 rounded" /></h2>
-              <div className={styles.inputGroup}>
-                {/* Name / Phone */}
-                <div className={styles.inputRow2}>
-                  <Skeleton className="h-11 rounded-md" />
-                  <Skeleton className="h-11 rounded-md" />
+              <h2 className={styles.sectionTitle}>Delivery</h2>
+              <div className="space-y-3">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="h-12 rounded-xl" />
+                  <Skeleton className="h-12 rounded-xl" />
                 </div>
-                {/* Address */}
-                <Skeleton className="h-11 w-full rounded-md" />
-                {/* Apt */}
-                <Skeleton className="h-11 w-full rounded-md" />
-                {/* City / Postal */}
-                <div className={styles.inputRow2}>
-                  <Skeleton className="h-11 rounded-md" />
-                  <Skeleton className="h-11 rounded-md" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="h-12 rounded-xl" />
+                  <Skeleton className="h-12 rounded-xl" />
                 </div>
-                {/* Save checkbox */}
+                <Skeleton className="h-12 w-full rounded-xl" />
                 <div className={styles.checkboxRow}>
                   <Skeleton className="size-4 rounded" />
                   <Skeleton className="h-3.5 w-52 rounded" />
@@ -65,50 +87,53 @@ export default function CheckoutPageSkeleton() {
               </div>
             </div>
 
-            {/* Payment */}
+            {/* Shipping Method */}
             <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}><Skeleton className="h-6 w-24 rounded" /></h2>
-              <div className={styles.sectionSubtitle}><Skeleton className="h-3.5 w-56 rounded" /></div>
+              <h2 className={styles.sectionTitle}>Shipping method</h2>
+              <div className="rounded-xl border border-border/80 p-4 flex items-center justify-between bg-muted/20">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-48 rounded" />
+                </div>
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+            </div>
+
+            {/* Payment Section */}
+            <div className={styles.sectionBlock}>
+              <h2 className={styles.sectionTitle}>Payment</h2>
+              <p className="text-xs text-muted-foreground mb-3">All transactions are secure and encrypted.</p>
               
-              <div className={styles.paymentOptions}>
-                <div className={styles.paymentOptionHeader}>
-                   <div className={styles.paymentOptionLeft}>
-                     <Skeleton className="size-4 rounded-full" />
-                     <Skeleton className="h-4 w-32 rounded" />
-                   </div>
+              <div className="rounded-xl border border-border/80 overflow-hidden divide-y divide-border/60">
+                <div className="p-4 flex items-center justify-between bg-muted/10">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-4 rounded-full" />
+                    <Skeleton className="h-4 w-36 rounded" />
+                  </div>
                 </div>
-                <div className="h-px bg-border/60" />
-                <div className={styles.paymentOptionHeader}>
-                   <div className={styles.paymentOptionLeft}>
-                     <Skeleton className="size-4 rounded-full" />
-                     <Skeleton className="h-4 w-40 rounded" />
-                   </div>
+                <div className="p-4 flex items-center justify-between bg-muted/10">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-4 rounded-full" />
+                    <Skeleton className="h-4 w-44 rounded" />
+                  </div>
                 </div>
-                <div className="h-px bg-border/60" />
-                <div className={styles.paymentOptionHeader}>
-                   <div className={styles.paymentOptionLeft}>
-                     <Skeleton className="size-4 rounded-full" />
-                     <Skeleton className="h-4 w-28 rounded" />
-                   </div>
-                </div>
-                <div className={styles.billingRow}>
-                  <Skeleton className="size-4 rounded" />
-                  <Skeleton className="h-4 w-56 rounded" />
+                <div className="p-4 flex items-center justify-between bg-muted/10">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-4 rounded-full" />
+                    <Skeleton className="h-4 w-32 rounded" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Special notes */}
+            {/* Special Notes */}
             <div className={styles.sectionBlock}>
-              <div className={styles.inputGroup}>
-                <Skeleton className="h-4 w-32 rounded" />
-                <Skeleton className="h-20 w-full rounded-md" />
-                <Skeleton className="h-3.5 w-40 rounded" />
-              </div>
+              <h2 className={styles.sectionTitle}>Special instructions for seller</h2>
+              <Skeleton className="h-20 w-full rounded-xl" />
             </div>
 
-            {/* CTA (desktop) */}
-            <Skeleton className={cn(styles.ctaButton, 'hidden md:flex')} />
+            {/* Desktop CTA */}
+            <Skeleton className={cn(styles.ctaButton, 'hidden md:flex h-13 rounded-xl')} />
 
             {/* Trust links */}
             <div className={styles.trustLinks}>
@@ -121,7 +146,7 @@ export default function CheckoutPageSkeleton() {
           </div>
         </div>
 
-        {/* ── RIGHT PANEL (desktop only) ── */}
+        {/* ── RIGHT PANEL (Desktop Order Summary) ── */}
         <div className={styles.rightPanel}>
           <div className={styles.rightPanelInner}>
             {/* Product list */}
@@ -131,9 +156,9 @@ export default function CheckoutPageSkeleton() {
                   <div className={styles.summaryProductThumbWrapper}>
                     <Skeleton className={styles.summaryProductThumb} />
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 flex-1">
                     <Skeleton className="h-3.5 w-3/4 rounded" />
-                    <Skeleton className="h-3 w-1/2 rounded" />
+                    <Skeleton className="h-3 w-1/3 rounded" />
                   </div>
                   <Skeleton className="h-4 w-16 rounded ml-auto" />
                 </div>

@@ -54,7 +54,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
   return (
     <>
       <div className="flex min-h-screen flex-col bg-background">
-        <div id="store-navbar-wrapper">
+        <ConditionalLayoutElements>
           <Navbar
             categories={categories}
             storeName={settings.storeName}
@@ -65,15 +65,22 @@ export default function LayoutWrapper({ children, categories, settings }) {
             announcementBarText={settings.announcementBarText}
             announcementBarMessages={settings.announcementBarMessages}
           />
-        </div>
+        </ConditionalLayoutElements>
 
         <main>{children}</main>
 
-        <div id="store-animated-stats">
-          <AnimatedStats />
-        </div>
+        <HomeOnlyLayoutElements>
+          <div id="store-animated-stats">
+            <AnimatedStats />
+          </div>
 
-          {/* ── Wholesale CTA ── */}
+          <div id="store-marquee-wrapper">
+            <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
+              <TiltedProductMarquee />
+            </Suspense>
+          </div>
+
+          {/* ── Wholesale CTA (Only on Home Page) ── */}
           <div id="store-wholesale-cta" className="mt-auto border-t border-border bg-primary/5 px-4 py-14 sm:py-16 text-center">
             <div className="mx-auto max-w-3xl">
               <h3 className="mb-3 text-lg font-bold text-primary sm:text-xl">
@@ -97,19 +104,13 @@ export default function LayoutWrapper({ children, categories, settings }) {
             </div>
           </div>
 
-          <HomeOnlyLayoutElements>
-            <div id="store-marquee-wrapper">
-              <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
-                <TiltedProductMarquee />
-              </Suspense>
-            </div>
+          {/* ── FAQ Section (Only on Home Page) ── */}
+          <div id="store-faq-wrapper">
+            <HomeFaqSection />
+          </div>
+        </HomeOnlyLayoutElements>
 
-            {/* ── FAQ Section ── */}
-            <div id="store-faq-wrapper">
-              <HomeFaqSection />
-            </div>
-          </HomeOnlyLayoutElements>
-
+        <ConditionalLayoutElements>
           <style dangerouslySetInnerHTML={{__html: `
             #store-footer {
               padding-bottom: 3rem !important;
@@ -268,8 +269,11 @@ export default function LayoutWrapper({ children, categories, settings }) {
               </div>
             </div>
           </footer>
+        </ConditionalLayoutElements>
       </div>
-      <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} hasAnnouncementBar={hasAnnouncementBar} />
+      <ConditionalLayoutElements>
+        <StoreDeferredChrome whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} hasAnnouncementBar={hasAnnouncementBar} />
+      </ConditionalLayoutElements>
     </>
   );
 }

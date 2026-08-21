@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartActions } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -82,7 +82,7 @@ export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', store
         <Button
             onClick={handleWhatsApp}
             variant="outline"
-            className={cn("w-full h-12 rounded-xl text-[#25D366] border border-[#25D366] bg-[#25D366]/5 hover:bg-[#25D366]/10 shadow-sm", className)}
+            className={cn("w-full h-12 rounded-xl text-[#128C7E] dark:text-[#25D366] border border-gray-200 dark:border-neutral-800 bg-[#25D366]/5 hover:bg-[#25D366]/10 shadow-none font-semibold", className)}
         >
             <WhatsAppIcon className="size-5 mr-2" />
             <span className="font-semibold text-sm">Order on WhatsApp</span>
@@ -105,6 +105,36 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         whatsappNumber: '',
         email: '',
     });
+    const [isBottomNavHidden, setIsBottomNavHidden] = useState(false);
+
+    useEffect(() => {
+        const updateFromAttr = () => {
+            const isHidden = document.documentElement.getAttribute('data-nav-hidden') === 'true';
+            setIsBottomNavHidden(isHidden);
+        };
+
+        const observer = new MutationObserver(updateFromAttr);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-nav-hidden'] });
+
+        let lastScrollY = window.scrollY;
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY <= 16) {
+                setIsBottomNavHidden(false);
+            } else if (currentScrollY > lastScrollY + 30 && currentScrollY > 80) {
+                setIsBottomNavHidden(true);
+            } else if (currentScrollY < lastScrollY - 12) {
+                setIsBottomNavHidden(false);
+            }
+            lastScrollY = currentScrollY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     const increment = () => setQuantity(q => q + 1);
     const decrement = () => setQuantity(q => (q > 1 ? q - 1 : 1));
@@ -305,7 +335,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             {!isOutOfStock ? (
                 <div className="hidden items-center gap-4 md:flex">
                     <span className="text-sm font-semibold text-foreground">Quantity</span>
-                    <div className="inline-flex items-center overflow-hidden rounded-lg border border-border bg-background">
+                    <div className="inline-flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 hover:border-primary/40 bg-background shadow-none">
                         <button
                             onClick={decrement}
                             className="inline-flex size-10 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -330,7 +360,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     <Button
                         onClick={() => setNotifyModalOpen(true)}
                         size="lg"
-                        className="h-11 flex-1 rounded-xl active:scale-[0.96]"
+                        className="h-11 flex-1 rounded-xl active:scale-[0.96] shadow-none font-semibold"
                     >
                         <BellRing className="size-4.5" />
                         Notify Me When In Stock
@@ -342,8 +372,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             disabled={isOutOfStock}
                             variant="outline"
                             className={cn(
-                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-all duration-300 ease-out border-2 shadow-sm hover:-translate-y-0.5",
-                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-background text-primary border-primary hover:bg-primary/5"
+                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50 hover:-translate-y-0.5",
+                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
                             )}
                             size="lg"
                         >
@@ -362,43 +392,46 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                     )}
                                 />
                             </span>
-                            Add to Cart
+                            {didJustAdd ? "Added" : "Add to Cart"}
                         </Button>
                         <Button
                             onClick={handleBuyNow}
-                            disabled={isOutOfStock}
+                            disabled={isBuying || isOutOfStock}
                             className={cn(
-                                "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] transition-all duration-300 ease-out border border-transparent shadow-sm hover:-translate-y-0.5",
-                                isBuying || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95 hover:-translate-y-0.5",
+                                isBuying ? "opacity-90 cursor-wait" : ""
                             )}
                             size="lg"
                         >
-                            <span className="relative inline-flex size-5 items-center justify-center mr-2">
-                                <Spinner
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-5",
-                                        isBuying ? "is-visible" : ""
-                                    )}
-                                />
-                                <PackageCheck
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-5",
-                                        !isBuying ? "is-visible" : ""
-                                    )}
-                                />
-                            </span>
-                            Buy Now
+                            {isBuying ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Spinner className="size-4 animate-spin text-primary-foreground" />
+                                    <span>Opening Checkout...</span>
+                                </span>
+                            ) : (
+                                <span className="flex items-center justify-center gap-2">
+                                    <PackageCheck className="size-4" />
+                                    <span>Buy Now</span>
+                                </span>
+                            )}
                         </Button>
                     </>
                 )}
                 <ProductSocialActions product={product} />
             </div>
 
-            <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset))] left-0 right-0 z-30 flex flex-col gap-2 border-t border-border/80 bg-background/98 p-2.5 backdrop-blur-md shadow-[0_-8px_20px_rgba(0,0,0,0.06)] md:hidden">
+            <div 
+                className="product-sticky-bar fixed left-0 right-0 z-30 flex flex-col gap-2 border-t border-border/80 bg-background/98 p-2.5 backdrop-blur-md md:hidden transition-[bottom,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-[bottom]"
+                style={{
+                    bottom: isBottomNavHidden
+                        ? 'env(safe-area-inset-bottom, 0px)'
+                        : 'calc(env(safe-area-inset-bottom, 0px) + var(--mobile-bottom-nav-offset, 58px))'
+                }}
+            >
                 {!isOutOfStock ? (
                     <>
                         <div className="flex items-center gap-2">
-                            <div className="inline-flex flex-[0.7] items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-11 px-1">
+                            <div className="inline-flex flex-[0.7] items-center justify-between overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 hover:border-primary/40 bg-background h-11 px-1 shadow-none">
                                 <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Minus className="size-3.5" />
                                 </button>
@@ -412,8 +445,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 disabled={isOutOfStock}
                                 variant="outline"
                                 className={cn(
-                                    "add-to-cart-button h-11 flex-[1.3] rounded-xl active:scale-[0.96] font-bold text-sm transition-all duration-300 ease-out border-2 shadow-sm",
-                                    isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-background text-primary border-primary hover:bg-primary/5"
+                                    "add-to-cart-button h-11 flex-[1.3] rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50",
+                                    isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
                                 )}
                             >
                                 <span className="relative inline-flex size-4 items-center justify-center mr-1.5">
@@ -436,27 +469,23 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         </div>
                         <Button
                             onClick={handleBuyNow}
-                            disabled={isOutOfStock}
+                            disabled={isBuying || isOutOfStock}
                             className={cn(
-                                "buy-now-button h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm transition-all duration-300 ease-out border border-transparent shadow-sm",
-                                isBuying || isOutOfStock ? "bg-muted/20 text-foreground border-foreground/40 opacity-80" : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                "buy-now-button h-11 w-full rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95",
+                                isBuying ? "opacity-90 cursor-wait" : ""
                             )}
                         >
-                            <span className="relative inline-flex size-4 items-center justify-center mr-1.5">
-                                <Spinner
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-4",
-                                        isBuying ? "is-visible" : ""
-                                    )}
-                                />
-                                <PackageCheck
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-4",
-                                        !isBuying ? "is-visible" : ""
-                                    )}
-                                />
-                            </span>
-                            Buy Now
+                            {isBuying ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Spinner className="size-4 animate-spin text-primary-foreground" />
+                                    <span>Opening Checkout...</span>
+                                </span>
+                            ) : (
+                                <span className="flex items-center justify-center gap-2">
+                                    <PackageCheck className="size-4" />
+                                    <span>Buy Now</span>
+                                </span>
+                            )}
                         </Button>
                     </>
                 ) : (
