@@ -8,6 +8,12 @@ const OrderSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+        idempotencyKey: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true,
+        },
         customerEmail: {
             type: String,
             required: false,

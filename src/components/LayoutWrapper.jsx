@@ -54,18 +54,16 @@ export default function LayoutWrapper({ children, categories, settings }) {
   return (
     <>
       <div className="flex min-h-screen flex-col bg-background">
-        <ConditionalLayoutElements>
-          <Navbar
-            categories={categories}
-            storeName={settings.storeName}
-            lightLogoUrl={settings.lightLogoUrl}
-            darkLogoUrl={settings.darkLogoUrl}
-            logoScalePercent={settings.logoScalePercent}
-            announcementBarEnabled={settings.announcementBarEnabled}
-            announcementBarText={settings.announcementBarText}
-            announcementBarMessages={settings.announcementBarMessages}
-          />
-        </ConditionalLayoutElements>
+        <Navbar
+          categories={categories}
+          storeName={settings.storeName}
+          lightLogoUrl={settings.lightLogoUrl}
+          darkLogoUrl={settings.darkLogoUrl}
+          logoScalePercent={settings.logoScalePercent}
+          announcementBarEnabled={settings.announcementBarEnabled}
+          announcementBarText={settings.announcementBarText}
+          announcementBarMessages={settings.announcementBarMessages}
+        />
 
         <main>{children}</main>
 

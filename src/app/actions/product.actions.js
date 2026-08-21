@@ -68,7 +68,6 @@ export async function toggleProductLiveAction(productId, nextValue) {
   revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
-  revalidatePath('/');
 
   return { success: true, showOnStore: isLive };
 }
@@ -94,7 +93,6 @@ export async function deleteProductAction(productId) {
   revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
-  revalidatePath('/');
 
   return { success: true };
 }
@@ -135,7 +133,6 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   revalidatePath(`/products/${product._id.toString()}`);
   revalidatePath('/admin/products');
   revalidatePath('/products');
-  revalidatePath('/');
 
   return { success: true, discountPercentage: product.discountPercentage, isDiscounted: product.isDiscounted };
 }

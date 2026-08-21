@@ -556,6 +556,11 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const submissionLockRef = useRef(false);
+  const idempotencyKeyRef = useRef(
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `idemp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  );
 
   useEffect(() => {
     const stored = readStoredSuccessfulOrder();
@@ -804,7 +809,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     clearStoredSuccessfulOrder();
     setOrderState({ orderId: '', whatsappUrl: '' });
     router.replace('/');
-    router.refresh();
   }
 
   function handleViewOrders() {
@@ -828,6 +832,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     (async () => {
       try {
         const result = await submitOrderAction({
+          idempotencyKey: idempotencyKeyRef.current,
           customerEmail: formData.email,
           customerName: formData.fullName,
           customerPhone: formData.phone,
@@ -863,7 +868,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         setOrderState(result);
         persistSuccessfulOrder(result);
         clearCart();
-        router.refresh();
       } catch (error) {
         setErrors((previous) => ({
           ...previous,

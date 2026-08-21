@@ -147,11 +147,11 @@ export default function HeroSlider({ slides = [] }) {
     <section
       ref={containerRef}
       data-testid="hero-main-slider"
-      className="relative w-full overflow-hidden bg-primary/10"
+      className="relative w-full overflow-hidden bg-muted/40"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-primary/10 md:h-[460px] lg:h-[560px]">
+      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-muted/40 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => (
           <div
             key={slide.id || `${slide.images.mobileSrc}-${index}`}
@@ -162,7 +162,7 @@ export default function HeroSlider({ slides = [] }) {
               {/* Mobile screen banner */}
               <div className="relative h-full w-full md:hidden">
                 <Image
-                  src={slide.images.mobileSrc || slide.images.desktopSrc}
+                  src={optimizeCloudinaryUrl(slide.images.mobileSrc || slide.images.desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
                   alt={slide.alt}
                   fill
                   sizes="100vw"
@@ -178,7 +178,7 @@ export default function HeroSlider({ slides = [] }) {
               {/* Desktop screen banner */}
               <div className="relative hidden h-full w-full md:block">
                 <Image
-                  src={slide.images.desktopSrc || slide.images.mobileSrc}
+                  src={optimizeCloudinaryUrl(slide.images.desktopSrc || slide.images.mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
                   alt={slide.alt}
                   fill
                   sizes="100vw"

@@ -3,12 +3,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare } from 'lucide-react';
 
+import dynamic from 'next/dynamic';
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
-import DashboardChart from '@/components/admin/DashboardChart';
 import { getAdminDashboardData } from '@/lib/data';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
+
+const DashboardChart = dynamic(() => import('@/components/admin/DashboardChart'), {
+  loading: () => <div className="h-[320px] w-full animate-pulse rounded-lg bg-muted/40" />,
+});
 
 const STATUS_VARIANT = {
   'Order Confirmed': 'default',

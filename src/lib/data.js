@@ -993,10 +993,6 @@ export async function getAdminHomePageBuilderData() {
 }
 
 export async function getStorefrontHomePage() {
-  'use cache';
-  cacheLife('foreverish');
-  cacheTag('home-page', 'home-sections', 'products', 'categories');
-
   try {
     const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
     const activeCategories = categories.filter(

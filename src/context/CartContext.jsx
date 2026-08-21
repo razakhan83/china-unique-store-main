@@ -101,6 +101,11 @@ function CartProviderContent({ children }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (!isInitialized) return;
+    persistCartSnapshot(cart);
+  }, [cart, isInitialized]);
+
   function persistCartSnapshot(nextCart) {
     try {
       localStorage.setItem(
@@ -137,67 +142,53 @@ function CartProviderContent({ children }) {
           return { success: false, error: 'Invalid product' };
         }
 
-        return new Promise((resolve) => {
-          startTransition(async () => {
-            addOptimisticCart({ type: 'add', item: normalized });
-            const nextCart = mergeCartItems(optimisticCart, normalized);
-            const persisted = persistCartSnapshot(nextCart);
-
-            if (!persisted) {
-              toast.error(`Could not add ${normalized.Name} to cart. Please try again.`);
-              resolve({ success: false, error: 'Failed to persist cart' });
-              return;
-            }
-
-            setCart(nextCart);
-
-            try {
-              trackAddToCartEvent({
-                productId: normalized.slug || normalized._id || normalized.id,
-                name: normalized.Name,
-                category: Array.isArray(normalized.Category) ? normalized.Category.join(', ') : '',
-                value: normalized.discountedPrice ?? normalized.Price,
-                quantity: normalized.quantity,
-              });
-            } catch (error) {
-              console.error('Failed to track add to cart event', error);
-            }
-
-            const toastId = toast(
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                        <CheckCircle2 className="size-4 text-emerald-500" />
-                        <span>Added to your cart</span>
-                    </div>
-                    <button 
-                        type="button" 
-                        onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} 
-                        className="text-[13px] font-bold text-primary hover:text-primary/80 transition-colors shrink-0 uppercase tracking-wide"
-                    >
-                        View Cart
-                    </button>
-                </div>,
-                { 
-                    position: 'bottom-center', 
-                    duration: 3500,
-                    className: 'mb-[72px] lg:mb-6 mx-auto rounded-full border border-border/60 shadow-lg !p-3 !px-4 !max-w-max !w-auto bg-background/95 backdrop-blur-md',
-                    style: { width: 'auto', minWidth: '0' }
-                }
-            );
-
-            resolve({ success: true, item: normalized, cart: nextCart });
-          });
+        startTransition(() => {
+          addOptimisticCart({ type: 'add', item: normalized });
+          setCart((prev) => mergeCartItems(prev, normalized));
         });
+
+        try {
+          trackAddToCartEvent({
+            productId: normalized.slug || normalized._id || normalized.id,
+            name: normalized.Name,
+            category: Array.isArray(normalized.Category) ? normalized.Category.join(', ') : '',
+            value: normalized.discountedPrice ?? normalized.Price,
+            quantity: normalized.quantity,
+          });
+        } catch (error) {
+          console.error('Failed to track add to cart event', error);
+        }
+
+        const toastId = toast(
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                    <span>Added to your cart</span>
+                </div>
+                <button 
+                    type="button" 
+                    onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} 
+                    className="text-[13px] font-bold text-primary hover:text-primary/80 transition-colors shrink-0 uppercase tracking-wide"
+                >
+                    View Cart
+                </button>
+            </div>,
+            { 
+                position: 'bottom-center', 
+                duration: 3500,
+                className: 'mb-[72px] lg:mb-6 mx-auto rounded-full border border-border/60 shadow-lg !p-3 !px-4 !max-w-max !w-auto bg-background/95 backdrop-blur-md',
+                style: { width: 'auto', minWidth: '0' }
+            }
+        );
+
+        return { success: true, item: normalized };
       },
       removeFromCart(product) {
         const itemId = getCartItemId(product);
-        const nextCart = optimisticCart.filter((item) => item.id !== itemId);
-        if (!persistCartSnapshot(nextCart)) {
-          toast.error('Could not update your cart right now.');
-          return { success: false, error: 'Failed to persist cart' };
-        }
-        setCart(nextCart);
-        return { success: true, cart: nextCart };
+        startTransition(() => {
+          setCart((prev) => prev.filter((item) => item.id !== itemId));
+        });
+        return { success: true };
       },
       updateQuantity(product, newQuantity) {
         const itemId = getCartItemId(product);
@@ -205,12 +196,9 @@ function CartProviderContent({ children }) {
 
         if (safeQuantity < 1) {
           const itemName = product?.Name || product?.name || 'Item';
-          const nextCart = optimisticCart.filter((item) => item.id !== itemId);
-          if (!persistCartSnapshot(nextCart)) {
-            toast.error('Could not update your cart right now.');
-            return { success: false, error: 'Failed to persist cart' };
-          }
-          setCart(nextCart);
+          startTransition(() => {
+            setCart((prev) => prev.filter((item) => item.id !== itemId));
+          });
           toast.success(`${itemName} removed from cart`, {
             duration: 2200,
             action: {
@@ -221,26 +209,23 @@ function CartProviderContent({ children }) {
               },
             },
           });
-          return { success: true, cart: nextCart };
+          return { success: true };
         }
 
-        const nextCart = optimisticCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: safeQuantity } : item
-        );
-        if (!persistCartSnapshot(nextCart)) {
-          toast.error('Could not update your cart right now.');
-          return { success: false, error: 'Failed to persist cart' };
-        }
-        setCart(nextCart);
-        return { success: true, cart: nextCart };
+        startTransition(() => {
+          setCart((prev) =>
+            prev.map((item) =>
+              item.id === itemId ? { ...item, quantity: safeQuantity } : item
+            )
+          );
+        });
+        return { success: true };
       },
       replaceCart(items) {
         const nextCart = Array.isArray(items) ? items.map(normalizeCartItem) : [];
-        if (!persistCartSnapshot(nextCart)) {
-          toast.error('Could not refresh your cart right now.');
-          return { success: false, error: 'Failed to persist cart' };
-        }
-        setCart(nextCart);
+        startTransition(() => {
+          setCart(nextCart);
+        });
         return { success: true, cart: nextCart };
       },
       clearCart() {
@@ -255,7 +240,7 @@ function CartProviderContent({ children }) {
         return { success: true, cart: [] };
       },
     }),
-    [addOptimisticCart, optimisticCart]
+    [addOptimisticCart]
   );
 
   const cartItemsValue = useMemo(

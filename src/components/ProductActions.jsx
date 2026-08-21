@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 import { getProductTagById } from '@/lib/productTags';
 import { flyToCart } from '@/lib/flyToCart';
+import { useActionLock } from '@/hooks/useActionLock';
 
 export function ProductSocialActions({ product, className = '' }) {
     const handleShare = async () => {
@@ -95,8 +96,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const router = useRouter();
     const packOptions = Array.isArray(product?.packOptions) ? product.packOptions : [];
     const [selectedPack, setSelectedPack] = useState(packOptions.length > 0 ? packOptions[0] : null);
-    const [isAdding, setIsAdding] = useState(false);
-    const [isBuying, setIsBuying] = useState(false);
+    const addLock = useActionLock();
+    const buyLock = useActionLock();
     const [didJustAdd, setDidJustAdd] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [notifyModalOpen, setNotifyModalOpen] = useState(false);
@@ -139,13 +140,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const increment = () => setQuantity(q => q + 1);
     const decrement = () => setQuantity(q => (q > 1 ? q - 1 : 1));
 
-    const handleAddToCart = async (event) => {
-        if (isAdding || isOutOfStock) return;
+    const handleAddToCart = (event) => addLock.run(async () => {
+        if (isOutOfStock) return;
         if (event?.currentTarget) {
             const imageSrc = product?.Images?.[0]?.url || product?.images?.[0]?.url || (typeof product?.images?.[0] === 'string' ? product.images[0] : '') || product?.image || '';
             flyToCart({ sourceEl: event.currentTarget, imageSrc });
         }
-        setIsAdding(true);
         const startedAt = performance.now();
         try {
             const productToAdd = selectedPack ? {
@@ -167,14 +167,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 await new Promise((resolve) => window.setTimeout(resolve, remaining));
             }
         } finally {
-            setIsAdding(false);
             window.setTimeout(() => setDidJustAdd(false), 650);
         }
-    };
+    });
 
-    const handleBuyNow = async () => {
-        if (isBuying || isOutOfStock) return;
-        setIsBuying(true);
+    const handleBuyNow = () => buyLock.run(async () => {
+        if (isOutOfStock) return;
         try {
             const productToAdd = selectedPack ? {
                 ...product,
@@ -188,14 +186,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             const result = await addToCart(productToAdd, quantity);
             if (result?.success) {
                 router.push('/checkout');
-            } else {
-                setIsBuying(false);
             }
         } catch (error) {
-            setIsBuying(false);
             toast.error('Failed to proceed to checkout.');
         }
-    };
+    });
 
     const handleWhatsApp = () => {
         const name = product.Name || product.name || 'this product';
@@ -369,11 +364,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     <>
                         <Button
                             onClick={handleAddToCart}
-                            disabled={isOutOfStock}
+                            disabled={addLock.isPending || isOutOfStock}
                             variant="outline"
                             className={cn(
                                 "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50 hover:-translate-y-0.5",
-                                isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
+                                addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
                             )}
                             size="lg"
                         >
@@ -381,13 +376,13 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 <Spinner
                                     className={cn(
                                         "add-to-cart-icon absolute size-5",
-                                        isAdding ? "is-visible" : ""
+                                        addLock.isPending ? "is-visible" : ""
                                     )}
                                 />
                                 <ShoppingCart
                                     className={cn(
                                         "add-to-cart-icon absolute size-5",
-                                        !isAdding ? "is-visible" : "",
+                                        !addLock.isPending ? "is-visible" : "",
                                         didJustAdd ? "text-primary" : ""
                                     )}
                                 />
@@ -396,14 +391,14 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         </Button>
                         <Button
                             onClick={handleBuyNow}
-                            disabled={isBuying || isOutOfStock}
+                            disabled={buyLock.isPending || isOutOfStock}
                             className={cn(
                                 "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95 hover:-translate-y-0.5",
-                                isBuying ? "opacity-90 cursor-wait" : ""
+                                buyLock.isPending ? "opacity-90 cursor-wait" : ""
                             )}
                             size="lg"
                         >
-                            {isBuying ? (
+                            {buyLock.isPending ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <Spinner className="size-4 animate-spin text-primary-foreground" />
                                     <span>Opening Checkout...</span>
@@ -442,24 +437,24 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             </div>
                             <Button
                                 onClick={handleAddToCart}
-                                disabled={isOutOfStock}
+                                disabled={addLock.isPending || isOutOfStock}
                                 variant="outline"
                                 className={cn(
                                     "add-to-cart-button h-11 flex-[1.3] rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50",
-                                    isAdding || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
+                                    addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
                                 )}
                             >
                                 <span className="relative inline-flex size-4 items-center justify-center mr-1.5">
                                     <Spinner
                                         className={cn(
                                             "add-to-cart-icon absolute size-4",
-                                            isAdding ? "is-visible" : ""
+                                            addLock.isPending ? "is-visible" : ""
                                         )}
                                     />
                                     <ShoppingCart
                                         className={cn(
                                             "add-to-cart-icon absolute size-4",
-                                            !isAdding ? "is-visible" : "",
+                                            !addLock.isPending ? "is-visible" : "",
                                             didJustAdd ? "text-primary" : ""
                                         )}
                                     />
@@ -469,13 +464,13 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         </div>
                         <Button
                             onClick={handleBuyNow}
-                            disabled={isBuying || isOutOfStock}
+                            disabled={buyLock.isPending || isOutOfStock}
                             className={cn(
                                 "buy-now-button h-11 w-full rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95",
-                                isBuying ? "opacity-90 cursor-wait" : ""
+                                buyLock.isPending ? "opacity-90 cursor-wait" : ""
                             )}
                         >
-                            {isBuying ? (
+                            {buyLock.isPending ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <Spinner className="size-4 animate-spin text-primary-foreground" />
                                     <span>Opening Checkout...</span>

@@ -124,7 +124,9 @@ export default function ProductGallery({ images, primaryTag, product }) {
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
                     className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
                     {...getBlurPlaceholderProps(image.blurDataURL)}
-                    preload={index === 0}
+                    priority={index === 0}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    loading={index === 0 ? 'eager' : 'lazy'}
                   />
                 </div>
               </CarouselItem>

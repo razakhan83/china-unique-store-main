@@ -22,6 +22,7 @@ export const orderItemSchema = z.object({
 });
 
 export const submitOrderSchema = z.object({
+  idempotencyKey: z.string().trim().max(100).optional().or(z.literal('')),
   customerName: nameSchema.min(1, 'Name is required'),
   customerPhone: phoneSchema.min(10, 'Valid phone number is required'),
   customerAddress: addressSchema.min(1, 'Address is required'),

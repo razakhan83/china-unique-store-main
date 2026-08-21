@@ -34,10 +34,11 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
           variant="ghost"
           size="icon-lg"
           className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
-          disabled
-          aria-label="Loading account"
+          aria-label="Account"
         >
-          <Skeleton className="size-9 rounded-full" />
+          <span className="relative flex size-6 items-center justify-center">
+            <User strokeWidth={1.5} className="size-[1.45rem]" />
+          </span>
         </Button>
       </div>
     );

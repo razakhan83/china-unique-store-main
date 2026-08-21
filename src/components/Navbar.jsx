@@ -22,6 +22,7 @@ import {
   Home,
   Package,
   MapPin,
+  User,
 } from 'lucide-react';
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
@@ -77,32 +78,16 @@ import StoreLogo from '@/components/StoreLogo';
 import MobileMenuContent from '@/components/MobileMenuContent';
 import { cn } from '@/lib/utils';
 
-const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), {
-  ssr: false,
-  loading: () => <Skeleton className="hidden md:inline-flex min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
-});
-
-const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), {
-  ssr: false,
-  loading: () => <Skeleton className="hidden md:inline-flex min-h-10 w-10 md:w-[6.5rem] rounded-xl" aria-hidden="true" />,
-});
+import NavbarSearchPanel from '@/components/NavbarSearchPanel';
+import NavbarDesktopAccountControl from '@/components/NavbarDesktopAccountControl';
 
 const AuthModal = dynamic(() => import('@/components/AuthModal'), {
   ssr: false,
   loading: () => null,
 });
 
-const NavbarSearchPanel = dynamic(() => import('@/components/NavbarSearchPanel'), {
-  loading: () => <Skeleton className="min-h-12 w-full rounded-xl" aria-hidden="true" />,
-});
-
 const MobileSearchOverlay = dynamic(() => import('@/components/MobileSearchOverlay'), {
   ssr: false,
-});
-
-const NavbarDesktopAccountControl = dynamic(() => import('@/components/NavbarDesktopAccountControl'), {
-  ssr: false,
-  loading: () => <Skeleton className="hidden md:block md:size-11 md:rounded-2xl" aria-hidden="true" />,
 });
 
 const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFooter'), {
@@ -216,6 +201,11 @@ function NavbarContent({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+
+  if (pathname?.startsWith('/checkout')) {
+    return null;
+  }
+
   const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
   const { activeCategory = 'all', isSidebarOpen = false, isCartOpen = false } = useCartUi() || {};
   const {
@@ -614,9 +604,7 @@ function NavbarContent({
                 <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                   <ShoppingBag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> All Products
                 </Link>
-                {!mounted || status === 'loading' ? (
-                  <div className="h-[38px] w-32 rounded-full bg-muted/40 animate-pulse" />
-                ) : session ? (
+                {session ? (
                   <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0">
                     <Package className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> My Orders
                   </Link>
@@ -687,6 +675,112 @@ function NavbarContent({
   );
 }
 
+export function NavbarStaticShell({
+  storeName = 'China Unique Store',
+  lightLogoUrl = '',
+  darkLogoUrl = '',
+  logoScalePercent = 100,
+  announcementBarEnabled = true,
+  announcementBarText = '',
+  announcementBarMessages = [],
+}) {
+  const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
+  const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
+
+  return (
+    <div className="navbar-shell sticky top-0 z-[200] overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
+      {showAnnouncementBar ? (
+        <div className="relative flex min-h-8 md:min-h-9 items-center bg-primary py-1.5 md:py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)]">
+          <AnnouncementMarquee items={announcementItems} />
+        </div>
+      ) : null}
+      <div className="relative z-50">
+        <header className="relative z-[60] mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+          <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+            <StoreLogo
+              storeName={storeName}
+              lightLogoUrl={lightLogoUrl}
+              darkLogoUrl={darkLogoUrl}
+              logoScalePercent={logoScalePercent * 1.35}
+              variant="light-surface"
+              priority
+              isLink={false}
+              className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 cursor-pointer"
+            />
+          </div>
+
+          <div className="hidden md:block flex-1 w-full mx-6 xl:mx-10">
+            <div className="relative flex h-12 w-full items-center rounded-2xl border border-border/70 bg-background/80 px-4 text-sm text-muted-foreground shadow-sm">
+              <Search className="mr-2.5 size-4 text-muted-foreground/80" />
+              <span>Search products...</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              className="relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground"
+              aria-label="Cart"
+            >
+              <span className="relative flex size-6 md:size-[1.65rem] items-center justify-center">
+                <ShoppingBag strokeWidth={1.5} className="size-full" />
+              </span>
+            </Button>
+
+            <div className="hidden md:block">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className="relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground"
+                aria-label="Account"
+              >
+                <span className="relative flex size-6 items-center justify-center">
+                  <User strokeWidth={1.5} className="size-[1.45rem]" />
+                </span>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
+          <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-muted-foreground/90">
+            <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
+              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Home className="size-4" strokeWidth={2.2} /> Home
+              </Link>
+              <span className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full text-muted-foreground">
+                <LayoutGrid className="size-4" strokeWidth={2.2} /> Categories / Collections
+                <ChevronDown className="size-3.5" />
+              </span>
+              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <ShoppingBag className="size-4" strokeWidth={2.2} /> All Products
+              </Link>
+              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <MapPin className="size-4" strokeWidth={2.2} /> Track Order
+              </Link>
+              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Heart className="size-4" strokeWidth={2.2} /> Wishlist
+              </Link>
+              <Link href="/products?price=under500" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Tag className="size-4" strokeWidth={2.2} /> Rs 500 Store
+              </Link>
+              <Link href="/products?price=under1000" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Tag className="size-4" strokeWidth={2.2} /> Rs 1000 Store
+              </Link>
+              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Phone className="size-4" strokeWidth={2.2} /> Contact Us
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar({
   categories = [],
   storeName = 'China Unique Store',
@@ -698,7 +792,19 @@ export default function Navbar({
   announcementBarMessages = [],
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <NavbarStaticShell
+          storeName={storeName}
+          lightLogoUrl={lightLogoUrl}
+          darkLogoUrl={darkLogoUrl}
+          logoScalePercent={logoScalePercent}
+          announcementBarEnabled={announcementBarEnabled}
+          announcementBarText={announcementBarText}
+          announcementBarMessages={announcementBarMessages}
+        />
+      }
+    >
       <NavbarContent
         categories={categories}
         storeName={storeName}

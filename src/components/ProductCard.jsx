@@ -57,7 +57,7 @@ function getFeatureBadge(product) {
 import { getProductCategories } from "@/lib/productCategories";
 import { getCategoryColor } from "@/lib/categoryColors";
 
-export default function ProductCard({ product, className = "", imageBg, isPreviewMode = false }) {
+export default function ProductCard({ product, className = "", imageBg, isPreviewMode = false, priority = false }) {
   const categories = getProductCategories(product);
   const primaryCategory = categories[0];
   const primaryCategoryName = primaryCategory?.name || primaryCategory?.label || "";
@@ -156,7 +156,9 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 fill
                 draggable={false}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                loading="lazy"
+                priority={priority}
+                fetchPriority={priority ? "high" : "auto"}
+                loading={priority ? "eager" : "lazy"}
                 className={cn(
                   "object-cover transition-all duration-500 ease-out",
                   "md:group-hover:scale-105",

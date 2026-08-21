@@ -26,8 +26,10 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. Skip non-GET, API requests, NextAuth, Admin routes, or Cloudinary uploads
+  // 1. Skip localhost/dev, non-GET, API requests, NextAuth, Admin routes, or Cloudinary uploads
   if (
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
     request.method !== 'GET' ||
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/admin') ||

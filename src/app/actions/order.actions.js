@@ -143,6 +143,30 @@ export async function submitOrderAction(input) {
     const couponCodeInput = validatedData.couponCode;
     const customerEmail = validatedData.customerEmail;
     const landmark = validatedData.landmark;
+    const idempotencyKey = validatedData.idempotencyKey;
+
+    if (idempotencyKey) {
+      const existing = await Order.findOne({ idempotencyKey }).lean();
+      if (existing) {
+        return {
+          success: true,
+          orderId: existing.orderId,
+          totalAmount: existing.totalAmount,
+          whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent([
+            '*New Order from China Unique Store*',
+            '',
+            '*Customer Details*',
+            `Name: ${existing.customerName}`,
+            `Phone: ${existing.customerPhone}`,
+            `Address: ${existing.customerAddress}`,
+            '',
+            `*Total:* Rs. ${(existing.totalAmount || 0).toLocaleString('en-PK')}`,
+            `*Order ID:* ${existing.orderId}`,
+          ].join('\n'))}` : '',
+          duplicate: true,
+        };
+      }
+    }
     
     const cookieStore = await cookies();
     const requestHeaders = await headers();
@@ -189,25 +213,42 @@ export async function submitOrderAction(input) {
       return { success: false, error: 'Unable to capture user email.' };
     }
 
-    // Create Order record
-    const order = await Order.create({
-      orderId: makeOrderId(),
-      secureToken: crypto.randomUUID(),
-      customerEmail: userEmail || null,
-      customerName,
-      customerPhone,
-      customerAddress,
-      customerCity,
-      landmark,
-      items: normalizedItems,
-      totalAmount: pricing.total,
-      status: DEFAULT_ORDER_STATUS,
-      notes,
-      couponCode: appliedCoupon ? appliedCoupon.code : undefined,
-      discountAmount: pricing.discountAmount || 0,
-      shippingAmount: pricing.shipping || 0,
-      statusHistory: [{ status: DEFAULT_ORDER_STATUS, timestamp: new Date() }],
-    });
+    // Create Order record with idempotency guard
+    let order;
+    try {
+      order = await Order.create({
+        orderId: makeOrderId(),
+        idempotencyKey: idempotencyKey || undefined,
+        secureToken: crypto.randomUUID(),
+        customerEmail: userEmail || null,
+        customerName,
+        customerPhone,
+        customerAddress,
+        customerCity,
+        landmark,
+        items: normalizedItems,
+        totalAmount: pricing.total,
+        status: DEFAULT_ORDER_STATUS,
+        notes,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        discountAmount: pricing.discountAmount || 0,
+        shippingAmount: pricing.shipping || 0,
+        statusHistory: [{ status: DEFAULT_ORDER_STATUS, timestamp: new Date() }],
+      });
+    } catch (createErr) {
+      if (createErr?.code === 11000 && idempotencyKey) {
+        const existing = await Order.findOne({ idempotencyKey }).lean();
+        if (existing) {
+          return {
+            success: true,
+            orderId: existing.orderId,
+            totalAmount: existing.totalAmount,
+            duplicate: true,
+          };
+        }
+      }
+      throw createErr;
+    }
 
     if (appliedCoupon) {
       await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
@@ -260,7 +301,11 @@ export async function submitOrderAction(input) {
 
     revalidateTag('orders');
     revalidateTag('admin-dashboard');
-    revalidateTag('products');
+    for (const item of normalizedItems) {
+      if (item.slug) {
+        revalidateTag(`product-${item.slug}`);
+      }
+    }
 
     after(async () => {
       const backgroundTasks = [
