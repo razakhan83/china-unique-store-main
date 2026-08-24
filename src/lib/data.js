@@ -1226,6 +1226,9 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const sortQuery = (() => {
     if (safeSort === 'price-low') return { Price: 1, createdAt: -1 };
     if (safeSort === 'price-high') return { Price: -1, createdAt: -1 };
+    if (safeSort === 'best-selling') return { isBestSelling: -1, createdAt: -1 };
+    if (safeSort === 'featured') return { isNewArrival: -1, isBestSelling: -1, createdAt: -1 };
+    if (safeSort === 'deals') return { isDiscounted: -1, discountPercentage: -1, createdAt: -1 };
     if (safeSort === 'az') return { Name: 1, createdAt: -1 };
     if (safeSort === 'za') return { Name: -1, createdAt: -1 };
     return { createdAt: -1 };

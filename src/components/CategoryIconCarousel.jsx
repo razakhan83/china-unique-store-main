@@ -162,13 +162,15 @@ export default function CategoryIconCarousel({ categories }) {
 
         {/* Pagination Dots */}
         {categoryCount > 1 && isMounted && (
-          <div className="mt-8 flex items-center justify-center gap-2">
+          <div className="mt-8 flex items-center justify-center gap-1.5">
             {Array.from({ length: numDots }).map((_, i) => (
               <div
                 key={i}
                 className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  activeDotIndex === i ? "w-8 bg-emerald-600" : "w-2 bg-slate-200"
+                  "rounded-full transition-all duration-300 ease-out",
+                  activeDotIndex === i 
+                    ? "w-6 h-2.5 bg-primary" 
+                    : "size-2.5 bg-background border-2 border-primary/60 hover:bg-primary/20"
                 )}
               />
             ))}

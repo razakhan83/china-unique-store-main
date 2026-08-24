@@ -316,11 +316,11 @@ function OrderSummaryContent({
 
                 <div className="flex items-center justify-between mt-2.5">
                   {/* Stepper Quantity Controls */}
-                  <div className="inline-flex items-center h-7 rounded-lg border border-border/80 bg-background shadow-2xs">
+                  <div className="inline-flex items-center h-8 sm:h-7 rounded-lg border border-border/80 bg-background shadow-2xs">
                     <button
                       type="button"
                       onClick={() => handleQuantityDecrease ? handleQuantityDecrease(item) : null}
-                      className="flex items-center justify-center size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-l-lg transition-colors active:scale-90"
+                      className="relative flex items-center justify-center size-8 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-l-lg transition-colors active:scale-90 after:absolute after:-inset-1 after:content-['']"
                       aria-label="Decrease quantity"
                       title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
                     >
@@ -332,7 +332,7 @@ function OrderSummaryContent({
                     <button
                       type="button"
                       onClick={() => handleQuantityIncrease ? handleQuantityIncrease(item) : null}
-                      className="flex items-center justify-center size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-r-lg transition-colors active:scale-90"
+                      className="relative flex items-center justify-center size-8 sm:size-7 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-r-lg transition-colors active:scale-90 after:absolute after:-inset-1 after:content-['']"
                       aria-label="Increase quantity"
                     >
                       <Plus className="size-3" />

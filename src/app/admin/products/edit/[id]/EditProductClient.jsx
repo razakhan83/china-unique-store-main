@@ -23,6 +23,7 @@ import { sanitizeRichTextHtml, stripHtmlTags } from '@/lib/richText';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { cn } from '@/lib/utils';
 import { PRODUCT_TAGS } from '@/lib/productTags';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const selectionChipClass = (selected) =>
   cn(
@@ -404,7 +405,7 @@ export default function EditProduct({ id }) {
   const seoPreviewDescription =
     trimmedSeoDescription || plainDescription || 'Add a focused product summary to improve search snippets.';
   const seoPreviewUrl =
-    trimmedSeoCanonicalUrl || `https://china-unique-items.vercel.app/products/${fallbackSlug || id}`;
+    trimmedSeoCanonicalUrl || `${getSiteUrl()}/products/${fallbackSlug || id}`;
   const seoChecks = [
     { label: 'SEO title', complete: trimmedSeoTitle.length >= 10 },
     { label: 'Meta description', complete: trimmedSeoDescription.length >= 50 },

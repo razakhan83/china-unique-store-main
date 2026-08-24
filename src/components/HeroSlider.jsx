@@ -182,8 +182,6 @@ export default function HeroSlider({ slides = [] }) {
                   alt={slide.alt}
                   fill
                   sizes="100vw"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   className="object-cover"
                   quality={85}

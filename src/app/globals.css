@@ -3,7 +3,7 @@
 
 @theme inline {
   --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --color-background: #fafafa;
   --color-foreground: #0f172a;
@@ -26,6 +26,10 @@
   --color-destructive-foreground: #ffffff;
   --color-success: #10b981;
   --color-success-foreground: #ffffff;
+  --color-info: #0ea5e9;
+  --color-info-foreground: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #1f2937;
   --color-sidebar: #ffffff;
   --color-sidebar-foreground: #0f172a;
   --color-sidebar-primary: #064e3b;
@@ -194,6 +198,12 @@
     background-size: 200% 100%;
     animation: var(--animate-shimmer);
     border-radius: var(--radius-md);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-card, .animate-shimmer {
+      animation: none !important;
+    }
   }
 
   .surface-card {

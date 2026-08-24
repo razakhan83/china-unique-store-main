@@ -332,6 +332,7 @@ export default function AdminProductsClient({
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
   const [togglingStockId, setTogglingStockId] = useState(null);
+  const [togglingFlagId, setTogglingFlagId] = useState(null);
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
   const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
   const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
@@ -537,6 +538,8 @@ export default function AdminProductsClient({
   }
 
   async function toggleProductFlag(productId, flag, currentStatus) {
+    if (togglingFlagId) return;
+    setTogglingFlagId(productId);
     const originalProducts = [...products];
     const newStatus = !currentStatus;
 
@@ -561,6 +564,8 @@ export default function AdminProductsClient({
     } catch (error) {
       setProducts(originalProducts);
       toast.error(error.message || "Could not update the product badge.");
+    } finally {
+      setTogglingFlagId(null);
     }
   }
 
@@ -1011,12 +1016,14 @@ export default function AdminProductsClient({
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="cursor-pointer"
+                                disabled={togglingFlagId === product._id}
                                 onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                               >
                                 {product.isNewArrival ? "Remove New Arrival" : "Mark as New Arrival"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="cursor-pointer"
+                                disabled={togglingFlagId === product._id}
                                 onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                               >
                                 {product.isBestSelling ? "Remove Best Selling" : "Mark as Best Selling"}

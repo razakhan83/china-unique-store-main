@@ -160,18 +160,18 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             {formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}
                                           </p>
                                         </div>
-                                        <div className="inline-flex h-7 items-stretch gap-0.5 self-start">
+                                        <div className="inline-flex h-8 sm:h-7 items-stretch gap-1 self-start">
                                           <Button
                                             type="button"
                                             variant="ghost"
                                             size="icon-xs"
                                             aria-label="Decrease quantity"
                                             onClick={() => updateQuantity(item, item.quantity - 1)}
-                                            className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
+                                            className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
                                           >
                                             <Minus />
                                           </Button>
-                                          <span className="inline-flex h-full w-7 items-center justify-center px-0 text-[0.84rem] font-semibold leading-none tabular-nums">
+                                          <span className="inline-flex h-full w-8 sm:w-7 items-center justify-center px-0 text-[0.84rem] font-semibold leading-none tabular-nums">
                                             {item.quantity}
                                           </span>
                                           <Button
@@ -180,7 +180,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                             size="icon-xs"
                                             aria-label="Increase quantity"
                                             onClick={() => updateQuantity(item, item.quantity + 1)}
-                                            className="h-full min-h-0 w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96]"
+                                            className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
                                           >
                                             <Plus />
                                           </Button>
@@ -192,7 +192,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                           variant="ghost"
                                           size="icon-sm"
                                           onClick={() => scheduleRemove(item)}
-                                          className="size-7 rounded-[var(--radius-lg)] text-muted-foreground transition-[transform,color] duration-150 hover:text-destructive active:scale-[0.96] [&_svg]:size-3.5"
+                                          className="relative size-8 sm:size-7 rounded-[var(--radius-lg)] text-muted-foreground transition-[transform,color] duration-150 hover:text-destructive active:scale-[0.96] [&_svg]:size-3.5 after:absolute after:-inset-1.5 after:content-['']"
                                           aria-label="Remove item"
                                         >
                                           <Trash2 />

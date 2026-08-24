@@ -53,94 +53,69 @@ export default function GuestOrderLookupForm() {
   }
 
   return (
-    <Card className="border-none shadow-none bg-transparent sm:border-solid sm:border-border/60 sm:shadow-xl sm:bg-card/80 sm:backdrop-blur-sm overflow-hidden rounded-none sm:rounded-3xl">
-      <CardHeader className="pb-6 pt-8 px-2 sm:px-6">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-inner">
-            <PackageSearch className="size-6 sm:size-8" />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="guest-order-id" className="block text-sm font-medium text-foreground mb-1.5">
+          Order ID
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
+            <ClipboardList className="size-4.5" />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-foreground">Track Your Order</h1>
-            <CardDescription className="text-sm sm:text-base px-2 sm:px-6 leading-relaxed mt-1">
-              Enter your order details below to check the current status and tracking information.
-            </CardDescription>
-          </div>
+          <input
+            id="guest-order-id"
+            type="text"
+            placeholder="e.g. ORD-ABC123"
+            value={orderId}
+            onChange={(event) => setOrderId(event.target.value.toUpperCase())}
+            className="w-full h-11 pl-10 pr-4 text-sm rounded-lg border border-border bg-background shadow-2xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            disabled={isPending}
+            required
+          />
         </div>
-      </CardHeader>
-      <CardContent className="px-6 sm:px-10 pb-10">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <FieldGroup className="space-y-5">
-            <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-id" className="text-sm lg:text-base font-semibold text-foreground mb-2">Order ID</FieldLabel>
-              <InputGroup className="min-h-14 lg:min-h-16 rounded-xl lg:rounded-2xl border border-border/50 bg-background shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300">
-                <InputGroupAddon align="inline-start" className="pl-4 lg:pl-5 text-muted-foreground">
-                  <InputGroupText>
-                    <ClipboardList className="size-5 lg:size-6" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="guest-order-id"
-                  type="text"
-                  placeholder="e.g. ORD-ABC123"
-                  value={orderId}
-                  onChange={(event) => setOrderId(event.target.value.toUpperCase())}
-                  className="h-14 lg:h-16 px-3 lg:px-4 text-base lg:text-lg placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
-                  disabled={isPending}
-                  aria-invalid={Boolean(submitError)}
-                  required
-                />
-              </InputGroup>
-              <FieldDescription className="mt-2 text-xs text-muted-foreground/80">
-                Found in your confirmation email or SMS.
-              </FieldDescription>
-            </Field>
+      </div>
 
-            <Field data-invalid={submitError ? 'true' : undefined}>
-              <FieldLabel htmlFor="guest-order-phone" className="text-sm lg:text-base font-semibold text-foreground mb-2">Phone Number</FieldLabel>
-              <InputGroup className="min-h-14 lg:min-h-16 rounded-xl lg:rounded-2xl border border-border/50 bg-background shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300">
-                <InputGroupAddon align="inline-start" className="pl-4 lg:pl-5 text-muted-foreground">
-                  <InputGroupText>
-                    <Phone className="size-5 lg:size-6" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="guest-order-phone"
-                  type="tel"
-                  placeholder="e.g. 0300 1234567"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  className="h-14 lg:h-16 px-3 lg:px-4 text-base lg:text-lg placeholder:text-muted-foreground/50 border-0 focus:ring-0 bg-transparent w-full"
-                  disabled={isPending}
-                  aria-invalid={Boolean(submitError)}
-                  required
-                />
-              </InputGroup>
-              <FieldDescription className="mt-2 text-xs text-muted-foreground/80">
-                The exact phone number you provided during checkout.
-              </FieldDescription>
-              {submitError && <FieldError className="mt-2 text-sm font-medium">{submitError}</FieldError>}
-            </Field>
-          </FieldGroup>
+      <div>
+        <label htmlFor="guest-order-phone" className="block text-sm font-medium text-foreground mb-1.5">
+          Phone Number
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
+            <Phone className="size-4.5" />
+          </div>
+          <input
+            id="guest-order-phone"
+            type="tel"
+            placeholder="e.g. 0300 1234567"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            className="w-full h-11 pl-10 pr-4 text-sm rounded-lg border border-border bg-background shadow-2xs placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            disabled={isPending}
+            required
+          />
+        </div>
+        {submitError && (
+          <p className="mt-1.5 text-xs font-medium text-destructive">{submitError}</p>
+        )}
+      </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-14 lg:h-16 text-base lg:text-lg font-bold rounded-xl lg:rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 mt-10"
-            disabled={isPending || !orderId.trim() || !phone.trim()}
-          >
-            {isPending ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="size-5 lg:size-6 animate-spin" />
-                Searching...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2 w-full">
-                Track Order
-                <ArrowRight className="size-5 lg:size-6" />
-              </span>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Button 
+        type="submit" 
+        className="w-full h-11 text-sm font-semibold rounded-lg shadow-sm hover:bg-primary/90 transition-all mt-2"
+        disabled={isPending || !orderId.trim() || !phone.trim()}
+      >
+        {isPending ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="size-4 animate-spin" />
+            Checking Status...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            Track Order
+            <ArrowRight className="size-4" />
+          </span>
+        )}
+      </Button>
+    </form>
   );
 }

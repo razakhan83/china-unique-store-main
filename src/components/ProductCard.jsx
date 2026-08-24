@@ -47,7 +47,7 @@ function getFeatureBadge(product) {
     return {
       label: "Best Seller",
       className:
-        "pointer-events-auto rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 uppercase tracking-[0.08em]",
+        "pointer-events-auto rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-semibold text-secondary-foreground uppercase tracking-[0.08em]",
     };
   }
 
@@ -92,7 +92,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border-none ring-0 bg-card shadow-none hover:-translate-y-0.5 transition-all duration-200 ease-out",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border-none ring-0 bg-card shadow-none [@media(hover:hover)]:hover:-translate-y-0.5 transition-transform duration-150 ease-out",
         "py-0",
         className
       )}
@@ -103,7 +103,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
           {ratingLabel ? (
             <Badge
               className={cn(
-                "pointer-events-auto rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-700 tabular-nums"
+                "pointer-events-auto rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-amber-700 tabular-nums"
               )}
             >
               <Star className="mr-1 size-3.5 fill-current" />
@@ -194,7 +194,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
 
           {isUnavailable && (
             <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
-              <div className="rounded-md border border-destructive/20 bg-red-50/95 text-destructive px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur-md">
+              <div className="rounded-md border border-destructive/20 bg-destructive/5 text-destructive px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur-md">
                 Out of Stock
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                         >
                           {formatPrice(compareAtPrice)}
                         </p>
-                        <Badge className="pointer-events-auto w-fit rounded bg-emerald-100/60 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 tracking-normal border-none shadow-none h-[22px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[12px] sm:h-[24px]">
+                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1.5 py-0.5 text-[11px] font-medium text-success tracking-normal border-none shadow-none h-[22px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[12px] sm:h-[24px]">
                           Save {formatPrice(compareAtPrice - sellingPrice)}
                         </Badge>
                       </div>

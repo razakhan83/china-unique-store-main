@@ -17,7 +17,7 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "h-11 w-full min-w-0 rounded-xl border px-3.5 py-2 text-sm text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 ease-out",
+        "h-11 w-full min-w-0 rounded-lg border px-3.5 py-2 text-sm text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 ease-out",
         "border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]",
         "placeholder:text-[color:color-mix(in_oklab,var(--color-muted-foreground)_78%,white)]",
         "hover:border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] hover:bg-[color:color-mix(in_oklab,var(--color-input)_94%,white)]",

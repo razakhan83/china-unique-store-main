@@ -54,6 +54,69 @@ export async function GET(request) {
       fetchError = err.message || 'Courier API connection error.';
     }
 
+    // If courier API returns no detailed events (e.g. Tracking Disabled on portal), build fallback timeline from store order history
+    if (events.length === 0 && order) {
+      const fallbackEvents = [];
+      const currentStatus = order.status || 'Shipped';
+      const cName = order.courierName || 'NOC Express';
+      const history = Array.isArray(order.statusHistory) ? order.statusHistory : [];
+
+      const getTimestampForStatus = (stNames, defaultDate) => {
+        const found = history.find((h) => stNames.includes(h.status));
+        return found?.timestamp || defaultDate;
+      };
+
+      const formatPktDate = (dVal) => {
+        if (!dVal) return '';
+        const d = new Date(dVal);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString('en-PK', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Karachi',
+        });
+      };
+
+      if (['Delivered', 'Completed'].includes(currentStatus)) {
+        const delDate = getTimestampForStatus(['Delivered', 'Completed'], order.updatedAt);
+        fallbackEvents.push({
+          status: 'Delivered',
+          remarks: `Delivered by ${cName}`,
+          dateTime: formatPktDate(delDate),
+        });
+      }
+
+      if (['Shipped', 'Delivered', 'Completed', 'In Transit'].includes(currentStatus)) {
+        const shipDate = getTimestampForStatus(['Shipped', 'In Transit'], order.shippedAt || order.updatedAt);
+        fallbackEvents.push({
+          status: 'In Transit',
+          remarks: `Handed over to ${cName}`,
+          dateTime: formatPktDate(shipDate),
+        });
+      }
+
+      if (['Confirmed', 'Shipped', 'Delivered', 'Completed', 'In Transit'].includes(currentStatus)) {
+        const confDate = getTimestampForStatus(['Confirmed'], order.createdAt);
+        fallbackEvents.push({
+          status: 'Order Confirmed',
+          remarks: 'Verified & packed',
+          dateTime: formatPktDate(confDate),
+        });
+      }
+
+      fallbackEvents.push({
+        status: 'Order Placed',
+        remarks: 'Order received',
+        dateTime: formatPktDate(order.createdAt),
+      });
+
+      events = fallbackEvents;
+    }
+
     return NextResponse.json({
       success: true,
       orderId: order?.orderId || null,

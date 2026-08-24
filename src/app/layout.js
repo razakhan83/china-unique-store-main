@@ -21,9 +21,6 @@ export const metadata = {
     template: '%s | China Unique Store',
   },
   description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
-  alternates: {
-    canonical: '/',
-  },
   openGraph: {
     title: 'China Unique Store',
     description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
@@ -59,18 +56,18 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0a3d2e',
+  themeColor: '#064e3b',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="bg-[#fafafa]" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" className="bg-background" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <meta name="google" content="notranslate" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body className={`${fontSans.variable} bg-[#fafafa] text-foreground antialiased`} suppressHydrationWarning>
+      <body className={`${fontSans.variable} bg-background text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="bottom-center" richColors />

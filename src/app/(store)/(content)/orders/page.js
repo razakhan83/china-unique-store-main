@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { getStoreSettings, getUserOrders } from '@/lib/data';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import GuestOrderLookupForm from '@/components/GuestOrderLookupForm';
 import {
   Empty,
@@ -33,46 +34,39 @@ export default function OrdersPage() {
 
 function OrdersPageSkeleton() {
   return (
-    <main className="min-h-screen bg-white pb-16 pt-8 font-sans">
-      <div className="container mx-auto max-w-6xl px-4">
-        <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
-          {/* Left Column */}
-          <div className="w-full lg:flex-1 flex flex-col min-w-0 animate-pulse">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-48 bg-gray-200 rounded-lg"></div>
-              <div className="h-6 w-8 bg-gray-200 rounded-full"></div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="h-12 w-64 bg-gray-100 rounded-xl"></div>
-              <div className="h-10 w-40 bg-gray-100 rounded-xl"></div>
-            </div>
-            
-            <div className="flex flex-col gap-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div className="bg-[#F8F9FA] px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between h-[72px]">
-                     <div className="h-5 w-48 bg-gray-200 rounded"></div>
-                     <div className="h-5 w-32 bg-gray-200 rounded mt-2 sm:mt-0"></div>
-                  </div>
-                  <div className="p-6 h-[220px] flex flex-col gap-4">
-                    <div className="h-6 w-64 bg-gray-200 rounded"></div>
-                    <div className="h-20 w-full bg-gray-100 rounded-lg mt-4"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <main className="w-full bg-background pt-4 pb-12 sm:pt-8 sm:pb-16 px-4">
+      <div className="w-full max-w-xl mx-auto animate-pulse">
+        <div className="text-center sm:text-left mb-5 sm:mb-6">
+          <div className="h-7 sm:h-8 w-48 bg-muted rounded-md mb-1.5 mx-auto sm:mx-0" />
+          <div className="h-4 w-64 bg-muted rounded-md mx-auto sm:mx-0" />
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <div className="h-4 w-20 bg-muted rounded mb-1.5" />
+            <div className="h-11 w-full bg-muted/60 rounded-lg" />
           </div>
-          
-          {/* Right Column */}
-          <div className="hidden lg:block w-full lg:w-[280px] xl:w-[320px] shrink-0 pt-0 lg:pt-[72px] animate-pulse">
-            <div className="rounded-2xl border border-gray-200 bg-[#F8F9FA] p-6 h-[260px]">
-               <div className="size-12 rounded-xl bg-gray-200 mb-5"></div>
-               <div className="h-6 w-40 bg-gray-200 rounded mb-4"></div>
-               <div className="h-4 w-full bg-gray-200 rounded mb-2"></div>
-               <div className="h-4 w-4/5 bg-gray-200 rounded mb-6"></div>
-               <div className="h-11 w-full bg-gray-200 rounded-xl"></div>
-            </div>
+          <div>
+            <div className="h-4 w-28 bg-muted rounded mb-1.5" />
+            <div className="h-11 w-full bg-muted/60 rounded-lg" />
+          </div>
+          <div className="h-11 w-full bg-primary/20 rounded-lg mt-2" />
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-border/80 text-center">
+          <div className="h-4 w-52 bg-muted rounded mx-auto" />
+        </div>
+
+        {/* Benefits Skeleton */}
+        <div className="mt-8 pt-6 border-t border-border/80 space-y-3">
+          <div className="h-4 w-36 bg-muted rounded mb-3" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-3.5 rounded-xl bg-muted/30 border border-border/60 space-y-1.5">
+                <div className="h-3.5 w-24 bg-muted rounded" />
+                <div className="h-3 w-full bg-muted/60 rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -99,47 +93,63 @@ async function OrdersContent() {
 
   if (!session) {
     return (
-      <main className="min-h-[calc(100vh-64px)] bg-background sm:bg-muted/10 py-8 sm:py-16 flex justify-center items-start lg:items-center">
-        <div className="container mx-auto max-w-5xl px-4 sm:px-6 w-full">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-8 lg:gap-16 w-full">
-            <div className="w-full lg:w-7/12">
-              <GuestOrderLookupForm />
-            </div>
-            
-            <div className="hidden lg:flex flex-col items-center justify-center relative w-16 shrink-0">
-              <span className="h-[300px] border-l border-border/60" />
-              <span className="absolute bg-muted/10 py-2 px-1 text-muted-foreground font-medium text-xs uppercase tracking-wider">Or</span>
+      <main className="w-full bg-background pt-4 pb-12 sm:pt-8 sm:pb-16 px-4">
+        <div className="w-full max-w-xl mx-auto">
+          {/* Clean Page Header */}
+          <div className="text-center sm:text-left mb-5 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Track Your Order
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+              Enter your details below to check live shipping and tracking updates.
+            </p>
+          </div>
+
+          {/* Direct Clean Form */}
+          <GuestOrderLookupForm />
+
+          {/* Clean Account Link */}
+          <div className="mt-6 pt-5 border-t border-border/80 text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Have an account?{' '}
+              <Link 
+                href="/auth/signin" 
+                className="font-semibold text-primary underline underline-offset-4 hover:opacity-80 transition-opacity"
+              >
+                Sign in to view all your orders
+              </Link>
+            </p>
+          </div>
+
+          {/* Account Benefits Section */}
+          <div className="mt-8 pt-6 border-t border-border/80">
+            <div className="text-center sm:text-left mb-3.5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Benefits of Having an Account
+              </h2>
             </div>
 
-            <div className="relative lg:hidden">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/60" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60">
+                <h3 className="text-xs font-semibold text-foreground">1-Click Tracking</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  Instant order status without typing details.
+                </p>
               </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                <span className="bg-muted/10 px-4 text-muted-foreground font-medium">Or</span>
-              </div>
-            </div>
 
-            <div className="w-full lg:flex-1">
-              <Empty className="h-full min-h-[300px] surface-card rounded-none sm:rounded-2xl border-none shadow-none bg-transparent sm:bg-background sm:border-solid sm:border-border/50 sm:shadow-sm sm:border py-6 sm:py-10 px-2 sm:px-6 relative overflow-hidden flex flex-col items-center justify-center text-center">
-                <div className="absolute -right-8 -top-8 size-32 rounded-full bg-primary/5 pointer-events-none blur-2xl"></div>
-                <div className="absolute -left-8 -bottom-8 size-32 rounded-full bg-primary/5 pointer-events-none blur-2xl"></div>
-                
-                <EmptyHeader className="relative z-10 w-full flex flex-col items-center">
-                  <EmptyMedia variant="icon" className="size-14 sm:size-16 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 shadow-sm mb-4 mx-auto">
-                    <ShoppingBag className="size-6 sm:size-8" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-xl sm:text-2xl font-bold text-foreground">Have an account?</EmptyTitle>
-                  <EmptyDescription className="text-sm sm:text-base mt-3 max-w-md mx-auto leading-relaxed">
-                    Sign in to view all your past orders, save favorites, and enjoy a faster checkout experience.
-                  </EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent className="relative z-10 mt-8">
-                  <Button render={<Link href="/auth/signin" />} nativeButton={false} className="h-12 px-10 rounded-full font-semibold shadow-sm transition-all duration-300 hover:shadow-md text-base">
-                    Sign In to Your Account
-                  </Button>
-                </EmptyContent>
-              </Empty>
+              <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60">
+                <h3 className="text-xs font-semibold text-foreground">PDF Invoices</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  Download digital receipts whenever needed.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60">
+                <h3 className="text-xs font-semibold text-foreground">Faster Checkout</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  Save addresses for rapid ordering.
+                </p>
+              </div>
             </div>
           </div>
         </div>

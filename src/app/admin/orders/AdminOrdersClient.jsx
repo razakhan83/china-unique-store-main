@@ -572,6 +572,8 @@ export default function AdminOrdersClient({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEmptyingTrash, setIsEmptyingTrash] = useState(false);
   const [emptyTrashConfirm, setEmptyTrashConfirm] = useState(false);
+  const [hardDeletingId, setHardDeletingId] = useState(null);
+  const [confirmHardDeleteOrder, setConfirmHardDeleteOrder] = useState(null);
 
   // Auto-open create modal if navigated from admin home with ?createOrder=1
   useEffect(() => {
@@ -874,12 +876,19 @@ export default function AdminOrdersClient({
   };
 
   const handleHardDeleteOrder = async (id, orderId) => {
-    const res = await hardDeleteOrderAction(id);
-    if (res.success) {
-      toast.success(`Order ${orderId} permanently deleted.`);
-      setTrashOrders((prev) => prev.filter((o) => o._id !== id));
-    } else {
-      toast.error(res.error || 'Failed to delete order.');
+    if (hardDeletingId) return;
+    setHardDeletingId(id);
+    try {
+      const res = await hardDeleteOrderAction(id);
+      if (res.success) {
+        toast.success(`Order ${orderId} permanently deleted.`);
+        setTrashOrders((prev) => prev.filter((o) => o._id !== id));
+        setConfirmHardDeleteOrder(null);
+      } else {
+        toast.error(res.error || 'Failed to delete order.');
+      }
+    } finally {
+      setHardDeletingId(null);
     }
   };
 
@@ -2256,10 +2265,11 @@ export default function AdminOrdersClient({
                             variant="ghost"
                             size="sm"
                             className="admin-cta-button h-7 text-[11px] text-destructive hover:text-destructive"
-                            onClick={() => handleHardDeleteOrder(o._id, o.orderId)}
+                            disabled={hardDeletingId === o._id}
+                            onClick={() => setConfirmHardDeleteOrder(o)}
                           >
                             <Trash2 className="mr-1 size-3" />
-                            Delete
+                            {hardDeletingId === o._id ? 'Deleting...' : 'Delete'}
                           </Button>
                         </div>
                       </td>
@@ -2271,6 +2281,34 @@ export default function AdminOrdersClient({
           )}
         </div>
       )}
+
+      {/* Hard Delete Single Order Confirm Dialog */}
+      <Dialog open={!!confirmHardDeleteOrder} onOpenChange={(open) => { if (!open) setConfirmHardDeleteOrder(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive text-sm">
+              <AlertTriangle className="size-4" />
+              Permanently Delete Order?
+            </DialogTitle>
+            <DialogDescription className="text-[13px]">
+              This will permanently remove order <strong>{confirmHardDeleteOrder?.orderId}</strong> from the database. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-1.5 sm:gap-0">
+            <Button variant="ghost" size="sm" onClick={() => setConfirmHardDeleteOrder(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={hardDeletingId === confirmHardDeleteOrder?._id}
+              onClick={() => confirmHardDeleteOrder && handleHardDeleteOrder(confirmHardDeleteOrder._id, confirmHardDeleteOrder.orderId)}
+              className="min-w-[120px]"
+            >
+              {hardDeletingId === confirmHardDeleteOrder?._id ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+              {hardDeletingId === confirmHardDeleteOrder?._id ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Empty Trash Confirm Dialog */}
       <Dialog open={emptyTrashConfirm} onOpenChange={setEmptyTrashConfirm}>

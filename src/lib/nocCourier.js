@@ -4,7 +4,7 @@
  * Supports 2 NOC Accounts / Portals (portal_1, portal_2)
  */
 
-const BASE_URL = 'http://api.shipnoc.com/api';
+const BASE_URL = 'https://api.shipnoc.com/api';
 
 export const NOC_PORTALS = [
   { id: 'portal_1', name: 'Main Account (unique items)' },
@@ -104,20 +104,33 @@ export async function fetchNocCities(portalKey = 'portal_1') {
  */
 export async function trackNocParcel(parcelNo, portalKey = 'portal_1') {
   const { userName, password, signature } = getNocCredentials(portalKey);
-  const url = `${BASE_URL}/GetParcelTracking?UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}&ParcelNo=${encodeURIComponent(parcelNo)}`;
+  const query = `UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}&ParcelNo=${encodeURIComponent(parcelNo)}`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
+  const urls = [
+    `https://api.shipnoc.com/api/GetParcelTracking?${query}`,
+    `http://api.shipnoc.com/api/GetParcelTracking?${query}`,
+  ];
 
-  if (!response.ok) {
-    throw new Error(`NOC API HTTP error: ${response.status}`);
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(6000),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  return data;
+  throw lastError || new Error('NOC API tracking service unreachable');
 }
 
 /**
