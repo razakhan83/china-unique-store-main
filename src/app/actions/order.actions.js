@@ -618,6 +618,54 @@ export async function createDraftOrderAction(input = {}) {
       ...(manualCodAmount !== undefined && { manualCodAmount }),
     });
 
+    // Auto-generate linked Invoice if requested
+    if (validatedData.createLinkedInvoice !== false) {
+      try {
+        const Invoice = (await import('@/models/Invoice')).default;
+        const { getNextInvoiceNumberAction } = await import('@/app/actions/invoice.actions');
+        const invoiceNumber = await getNextInvoiceNumberAction();
+
+        const invoiceItems = normalizedItems.map((it) => ({
+          productId: String(it.productId || ''),
+          name: String(it.name || 'Item'),
+          image: String(it.image || ''),
+          quantity: Math.max(1, Number(it.quantity) || 1),
+          price: Math.max(0, Number(it.price) || 0),
+          amount: Math.max(1, Number(it.quantity) || 1) * Math.max(0, Number(it.price) || 0),
+        }));
+
+        const subtotal = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
+
+        const invoice = await Invoice.create({
+          invoiceNumber,
+          orderId: order.orderId,
+          orderRef: order._id,
+          customerName,
+          customerPhone,
+          customerEmail: customerEmail || '',
+          customerAddress,
+          customerCity,
+          landmark,
+          items: invoiceItems,
+          subtotal,
+          discountAmount: 0,
+          shippingAmount: 0,
+          totalAmount,
+          paidAmount: 0,
+          balanceDue: totalAmount,
+          status: 'DRAFT',
+          customerNotes: notes || '',
+        });
+
+        order.invoiceId = invoice._id;
+        order.invoiceNumber = invoice.invoiceNumber;
+        await order.save();
+        revalidatePath('/admin/invoices');
+      } catch (invoiceErr) {
+        console.error('Auto-invoice creation error in draft order:', invoiceErr);
+      }
+    }
+
     try {
       const ManualCustomer = (await import('@/models/ManualCustomer')).default;
       await ManualCustomer.findOneAndUpdate(

@@ -2006,6 +2006,7 @@ export default function AdminOrdersClient({
         weight: draftForm.weight,
         notes: draftForm.notes,
         manualCodAmount: draftForm.manualCodAmount,
+        createLinkedInvoice,
         items: draftItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
