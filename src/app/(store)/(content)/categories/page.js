@@ -32,7 +32,7 @@ async function getCategoriesData() {
 
     return categories.map((cat, idx) => ({
       _id: cat._id.toString(),
-      id: cat._id.toString(),
+      id: cat.slug || cat._id.toString(),
       name: cat.name,
       slug: cat.slug,
       image: cat.image || '',

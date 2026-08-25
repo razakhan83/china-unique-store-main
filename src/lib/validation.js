@@ -92,10 +92,10 @@ export const storeSettingsSchema = z.object({
 });
 
 export const reviewSchema = z.object({
-  productId: z.string().trim().min(1, 'Product ID is required').max(100),
+  productId: z.string().trim().min(1, 'Product ID is required').max(500),
   rating: z.number().int().min(1, 'Rating must be between 1 and 5').max(5, 'Rating must be between 1 and 5'),
-  comment: z.string().trim().max(1000, 'Comment is too long').optional().or(z.literal('')),
-  images: z.array(urlSchema).max(2, 'Maximum 2 images allowed').optional(),
+  comment: z.string().trim().max(2000, 'Comment is too long').optional().or(z.literal('')),
+  images: z.array(urlSchema).max(5, 'Maximum images allowed').optional(),
 });
 
 export const userProfileSchema = z.object({

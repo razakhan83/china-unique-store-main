@@ -195,13 +195,11 @@ export async function POST(req) {
             primaryTag: primaryTag || '',
         });
 
-        await product.populate({ path: 'Category', select: 'name slug bgColor' });
-
-        revalidateTag('products', { expire: 0 });
-        revalidateTag(`product-${uniqueSlug}`, { expire: 0 });
-        revalidateTag(`product-${product._id.toString()}`, { expire: 0 });
-        revalidateTag('admin-dashboard', { expire: 0 });
-        revalidateTag('home-sections', { expire: 0 });
+        revalidateTag('products');
+        revalidateTag(`product-${uniqueSlug}`);
+        revalidateTag(`product-${product._id.toString()}`);
+        revalidateTag('admin-dashboard');
+        revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
         revalidatePath(`/products/${uniqueSlug}`);

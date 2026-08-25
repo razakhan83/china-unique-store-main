@@ -215,6 +215,21 @@ function persistSuccessfulOrder(order) {
         whatsappUrl: order.whatsappUrl || '',
       }),
     );
+
+    // Save to guest_orders in localStorage for review verification
+    try {
+      const existingGuestOrders = JSON.parse(window.localStorage.getItem('guest_orders') || '[]');
+      const newGuestOrder = {
+        orderId: order.orderId,
+        secureToken: order.secureToken || '',
+        items: order.items || [],
+        timestamp: Date.now(),
+      };
+      const updated = [newGuestOrder, ...existingGuestOrders.filter(o => o.orderId !== order.orderId)].slice(0, 20);
+      window.localStorage.setItem('guest_orders', JSON.stringify(updated));
+    } catch (guestErr) {
+      console.error('Failed to store guest order in localStorage', guestErr);
+    }
   } catch (error) {
     console.error('Failed to persist checkout success state', error);
   }

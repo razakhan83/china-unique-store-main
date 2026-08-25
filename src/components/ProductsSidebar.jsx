@@ -59,12 +59,13 @@ export default function ProductsSidebar({ categories = [], activeCategory = 'all
           </button>
           
           {categories.map((category) => {
-            const isActive = activeCategory === category.id;
-            const isLoading = isPending && pendingCategoryId === category.id;
+            const catKey = category.slug || category.id || category._id;
+            const isActive = activeCategory === category.id || activeCategory === category._id || activeCategory === category.slug;
+            const isLoading = isPending && pendingCategoryId === catKey;
             return (
               <button
-                key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
+                key={category.id || category._id}
+                onClick={() => handleCategoryClick(catKey)}
                 className={cn(
                   "flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors text-left w-full cursor-pointer",
                   isActive 

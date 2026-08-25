@@ -71,20 +71,35 @@ export default function NocTrackingModal({
       <DialogContent className="max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header Section */}
         <div className="p-5 sm:p-6 pb-3 border-b border-border bg-background relative">
-          <DialogHeader className="p-0 text-left gap-1">
-            <div className="flex items-center gap-2">
-              <Truck className="size-5 text-primary shrink-0" />
-              <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-                Shipment Tracking
-                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5">
-                  Live
-                </Badge>
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Live courier updates and delivery checkpoints
-            </DialogDescription>
-          </DialogHeader>
+          <div className="flex items-start justify-between gap-3 pr-8 sm:pr-0">
+            <DialogHeader className="p-0 text-left gap-1">
+              <div className="flex items-center gap-2">
+                <Truck className="size-5 text-primary shrink-0" />
+                <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+                  Shipment Tracking
+                  <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5">
+                    Live
+                  </Badge>
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                Live courier updates and delivery checkpoints
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Top Header Refresh / Reload Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 rounded-lg border-border text-foreground hover:bg-muted text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer"
+              onClick={fetchTracking}
+              disabled={loading}
+              title="Refresh tracking status"
+            >
+              <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Reload</span>
+            </Button>
+          </div>
 
           {/* Prominent Courier & Tracking Card */}
           <div className="mt-4 p-3.5 rounded-xl border border-border bg-muted/35 flex flex-col gap-2.5 shadow-2xs">
@@ -122,16 +137,6 @@ export default function NocTrackingModal({
                     className="h-8 px-2.5 text-xs rounded-md font-medium border-border" 
                   />
                 )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-8 rounded-md border-border text-foreground hover:bg-background"
-                  onClick={fetchTracking}
-                  disabled={loading}
-                  title="Refresh tracking status"
-                >
-                  <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-                </Button>
               </div>
             </div>
           </div>

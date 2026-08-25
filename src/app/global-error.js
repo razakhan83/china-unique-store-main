@@ -6,6 +6,18 @@ import { AlertTriangle, RotateCcw } from 'lucide-react';
 export default function GlobalError({ error, unstable_retry }) {
   useEffect(() => {
     console.error(error);
+    if (
+      error?.name === 'ChunkLoadError' ||
+      error?.message?.includes('Failed to load chunk') ||
+      error?.message?.includes('Loading chunk')
+    ) {
+      const lastReload = sessionStorage.getItem('chunk_reload_timestamp');
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 8000) {
+        sessionStorage.setItem('chunk_reload_timestamp', String(now));
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
@@ -22,7 +34,7 @@ export default function GlobalError({ error, unstable_retry }) {
             </p>
           </div>
           <button
-            onClick={() => unstable_retry()}
+            onClick={() => (typeof unstable_retry === 'function' ? unstable_retry() : window.location.reload())}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-[0.98]"
           >
             <RotateCcw className="size-4" />

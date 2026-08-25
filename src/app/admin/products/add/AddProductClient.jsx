@@ -81,6 +81,36 @@ export default function AddProduct() {
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const seoGenerationLockRef = useRef(false);
 
+  const resetForm = useCallback(() => {
+    setName("");
+    setDescription("");
+    setShortDescription("");
+    setSeoTitle("");
+    setSeoDescription("");
+    setSeoKeywords("");
+    setSeoCanonicalUrl("");
+    setPrice("");
+    setCompareAtPrice("");
+    setDiscountPercentage("");
+    setPackOptions([{ label: "1 pcs", price: "" }]);
+    setStockQuantity("1");
+    setStockStatus("In Stock");
+    setCategories([]);
+    setVendorAssignments([]);
+    setImages([]);
+    setIsLive(true);
+    setIsNewArrival(true);
+    setIsBestSelling(false);
+    setIsFeatured(false);
+    setFeaturedPriority(0);
+    setTags([]);
+    setPrimaryTag("");
+  }, []);
+
+  useEffect(() => {
+    resetForm();
+  }, [resetForm]);
+
   useEffect(() => {
     const fetchDependencies = async () => {
       try {
@@ -220,7 +250,9 @@ export default function AddProduct() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!Name || !Price || Categories.length === 0 || images.length === 0) {
+    if (saving) return;
+
+    if (!Name.trim() || !Price || Categories.length === 0 || images.length === 0) {
       toast.error("Name, Price, Category and at least one Image are required.");
       return;
     }
@@ -248,7 +280,7 @@ export default function AddProduct() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          Name,
+          Name: Name.trim(),
           Description: sanitizedDescription,
           shortDescription,
           seoTitle,
@@ -277,7 +309,9 @@ export default function AddProduct() {
 
       if (res.ok && data.success) {
         toast.success("Product created!");
+        resetForm();
         router.push("/admin/products");
+        router.refresh();
       } else {
         toast.error(data.message || data.error || "Failed to create product");
       }

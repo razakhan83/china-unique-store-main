@@ -405,7 +405,13 @@ export async function submitOrderAction(input) {
     return {
       success: true,
       orderId: order.orderId,
+      secureToken: order.secureToken,
       totalAmount: pricing.total,
+      items: normalizedItems.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        image: item.image || '',
+      })),
       whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}` : '',
     };
   } catch (error) {

@@ -35,7 +35,7 @@ function getCategoryPillClassName(isActive) {
 function buildTitle(activeCategory, categories, searchTerm) {
   if (activeCategory === "new-arrivals") return "New Arrivals";
   if (activeCategory && activeCategory !== "all") {
-    return categories.find((category) => category.id === activeCategory)?.label || "Products";
+    return categories.find((category) => category.id === activeCategory || category.slug === activeCategory || category._id === activeCategory)?.label || "Products";
   }
   if (searchTerm) return "Search Results";
   return "All Products";

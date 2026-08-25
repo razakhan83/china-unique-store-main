@@ -183,7 +183,7 @@ export default function MobileBottomNav({
           "fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)] transition-all duration-300 ease-in-out",
           isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100 pointer-events-auto"
         )}
-        style={{ zIndex: 400 }}
+        style={{ zIndex: 40 }}
       >
         <div className="mx-auto w-full max-w-xl">
           <nav

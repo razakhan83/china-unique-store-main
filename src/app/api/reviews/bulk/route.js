@@ -29,9 +29,13 @@ export async function POST(req) {
 
     // Look up the DB user so we have a real ObjectId for userId
     const email = normalizeEmail(session.user.email);
-    const dbUser = await User.findOne({ email }).select('_id name').lean();
+    let dbUser = await User.findOne({ email }).select('_id name').lean();
     if (!dbUser) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      dbUser = await User.findOneAndUpdate(
+        { email },
+        { name: session.user.name || 'Customer', email },
+        { upsert: true, new: true }
+      ).select('_id name').lean();
     }
 
     // Check if order exists and belongs to user
@@ -41,7 +45,7 @@ export async function POST(req) {
     }
 
     // Verify ownership (by email)
-    if (order.customerEmail !== email) {
+    if (order.customerEmail && order.customerEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

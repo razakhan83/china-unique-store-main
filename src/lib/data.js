@@ -1331,22 +1331,42 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     query.isDiscounted = true;
   } else if (safeCategory && safeCategory !== 'all') {
     const categories = await getCategoriesRaw();
-    const matchedCategory = categories.find((entry) => entry.id === safeCategory);
-    if (!matchedCategory?._id) {
-      return {
-        items: [],
-        total: 0,
-        page: safePage,
-        limit: safeLimit,
-        hasMore: false,
-        totalPages: 0,
-        activeCategory: safeCategory,
-        searchTerm: safeSearch,
-        sort: safeSort,
-      };
-    }
+    const matchedCategory = categories.find(
+      (entry) =>
+        entry.id === safeCategory ||
+        entry._id === safeCategory ||
+        (entry.slug && entry.slug === safeCategory) ||
+        entry.label?.toLowerCase() === safeCategory.toLowerCase()
+    );
 
-    query.Category = matchedCategory._id;
+    if (matchedCategory?._id) {
+      query.Category = matchedCategory._id;
+    } else {
+      const CategoryModel = (await import('@/models/Category')).default;
+      const directCategory = await CategoryModel.findOne({
+        $or: [
+          ...(mongoose.Types.ObjectId.isValid(safeCategory) ? [{ _id: safeCategory }] : []),
+          { slug: safeCategory },
+          { name: new RegExp(`^${escapeRegex(safeCategory)}$`, 'i') },
+        ],
+      }).lean();
+
+      if (directCategory?._id) {
+        query.Category = directCategory._id.toString();
+      } else {
+        return {
+          items: [],
+          total: 0,
+          page: safePage,
+          limit: safeLimit,
+          hasMore: false,
+          totalPages: 0,
+          activeCategory: safeCategory,
+          searchTerm: safeSearch,
+          sort: safeSort,
+        };
+      }
+    }
   }
 
   if (safeSearch) {
@@ -1532,7 +1552,7 @@ export async function getProductBySlug(slug) {
   } catch {}
   const hyphenated = decodedSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
 
-  cacheTag('products', `product-${safeSlug}`, `product-${hyphenated}`);
+  cacheTag('products', `product-${safeSlug}`, `product-${decodedSlug}`, `product-${hyphenated}`);
 
   async function getSingleProduct(productSlug) {
     try {
@@ -1554,16 +1574,22 @@ export async function getProductBySlug(slug) {
       ])).filter(Boolean);
 
       // 1. Try finding by slug candidates (vanity URL)
-      let product = await Product.findOne({ slug: { $in: slugCandidates }, showOnStore: true })
+      let product = await Product.findOne({
+        slug: { $in: slugCandidates },
+        showOnStore: { $ne: false },
+      })
         .select(PRODUCT_DETAIL_PROJECTION)
         .populate(PRODUCT_CATEGORY_POPULATE)
         .lean();
       
-      // 2. If not found, and it looks like a Mongo ID, try finding by ID
+      // 2. If not found, try finding by Mongo _id
       if (!product) {
         for (const candidate of slugCandidates) {
           if (mongoose.Types.ObjectId.isValid(candidate)) {
-            product = await Product.findOne({ _id: candidate, showOnStore: true })
+            product = await Product.findOne({
+              _id: candidate,
+              showOnStore: { $ne: false },
+            })
               .select(PRODUCT_DETAIL_PROJECTION)
               .populate(PRODUCT_CATEGORY_POPULATE)
               .lean();
@@ -1572,11 +1598,23 @@ export async function getProductBySlug(slug) {
         }
       }
 
-      // 3. Fallback: match by product Name if raw name was in the URL
+      // 3. Fallback: case-insensitive slug regex search
+      if (!product) {
+        const escapedSlug = cleanSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        product = await Product.findOne({
+          slug: { $regex: new RegExp(`^${escapedSlug}$`, 'i') },
+          showOnStore: { $ne: false },
+        })
+          .select(PRODUCT_DETAIL_PROJECTION)
+          .populate(PRODUCT_CATEGORY_POPULATE)
+          .lean();
+      }
+
+      // 4. Fallback: match by product Name if raw name was in the URL
       if (!product && decoded.length > 2) {
         product = await Product.findOne({
           Name: { $regex: new RegExp(`^${decoded.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
-          showOnStore: true,
+          showOnStore: { $ne: false },
         })
           .select(PRODUCT_DETAIL_PROJECTION)
           .populate(PRODUCT_CATEGORY_POPULATE)

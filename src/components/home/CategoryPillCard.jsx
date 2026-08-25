@@ -38,13 +38,13 @@ const CATEGORY_ICONS = {
   automotive: Car,
 };
 
-export function getCategoryIcon(name) {
-  return CATEGORY_ICONS[(name || '').toLowerCase().trim()] || Tag;
+function renderCategoryFallbackIcon(name, color) {
+  const IconComponent = CATEGORY_ICONS[(name || '').toLowerCase().trim()] || Tag;
+  return <IconComponent className="size-1/2 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" style={{ color }} />;
 }
 
 export default function CategoryPillCard({ category, index = 0, href }) {
   const colors = getCategoryColorByIndex(index);
-  const Icon = getCategoryIcon(category.name || category.label);
 
   const img1 = category.image
     ? optimizeCloudinaryUrl(category.image, CLOUDINARY_IMAGE_PRESETS.categoryCircle)
@@ -60,7 +60,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
   const hasThreeImages = Boolean(img1 && img2 && img3);
   const hasTwoImages = !hasThreeImages && images.length === 2;
   const hasOneImage = images.length === 1;
-  const targetHref = href || `/products?category=${category.id || category._id}`;
+  const targetHref = href || `/products?category=${category.slug || category.id || category._id}`;
 
   return (
     <Link
@@ -119,7 +119,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
               />
             </div>
           ) : (
-            <Icon className="size-1/2 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" style={{ color: colors.accent }} />
+            renderCategoryFallbackIcon(category.name || category.label, colors.accent)
           )}
         </div>
       </div>

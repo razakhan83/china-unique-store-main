@@ -7,6 +7,18 @@ import { Button } from '@/components/ui/button';
 export default function Error({ error, unstable_retry }) {
   useEffect(() => {
     console.error(error);
+    if (
+      error?.name === 'ChunkLoadError' ||
+      error?.message?.includes('Failed to load chunk') ||
+      error?.message?.includes('Loading chunk')
+    ) {
+      const lastReload = sessionStorage.getItem('chunk_reload_timestamp');
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 8000) {
+        sessionStorage.setItem('chunk_reload_timestamp', String(now));
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
@@ -20,7 +32,7 @@ export default function Error({ error, unstable_retry }) {
           An unexpected error occurred. Please try again.
         </p>
       </div>
-      <Button onClick={() => unstable_retry()} variant="outline" className="gap-2">
+      <Button onClick={() => (typeof unstable_retry === 'function' ? unstable_retry() : window.location.reload())} variant="outline" className="gap-2">
         <RotateCcw className="size-4" />
         Try again
       </Button>

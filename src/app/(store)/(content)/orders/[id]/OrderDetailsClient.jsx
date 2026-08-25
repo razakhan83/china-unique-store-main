@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Package, Truck, ExternalLink } from 'lucide-react';
+import { Package, Truck, ExternalLink, MessageSquare, CheckCircle2, Star } from 'lucide-react';
 import CopyButton from '@/components/CopyButton';
 import InvoiceButton from '@/components/InvoiceButtonWrapper';
 import NocTrackingModal from '@/components/NocTrackingModal';
+import ReviewModal from '@/components/ReviewModal';
 import { Button } from '@/components/ui/button';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { Badge } from '@/components/ui/badge';
@@ -28,24 +29,73 @@ import {
 
 export default function OrderDetailsClient({ order, invoiceBranding }) {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState(order);
 
-  if (!order) return null;
-  const rawStatus = normalizeOrderStatus(order.status);
+  useEffect(() => {
+    if (order?.orderId && order?.secureToken) {
+      try {
+        const guestOrders = JSON.parse(localStorage.getItem('guest_orders') || '[]');
+        const exists = guestOrders.some(o => o.orderId === order.orderId);
+        if (!exists) {
+          const updated = [{
+            orderId: order.orderId,
+            secureToken: order.secureToken,
+            items: (order.items || []).map(i => ({ productId: i.productId, name: i.name })),
+            timestamp: Date.now()
+          }, ...guestOrders].slice(0, 20);
+          localStorage.setItem('guest_orders', JSON.stringify(updated));
+        }
+      } catch (e) {
+        // ignore localStorage error
+      }
+    }
+  }, [order?.orderId, order?.secureToken, order?.items]);
+
+  if (!currentOrder) return null;
+  const rawStatus = normalizeOrderStatus(currentOrder.status);
+  const isDelivered = rawStatus === 'Delivered';
+  const isAllReviewed = currentOrder.items?.length > 0 && currentOrder.items.every(i => i.isReviewed);
+
+  // Auto-open review popup on visit if delivered and not yet reviewed
+  useEffect(() => {
+    if (isDelivered && !isAllReviewed && currentOrder?.orderId) {
+      const isDismissed = sessionStorage.getItem(`review_prompt_dismissed_order_${currentOrder.orderId}`);
+      if (!isDismissed) {
+        setShowReviewModal(true);
+      }
+    }
+  }, [isDelivered, isAllReviewed, currentOrder?.orderId]);
+
+  const handleReviewAction = (action) => {
+    if (action === 'later' || action === 'dismiss') {
+      try {
+        sessionStorage.setItem(`review_prompt_dismissed_order_${currentOrder?.orderId}`, 'true');
+      } catch (e) {}
+    }
+  };
   
   // Customer-facing status mapping: Packed -> In Process
   const displayStatus = ['Order Confirmed', 'In Process', 'Packed', 'Confirmed', 'Pending', 'Sourcing'].includes(rawStatus)
     ? 'In Process'
     : rawStatus;
 
-  const customerName = order.shippingAddress?.fullName || order.customerName || 'Customer';
-  const customerAddress = order.shippingAddress 
-    ? `${order.shippingAddress.address1 || ''}${order.shippingAddress.city ? `, ${order.shippingAddress.city}` : ''}`
-    : order.customerAddress || 'No Address Provided';
+  const customerName = currentOrder.shippingAddress?.fullName || currentOrder.customerName || 'Customer';
+  const customerAddress = currentOrder.shippingAddress 
+    ? `${currentOrder.shippingAddress.address1 || ''}${currentOrder.shippingAddress.city ? `, ${currentOrder.shippingAddress.city}` : ''}`
+    : currentOrder.customerAddress || 'No Address Provided';
   
-  const customerPhone = order.shippingAddress?.phone || order.customerPhone || '';
+  const customerPhone = currentOrder.shippingAddress?.phone || currentOrder.customerPhone || '';
   
-  const itemsSubtotal = order.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
-  const deliveryCharges = order.shippingAmount != null ? order.shippingAmount : Math.max(0, order.totalAmount - itemsSubtotal);
+  const itemsSubtotal = currentOrder.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 1)), 0);
+  const deliveryCharges = currentOrder.shippingAmount != null ? currentOrder.shippingAmount : Math.max(0, currentOrder.totalAmount - itemsSubtotal);
+
+  const handleReviewComplete = () => {
+    setCurrentOrder(prev => ({
+      ...prev,
+      items: prev.items.map(item => ({ ...item, isReviewed: true }))
+    }));
+  };
 
   return (
     <>
@@ -53,23 +103,60 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
         {/* Left Column */}
         <div className="flex flex-col gap-4 md:gap-6 md:col-span-2 min-w-0">
           
+          {/* Delivered / Review Banner if delivered */}
+          {isDelivered && (
+            <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/30 p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="size-11 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center shrink-0">
+                  <Star className="size-5 text-amber-600 fill-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                    {isAllReviewed ? 'Thank you for your review!' : 'How was your experience?'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                    {isAllReviewed 
+                      ? 'Your feedback helps other buyers make informed choices.' 
+                      : 'Your order is delivered! Share your feedback and rate the products.'}
+                  </p>
+                </div>
+              </div>
+              <div>
+                {isAllReviewed ? (
+                  <Button disabled variant="outline" className="bg-white/80 border-gray-200 text-gray-400 rounded-xl h-10 px-5 font-semibold text-xs cursor-not-allowed">
+                    <CheckCircle2 className="size-4 mr-1.5 text-emerald-600" />
+                    Reviewed
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => setShowReviewModal(true)}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 px-5 font-semibold text-xs shadow-sm transition-all active:scale-[0.98] w-full sm:w-auto"
+                  >
+                    <MessageSquare className="size-4 mr-1.5" />
+                    Write a Review
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Order Header Card */}
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 space-y-0">
               <div className="flex flex-col space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <CardTitle className="text-lg md:text-xl break-all">Order #{order.orderId}</CardTitle>
-                  <CopyButton text={order.orderId} className="size-6 text-muted-foreground shrink-0" />
+                  <CardTitle className="text-lg md:text-xl break-all">Order #{currentOrder.orderId}</CardTitle>
+                  <CopyButton text={currentOrder.orderId} className="size-6 text-muted-foreground shrink-0" />
                 </div>
                 <CardDescription className="text-xs sm:text-sm">
-                  Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  Placed on {new Date(currentOrder.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </CardDescription>
               </div>
               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
                 <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 border-blue-200">
                   {displayStatus}
                 </Badge>
-                <InvoiceButton order={order} branding={invoiceBranding} variant="outline" className="h-8 sm:h-9 text-xs sm:text-sm" />
+                <InvoiceButton order={currentOrder} branding={invoiceBranding} variant="outline" className="h-8 sm:h-9 text-xs sm:text-sm" />
               </div>
             </CardHeader>
           </Card>
@@ -79,7 +166,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
             <CardHeader>
               <CardTitle>Items</CardTitle>
               <CardDescription>
-                {order.items.length} item{order.items.length === 1 ? '' : 's'} in this order.
+                {currentOrder.items.length} item{currentOrder.items.length === 1 ? '' : 's'} in this order.
               </CardDescription>
             </CardHeader>
             <CardContent className="px-0 sm:px-6">
@@ -97,7 +184,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items.map((item, idx) => (
+                    {currentOrder.items.map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>
                           <div className="relative size-12 rounded-md bg-muted overflow-hidden">
@@ -124,7 +211,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
 
               {/* --- MOBILE VIEW (Flex Layout) --- */}
               <div className="flex flex-col divide-y sm:hidden">
-                {order.items.map((item, idx) => (
+                {currentOrder.items.map((item, idx) => (
                   <div key={idx} className="flex flex-col gap-3 py-4 px-4 min-w-0">
                     <div className="flex gap-4 min-w-0">
                       <div className="relative size-16 rounded-md border bg-muted overflow-hidden shrink-0">
@@ -167,15 +254,15 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {order.trackingNumber ? (
+              {currentOrder.trackingNumber ? (
                 <>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Courier:</span>
-                    <span className="font-semibold text-foreground">{order.courierName || 'NOC Express'}</span>
+                    <span className="font-semibold text-foreground">{currentOrder.courierName || 'NOC Express'}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Tracking #:</span>
-                    <span className="font-mono font-bold text-sky-700">{order.trackingNumber}</span>
+                    <span className="font-mono font-bold text-sky-700">{currentOrder.trackingNumber}</span>
                   </div>
                   <Button
                     onClick={() => setShowTrackingModal(true)}
@@ -219,10 +306,10 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
                 <span>{deliveryCharges === 0 ? 'Free' : `Rs. ${deliveryCharges.toLocaleString('en-PK')}`}</span>
               </div>
 
-              {order.discountAmount > 0 && (
+              {currentOrder.discountAmount > 0 && (
                 <div className="flex items-center justify-between text-sm text-green-600">
                   <span>Discount</span>
-                  <span>-Rs. {order.discountAmount.toLocaleString('en-PK')}</span>
+                  <span>-Rs. {currentOrder.discountAmount.toLocaleString('en-PK')}</span>
                 </div>
               )}
 
@@ -230,7 +317,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
 
               <div className="flex items-center justify-between font-medium">
                 <span>Total</span>
-                <span className="text-lg">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
+                <span className="text-lg">Rs. {currentOrder.totalAmount.toLocaleString('en-PK')}</span>
               </div>
             </CardContent>
           </Card>
@@ -253,7 +340,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                {order.paymentMethod || 'Cash on Delivery'}
+                {currentOrder.paymentMethod || 'Cash on Delivery'}
               </div>
             </CardContent>
           </Card>
@@ -264,11 +351,21 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
       <NocTrackingModal
         open={showTrackingModal}
         onOpenChange={setShowTrackingModal}
-        trackingNumber={order.trackingNumber}
-        orderId={order.orderId}
-        courierName={order.courierName || 'NOC Express'}
-        nocLabelUrl={order.nocLabelUrl}
+        trackingNumber={currentOrder.trackingNumber}
+        orderId={currentOrder.orderId}
+        courierName={currentOrder.courierName || 'NOC Express'}
+        nocLabelUrl={currentOrder.nocLabelUrl}
       />
+
+      {isDelivered && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onOpenChange={setShowReviewModal}
+          order={currentOrder}
+          onComplete={handleReviewComplete}
+          onAction={handleReviewAction}
+        />
+      )}
     </>
   );
 }

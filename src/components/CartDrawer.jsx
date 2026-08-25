@@ -259,18 +259,18 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
               </Card>
               <div className="flex items-center gap-2.5 mt-1">
                 <Button
-                  variant="outline"
-                  className="flex-1 h-11 px-2.5 rounded-xl border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[12.5px] sm:text-sm font-semibold transition-all active:scale-[0.98]"
+                  type="button"
+                  className="flex-1 h-11 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-900 text-[12.5px] sm:text-sm font-bold shadow-none transition-all active:scale-[0.98] cursor-pointer"
                   onClick={handleWhatsAppDirectCheckout}
                 >
-                  <WhatsAppIcon className="mr-1.5 size-4.5 shrink-0 text-[#25D366]" />
+                  <WhatsAppIcon className="mr-1.5 size-4.5 shrink-0 text-emerald-600" />
                   <span className="truncate">Order on WhatsApp</span>
                 </Button>
                 
                 <Link 
                   href="/checkout" 
                   onClick={() => setIsCartOpen(false)} 
-                  className="flex-1 inline-flex h-11 px-2.5 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] sm:text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
+                  className="flex-1 inline-flex h-11 px-3 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] sm:text-sm font-bold shadow-none transition-all active:scale-[0.98]"
                 >
                   <span className="truncate">Checkout</span> <ArrowRight className="ml-1.5 size-4 shrink-0" />
                 </Link>

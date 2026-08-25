@@ -23,6 +23,7 @@ import {
   Package,
   MapPin,
   User,
+  ArrowRight,
 } from 'lucide-react';
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
@@ -568,7 +569,7 @@ function NavbarContent({
                   <Home className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname === '/' ? 2.5 : 2.2} /> Home
                 </Link>
 
-                {/* Categories Dropdown */}
+                {/* Categories Dropdown & Direct Link */}
                 <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
                   <div
                     onPointerEnter={() => {
@@ -577,9 +578,13 @@ function NavbarContent({
                     }}
                     onPointerLeave={scheduleCategoriesClose}
                   >
-                    <DropdownMenuTrigger 
+                    <DropdownMenuTrigger
+                      onClick={() => {
+                        setIsCategoriesOpen(false);
+                        router.push('/categories');
+                      }}
                       className={cn(
-                        "group/button flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out outline-none select-none active:scale-95 active:translate-y-0 hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
+                        "group/button flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out outline-none select-none active:scale-95 active:translate-y-0 hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] cursor-pointer",
                         pathname?.startsWith('/categories') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
                       )}
                     >
@@ -588,7 +593,7 @@ function NavbarContent({
                     </DropdownMenuTrigger>
                   </div>
                   <DropdownMenuContent
-                    className="w-60 p-1 rounded-2xl"
+                    className="w-60 p-1 rounded-2xl bg-white border border-gray-200 shadow-xl"
                     align="start"
                     sideOffset={8}
                     onPointerEnter={cancelCategoriesClose}
@@ -596,12 +601,15 @@ function NavbarContent({
                   >
                     {categories.map((category) => (
                       <DropdownMenuItem
-                        key={category.id}
-                        className="rounded-xl cursor-pointer hover:bg-muted"
-                        onClick={() => handleCategoryClick(category.id)}
+                        key={category.id || category._id}
+                        className="rounded-xl cursor-pointer hover:bg-muted text-gray-900"
+                        onClick={() => {
+                          setIsCategoriesOpen(false);
+                          router.push(`/products?category=${category.slug || category.id || category._id}`);
+                        }}
                       >
                         <Tag className="text-muted-foreground size-4" />
-                        <span>{category.label}</span>
+                        <span>{category.label || category.name}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>

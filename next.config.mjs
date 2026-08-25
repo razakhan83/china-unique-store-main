@@ -16,15 +16,7 @@ const nextConfig = {
   reactCompiler: true,
 
   experimental: {
-    turbopackFileSystemCacheForDev: true,
-    turbopackFileSystemCacheForBuild: true,
-    cachedNavigations: true,
     appNewScrollHandler: true,
-    staleTimes: {
-      dynamic: 30,
-      static: 300,
-    },
-    // FIX: optimizePackageImports belongs inside experimental, NOT top-level
     optimizePackageImports: [
       'lucide-react',
       'recharts',

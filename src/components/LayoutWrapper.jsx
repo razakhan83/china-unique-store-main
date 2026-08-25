@@ -14,6 +14,7 @@ import StoreLogo from '@/components/StoreLogo';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
+import WebsiteFeedbackButton from '@/components/WebsiteFeedbackButton';
 
 const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
   loading: () => <div className="h-48 w-full bg-background" aria-hidden="true" />,
@@ -65,7 +66,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           announcementBarMessages={settings.announcementBarMessages}
         />
 
-        <main>{children}</main>
+        <main className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
 
         <HomeOnlyLayoutElements>
           <div id="store-animated-stats">
@@ -207,6 +208,15 @@ export default function LayoutWrapper({ children, categories, settings }) {
                         </li>
                       </>
                     )}
+                    <li>
+                      <Link href="/contact-us" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                        <ChevronRight className="size-4" />
+                        Contact Support
+                      </Link>
+                    </li>
+                    <li>
+                      <WebsiteFeedbackButton />
+                    </li>
                   </ul>
                 </div>
                 <div>
@@ -235,6 +245,14 @@ export default function LayoutWrapper({ children, categories, settings }) {
                         <span>Nationwide shipping and order support via WhatsApp</span>
                       </div>
                     </li>
+                    <li className="pt-1">
+                      <Link 
+                        href="/contact-us"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                      >
+                        View all contact channels →
+                      </Link>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -250,6 +268,10 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     <span className="size-1 rounded-full bg-border" />
                     <Link href="/privacy-policy" className="transition-colors hover:text-foreground">
                       Privacy Policy
+                    </Link>
+                    <span className="size-1 rounded-full bg-border" />
+                    <Link href="/contact-us" className="transition-colors hover:text-foreground">
+                      Contact Us
                     </Link>
                   </div>
                 </div>

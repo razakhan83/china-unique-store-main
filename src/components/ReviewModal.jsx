@@ -25,9 +25,19 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
   const [errors, setErrors] = useState({});
   const [actionTaken, setActionTaken] = useState(null);
 
-  // Reset actionTaken when modal opens
+  // Reset actionTaken and lock background scroll when modal opens
   useEffect(() => {
-    if (isOpen) setActionTaken(null);
+    if (isOpen) {
+      setActionTaken(null);
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+      };
+    }
   }, [isOpen]);
 
   const handleOpenChange = (open) => {
@@ -93,7 +103,7 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
         toast.success('Thank you for your feedback!');
         setActionTaken('submit');
         onAction?.('submit');
-        onComplete();
+        onComplete?.();
         onOpenChange(false);
       } else {
         if (data.errors) {
@@ -120,28 +130,28 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto sm:rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Package className="size-6 text-primary" />
+      <DialogContent className="max-w-xl max-h-[90dvh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden sm:rounded-2xl gap-0">
+        <DialogHeader className="p-4 sm:p-6 border-b border-border/80 shrink-0 bg-background">
+          <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Package className="size-5 sm:size-6 text-primary" />
             Rate Your Experience
           </DialogTitle>
-          <DialogDescription>
-            Your parcel has been delivered! Please share your feedback on the products from Order #{order.orderId}.
+          <DialogDescription className="mt-1">
+            Order #{order.orderId} • {itemsToReview.length} {itemsToReview.length === 1 ? 'item' : 'items'} to review
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-8 py-4">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y divide-y divide-border/60 space-y-6">
           {itemsToReview.map((item) => (
-            <div key={item.productId} className="space-y-4 pb-6 border-b border-border last:border-0 last:pb-0">
+            <div key={item.productId} className="space-y-4 pt-6 first:pt-0">
               <div className="flex gap-4">
-                <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+                <div className="relative size-14 sm:size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
                   <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" unoptimized />
                 </div>
                 <div className="flex-1 space-y-1">
                   <h4 className="font-semibold text-foreground text-sm line-clamp-1">{item.name}</h4>
                   
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 pt-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -149,11 +159,11 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
                         onClick={() => handleRatingChange(item.productId, star)}
                         disabled={!!errors[item.productId]}
                         className={cn(
-                          "transition-transform hover:scale-110 disabled:opacity-50 disabled:hover:scale-100",
-                          item.rating >= star ? "text-accent" : "text-muted/40"
+                          "transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100",
+                          item.rating >= star ? "text-amber-500" : "text-muted-foreground/30"
                         )}
                       >
-                        <Star className={cn("size-5", item.rating >= star && "fill-current")} />
+                        <Star className={cn("size-6 sm:size-7", item.rating >= star && "fill-current")} />
                       </button>
                     ))}
                   </div>
@@ -169,12 +179,12 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
               ) : (
                 <FieldGroup>
                   <Field>
-                    <FieldLabel htmlFor={`review-${item.productId}`}>Comments</FieldLabel>
+                    <FieldLabel htmlFor={`review-${item.productId}`} className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Comments</FieldLabel>
                     <FieldContent>
                       <Textarea
                         id={`review-${item.productId}`}
                         placeholder="Share your thoughts about this product..."
-                        className="min-h-[80px] resize-none text-sm"
+                        className="min-h-[80px] resize-none text-sm rounded-xl"
                         value={item.comment}
                         onChange={(e) => handleCommentChange(item.productId, e.target.value)}
                       />
@@ -186,19 +196,20 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
           ))}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="p-4 sm:p-6 border-t border-border/80 bg-muted/30 shrink-0 gap-3 m-0 rounded-none sm:rounded-b-2xl pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-6">
           <Button 
-            variant="ghost" 
+            variant="outline" 
             onClick={() => {
               setActionTaken('later');
               onAction?.('later');
               onOpenChange(false);
             }} 
             disabled={submitting}
+            className="flex-1 rounded-xl h-11"
           >
             Maybe Later
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || itemsToReview.length === 0}>
+          <Button onClick={handleSubmit} disabled={submitting || itemsToReview.length === 0} className="flex-1 rounded-xl h-11">
             {submitting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
