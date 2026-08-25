@@ -6,7 +6,7 @@ import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutG
 import dynamic from 'next/dynamic';
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
-import { getAdminDashboardData } from '@/lib/data';
+import { getAdminDashboardData, getAdminChartData } from '@/lib/data';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 
@@ -57,7 +57,14 @@ const emptySummary = {
 
 async function loadDashboardDataSafely() {
   try {
-    return await getAdminDashboardData();
+    const [dashboardData, chartData] = await Promise.all([
+      getAdminDashboardData(),
+      getAdminChartData('monthly'),
+    ]);
+    return {
+      ...dashboardData,
+      chartData: Array.isArray(chartData) ? chartData : [],
+    };
   } catch (error) {
     console.error('[admin/dashboard] failed to load dashboard summary', error);
     return {
@@ -67,6 +74,7 @@ async function loadDashboardDataSafely() {
       topProducts: [],
       topCustomers: [],
       recentReviews: [],
+      chartData: [],
       hasError: true,
     };
   }
@@ -90,6 +98,7 @@ async function DashboardContent({ session }) {
     topProducts = [],
     topCustomers = [],
     recentReviews = [],
+    chartData = [],
     hasError = false,
   } = await loadDashboardDataSafely();
 
@@ -259,7 +268,7 @@ async function DashboardContent({ session }) {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr] mb-4">
         <div className="flex flex-col gap-4">
           <div className="admin-surface flex flex-col rounded-[0.5rem] p-4 h-full">
-            <DashboardChart initialData={[]} initialPeriod="monthly" />
+            <DashboardChart initialData={chartData} initialPeriod="monthly" />
           </div>
         </div>
 

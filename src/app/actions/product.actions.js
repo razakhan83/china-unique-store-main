@@ -76,11 +76,25 @@ export async function deleteProductAction(productId) {
   await assertAdmin();
   await mongooseConnect();
   const Product = (await import('@/models/Product')).default;
+  const Order = (await import('@/models/Order')).default;
 
-  const product = await Product.findByIdAndDelete(productId);
+  const product = await Product.findById(productId).lean();
   if (!product) {
     throw new Error('Product not found');
   }
+
+  const activeOrderCount = await Order.countDocuments({
+    'items.productId': { $in: [productId.toString(), product.slug].filter(Boolean) },
+    status: { $in: ['Order Confirmed', 'In Process', 'Packed', 'Shipped', 'Out For Delivery'] },
+    isDeleted: false,
+    isDraft: false,
+  });
+
+  if (activeOrderCount > 0) {
+    throw new Error(`Cannot delete product "${product.Name}" because it is in ${activeOrderCount} active unfulfilled order(s). Please fulfill or cancel those orders first, or turn off store visibility.`);
+  }
+
+  await Product.findByIdAndDelete(productId);
 
   updateTag('products');
   if (product.slug) {

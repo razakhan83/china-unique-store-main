@@ -247,6 +247,10 @@ export default function ProductPage({ params }) {
     <div className="product-detail-shell min-h-screen bg-gray-50">
       <ProductPageScrollReset />
 
+      <Suspense fallback={null}>
+        <ProductJsonLdScript paramsPromise={params} />
+      </Suspense>
+
       <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
         <div className="flex items-center justify-between md:hidden">
           <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
@@ -275,6 +279,22 @@ export default function ProductPage({ params }) {
         <RelatedProductsSection paramsPromise={params} />
       </Suspense>
     </div>
+  );
+}
+
+async function ProductJsonLdScript({ paramsPromise }) {
+  const { id: slug } = await paramsPromise;
+  const pageData = await getCachedProductPageData(slug);
+  if (!pageData?.product) return null;
+
+  const reviewSummary = await getProductReviewSummarySafe(pageData.product._id);
+  const jsonLd = getProductJsonLd({ product: pageData.product, reviewSummary });
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
   );
 }
 

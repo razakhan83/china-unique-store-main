@@ -281,6 +281,9 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
     }
   }, [mounted, deliveredOrders, feedbackOrder, trackingOrder, reviewedOrders]);
   
+  const currentYear = new Date().getFullYear();
+  const prevYear = currentYear - 1;
+
   const filteredDeliveredOrders = deliveredOrders.filter(order => {
     if (timeFilter === 'all') return true;
     const orderDate = new Date(order.createdAt || order.updatedAt || Date.now());
@@ -291,14 +294,14 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
     if (timeFilter === 'past_3_months') {
       return (now.getTime() - orderDate.getTime()) <= 90 * 24 * 60 * 60 * 1000;
     }
-    if (timeFilter === '2026') {
-      return orderDate.getFullYear() === 2026;
+    if (timeFilter === String(currentYear)) {
+      return orderDate.getFullYear() === currentYear;
     }
-    if (timeFilter === '2025') {
-      return orderDate.getFullYear() === 2025;
+    if (timeFilter === String(prevYear)) {
+      return orderDate.getFullYear() === prevYear;
     }
     if (timeFilter === 'older') {
-      return orderDate.getFullYear() < 2025;
+      return orderDate.getFullYear() < prevYear;
     }
     return true;
   });
@@ -343,8 +346,9 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                 <SelectContent>
                   <SelectItem value="past_30_days" className="font-medium">Last 30 Days</SelectItem>
                   <SelectItem value="past_3_months" className="font-medium">Past 3 Months</SelectItem>
-                  <SelectItem value="2026" className="font-medium">2026</SelectItem>
-                  <SelectItem value="2025" className="font-medium">2025</SelectItem>
+                  <SelectItem value={String(currentYear)} className="font-medium">{currentYear}</SelectItem>
+                  <SelectItem value={String(prevYear)} className="font-medium">{prevYear}</SelectItem>
+                  <SelectItem value="older" className="font-medium">Older</SelectItem>
                   <SelectItem value="all" className="font-medium">All Time</SelectItem>
                 </SelectContent>
               </Select>

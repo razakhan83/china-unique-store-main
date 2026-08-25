@@ -751,6 +751,31 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     setHasTrackedCheckoutView(true);
   }, [cart, hasTrackedCheckoutView, total]);
 
+  // Capture abandoned cart snapshot for admin follow-up
+  useEffect(() => {
+    const phone = formData.phone?.trim();
+    if (!phone || phone.length < 8 || !cart || cart.length === 0) return;
+
+    const timer = setTimeout(() => {
+      fetch('/api/cart/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          name: formData.fullName,
+          email: formData.email,
+          city: formData.city,
+          address: formData.address,
+          landmark: formData.landmark,
+          items: cart,
+          totalAmount: pricing.total,
+        }),
+      }).catch(() => {});
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [formData.phone, formData.fullName, formData.email, formData.city, formData.address, formData.landmark, cart, pricing.total]);
+
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));

@@ -47,20 +47,23 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
     const emailBranding = await getEmailBranding();
     const adminRecipients = getConfiguredAdminEmails();
-    const adminEmailResult = await resend.emails.send({
-      from: 'China Unique <onboarding@resend.dev>',
-      to: adminRecipients.length > 0 ? adminRecipients : ['123raza83@gmail.com'],
-      subject: `New Order Received - ${customerName}`,
-      html: generateOrderEmailHtml(order, emailBranding),
-      headers: {
-        'X-Click-Tracking': 'off',
-      },
-    });
-    console.log(`Admin email notification triggered for ${order.orderId}:`, adminEmailResult);
+    const emailFrom = process.env.EMAIL_FROM || 'China Unique <onboarding@resend.dev>';
+    if (adminRecipients.length > 0) {
+      const adminEmailResult = await resend.emails.send({
+        from: emailFrom,
+        to: adminRecipients,
+        subject: `New Order Received - ${customerName}`,
+        html: generateOrderEmailHtml(order, emailBranding),
+        headers: {
+          'X-Click-Tracking': 'off',
+        },
+      });
+      console.log(`Admin email notification triggered for ${order.orderId}:`, adminEmailResult);
+    }
 
     if (userEmail) {
       const customerEmailResult = await resend.emails.send({
-        from: 'China Unique <onboarding@resend.dev>',
+        from: emailFrom,
         to: userEmail,
         subject: `Thank You for Your Order! - ${order.orderId}`,
         html: generateCustomerOrderConfirmationHtml(order, emailBranding),
@@ -233,6 +236,7 @@ export async function submitOrderAction(input) {
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         discountAmount: pricing.discountAmount || 0,
         shippingAmount: pricing.shipping || 0,
+        inventoryAdjusted: true,
         statusHistory: [{ status: DEFAULT_ORDER_STATUS, timestamp: new Date() }],
       });
     } catch (createErr) {
@@ -371,10 +375,26 @@ export async function submitOrderAction(input) {
               metadata: {
                 id: order.orderId,
                 userName: customerName,
-              }
+              },
             });
           } catch (notifyError) {
             console.error('Failed to create order notification:', notifyError);
+          }
+        })()
+      );
+
+      backgroundTasks.push(
+        (async () => {
+          try {
+            const AbandonedCart = (await import('@/models/AbandonedCart')).default;
+            if (customerPhone) {
+              await AbandonedCart.updateMany(
+                { phone: customerPhone, status: 'ABANDONED' },
+                { $set: { status: 'RECOVERED', recoveredOrderId: order.orderId } }
+              );
+            }
+          } catch (abandonErr) {
+            console.error('Failed to mark abandoned cart recovered:', abandonErr);
           }
         })()
       );
@@ -476,9 +496,10 @@ export async function syncCartPricingAction(items) {
 }
 
 export async function linkOrdersAction(phone) {
-  // NOTE: This function references `session` without declaring it — this is a
-  // pre-existing bug in the original actions.js and is preserved here as-is.
-  // Fix tracked separately.
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return { success: false, message: 'You must be signed in to link orders to your account.' };
+  }
 
   const validation = linkOrdersSchema.safeParse({ phone });
   if (!validation.success) {
@@ -783,8 +804,10 @@ export async function updateOrderAction(id, updates) {
       console.error('Failed to upsert manual customer on update:', err);
     }
 
-    if (wasDraft && order.isDraft === false) {
+    if (wasDraft && order.isDraft === false && !order.inventoryAdjusted) {
       await applyInventoryAdjustments(order.items);
+      order.inventoryAdjusted = true;
+      await order.save();
     }
 
     // Auto-sync: When order moves to Shipped/Delivered, automatically move linked DRAFT invoice to SENT
@@ -922,14 +945,18 @@ export async function bulkUpdateOrderStatusAction({
 
       const previousStatus = currentStatus;
       order.status = normalizedNextStatus;
-      if (wasDraft) {
-        order.isDraft = false;
+      if (!Array.isArray(order.statusHistory)) {
+        order.statusHistory = [];
+      }
+      order.statusHistory.push({
+        status: normalizedNextStatus,
+        timestamp: new Date(),
+      });
+      if (wasDraft && !order.inventoryAdjusted) {
+        await applyInventoryAdjustments(order.items);
+        order.inventoryAdjusted = true;
       }
       await order.save();
-
-      if (wasDraft) {
-        await applyInventoryAdjustments(order.items);
-      }
 
       updatedOrders.push(order._id.toString());
       logs.push({

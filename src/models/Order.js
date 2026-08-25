@@ -92,6 +92,10 @@ const OrderSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        inventoryAdjusted: {
+            type: Boolean,
+            default: false,
+        },
         sourceTag: {
             type: String,
             default: '',

@@ -72,6 +72,22 @@ const nextConfig = {
       { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      {
+        key: 'Content-Security-Policy',
+        value: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://analytics.tiktok.com https://www.googletagmanager.com https://va.vercel-scripts.com",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "img-src 'self' blob: data: https://res.cloudinary.com https://lh3.googleusercontent.com https://www.facebook.com https://*.facebook.com https://*.tiktok.com",
+          "font-src 'self' https://fonts.gstatic.com data:",
+          "connect-src 'self' https://res.cloudinary.com https://*.facebook.com https://*.tiktok.com https://analytics.tiktok.com https://www.google-analytics.com https://api.resend.com https://*.vercel-insights.com",
+          "frame-src 'self' https://www.facebook.com https://www.google.com https://maps.google.com",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+          "frame-ancestors 'self'",
+        ].join('; '),
+      },
     ];
 
     return [

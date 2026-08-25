@@ -31,6 +31,7 @@ import {
   Shield,
   Smartphone,
   ShoppingCart,
+  ShoppingBag,
   Sparkles,
   Store,
   Tag,
@@ -79,6 +80,7 @@ const productNavItems = [
 // 3. Orders & Sales Management
 const ordersNavItems = [
   { href: '/admin/orders', label: 'View All Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
+  { href: '/admin/abandoned-carts', label: 'Abandoned Carts', icon: ShoppingBag, match: (pathname) => pathname.startsWith('/admin/abandoned-carts') },
   { href: '/admin/invoices', label: 'Invoices', icon: FileText, match: (pathname) => pathname.startsWith('/admin/invoices') },
   { href: '/admin/payments', label: 'Payments Received', icon: CreditCard, match: (pathname) => pathname.startsWith('/admin/payments') },
 ];
@@ -171,6 +173,7 @@ function getOpenSections(pathname) {
 }
 
 function getPageMeta(pathname) {
+  if (pathname.startsWith('/admin/abandoned-carts')) return { title: 'Abandoned Carts' };
   if (pathname.startsWith('/admin/orders')) return { title: 'Orders' };
   if (pathname.startsWith('/admin/products')) return { title: 'Products' };
   if (pathname.startsWith('/admin/vendors')) return { title: 'Vendors' };

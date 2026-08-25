@@ -163,6 +163,6 @@ export const authOptions = {
   pages: {
     signIn: "/auth/signin",
   },
-  secret: process.env.NEXTAUTH_SECRET || "raza_secret_123",
+  secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
 };
