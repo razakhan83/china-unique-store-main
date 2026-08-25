@@ -2,7 +2,9 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 export const HOME_PAGE_SINGLETON_KEY = 'storefront-home-page';
 export const HOME_PAGE_PRODUCT_COLLECTIONS = [
+  'featured',
   'new-arrivals',
+  'best-sellers',
   'special-offers',
   'top-rated',
 ];

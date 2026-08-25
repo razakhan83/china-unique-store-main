@@ -157,6 +157,21 @@ export function ProductQuickViewDialog({ open, onOpenChange, product: rowProduct
                         Out of Stock
                       </Badge>
                     )}
+                    {product.isFeatured && (
+                      <Badge className="bg-amber-50 text-amber-800 border-amber-300 text-[10px] sm:text-xs px-2 py-0">
+                        🌟 Featured (Ads)
+                      </Badge>
+                    )}
+                    {product.isNewArrival && (
+                      <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] sm:text-xs px-2 py-0">
+                        🆕 New Arrival
+                      </Badge>
+                    )}
+                    {product.isBestSelling && (
+                      <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[10px] sm:text-xs px-2 py-0">
+                        🔥 Best Seller
+                      </Badge>
+                    )}
                     {isLoading && (
                       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <Loader2 className="size-3 animate-spin" /> Loading…

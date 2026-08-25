@@ -74,11 +74,9 @@ export default function ProductsPageHeader({
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
   const categoryButtons = [
-    { id: "all", label: "All Items", icon: Search},
-    { id: "new-arrivals", label: "New Arrivals", icon: Clock},
-    { id: "special-offers", label: "Special Offers", icon: Tag},
+    { id: "all", label: "All Items", icon: Search },
     ...categories
-      .filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals')
+      .filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals' && c.slug !== 'special-offers' && c.slug !== 'new-arrivals' && c.id !== 'featured' && c.id !== 'best-sellers')
       .map(c => ({ ...c, icon: Tag })),
   ];
   const effectiveActiveCategory = pendingCategoryId ?? activeCategory;

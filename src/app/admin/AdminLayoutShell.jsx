@@ -31,7 +31,9 @@ import {
   Shield,
   Smartphone,
   ShoppingCart,
+  Sparkles,
   Store,
+  Tag,
   Tags,
   TrendingUp,
   Truck,
@@ -89,10 +91,10 @@ const customersNavItems = [
 
 // 5. Marketing
 const marketingNavItems = [
+  { href: '/admin/marketing/featured', label: 'Featured (Ads)', icon: Sparkles, match: (pathname) => pathname.startsWith('/admin/marketing/featured') },
+  { href: '/admin/marketing/campaigns', label: 'Special Offers', icon: Tag, match: (pathname) => pathname.startsWith('/admin/marketing/campaigns') },
   { href: '/admin/marketing/coupons', label: 'Coupon Codes', icon: Tags, match: (pathname) => pathname.startsWith('/admin/marketing/coupons') },
-  { href: '/admin/marketing/campaigns', label: 'Discount Campaigns', icon: Megaphone, match: (pathname) => pathname.startsWith('/admin/marketing/campaigns') },
   { href: '/admin/marketing/banners', label: 'Banner Management', icon: Images, match: (pathname) => pathname.startsWith('/admin/marketing/banners') },
-  { href: '/admin/marketing/featured', label: 'Featured Products', icon: Box, match: (pathname) => pathname.startsWith('/admin/marketing/featured') },
   { href: '/admin/marketing/social', label: 'Social & Tracking', icon: Globe, match: (pathname) => pathname.startsWith('/admin/marketing/social') },
 ];
 

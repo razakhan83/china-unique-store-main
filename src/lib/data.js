@@ -46,9 +46,17 @@ const HOME_MARKETING_SECTIONS = [
   { id: 'best-selling', label: 'Best Selling', iconName: 'Trophy' },
 ];
 const HOME_PAGE_PRODUCT_COLLECTION_CONFIG = {
+  'featured': {
+    label: 'Featured Products',
+    viewAllHref: '/products?sort=featured',
+  },
   'new-arrivals': {
     label: 'New Arrivals',
     viewAllHref: '/products?category=new-arrivals',
+  },
+  'best-sellers': {
+    label: 'Best Sellers / Hot',
+    viewAllHref: '/products?category=best-selling',
   },
   'special-offers': {
     label: 'Special Offers',
@@ -78,6 +86,8 @@ const PRODUCT_CARD_PROJECTION = [
   'discountedPrice',
   'isNewArrival',
   'isBestSelling',
+  'isFeatured',
+  'featuredPriority',
   'tags',
   'primaryTag',
 ].join(' ');
@@ -190,6 +200,8 @@ function serializeProduct(product) {
     updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
     isNewArrival: safeProduct.isNewArrival === true,
     isBestSelling: safeProduct.isBestSelling === true,
+    isFeatured: safeProduct.isFeatured === true,
+    featuredPriority: Number(safeProduct.featuredPriority || 0),
     tags: Array.isArray(safeProduct.tags) ? safeProduct.tags : [],
     primaryTag: safeProduct.primaryTag || '',
   };
@@ -212,6 +224,8 @@ function toProductCardItem(product) {
     showOnStore: product.showOnStore !== false,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
+    isFeatured: product.isFeatured === true,
+    featuredPriority: Number(product.featuredPriority || 0),
     averageRating: Number(product.averageRating || 0),
     reviewCount: Number(product.reviewCount || 0),
     discountPercentage: Number(product.discountPercentage || 0),
@@ -247,6 +261,10 @@ function toProductDetailView(product) {
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
     tags: Array.isArray(product.tags) ? product.tags : [],
     primaryTag: product.primaryTag || '',
+    isNewArrival: product.isNewArrival === true,
+    isBestSelling: product.isBestSelling === true,
+    isFeatured: product.isFeatured === true,
+    featuredPriority: Number(product.featuredPriority || 0),
   };
 }
 
@@ -267,6 +285,8 @@ function toAdminProductRow(product) {
     updatedAt: product.updatedAt,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
+    isFeatured: product.isFeatured === true,
+    featuredPriority: Number(product.featuredPriority || 0),
     vendors: Array.isArray(product.vendors)
       ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
       : [],
@@ -565,7 +585,7 @@ async function getCategoriesRaw() {
   const dbCategories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
   let mappedCategories = [];
   if (dbCategories.length > 0) {
-    mappedCategories = dbCategories.map((category) => ({
+    return dbCategories.map((category) => ({
       _id: category._id.toString(),
       id: category.slug || normalizeCategoryId(category.name),
       label: category.name,
@@ -585,23 +605,7 @@ async function getCategoriesRaw() {
     }));
   }
 
-  if (!mappedCategories.some(c => c.id === 'special-offers')) {
-    mappedCategories.unshift({
-      _id: 'special-offers',
-      id: 'special-offers',
-      label: 'Special Offers',
-      image: '',
-      imagePublicId: '',
-      blurDataURL: '',
-      sortOrder: 0,
-      isEnabled: true,
-      showOnHome: true,
-    });
-  }
-  
-  if (mappedCategories.length > 0) {
-    return mappedCategories;
-  }
+  return [];
 
   const products = await getLiveProductsRaw();
   const categoryMap = new Map();
@@ -730,33 +734,172 @@ async function getProductsForHomeCollectionSectionsRaw(collectionKeys = [], limi
 
   const results = new Map();
 
-  const fetchFlaggedProducts = async (filter, sort, collectionKey) => {
-    const requestedLimit = Math.max(1, Number(limitByCollection.get(collectionKey) || 8));
+  // 1. FEATURED PRODUCTS (Ads / Admin Pinned)
+  if (uniqueKeys.includes('featured')) {
+    const requestedLimit = Math.max(1, Number(limitByCollection.get('featured') || 8));
     const products = await Product.find({
       showOnStore: true,
-      ...filter,
+      isFeatured: true,
     })
       .select(PRODUCT_CARD_PROJECTION)
       .populate(PRODUCT_CATEGORY_POPULATE)
-      .sort(sort)
+      .sort({ featuredPriority: -1, createdAt: -1 })
       .limit(Math.min(24, requestedLimit))
       .lean();
 
-    results.set(collectionKey, products.map((product) => toProductCardItem(serializeProduct(product))));
-  };
+    results.set('featured', products.map((p) => toProductCardItem(serializeProduct(p))));
+  }
 
-  await Promise.all(
-    uniqueKeys
-      .filter((key) => key === 'new-arrivals' || key === 'special-offers')
-      .map((key) => {
-        if (key === 'new-arrivals') {
-          return fetchFlaggedProducts({ isNewArrival: true }, { createdAt: -1 }, key);
+  // 2. NEW ARRIVALS (Time-based automatic + Manual Admin Override)
+  if (uniqueKeys.includes('new-arrivals')) {
+    const requestedLimit = Math.max(1, Number(limitByCollection.get('new-arrivals') || 8));
+    // Fetch manual flagged first + recent products (within 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    let products = await Product.find({
+      showOnStore: true,
+      $or: [
+        { isNewArrival: true },
+        { createdAt: { $gte: thirtyDaysAgo } }
+      ]
+    })
+      .select(PRODUCT_CARD_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
+      .sort({ isNewArrival: -1, createdAt: -1 })
+      .limit(Math.min(24, requestedLimit))
+      .lean();
+
+    // Fallback: If less than 4 products match 30-day window, fill with latest products
+    if (products.length < Math.min(4, requestedLimit)) {
+      products = await Product.find({ showOnStore: true })
+        .select(PRODUCT_CARD_PROJECTION)
+        .populate(PRODUCT_CATEGORY_POPULATE)
+        .sort({ isNewArrival: -1, createdAt: -1 })
+        .limit(Math.min(24, requestedLimit))
+        .lean();
+    }
+
+    results.set('new-arrivals', products.map((p) => toProductCardItem(serializeProduct(p))));
+  }
+
+  // 3. BEST SELLERS / HOT (Automatic Sales Count from Orders + Manual Admin Override)
+  if (uniqueKeys.includes('best-sellers')) {
+    const requestedLimit = Math.max(1, Number(limitByCollection.get('best-sellers') || 8));
+    
+    // Step A: Fetch manual admin picks
+    const manualBestSellers = await Product.find({
+      showOnStore: true,
+      isBestSelling: true,
+    })
+      .select(PRODUCT_CARD_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
+      .sort({ createdAt: -1 })
+      .limit(Math.min(24, requestedLimit))
+      .lean();
+
+    const manualIds = new Set(manualBestSellers.map((p) => p._id.toString()));
+    const combinedProducts = [...manualBestSellers];
+
+    // Step B: Fetch top sold products from Orders if more slots needed
+    if (combinedProducts.length < requestedLimit) {
+      try {
+        const topSoldAggregation = await Order.aggregate([
+          { $unwind: '$items' },
+          {
+            $group: {
+              _id: '$items.productId',
+              totalSold: { $sum: '$items.quantity' },
+            },
+          },
+          { $sort: { totalSold: -1 } },
+          { $limit: Math.max(requestedLimit * 3, 20) },
+        ]);
+
+        const topSoldIds = topSoldAggregation
+          .map((item) => item._id)
+          .filter((id) => id && !manualIds.has(String(id)));
+
+        const objectIds = [];
+        const slugs = [];
+        for (const id of topSoldIds) {
+          if (typeof id === 'string' && id.length === 24 && /^[0-9a-fA-F]{24}$/.test(id)) {
+            objectIds.push(id);
+          } else if (id) {
+            slugs.push(id);
+          }
         }
 
-        return fetchFlaggedProducts({ isDiscounted: true }, { createdAt: -1 }, key);
-      }),
-  );
+        const query = [];
+        if (objectIds.length > 0) query.push({ _id: { $in: objectIds } });
+        if (slugs.length > 0) query.push({ slug: { $in: slugs } });
 
+        if (query.length > 0) {
+          const autoBestSellers = await Product.find({
+            showOnStore: true,
+            $or: query,
+          })
+            .select(PRODUCT_CARD_PROJECTION)
+            .populate(PRODUCT_CATEGORY_POPULATE)
+            .lean();
+
+          const autoMap = new Map();
+          autoBestSellers.forEach((p) => {
+            autoMap.set(p._id.toString(), p);
+            if (p.slug) autoMap.set(p.slug, p);
+          });
+
+          for (const item of topSoldAggregation) {
+            const foundProduct = autoMap.get(String(item._id));
+            if (foundProduct && !manualIds.has(foundProduct._id.toString())) {
+              manualIds.add(foundProduct._id.toString());
+              combinedProducts.push(foundProduct);
+              if (combinedProducts.length >= requestedLimit) break;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[DATA] Error aggregating best sellers:', err.message);
+      }
+    }
+
+    // Step C: If still empty/short, fallback to featured / newest
+    if (combinedProducts.length < Math.min(4, requestedLimit)) {
+      const remainingNeeded = Math.min(24, requestedLimit) - combinedProducts.length;
+      const extraProducts = await Product.find({
+        showOnStore: true,
+        _id: { $nin: Array.from(manualIds) },
+      })
+        .select(PRODUCT_CARD_PROJECTION)
+        .populate(PRODUCT_CATEGORY_POPULATE)
+        .sort({ isBestSelling: -1, createdAt: -1 })
+        .limit(remainingNeeded)
+        .lean();
+
+      combinedProducts.push(...extraProducts);
+    }
+
+    results.set(
+      'best-sellers',
+      combinedProducts.slice(0, requestedLimit).map((p) => toProductCardItem(serializeProduct(p)))
+    );
+  }
+
+  // 4. SPECIAL OFFERS / DEALS
+  if (uniqueKeys.includes('special-offers')) {
+    const requestedLimit = Math.max(1, Number(limitByCollection.get('special-offers') || 8));
+    const products = await Product.find({
+      showOnStore: true,
+      isDiscounted: true,
+    })
+      .select(PRODUCT_CARD_PROJECTION)
+      .populate(PRODUCT_CATEGORY_POPULATE)
+      .sort({ discountPercentage: -1, createdAt: -1 })
+      .limit(Math.min(24, requestedLimit))
+      .lean();
+
+    results.set('special-offers', products.map((p) => toProductCardItem(serializeProduct(p))));
+  }
+
+  // 5. TOP RATED
   if (uniqueKeys.includes('top-rated')) {
     const Review = (await import('@/models/Review')).default;
     const requestedLimit = Math.max(1, Number(limitByCollection.get('top-rated') || 8));
@@ -1178,7 +1321,9 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     query.Price = { $gt: 5000 };
   }
 
-  if (safeCategory === 'new-arrivals') {
+  if (safeCategory === 'featured') {
+    query.isFeatured = true;
+  } else if (safeCategory === 'new-arrivals') {
     query.isNewArrival = true;
   } else if (safeCategory === 'best-selling') {
     query.isBestSelling = true;
@@ -1227,7 +1372,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     if (safeSort === 'price-low') return { Price: 1, createdAt: -1 };
     if (safeSort === 'price-high') return { Price: -1, createdAt: -1 };
     if (safeSort === 'best-selling') return { isBestSelling: -1, createdAt: -1 };
-    if (safeSort === 'featured') return { isNewArrival: -1, isBestSelling: -1, createdAt: -1 };
+    if (safeSort === 'featured') return { isFeatured: -1, featuredPriority: -1, createdAt: -1 };
     if (safeSort === 'deals') return { isDiscounted: -1, discountPercentage: -1, createdAt: -1 };
     if (safeSort === 'az') return { Name: 1, createdAt: -1 };
     if (safeSort === 'za') return { Name: -1, createdAt: -1 };
@@ -1376,26 +1521,63 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
 
 export async function getProductBySlug(slug) {
   'use cache';
-  cacheLife('foreverish');
+  cacheLife('hours');
 
   const safeSlug = String(slug || '').trim();
   if (!safeSlug) return null;
 
-  cacheTag('products', `product-${safeSlug}`);
+  let decodedSlug = safeSlug;
+  try {
+    decodedSlug = decodeURIComponent(safeSlug).trim();
+  } catch {}
+  const hyphenated = decodedSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+
+  cacheTag('products', `product-${safeSlug}`, `product-${hyphenated}`);
 
   async function getSingleProduct(productSlug) {
     try {
       await mongooseConnect();
       
-      // 1. Try finding by slug first (vanity URL)
-      let product = await Product.findOne({ slug: productSlug, showOnStore: true })
+      const cleanSlug = String(productSlug || '').trim();
+      let decoded = cleanSlug;
+      try {
+        decoded = decodeURIComponent(cleanSlug).trim();
+      } catch {}
+
+      const hyphenCandidate = decoded.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+      const slugCandidates = Array.from(new Set([
+        cleanSlug,
+        cleanSlug.toLowerCase(),
+        decoded,
+        decoded.toLowerCase(),
+        hyphenCandidate,
+      ])).filter(Boolean);
+
+      // 1. Try finding by slug candidates (vanity URL)
+      let product = await Product.findOne({ slug: { $in: slugCandidates }, showOnStore: true })
         .select(PRODUCT_DETAIL_PROJECTION)
         .populate(PRODUCT_CATEGORY_POPULATE)
         .lean();
       
       // 2. If not found, and it looks like a Mongo ID, try finding by ID
-      if (!product && mongoose.Types.ObjectId.isValid(productSlug)) {
-        product = await Product.findOne({ _id: productSlug, showOnStore: true })
+      if (!product) {
+        for (const candidate of slugCandidates) {
+          if (mongoose.Types.ObjectId.isValid(candidate)) {
+            product = await Product.findOne({ _id: candidate, showOnStore: true })
+              .select(PRODUCT_DETAIL_PROJECTION)
+              .populate(PRODUCT_CATEGORY_POPULATE)
+              .lean();
+            if (product) break;
+          }
+        }
+      }
+
+      // 3. Fallback: match by product Name if raw name was in the URL
+      if (!product && decoded.length > 2) {
+        product = await Product.findOne({
+          Name: { $regex: new RegExp(`^${decoded.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+          showOnStore: true,
+        })
           .select(PRODUCT_DETAIL_PROJECTION)
           .populate(PRODUCT_CATEGORY_POPULATE)
           .lean();
@@ -1413,7 +1595,7 @@ export async function getProductBySlug(slug) {
     return product ? toProductDetailView(product) : null;
   } catch (error) {
     console.error(`❌ [DATA] getProductBySlug failed for "${safeSlug}":`, error.message);
-    throw error; // Rethrow to let Next.js Error boundary handle it, preventing false 404 caching
+    throw error;
   }
 }
 

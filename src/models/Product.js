@@ -203,6 +203,14 @@ const ProductSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        isFeatured: {
+            type: Boolean,
+            default: false,
+        },
+        featuredPriority: {
+            type: Number,
+            default: 0,
+        },
         tags: {
             type: [String],
             default: [],
@@ -223,6 +231,7 @@ ProductSchema.index({ showOnStore: 1, slug: 1 });
 ProductSchema.index({ showOnStore: 1, isDiscounted: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isNewArrival: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isBestSelling: 1, createdAt: -1 });
+ProductSchema.index({ showOnStore: 1, isFeatured: 1, featuredPriority: -1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, Price: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, Price: -1, createdAt: -1 });
 ProductSchema.index({ 'vendors.name': 1 });
@@ -243,7 +252,9 @@ if (
         !cachedProduct.schema.path('vendors').schema?.path('address') ||
         !cachedProduct.schema.path('packOptions') ||
         !cachedProduct.schema.path('tags') ||
-        !cachedProduct.schema.path('primaryTag')
+        !cachedProduct.schema.path('primaryTag') ||
+        !cachedProduct.schema.path('isFeatured') ||
+        !cachedProduct.schema.path('featuredPriority')
     )
 ) {
     delete mongoose.models.Product;

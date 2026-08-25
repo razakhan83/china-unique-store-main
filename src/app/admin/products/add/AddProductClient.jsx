@@ -65,6 +65,8 @@ export default function AddProduct() {
   const [showOnStore, setIsLive] = useState(true);
   const [isNewArrival, setIsNewArrival] = useState(true);
   const [isBestSelling, setIsBestSelling] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [featuredPriority, setFeaturedPriority] = useState(0);
   const [tags, setTags] = useState([]);
   const [primaryTag, setPrimaryTag] = useState("");
 
@@ -265,6 +267,8 @@ export default function AddProduct() {
           showOnStore,
           isNewArrival,
           isBestSelling,
+          isFeatured,
+          featuredPriority: Number(featuredPriority) || 0,
           tags,
           primaryTag,
         }),
@@ -773,7 +777,16 @@ export default function AddProduct() {
             <AccordionContent className="pb-4">
               <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
+                <Label
+                  className="mr-2 cursor-pointer text-xs text-muted-foreground"
+                  htmlFor="toggle-featured"
+                >
+                  Featured (Ads)
+                </Label>
+                <Switch id="toggle-featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
+              </div>
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label
                   className="mr-2 cursor-pointer text-xs text-muted-foreground"

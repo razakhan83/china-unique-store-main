@@ -39,6 +39,9 @@ import {
   Clock,
   ChevronRight,
   Video,
+  Flame,
+  Trophy,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -89,6 +92,36 @@ const SECTION_TEMPLATES = [
     icon: Images,
   },
   {
+    type: 'ProductCollection',
+    collectionKey: 'featured',
+    label: 'Featured Products (Ads)',
+    icon: Sparkles,
+  },
+  {
+    type: 'ProductCollection',
+    collectionKey: 'new-arrivals',
+    label: 'New Arrival Products',
+    icon: Clock,
+  },
+  {
+    type: 'ProductCollection',
+    collectionKey: 'best-sellers',
+    label: 'Best Seller / Hot Products',
+    icon: Flame,
+  },
+  {
+    type: 'ProductCollection',
+    collectionKey: 'special-offers',
+    label: 'Special Offer Products',
+    icon: Tag,
+  },
+  {
+    type: 'ProductCollection',
+    collectionKey: 'top-rated',
+    label: 'Top Rated Products',
+    icon: Star,
+  },
+  {
     type: 'CategoriesGrid',
     label: 'All Categories',
     icon: LayoutGrid,
@@ -107,24 +140,6 @@ const SECTION_TEMPLATES = [
     type: 'ProductGridByCategory',
     label: 'Category Products',
     icon: SquareStack,
-  },
-  {
-    type: 'ProductCollection',
-    collectionKey: 'new-arrivals',
-    label: 'New Arrival Products',
-    icon: Clock,
-  },
-  {
-    type: 'ProductCollection',
-    collectionKey: 'special-offers',
-    label: 'Special Offer Products',
-    icon: Tag,
-  },
-  {
-    type: 'ProductCollection',
-    collectionKey: 'top-rated',
-    label: 'Top Rated Products',
-    icon: Star,
   },
   {
     type: 'VideoCatalog',

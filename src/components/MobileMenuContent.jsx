@@ -159,27 +159,7 @@ export default function MobileMenuContent({
       <TabsContent value="categories" className="m-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-right-4 duration-300 ease-out">
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-2 pb-12">
           <SidebarMenu className="px-4 gap-1">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={activeCategory === 'new-arrivals'}
-                onClick={() => handleCategoryClick('new-arrivals')}
-                className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'new-arrivals' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-              >
-                <Clock className="size-4 text-foreground" />
-                <span className="text-[14px] tracking-tight">New Arrivals</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={activeCategory === 'special-offers'}
-                onClick={() => handleCategoryClick('special-offers')}
-                className={`gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground ${activeCategory === 'special-offers' ? 'bg-gray-200 font-semibold shadow-sm' : 'bg-gray-50 hover:bg-gray-100 font-medium'}`}
-              >
-                <Tag className="size-4 text-foreground" />
-                <span className="text-[14px] tracking-tight">Special Offers</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+            {categories.map((category) => (
               <SidebarMenuItem key={category.id}>
                 <SidebarMenuButton
                   isActive={activeCategory === category.id}

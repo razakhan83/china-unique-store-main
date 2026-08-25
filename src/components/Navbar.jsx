@@ -583,7 +583,7 @@ function NavbarContent({
                         pathname?.startsWith('/categories') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
                       )}
                     >
-                      <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-[1.15]" strokeWidth={pathname?.startsWith('/categories') ? 2.5 : 2.2} /> Categories / Collections
+                      <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-[1.15]" strokeWidth={pathname?.startsWith('/categories') ? 2.5 : 2.2} /> Categories
                       <ChevronDown className={cn('size-3.5 transition-transform duration-300 ease-out', isCategoriesOpen && 'rotate-180')} />
                     </DropdownMenuTrigger>
                   </div>
@@ -594,22 +594,13 @@ function NavbarContent({
                     onPointerEnter={cancelCategoriesClose}
                     onPointerLeave={scheduleCategoriesClose}
                   >
-                    <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('new-arrivals')}>
-                      <Clock className="text-accent-foreground size-4" />
-                      <span>New Arrivals</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-muted" onClick={() => handleCategoryClick('special-offers')}>
-                      <Tag className="text-accent-foreground" />
-                      <span>Special Offers</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
+                    {categories.map((category) => (
                       <DropdownMenuItem
                         key={category.id}
                         className="rounded-xl cursor-pointer hover:bg-muted"
                         onClick={() => handleCategoryClick(category.id)}
                       >
-                        <Tag className="text-muted-foreground" />
+                        <Tag className="text-muted-foreground size-4" />
                         <span>{category.label}</span>
                       </DropdownMenuItem>
                     ))}

@@ -21,7 +21,10 @@ import {
   TrendingUp,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Sparkles,
+  Flame,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -558,6 +561,8 @@ export default function AdminProductsClient({
       toast.success(
         flag === "isNewArrival"
           ? `New Arrival ${newStatus ? "enabled" : "disabled"} for this product.`
+          : flag === "isFeatured"
+          ? `Featured (Ads) ${newStatus ? "enabled" : "disabled"} for this product.`
           : `Best Selling ${newStatus ? "enabled" : "disabled"} for this product.`
       );
       router.refresh();
@@ -995,12 +1000,12 @@ export default function AdminProductsClient({
                                 Discount: {product.isDiscounted ? `${product.discountPercentage}%` : "None"}
                               </DropdownMenuItem>
                               <DropdownMenuItem disabled>
-                                Flags: {[product.isNewArrival ? "NEW" : null, product.isBestSelling ? "TOP" : null].filter(Boolean).join(", ") || "None"}
+                                Flags: {[product.isFeatured ? "ADS/FEATURED" : null, product.isNewArrival ? "NEW" : null, product.isBestSelling ? "HOT" : null].filter(Boolean).join(", ") || "None"}
                               </DropdownMenuItem>
                               <DropdownMenuItem disabled>Vendors: {Array.isArray(product.vendors) ? product.vendors.length : 0}</DropdownMenuItem>
                               <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Catalog</DropdownMenuLabel>
+                              <DropdownMenuLabel>Catalog & Badges</DropdownMenuLabel>
                               <DropdownMenuItem className="cursor-pointer" disabled={isPending && togglingId === product._id} onClick={() => handleToggleLive(product)}>
                                 {optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore ? "Mark as Draft" : "Publish to Store"}
                               </DropdownMenuItem>
@@ -1017,8 +1022,17 @@ export default function AdminProductsClient({
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 disabled={togglingFlagId === product._id}
+                                onClick={() => toggleProductFlag(product._id, "isFeatured", product.isFeatured)}
+                              >
+                                <Sparkles className="mr-2 size-4 text-amber-500" />
+                                {product.isFeatured ? "Remove Featured (Ads)" : "Mark as Featured (Ads)"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                disabled={togglingFlagId === product._id}
                                 onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
                               >
+                                <Clock className="mr-2 size-4 text-emerald-600" />
                                 {product.isNewArrival ? "Remove New Arrival" : "Mark as New Arrival"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
@@ -1026,7 +1040,8 @@ export default function AdminProductsClient({
                                 disabled={togglingFlagId === product._id}
                                 onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
                               >
-                                {product.isBestSelling ? "Remove Best Selling" : "Mark as Best Selling"}
+                                <Flame className="mr-2 size-4 text-rose-500" />
+                                {product.isBestSelling ? "Remove Best Seller" : "Mark as Best Seller"}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -1139,6 +1154,30 @@ export default function AdminProductsClient({
                           <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
                             <Tag className="mr-2 size-3.5" />
                             {product.isDiscounted ? "Edit Discount" : "Set Discount"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            disabled={togglingFlagId === product._id}
+                            onClick={() => toggleProductFlag(product._id, "isFeatured", product.isFeatured)}
+                          >
+                            <Sparkles className="mr-2 size-3.5 text-amber-500" />
+                            {product.isFeatured ? "Remove Featured" : "Mark as Featured"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            disabled={togglingFlagId === product._id}
+                            onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
+                          >
+                            <Clock className="mr-2 size-3.5 text-emerald-600" />
+                            {product.isNewArrival ? "Remove New" : "Mark as New Arrival"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            disabled={togglingFlagId === product._id}
+                            onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
+                          >
+                            <Flame className="mr-2 size-3.5 text-rose-500" />
+                            {product.isBestSelling ? "Remove Best Seller" : "Mark as Best Seller"}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="cursor-pointer" onClick={() => setReviewsModal({ open: true, product })}>
                             <MessageSquare className="mr-2 size-3.5" />

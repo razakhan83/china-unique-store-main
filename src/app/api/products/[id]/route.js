@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling vendors packOptions tags primaryTag')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
@@ -133,6 +133,10 @@ export async function PUT(request, { params }) {
         // Marketing flags
         existingProduct.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';
         existingProduct.isBestSelling = body.isBestSelling === true || body.isBestSelling === 'true';
+        existingProduct.isFeatured = body.isFeatured === true || body.isFeatured === 'true';
+        if (body.featuredPriority !== undefined) {
+            existingProduct.featuredPriority = Number(body.featuredPriority) || 0;
+        }
 
         // Discount fields
         const discountPct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
@@ -257,10 +261,12 @@ export async function PATCH(request, { params }) {
         }
 
         // Handle Marketing flags toggle
-        if (body.isNewArrival !== undefined || body.isBestSelling !== undefined) {
+        if (body.isNewArrival !== undefined || body.isBestSelling !== undefined || body.isFeatured !== undefined || body.featuredPriority !== undefined) {
             const updateFields = {};
             if (body.isNewArrival !== undefined) updateFields.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';
             if (body.isBestSelling !== undefined) updateFields.isBestSelling = body.isBestSelling === true || body.isBestSelling === 'true';
+            if (body.isFeatured !== undefined) updateFields.isFeatured = body.isFeatured === true || body.isFeatured === 'true';
+            if (body.featuredPriority !== undefined) updateFields.featuredPriority = Number(body.featuredPriority) || 0;
 
             const updatedProduct = await Product.findByIdAndUpdate(
                 id,
@@ -287,6 +293,8 @@ export async function PATCH(request, { params }) {
                     _id: updatedProduct._id.toString(),
                     isNewArrival: updatedProduct.isNewArrival,
                     isBestSelling: updatedProduct.isBestSelling,
+                    isFeatured: updatedProduct.isFeatured,
+                    featuredPriority: updatedProduct.featuredPriority,
                 },
             });
         }

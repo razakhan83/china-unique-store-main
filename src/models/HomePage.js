@@ -205,4 +205,8 @@ const HomePageSchema = new mongoose.Schema(
   },
 );
 
+if (mongoose.models.HomePage) {
+  delete mongoose.models.HomePage;
+}
+
 export default mongoose.models.HomePage || mongoose.model('HomePage', HomePageSchema);

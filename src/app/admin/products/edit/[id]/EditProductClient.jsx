@@ -55,6 +55,8 @@ export default function EditProduct({ id }) {
   const [showOnStore, setIsLive] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(false);
   const [isBestSelling, setIsBestSelling] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [featuredPriority, setFeaturedPriority] = useState(0);
   const [tags, setTags] = useState([]);
   const [primaryTag, setPrimaryTag] = useState("");
   const stockStatus = 'in_stock';
@@ -134,6 +136,8 @@ export default function EditProduct({ id }) {
           setIsLive(p.showOnStore ?? false);
           setIsNewArrival(p.isNewArrival === true);
           setIsBestSelling(p.isBestSelling === true);
+          setIsFeatured(p.isFeatured === true);
+          setFeaturedPriority(p.featuredPriority || 0);
           setTags(Array.isArray(p.tags) ? p.tags : []);
           setPrimaryTag(p.primaryTag || '');
         } else {
@@ -315,6 +319,8 @@ export default function EditProduct({ id }) {
           showOnStore,
           isNewArrival,
           isBestSelling,
+          isFeatured,
+          featuredPriority: Number(featuredPriority) || 0,
           tags,
           primaryTag,
         }),
@@ -779,7 +785,11 @@ export default function EditProduct({ id }) {
                         {/* Marketing Flags */}
           <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
+                <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-featured">Featured (Ads)</Label>
+                <Switch id="toggle-featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
+              </div>
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-new">New Arrival</Label>
                 <Switch id="toggle-new" checked={isNewArrival} onCheckedChange={setIsNewArrival} />
