@@ -64,6 +64,7 @@ export default function SearchField({
             onChange={onChange}
             onFocus={onFocus}
             autoFocus={autoFocus}
+            aria-label={placeholder || "Search for products"}
             className={cn(
               "h-12 min-w-0 border-0 bg-transparent pl-11 pr-10 text-sm text-foreground shadow-none outline-none ring-0 transition-none placeholder:text-transparent",
               "hover:border-0 hover:bg-transparent hover:shadow-none",

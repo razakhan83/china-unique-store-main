@@ -135,20 +135,25 @@ export default function ProductGallery({ images, primaryTag, product }) {
         </Carousel>
 
         {hasMultipleImages && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1.5 md:hidden z-10 pointer-events-none">
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-0.5 md:hidden z-10 pointer-events-none">
             {normalizedImages.map((_, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => handleThumbnailClick(index)}
                 aria-label={`Go to slide ${index + 1}`}
-                className={cn(
-                  'rounded-full transition-all duration-300 pointer-events-auto cursor-pointer shadow-xs',
-                  index === selectedIndex
-                    ? 'w-5 h-2 bg-primary'
-                    : 'size-2 bg-background border-[1.5px] border-primary/60 hover:bg-primary/20'
-                )}
-              />
+                aria-pressed={index === selectedIndex}
+                className="group relative inline-flex min-h-[44px] min-w-[36px] items-center justify-center p-2 pointer-events-auto cursor-pointer focus:outline-none"
+              >
+                <span
+                  className={cn(
+                    'rounded-full transition-all duration-300 pointer-events-none block shadow-xs',
+                    index === selectedIndex
+                      ? 'w-5 h-2 bg-primary'
+                      : 'size-2 bg-background border-[1.5px] border-primary/60 group-hover:bg-primary/20'
+                  )}
+                />
+              </button>
             ))}
           </div>
         )}

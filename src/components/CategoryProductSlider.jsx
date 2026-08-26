@@ -107,20 +107,25 @@ function CarouselDots({ slideCount }) {
   };
 
   return (
-    <div className="relative z-30 mt-6 flex items-center justify-center gap-1.5 pt-3 pb-1">
+    <div className="relative z-30 mt-6 flex items-center justify-center gap-0.5 pt-3 pb-1">
       {Array.from({ length: snapCount }, (_, idx) => (
         <button
           key={idx}
           type="button"
           aria-label={`Go to slide page ${idx + 1}`}
+          aria-pressed={idx === selectedIndex}
           onClick={() => handleGoTo(idx)}
-          className={cn(
-            'rounded-full transition-all duration-300 ease-out cursor-pointer',
-            idx === selectedIndex
-              ? 'w-6 h-2.5 bg-primary'
-              : 'size-2.5 bg-background border-2 border-primary/60 hover:bg-primary/20'
-          )}
-        />
+          className="group relative inline-flex min-h-[44px] min-w-[36px] items-center justify-center p-2 cursor-pointer focus:outline-none"
+        >
+          <span
+            className={cn(
+              'rounded-full transition-all duration-300 ease-out pointer-events-none block',
+              idx === selectedIndex
+                ? 'w-6 h-2.5 bg-primary'
+                : 'size-2.5 bg-background border-2 border-primary/60 group-hover:bg-primary/20'
+            )}
+          />
+        </button>
       ))}
     </div>
   );

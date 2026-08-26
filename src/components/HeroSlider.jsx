@@ -38,10 +38,15 @@ function extractSlideImages(slide) {
   };
 }
 
-function SlideFrame({ href, children }) {
+function SlideFrame({ href, isActive, children }) {
   if (!href) return <>{children}</>;
   return (
-    <Link href={href} className="block h-full w-full">
+    <Link
+      href={href}
+      tabIndex={isActive ? 0 : -1}
+      aria-hidden={!isActive}
+      className="block h-full w-full"
+    >
       {children}
     </Link>
   );
@@ -152,45 +157,50 @@ export default function HeroSlider({ slides = [] }) {
       onTouchEnd={handleTouchEnd}
     >
       <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-muted/40 md:h-[460px] lg:h-[560px]">
-        {resolvedSlides.map((slide, index) => (
-          <div
-            key={slide.id || `${slide.images.mobileSrc}-${index}`}
-            className={`hero-fade-slide ${safeActiveIndex === index ? 'is-active' : ''}`}
-            aria-hidden={safeActiveIndex !== index}
-          >
-            <SlideFrame href={slide.link}>
-              {/* Mobile screen banner */}
-              <div className="relative h-full w-full md:hidden">
-                <Image
-                  src={optimizeCloudinaryUrl(slide.images.mobileSrc || slide.images.desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  priority={index === 0}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  quality={80}
-                  {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
-                />
-              </div>
+        {resolvedSlides.map((slide, index) => {
+          const isActive = safeActiveIndex === index;
+          return (
+            <div
+              key={slide.id || `${slide.images.mobileSrc}-${index}`}
+              className={`hero-fade-slide ${isActive ? 'is-active' : ''}`}
+              aria-hidden={!isActive}
+            >
+              <SlideFrame href={slide.link} isActive={isActive}>
+                {/* Mobile screen banner */}
+                <div className="relative h-full w-full md:hidden">
+                  <Image
+                    src={optimizeCloudinaryUrl(slide.images.mobileSrc || slide.images.desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
+                    alt={slide.alt}
+                    fill
+                    sizes="100vw"
+                    priority={index === 0}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    className="object-cover"
+                    quality={80}
+                    {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
+                  />
+                </div>
 
-              {/* Desktop screen banner */}
-              <div className="relative hidden h-full w-full md:block">
-                <Image
-                  src={optimizeCloudinaryUrl(slide.images.desktopSrc || slide.images.mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  className="object-cover"
-                  quality={85}
-                  {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
-                />
-              </div>
-            </SlideFrame>
-          </div>
-        ))}
+                {/* Desktop screen banner */}
+                <div className="relative hidden h-full w-full md:block">
+                  <Image
+                    src={optimizeCloudinaryUrl(slide.images.desktopSrc || slide.images.mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
+                    alt={slide.alt}
+                    fill
+                    sizes="100vw"
+                    priority={index === 0}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    className="object-cover"
+                    quality={85}
+                    {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
+                  />
+                </div>
+              </SlideFrame>
+            </div>
+          );
+        })}
 
         {/* Prev/Next arrows — desktop only */}
         {resolvedSlides.length > 1 ? (
@@ -198,7 +208,7 @@ export default function HeroSlider({ slides = [] }) {
             <button
               type="button"
               onClick={goToPrevSlide}
-              className="hero-slider-control pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/45"
+              className="hero-slider-control pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/45 cursor-pointer"
               aria-label="Previous slide"
             >
               <ChevronLeft className="size-5" />
@@ -206,7 +216,7 @@ export default function HeroSlider({ slides = [] }) {
             <button
               type="button"
               onClick={goToNextSlide}
-              className="hero-slider-control pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/45"
+              className="hero-slider-control pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/45 cursor-pointer"
               aria-label="Next slide"
             >
               <ChevronRight className="size-5" />
@@ -216,7 +226,7 @@ export default function HeroSlider({ slides = [] }) {
 
         {/* Dot indicators */}
         {resolvedSlides.length > 1 ? (
-          <div className="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-2">
+          <div className="absolute inset-x-0 bottom-5 z-10 flex items-center justify-center gap-1">
             {resolvedSlides.map((slide, index) => (
               <button
                 key={slide.id || `dot-${index}`}
@@ -224,10 +234,14 @@ export default function HeroSlider({ slides = [] }) {
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={safeActiveIndex === index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full shadow-md transition-all duration-300 origin-center ${
-                  safeActiveIndex === index ? 'w-8 bg-white' : 'w-2 bg-white/55 hover:bg-white/80'
-                }`}
-              />
+                className="group relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2 cursor-pointer focus:outline-none"
+              >
+                <span
+                  className={`h-2 rounded-full shadow-md transition-all duration-300 origin-center block pointer-events-none ${
+                    safeActiveIndex === index ? 'w-8 bg-white' : 'w-2 bg-white/55 group-hover:bg-white/80'
+                  }`}
+                />
+              </button>
             ))}
           </div>
         ) : null}
