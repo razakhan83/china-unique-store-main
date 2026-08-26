@@ -660,20 +660,15 @@ function NavbarContent({
                   <Heart className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname?.startsWith('/wishlist') ? 2.5 : 2.2} /> Wishlist
                 </Link>
 
-                {/* Rs 500 Store */}
+                {/* Dollar Store */}
                 <Link 
-                  href="/products?price=under500" 
-                  className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none font-semibold text-muted-foreground/90"
+                  href="/products?price=under300" 
+                  className={cn(
+                    "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
+                    pathname === '/products' ? "font-semibold text-muted-foreground/90" : "font-semibold text-muted-foreground/90"
+                  )}
                 >
-                  <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 500 Store
-                </Link>
-
-                {/* Rs 1000 Store */}
-                <Link 
-                  href="/products?price=under1000" 
-                  className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none font-semibold text-muted-foreground/90"
-                >
-                  <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Rs 1000 Store
+                  <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Dollar Store
                 </Link>
 
                 {/* Contact Us */}
@@ -827,11 +822,8 @@ export function NavbarStaticShell({
               <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Heart className="size-4" strokeWidth={2.2} /> Wishlist
               </Link>
-              <Link href="/products?price=under500" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
-                <Tag className="size-4" strokeWidth={2.2} /> Rs 500 Store
-              </Link>
-              <Link href="/products?price=under1000" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
-                <Tag className="size-4" strokeWidth={2.2} /> Rs 1000 Store
+              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <Tag className="size-4" strokeWidth={2.2} /> Dollar Store
               </Link>
               <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Phone className="size-4" strokeWidth={2.2} /> Contact Us

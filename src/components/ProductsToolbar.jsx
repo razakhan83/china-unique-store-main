@@ -21,6 +21,7 @@ const sortOptions = [
 
 const PRICE_PILLS = [
   { value: 'all', label: 'All Prices' },
+  { value: 'under300', label: 'Under Rs. 300' },
   { value: 'under500', label: 'Under Rs. 500' },
   { value: '500-1500', label: 'Rs. 500 – 1.5K' },
   { value: '1500-5000', label: 'Rs. 1.5K – 5K' },

@@ -75,6 +75,15 @@ export default function MobileMenuContent({
                 <span className="text-[14px] tracking-tight">All Products</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="gap-4 rounded-lg px-3 py-1.5 h-9 transition-all duration-300 active:scale-[0.98] text-foreground bg-gray-50 hover:bg-gray-100 font-medium"
+                render={<Link href="/products?price=under300" onClick={() => setIsSidebarOpen(false)} />}
+              >
+                <Tag className="size-4 text-foreground" />
+                <span className="text-[14px] tracking-tight">Dollar Store</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem className="flex items-center">
               <MyOrdersButton
                 isMobile

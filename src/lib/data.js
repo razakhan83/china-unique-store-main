@@ -1309,10 +1309,12 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
 
   const query = { showOnStore: true };
 
-  if (price === 'under500') {
-    query.Price = { $lt: 500 };
+  if (price === 'under300' || price === 'under-300' || price === 'dollar-store' || price === 'dollar') {
+    query.Price = { $lte: 300 };
+  } else if (price === 'under500') {
+    query.Price = { $lte: 500 };
   } else if (price === 'under1000') {
-    query.Price = { $lt: 1000 };
+    query.Price = { $lte: 1000 };
   } else if (price === '500-1500') {
     query.Price = { $gte: 500, $lte: 1500 };
   } else if (price === '1500-5000') {

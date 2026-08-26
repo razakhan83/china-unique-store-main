@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
 const PRICE_BUCKETS = [
+  { value: 'under300', label: 'Under Rs. 300 (Dollar Store)' },
   { value: 'under500', label: 'Under Rs. 500' },
   { value: '500-1500', label: 'Rs. 500 – 1,500' },
   { value: '1500-5000', label: 'Rs. 1,500 – 5,000' },
