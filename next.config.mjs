@@ -43,6 +43,9 @@ const nextConfig = {
   // ── Image Optimization ───────────────────────────────────────────────────────
   // Removed `unoptimized: true` — was bypassing ALL Next.js image optimization.
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
     // Mobile-first device sizes: phones (360-428px) → tablet (768px) → desktop
     deviceSizes: [360, 428, 640, 768, 1024, 1280, 1920],

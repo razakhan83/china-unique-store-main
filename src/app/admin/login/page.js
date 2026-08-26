@@ -53,7 +53,7 @@ export default async function AdminLoginPage() {
             
             <div className="w-full max-w-[180px] mt-1 sm:max-w-[220px] lg:mt-12 lg:max-w-[480px]">
               <Image 
-                src="/Work time-amico.svg" 
+                src="/work-time-amico.svg" 
                 alt="Admin Workspace Illustration" 
                 width={500}
                 height={500}

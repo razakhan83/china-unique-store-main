@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -150,9 +151,15 @@ export default function NocTrackingModal({
               <p className="text-xs text-muted-foreground font-medium">Connecting to {effectiveCourier}...</p>
             </div>
           ) : events.length === 0 ? (
-            /* Clean Fallback State (No extra dabbas) */
-            <div className="py-6 flex flex-col items-center text-center gap-2.5">
-              <Clock className="size-8 text-primary/80" />
+            /* Clean Fallback State with SVG Illustration */
+            <div className="py-4 flex flex-col items-center text-center gap-2.5">
+              <Image
+                src="/undraw_on-the-way_zwi3.svg"
+                alt="Parcel in transit"
+                width={160}
+                height={120}
+                className="h-auto w-[140px] sm:w-[160px] object-contain opacity-95 select-none mb-1"
+              />
               <div className="space-y-1 max-w-sm">
                 <h4 className="font-bold text-foreground text-sm">Shipment Booked & In Transit</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">

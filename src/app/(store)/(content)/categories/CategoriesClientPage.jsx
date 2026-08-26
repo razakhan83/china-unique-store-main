@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import Image from 'next/image';
 import CategoryPillCard from '@/components/home/CategoryPillCard';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import Link from 'next/link';
@@ -91,9 +92,18 @@ export default function CategoriesClientPage({ initialCategories = [] }) {
 
         {/* Categories Grid */}
         {filteredCategories.length === 0 ? (
-          <div className="surface-card my-10 rounded-3xl p-12 text-center shadow-sm">
+          <div className="surface-card my-10 rounded-3xl p-12 text-center shadow-sm flex flex-col items-center justify-center">
+            <div className="mb-4 flex items-center justify-center">
+              <Image
+                src="/undraw_online-shopping_po8w.svg"
+                alt="No categories found"
+                width={180}
+                height={130}
+                className="h-auto w-[160px] sm:w-[180px] object-contain opacity-90 select-none"
+              />
+            </div>
             <p className="text-base font-semibold text-foreground">No categories found matching &quot;{searchQuery}&quot;</p>
-            <p className="mt-1 text-sm text-muted-foreground">Try searching with a different term.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Try searching with a different term or clear the search.</p>
           </div>
         ) : (
           <div className="my-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-6 lg:gap-8">

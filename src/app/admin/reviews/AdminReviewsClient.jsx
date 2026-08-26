@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -316,13 +317,19 @@ export default function AdminReviewsClient({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="rounded-full bg-muted p-3 text-muted-foreground">
-                      <Search className="size-6" />
-                    </div>
-                    <p className="font-medium">No reviews found</p>
-                    <p className="text-sm text-muted-foreground">Try adjusting your search terms.</p>
+                <TableCell colSpan={6} className="h-72 text-center py-8">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <Image
+                      src="/undraw_polaroid_qqdz.svg"
+                      alt="No reviews illustration"
+                      width={160}
+                      height={120}
+                      className="h-auto w-[140px] sm:w-[160px] object-contain opacity-90 select-none"
+                    />
+                    <p className="font-semibold text-foreground text-sm">No reviews found</p>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      Customer reviews and attached photo feedback will appear here as orders get fulfilled.
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>

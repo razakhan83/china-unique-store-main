@@ -1,8 +1,5 @@
 import 'server-only';
 
-import fs from 'node:fs';
-import path from 'node:path';
-
 import mongooseConnect from '@/lib/mongooseConnect';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { normalizeSocialUrl } from '@/lib/social';
@@ -11,7 +8,6 @@ import Settings from '@/models/Settings';
 
 const SETTINGS_KEY = 'site-settings';
 const DEFAULT_BASE_URL = getSiteUrl();
-const FOOTER_DARK_LOGO_FILE = path.join(process.cwd(), 'public', 'email-footer-logo-dark-cropped.png');
 
 const DEFAULT_BRANDING = {
   baseUrl: DEFAULT_BASE_URL,
@@ -86,16 +82,27 @@ function formatDate(value, options = {}) {
   return date.toLocaleString('en-PK', { dateStyle: 'medium', ...options });
 }
 
-function getItems(order) {
+function toAbsoluteEmailUrl(url, baseUrl = DEFAULT_BASE_URL) {
+  const cleanUrl = String(url || '').trim();
+  if (!cleanUrl) return '';
+  if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl;
+  if (cleanUrl.startsWith('//')) return `https:${cleanUrl}`;
+  const cleanBase = String(baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
+  const cleanPath = cleanUrl.replace(/^\/+/, '');
+  return `${cleanBase}/${cleanPath}`;
+}
+
+function getItems(order, baseUrl = DEFAULT_BASE_URL) {
   if (!Array.isArray(order?.items)) return [];
 
   return order.items.map((item, index) => {
     const quantity = Math.max(1, getNumber(item?.quantity, 1));
     const unitPrice = getNumber(item?.price);
+    const rawImage = getText(item?.image || item?.Image || item?.imageUrl);
 
     return {
       name: getText(item?.name || item?.Name, `Item ${index + 1}`),
-      image: getText(item?.image || item?.Image || item?.imageUrl),
+      image: toAbsoluteEmailUrl(rawImage, baseUrl),
       quantity,
       unitPrice,
       lineTotal: unitPrice * quantity,
@@ -120,32 +127,18 @@ function buildOrderUrl(order, baseUrl) {
 }
 
 function getLogoUrl(branding) {
-  return getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
+  const raw = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
+  if (!raw) return '';
+  return toAbsoluteEmailUrl(raw, branding?.baseUrl);
 }
 
 function getFooterDarkLogoUrl(branding) {
-  const baseUrl = getText(branding?.baseUrl, DEFAULT_BASE_URL).replace(/\/$/, '');
+  const customFooterLogo = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
+  if (customFooterLogo) {
+    return toAbsoluteEmailUrl(customFooterLogo, branding?.baseUrl);
+  }
+  const baseUrl = getText(branding?.baseUrl, DEFAULT_BASE_URL).replace(/\/+$/, '');
   return `${baseUrl}/email-footer-logo-dark-cropped.png`;
-}
-
-let cachedFooterDarkLogoDataUrl;
-
-function getFooterDarkLogoSrc(branding) {
-  if (typeof cachedFooterDarkLogoDataUrl === 'string') {
-    return cachedFooterDarkLogoDataUrl;
-  }
-
-  try {
-    if (fs.existsSync(FOOTER_DARK_LOGO_FILE)) {
-      const imageBuffer = fs.readFileSync(FOOTER_DARK_LOGO_FILE);
-      cachedFooterDarkLogoDataUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
-      return cachedFooterDarkLogoDataUrl;
-    }
-  } catch (error) {
-    console.error('Failed to read cropped footer logo asset:', error);
-  }
-
-  return getText(branding?.lightLogoUrl || branding?.darkLogoUrl || getFooterDarkLogoUrl(branding));
 }
 
 function getEmailLogoScalePercent(branding) {
@@ -169,14 +162,22 @@ function renderLogo(branding) {
 function renderProductRow(item) {
   const imageHtml = item.image
     ? `<img src="${esc(item.image)}" alt="${esc(item.name)}" width="56" height="56" style="display:block;width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid ${C.borderSoft};">`
-    : '';
+    : `<table cellpadding="0" cellspacing="0" border="0" width="56" height="56" style="width:56px;height:56px;background:${C.panel};border:1px solid ${C.borderSoft};border-radius:10px;"><tr><td align="center" valign="middle" style="font-family:${FONT};font-size:10px;color:${C.light};font-weight:600;">ITEM</td></tr></table>`;
 
   return `
     <tr><td style="padding:12px 14px;border-top:1px solid ${C.borderSoft};">
-      ${imageHtml ? `<div style="padding-bottom:8px;">${imageHtml}</div>` : ''}
-      <div style="font-family:${FONT};font-size:14px;line-height:20px;font-weight:600;color:${C.text};word-break:break-word;">${esc(item.name)}</div>
-      <div style="padding-top:2px;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted};">Qty: ${item.quantity} x ${esc(formatCurrency(item.unitPrice))}</div>
-      <div style="padding-top:2px;font-family:${FONT};font-size:14px;line-height:20px;font-weight:700;color:${C.text};">${esc(formatCurrency(item.lineTotal))}</div>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td width="64" valign="top" style="padding-right:12px;">
+            ${imageHtml}
+          </td>
+          <td valign="top">
+            <div style="font-family:${FONT};font-size:14px;line-height:20px;font-weight:600;color:${C.text};word-break:break-word;">${esc(item.name)}</div>
+            <div style="padding-top:2px;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted};">Qty: ${item.quantity} &times; ${esc(formatCurrency(item.unitPrice))}</div>
+            <div style="padding-top:2px;font-family:${FONT};font-size:14px;line-height:20px;font-weight:700;color:${C.text};">${esc(formatCurrency(item.lineTotal))}</div>
+          </td>
+        </tr>
+      </table>
     </td></tr>`;
 }
 
@@ -203,16 +204,24 @@ function renderPricingSummary(pricing) {
 
 function renderSocialLinks(branding) {
   const links = [
-    { href: normalizeSocialUrl(branding?.facebookPageUrl), label: 'Facebook' },
-    { href: normalizeSocialUrl(branding?.instagramUrl), label: 'Instagram' },
-    { href: createWhatsAppUrl(branding?.whatsappNumber), label: 'WhatsApp' },
+    { href: normalizeSocialUrl(branding?.facebookPageUrl), label: 'Facebook', bg: '#1877F2', color: '#ffffff' },
+    { href: normalizeSocialUrl(branding?.instagramUrl), label: 'Instagram', bg: '#E4405F', color: '#ffffff' },
+    { href: createWhatsAppUrl(branding?.whatsappNumber), label: 'WhatsApp', bg: '#25D366', color: '#ffffff' },
   ].filter((link) => link.href);
 
   if (!links.length) return '';
 
   return `
-    <tr><td align="center" style="padding:0 20px 8px;font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted};">
-      ${links.map((link) => `<a href="${esc(link.href)}" style="color:${C.accent};text-decoration:none;font-weight:600;">${esc(link.label)}</a>`).join('<span style="color:#94a39b;padding:0 4px;">&middot;</span>')}
+    <tr><td align="center" style="padding:10px 20px 12px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+        <tr>
+          ${links.map((link) => `
+            <td style="padding:0 4px;">
+              <a href="${esc(link.href)}" target="_blank" style="display:inline-block;padding:5px 12px;border-radius:6px;background:${link.bg};color:${link.color};text-decoration:none;font-family:${FONT};font-size:11px;font-weight:bold;line-height:14px;">${esc(link.label)}</a>
+            </td>
+          `).join('')}
+        </tr>
+      </table>
     </td></tr>`;
 }
 
@@ -258,7 +267,7 @@ function renderCustomerEmailLogo(branding) {
 }
 
 function renderCustomerEmailFooterLogo(branding) {
-  const logoUrl = getFooterDarkLogoSrc(branding);
+  const logoUrl = getFooterDarkLogoUrl(branding);
   const logoAlt = esc(branding?.storeName || 'Store');
 
   if (!logoUrl) {
@@ -273,25 +282,25 @@ function renderCustomerEmailFooterLogo(branding) {
 
 function renderCustomerEmailItemCard(item) {
   const imageHtml = item.image
-    ? `<img src="${esc(item.image)}" style="display:block;outline:0;line-height:100%;-ms-interpolation-mode:bicubic;width:100px;height:104px;border:0;object-fit:cover;border-radius:10px;" width="100" height="104" alt="${esc(item.name)}" />`
-    : `<div style="width:100px;height:104px;border-radius:10px;background:${EMAIL_THEME.accentTint};font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:13px;line-height:104px;text-align:center;color:${EMAIL_THEME.muted};">No image</div>`;
+    ? `<img src="${esc(item.image)}" style="display:block;outline:0;line-height:100%;-ms-interpolation-mode:bicubic;width:90px;height:90px;border:0;object-fit:cover;border-radius:10px;" width="90" height="90" alt="${esc(item.name)}" />`
+    : `<table cellpadding="0" cellspacing="0" border="0" width="90" height="90" style="width:90px;height:90px;background:${EMAIL_THEME.accentTint};border-radius:10px;"><tr><td align="center" valign="middle" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;color:${EMAIL_THEME.muted};font-weight:600;">No Image</td></tr></table>`;
 
   return `
     <tr>
-      <td style="padding:0 0 4px;">
-        <table border="0" cellpadding="0" cellspacing="0" role="presentation" bgcolor="#ffffff" style="width:100%;background-color:#FFF;border-radius:10px;">
+      <td style="padding:0 0 8px;">
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation" bgcolor="#ffffff" style="width:100%;background-color:#FFF;border-radius:10px;border:1px solid ${C.borderSoft};">
           <tr>
-            <td align="left" valign="top" style="padding:16px;height:auto;">
+            <td align="left" valign="top" style="padding:14px;height:auto;">
               <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
                 <tr>
-                  <td valign="top" style="width:120px;padding:0 20px 0 0;">${imageHtml}</td>
+                  <td valign="top" style="width:100px;padding:0 14px 0 0;">${imageHtml}</td>
                   <td valign="top">
-                    <div style="padding:9px 0 4px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:16px;line-height:1.4;font-weight:600;color:${EMAIL_THEME.text};">${esc(item.name)}</div>
-                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.4;color:${EMAIL_THEME.muted};">Qty: ${item.quantity}</div>
-                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.4;color:${EMAIL_THEME.muted};">Price: ${esc(formatCurrency(item.unitPrice))}</div>
+                    <div style="padding:4px 0 4px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;font-weight:600;color:${EMAIL_THEME.text};">${esc(item.name)}</div>
+                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.4;color:${EMAIL_THEME.muted};">Qty: ${item.quantity}</div>
+                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.4;color:${EMAIL_THEME.muted};">Price: ${esc(formatCurrency(item.unitPrice))}</div>
                   </td>
-                  <td align="right" valign="top" style="white-space:nowrap;padding-top:16px;">
-                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:16px;line-height:1.4;color:${EMAIL_THEME.text};text-align:right;">${esc(formatCurrency(item.lineTotal))}</div>
+                  <td align="right" valign="top" style="white-space:nowrap;padding-top:8px;">
+                    <div style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;font-weight:700;color:${EMAIL_THEME.text};text-align:right;">${esc(formatCurrency(item.lineTotal))}</div>
                   </td>
                 </tr>
               </table>
@@ -304,17 +313,23 @@ function renderCustomerEmailItemCard(item) {
 
 function renderCustomerEmailFooterLinks(branding) {
   const links = [
-    { href: normalizeSocialUrl(branding?.facebookPageUrl), label: 'Facebook' },
-    { href: normalizeSocialUrl(branding?.instagramUrl), label: 'Instagram' },
-    { href: createWhatsAppUrl(branding?.whatsappNumber), label: 'WhatsApp' },
+    { href: normalizeSocialUrl(branding?.facebookPageUrl), label: 'Facebook', bg: '#1877F2' },
+    { href: normalizeSocialUrl(branding?.instagramUrl), label: 'Instagram', bg: '#E4405F' },
+    { href: createWhatsAppUrl(branding?.whatsappNumber), label: 'WhatsApp', bg: '#25D366' },
   ].filter((link) => link.href);
 
   if (!links.length) return '';
 
   return `
-    <div style="padding-top:16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;color:${C.white};text-align:center;">
-      ${links.map((link) => `<a href="${esc(link.href)}" target="_blank" style="color:${C.white};text-decoration:underline;">${esc(link.label)}</a>`).join('<span style="padding:0 8px;">|</span>')}
-    </div>`;
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;">
+      <tr>
+        ${links.map((link) => `
+          <td style="padding:0 6px;">
+            <a href="${esc(link.href)}" target="_blank" style="display:inline-block;padding:6px 14px;border-radius:20px;background:${link.bg};color:#ffffff;text-decoration:none;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:12px;font-weight:600;line-height:16px;">${esc(link.label)}</a>
+          </td>
+        `).join('')}
+      </tr>
+    </table>`;
 }
 
 export async function getEmailBranding() {
@@ -343,7 +358,7 @@ export async function getEmailBranding() {
 
 export function generateOrderEmailHtml(order, brandingInput = {}) {
   const branding = { ...DEFAULT_BRANDING, ...brandingInput };
-  const items = getItems(order);
+  const items = getItems(order, branding.baseUrl);
   const pricing = getPricing(order, items);
   const adminUrl = `${branding.baseUrl}/admin/orders`;
   const customerName = getText(order?.customerName, 'Customer');
@@ -398,6 +413,7 @@ export function generateOrderEmailHtml(order, brandingInput = {}) {
     <tr><td align="center" style="padding:20px 20px 14px;">
       <a href="${esc(adminUrl)}" style="display:inline-block;padding:12px 24px;border-radius:10px;background:${C.accent};color:${C.white};text-decoration:none;font-family:${FONT};font-size:13px;line-height:20px;font-weight:700;">Manage Order</a>
     </td></tr>
+    ${renderSocialLinks(branding)}
     <tr><td style="padding:0 20px 24px;font-family:${FONT};font-size:11px;line-height:16px;color:${C.light};text-align:center;">
       Automated notification from ${esc(branding.storeName)}.
     </td></tr>`;
@@ -410,7 +426,7 @@ export function generateOrderEmailHtml(order, brandingInput = {}) {
 
 export function generateCustomerOrderConfirmationHtml(order, brandingInput = {}) {
   const branding = { ...DEFAULT_BRANDING, ...brandingInput };
-  const items = getItems(order);
+  const items = getItems(order, branding.baseUrl);
   const pricing = getPricing(order, items);
   const customerName = getText(order?.customerName, 'Customer');
   const firstName = customerName.split(/\s+/)[0] || customerName;
@@ -470,7 +486,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
                 <tr>
                   <td valign="top" align="left" style="padding:0 12px 0 0;">${renderCustomerEmailLogo(branding)}</td>
                   <td valign="middle" align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.4;color:${EMAIL_THEME.text};">
-                    <a href="${esc(orderUrl)}" target="_blank" style="color:${EMAIL_THEME.text};text-decoration:none;">Track Package</a>
+                    <a href="${esc(orderUrl)}" target="_blank" style="color:${EMAIL_THEME.accent};font-weight:600;text-decoration:none;">Track Package</a>
                     <span style="padding:0 10px;color:#9aa8bf;">|</span>
                     ${supportEmail ? `<a href="mailto:${esc(supportEmail)}" style="color:${EMAIL_THEME.text};text-decoration:none;">Contact Us</a>` : whatsappHref ? `<a href="${esc(whatsappHref)}" target="_blank" style="color:${EMAIL_THEME.text};text-decoration:none;">Contact Us</a>` : '<span>Contact Us</span>'}
                   </td>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 
@@ -30,17 +31,26 @@ export default function WishlistClient() {
 
   if (items.length === 0) {
     return (
-      <Empty className="surface-card rounded-xl border border-dashed border-border py-12">
+      <Empty className="surface-card rounded-2xl border border-dashed border-border py-12 px-4 text-center">
         <EmptyHeader>
-          <EmptyMedia variant="icon" className="size-16 rounded-full bg-muted text-muted-foreground">
-            <Heart className="size-8" />
-          </EmptyMedia>
-          <EmptyTitle className="text-xl font-semibold text-foreground">Your wishlist is empty</EmptyTitle>
-          <EmptyDescription>Save the products you love and come back to them anytime.</EmptyDescription>
+          <div className="mx-auto mb-4 flex items-center justify-center">
+            <Image
+              src="/undraw_shopping-app_b80f.svg"
+              alt="Empty wishlist illustration"
+              width={200}
+              height={160}
+              className="h-auto w-[180px] sm:w-[200px] select-none object-contain drop-shadow-xs"
+              priority
+            />
+          </div>
+          <EmptyTitle className="text-xl sm:text-2xl font-bold text-foreground">Your wishlist is empty</EmptyTitle>
+          <EmptyDescription className="max-w-sm mx-auto text-sm text-muted-foreground mt-1">
+            Save the products you love and come back to them anytime to complete your purchase.
+          </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Button render={<Link href="/products" />} nativeButton={false}>
-            Continue Shopping
+        <EmptyContent className="mt-6">
+          <Button render={<Link href="/products" />} nativeButton={false} className="rounded-xl px-6 h-11">
+            Explore Products
           </Button>
         </EmptyContent>
       </Empty>

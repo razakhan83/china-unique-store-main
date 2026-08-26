@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, CircleHelp, FileText, Lock, RotateCcw, Store, Truck } from 'lucide-react';
 import FaqAccordion from '@/components/FaqAccordion';
 
@@ -149,24 +150,42 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
     <div className="bg-background pb-24 pt-14 md:pt-18">
       <div className="container mx-auto max-w-2xl px-5 sm:px-6">
 
-        {/* ── Page badge ── */}
-        <div className="mb-6 flex items-center gap-2">
-          <Icon className="size-4 text-primary" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-            {label}
-          </span>
+        {/* ── Header & Hero ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex-1">
+            {/* ── Page badge ── */}
+            <div className="mb-4 flex items-center gap-2">
+              <Icon className="size-4 text-primary" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+                {label}
+              </span>
+            </div>
+
+            {/* ── Title ── */}
+            <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-foreground sm:text-[2.4rem]">
+              {page?.title || 'Store Page'}
+            </h1>
+
+            {page?.description ? (
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                {page.description}
+              </p>
+            ) : null}
+          </div>
+
+          {page?.slug === 'about-us' && (
+            <div className="shrink-0 flex items-center justify-start sm:justify-end">
+              <Image
+                src="/undraw_plants_md5c.svg"
+                alt="About China Unique Store"
+                width={150}
+                height={115}
+                className="h-auto w-[130px] sm:w-[150px] object-contain opacity-95 select-none"
+                priority
+              />
+            </div>
+          )}
         </div>
-
-        {/* ── Title ── */}
-        <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-foreground sm:text-[2.4rem]">
-          {page?.title || 'Store Page'}
-        </h1>
-
-        {page?.description ? (
-          <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-            {page.description}
-          </p>
-        ) : null}
 
         {/* ── Thin rule ── */}
         <div className="mt-8 mb-8 h-px bg-border" />

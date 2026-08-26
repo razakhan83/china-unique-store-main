@@ -54,7 +54,7 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
     }}>
       <DialogContent 
         showCloseButton={false} 
-        className="sm:max-w-md p-0 overflow-hidden border border-border/80 bg-card text-center w-[92vw] max-w-[420px] rounded-2xl shadow-lg"
+        className="p-0 overflow-y-auto border-0 sm:border sm:border-border/80 bg-card text-center w-full h-[100dvh] max-w-full sm:h-auto sm:max-w-md rounded-none sm:rounded-2xl shadow-xl flex flex-col justify-center sm:block"
       >
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes boom {
@@ -63,60 +63,67 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
           }
           @keyframes popIn {
             0% { transform: scale(0.5); opacity: 0; }
-            70% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(1.08); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes slideUpFade {
+            0% { transform: translateY(16px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
           }
           .particle {
             animation: boom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
           }
           .pop-in {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          }
+          .slide-up-fade {
+            animation: slideUpFade 0.4s ease-out forwards;
           }
         `}} />
 
-        <div className="relative p-6 pt-12 pb-7 flex flex-col items-center overflow-hidden">
+        <div className="relative p-6 sm:p-8 pt-12 pb-8 sm:py-8 flex flex-col items-center justify-center my-auto min-h-0 overflow-hidden w-full max-w-md mx-auto">
           
           {/* Party Boom / Confetti Effect SVG */}
           {showConfetti && (
-            <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center top-[-100px] z-0">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center top-[-60px] z-0">
                {/* Leaf Particles */}
-               <div className="absolute opacity-80 particle" style={{ '--tx': '-110px', '--ty': '-90px' }}><Leaf className="text-primary size-6 rotate-45" strokeWidth={1.5} /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '120px', '--ty': '-70px' }}><Leaf className="text-primary size-5 -rotate-12" strokeWidth={1.5} /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '-85px', '--ty': '85px' }}><Leaf className="text-primary size-7 rotate-90" strokeWidth={1.5} /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '105px', '--ty': '95px' }}><Leaf className="text-primary size-4 -rotate-45" strokeWidth={1.5} /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '-120px', '--ty': '-100px' }}><Leaf className="text-primary size-6 rotate-45" strokeWidth={1.5} /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '130px', '--ty': '-80px' }}><Leaf className="text-primary size-5 -rotate-12" strokeWidth={1.5} /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '-95px', '--ty': '95px' }}><Leaf className="text-primary size-7 rotate-90" strokeWidth={1.5} /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '115px', '--ty': '105px' }}><Leaf className="text-primary size-4 -rotate-45" strokeWidth={1.5} /></div>
                {/* Circle Particles */}
-               <div className="absolute opacity-80 particle" style={{ '--tx': '-45px', '--ty': '-130px' }}><div className="w-2 h-2 rounded-full bg-primary" /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '65px', '--ty': '-110px' }}><div className="w-3 h-3 rounded-full bg-primary/60" /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '-130px', '--ty': '25px' }}><div className="w-2.5 h-2.5 rounded-full bg-primary/80" /></div>
-               <div className="absolute opacity-80 particle" style={{ '--tx': '120px', '--ty': '35px' }}><div className="w-2 h-2 rounded-full bg-primary" /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '-50px', '--ty': '-140px' }}><div className="w-2.5 h-2.5 rounded-full bg-primary" /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '75px', '--ty': '-120px' }}><div className="w-3 h-3 rounded-full bg-primary/60" /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '-140px', '--ty': '30px' }}><div className="w-2.5 h-2.5 rounded-full bg-primary/80" /></div>
+               <div className="absolute opacity-80 particle" style={{ '--tx': '130px', '--ty': '40px' }}><div className="w-2 h-2 rounded-full bg-primary" /></div>
             </div>
           )}
 
           {/* Close button */}
           <button 
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-full transition-colors z-10"
             aria-label="Close"
           >
-            <X className="size-4.5" />
+            <X className="size-5" />
           </button>
 
           {/* Clean Success Icon Badge */}
           <div className="relative mb-5 z-10 pop-in">
-            <div className="relative bg-emerald-50 text-primary rounded-full p-3.5 border border-emerald-200/60 shadow-xs">
-              <Check className="size-7 stroke-[2.5]" />
+            <div className="relative bg-emerald-500/10 text-primary rounded-full p-4 border border-primary/20 shadow-sm">
+              <Check className="size-8 stroke-[2.5]" />
             </div>
           </div>
 
-          <DialogHeader className="mb-3 space-y-2 relative z-10">
-            <DialogTitle className="text-xl font-bold text-foreground">Order Confirmed!</DialogTitle>
-            <DialogDescription className="text-muted-foreground text-sm max-w-[280px] mx-auto leading-relaxed flex flex-col items-center">
+          <DialogHeader className="mb-3 space-y-2 relative z-10 slide-up-fade">
+            <DialogTitle className="text-2xl sm:text-xl font-bold text-foreground">Order Confirmed!</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm max-w-[300px] mx-auto leading-relaxed flex flex-col items-center">
               Your order has been placed successfully.
-              <span className="flex items-center justify-between gap-3 mt-4 font-semibold text-foreground text-sm tracking-wide bg-muted/40 border border-border/70 px-3.5 py-2 rounded-xl w-full max-w-[260px]">
+              <span className="flex items-center justify-between gap-3 mt-4 font-semibold text-foreground text-sm tracking-wide bg-muted/50 border border-border/80 px-4 py-2.5 rounded-xl w-full max-w-[280px]">
                 <span className="font-mono">{orderId || '#123456789-054'}</span>
                 <button 
                   onClick={handleCopy} 
-                  className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-card hover:bg-muted p-1.5 rounded-lg border border-border/70 shadow-2xs"
+                  className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-card hover:bg-muted p-1.5 rounded-lg border border-border/70 shadow-2xs active:scale-95"
                   aria-label="Copy Order ID"
                 >
                   {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
@@ -125,24 +132,24 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
             </DialogDescription>
           </DialogHeader>
 
-          <p className="text-gray-900 font-medium mb-8 text-[15px] relative z-10">
+          <p className="text-foreground font-semibold mb-8 text-[15px] sm:text-sm relative z-10">
             Thank you for your purchase!
           </p>
 
-          <div className="w-full space-y-2.5 relative z-10">
+          <div className="w-full space-y-3 relative z-10 slide-up-fade">
             {isSignedIn ? (
               <>
                 <button 
                   type="button"
                   onClick={(e) => handleLinkClick(e, '/')}
-                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer"
+                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                 >
                   Continue Shopping
                 </button>
                 <button 
                   type="button"
                   onClick={(e) => handleLinkClick(e, '/orders')}
-                  className="flex w-full items-center justify-center py-3.5 rounded-xl text-sm font-semibold border border-border/80 bg-background text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer"
+                  className="flex w-full items-center justify-center py-3.5 rounded-xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                 >
                   View my order
                 </button>
@@ -152,7 +159,7 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
                 <button 
                   type="button"
                   onClick={(e) => handleLinkClick(e, '/orders')}
-                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer"
+                  className="flex w-full items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground py-3.5 rounded-xl text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                 >
                   Track your order
                 </button>
@@ -162,7 +169,7 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
                     <button 
                       type="button"
                       onClick={(e) => handleLinkClick(e, '/auth/signin?callbackUrl=/orders')}
-                      className="flex w-full items-center justify-center py-3 rounded-xl text-xs font-semibold border border-border/80 bg-background text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer"
+                      className="flex w-full items-center justify-center py-3 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted/50 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
                     >
                       Sign in to your account
                     </button>

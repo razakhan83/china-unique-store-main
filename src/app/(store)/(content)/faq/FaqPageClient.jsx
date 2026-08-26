@@ -172,10 +172,18 @@ export default function FaqPageClient({ whatsappNumber, storeName, pageTitle, pa
               ))}
             </Accordion>
           ) : (
-            <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 py-12 text-center">
-              <HelpCircle className="mx-auto size-10 text-muted-foreground/40 mb-3" />
+            <div className="rounded-2xl border border-dashed border-border/80 bg-card py-12 px-4 text-center">
+              <div className="mx-auto mb-4 flex items-center justify-center">
+                <Image
+                  src="/undraw_questions_52ic.svg"
+                  alt="No FAQs found"
+                  width={160}
+                  height={120}
+                  className="h-auto w-[140px] sm:w-[160px] object-contain opacity-90 select-none"
+                />
+              </div>
               <h3 className="text-base font-bold text-foreground mb-1">No questions found</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4 px-4">
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-5 px-4">
                 We couldn&apos;t find any FAQs matching &ldquo;{searchQuery}&rdquo;. Try using different keywords or clear the filters.
               </p>
               <button
@@ -184,7 +192,7 @@ export default function FaqPageClient({ whatsappNumber, storeName, pageTitle, pa
                   setSearchQuery('');
                   setSelectedCategory('all');
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
               >
                 Reset Search
               </button>
@@ -192,34 +200,29 @@ export default function FaqPageClient({ whatsappNumber, storeName, pageTitle, pa
           )}
         </div>
 
-        {/* ── Bottom WhatsApp Help CTA Banner ── */}
-        <div className="relative max-w-4xl mx-auto mt-16 rounded-2xl border border-border bg-gradient-to-tr from-primary/5 via-card to-background p-6 sm:p-8 text-center overflow-hidden shadow-md">
-          <div className="absolute top-0 right-0 -z-10 size-48 rounded-full bg-primary/5 blur-3xl" />
-          
-          <div className="max-w-xl mx-auto space-y-4">
-            <div className="inline-flex size-11 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] mb-1">
-              <WhatsAppIcon className="size-5.5 shrink-0" />
+        {/* ── Compact & Clean WhatsApp Help Bar (No Gradients) ── */}
+        <div className="max-w-4xl mx-auto mt-10 rounded-xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366]">
+              <WhatsAppIcon className="size-4.5" />
             </div>
-            
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Still Need Help?
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Can&apos;t find the answer to your question? Message us directly on WhatsApp! Our customer service representative will respond to your queries immediately.
-            </p>
-            
-            <div className="pt-2">
-              <a
-                href={whatsappLink || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/10 transition-all duration-300 hover:bg-[#22c15c] hover:-translate-y-0.5 hover:shadow-[0_8px_16px_-4px_rgba(37,211,102,0.5)] active:scale-[0.98]"
-              >
-                Chat on WhatsApp
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-              </a>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Still need help?</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Chat with our support team directly on WhatsApp for quick answers.
+              </p>
             </div>
           </div>
+          
+          <a
+            href={whatsappLink || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 text-xs font-semibold shadow-xs transition-colors active:scale-95"
+          >
+            <WhatsAppIcon className="size-3.5" />
+            Chat on WhatsApp
+          </a>
         </div>
 
       </div>

@@ -138,7 +138,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                               >
                                 <CardContent className="px-2.5 py-2">
                                   <div className="flex items-stretch gap-2.5">
-                                    <div className="relative size-[4.5rem] shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-muted outline outline-1 outline-black/5 md:size-[4.75rem]">
+                                    <div className="relative size-[4.5rem] shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-muted outline outline-1 outline-black/5 md:size-[4.75rem] flex items-center justify-center">
                                       {primaryImageSrc ? (
                                         <Image
                                           src={primaryImageSrc}
@@ -148,7 +148,9 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                           className="object-cover"
                                           {...getBlurPlaceholderProps(primaryImage?.blurDataURL)}
                                         />
-                                      ) : null}
+                                      ) : (
+                                        <ShoppingBag className="size-5 text-muted-foreground/40" />
+                                      )}
                                     </div>
                                     <div className="flex min-w-0 flex-1 items-stretch justify-between gap-2">
                                       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { CheckCircle2, Loader2, SearchX } from 'lucide-react';
 
 import ProductCard from '@/components/ProductCard';
@@ -112,18 +113,22 @@ export default function ProductsInfiniteGrid({
 
   if (products.length === 0 && !isLoading) {
     return (
-      <div className="products-page-empty relative mt-8">
-        <Empty className="surface-card w-full rounded-xl px-6 py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="icon" className="size-16 rounded-xl bg-primary/10 text-primary">
-              <SearchX className="size-7" />
-            </EmptyMedia>
-            <EmptyTitle className="text-lg font-semibold text-foreground">No products found</EmptyTitle>
-            <EmptyDescription className="max-w-sm">
-              Try adjusting your search query, filters, or category to explore other items.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+      <div className="products-page-empty relative mt-4 sm:mt-6 w-full">
+        <div className="rounded-2xl border border-border/70 bg-card p-8 sm:p-12 text-center flex flex-col items-center justify-center">
+          <div className="mb-5 flex items-center justify-center">
+            <Image
+              src="/undraw_skateboarding_i2pz.svg"
+              alt="No products found"
+              width={180}
+              height={140}
+              className="h-auto w-[150px] sm:w-[180px] object-contain opacity-95 select-none"
+            />
+          </div>
+          <h3 className="text-lg font-bold text-foreground mb-1.5">No products found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Try adjusting your search query, filters, or category to explore other items.
+          </p>
+        </div>
       </div>
     );
   }

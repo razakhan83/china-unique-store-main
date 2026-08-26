@@ -60,17 +60,32 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
   // Auto-open review popup on visit if delivered and not yet reviewed
   useEffect(() => {
     if (isDelivered && !isAllReviewed && currentOrder?.orderId) {
-      const isDismissed = sessionStorage.getItem(`review_prompt_dismissed_order_${currentOrder.orderId}`);
-      if (!isDismissed) {
+      let isDismissAll = false;
+      let isDismissedPermanently = false;
+      let isRemindLaterThisSession = false;
+      try {
+        isDismissAll = localStorage.getItem('feedback_dismiss_all') === 'true';
+        isDismissedPermanently = localStorage.getItem(`feedback_dismissed_${currentOrder.orderId}`) === 'true';
+        isRemindLaterThisSession = sessionStorage.getItem(`feedback_remind_later_${currentOrder.orderId}`) === 'true';
+      } catch (e) {}
+
+      if (!isDismissAll && !isDismissedPermanently && !isRemindLaterThisSession) {
         setShowReviewModal(true);
       }
     }
   }, [isDelivered, isAllReviewed, currentOrder?.orderId]);
 
   const handleReviewAction = (action) => {
-    if (action === 'later' || action === 'dismiss') {
+    if (action === 'later') {
       try {
-        sessionStorage.setItem(`review_prompt_dismissed_order_${currentOrder?.orderId}`, 'true');
+        sessionStorage.setItem(`feedback_remind_later_${currentOrder?.orderId}`, 'true');
+      } catch (e) {}
+    } else if (action === 'dismiss' || action === 'dismiss_all') {
+      try {
+        localStorage.setItem(`feedback_dismissed_${currentOrder?.orderId}`, 'true');
+        if (action === 'dismiss_all') {
+          localStorage.setItem('feedback_dismiss_all', 'true');
+        }
       } catch (e) {}
     }
   };

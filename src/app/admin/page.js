@@ -111,23 +111,31 @@ async function DashboardContent({ session }) {
 
   return (
     <div className="admin-page-stack w-full gap-4">
-      <div className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-[-0.04em] text-foreground md:text-[1.75rem]">
+      {/* Header Banner */}
+      <div className="admin-surface rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border/80 relative overflow-hidden bg-card">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             {getGreeting()}, {session?.user?.name?.split(' ')[0] || 'Admin'}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Here&apos;s what&apos;s happening with your store today.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Here&apos;s what&apos;s happening with your store today.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/orders?createOrder=1" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <Link
+            href="/admin/orders?createOrder=1"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+          >
             <Plus className="size-3.5" />
-            <span className="hidden sm:inline">Create Order</span>
-            <span className="sm:hidden">Order</span>
+            <span>Create Order</span>
           </Link>
-          <Link href="/admin/products/add" className="inline-flex items-center justify-center gap-1.5 rounded-md bg-secondary px-3 sm:px-4 py-2 text-[13px] font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-colors">
+          <Link
+            href="/admin/products/add"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-secondary px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-colors"
+          >
             <Box className="size-3.5" />
-            <span className="hidden sm:inline">Add Product</span>
-            <span className="sm:hidden">Product</span>
+            <span>Add Product</span>
           </Link>
         </div>
       </div>

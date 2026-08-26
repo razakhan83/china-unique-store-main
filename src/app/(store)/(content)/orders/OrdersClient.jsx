@@ -269,10 +269,21 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
   // Auto-popup logic for delivered orders on visit
   useEffect(() => {
     if (mounted && deliveredOrders.length > 0) {
+      try {
+        const isDismissAll = localStorage.getItem('feedback_dismiss_all') === 'true';
+        if (isDismissAll) return;
+      } catch (e) {}
+
       const unreviewedDeliveredOrder = deliveredOrders.find(order => {
         const isOrderAllReviewed = order.items?.length > 0 && order.items.every(i => i.isReviewed);
-        const isDismissedThisSession = sessionStorage.getItem(`feedback_remind_later_${order.orderId}`);
-        return !isOrderAllReviewed && !isDismissedThisSession && !reviewedOrders.includes(order._id);
+        let isRemindLaterThisSession = false;
+        let isDismissedPermanently = false;
+        try {
+          isRemindLaterThisSession = sessionStorage.getItem(`feedback_remind_later_${order.orderId}`) === 'true';
+          isDismissedPermanently = localStorage.getItem(`feedback_dismissed_${order.orderId}`) === 'true';
+        } catch (e) {}
+        
+        return !isOrderAllReviewed && !isRemindLaterThisSession && !isDismissedPermanently && !reviewedOrders.includes(order._id);
       });
 
       if (unreviewedDeliveredOrder && !feedbackOrder && !trackingOrder) {
@@ -488,18 +499,29 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                 </div>
               );
             }) : (
-              <Empty className="rounded-2xl border border-dashed border-gray-200 py-20 bg-white">
+              <Empty className="rounded-2xl border border-dashed border-gray-200 py-16 px-4 bg-white text-center">
                 <EmptyHeader>
-                  <EmptyMedia variant="icon" className="size-16 rounded-full bg-[#F1F3F5] text-gray-400">
-                    <ShoppingBag className="size-8" />
-                  </EmptyMedia>
-                  <EmptyTitle className="text-xl font-bold text-gray-900 mt-4">No orders found</EmptyTitle>
-                  <EmptyDescription className="text-sm text-gray-500 mt-1">
+                  <div className="mx-auto mb-4 flex items-center justify-center">
+                    <Image
+                      src="/undraw_delivery-address_409g.svg"
+                      alt="No orders illustration"
+                      width={180}
+                      height={140}
+                      className="h-auto w-[160px] sm:w-[180px] object-contain opacity-95 select-none"
+                    />
+                  </div>
+                  <EmptyTitle className="text-xl font-bold text-gray-900 mt-2">No orders found</EmptyTitle>
+                  <EmptyDescription className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
                     {activeTab === 'not_shipped' 
-                      ? "You don't have any pending orders." 
+                      ? "You don't have any pending orders currently in progress." 
                       : "You don't have any delivered orders matching this time period."}
                   </EmptyDescription>
                 </EmptyHeader>
+                <div className="mt-6 flex justify-center">
+                  <Button render={<Link href="/products" />} nativeButton={false} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 px-6 font-semibold shadow-sm transition-all active:scale-[0.98]">
+                    Start Shopping
+                  </Button>
+                </div>
               </Empty>
             )}
           </div>
@@ -544,13 +566,18 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
           }}
           onDismissPermanently={() => {
             try {
-              sessionStorage.setItem(`feedback_remind_later_${feedbackOrder.orderId}`, 'true');
+              localStorage.setItem('feedback_dismiss_all', 'true');
+              deliveredOrders.forEach(o => {
+                if (o.orderId) {
+                  localStorage.setItem(`feedback_dismissed_${o.orderId}`, 'true');
+                }
+              });
             } catch (e) {}
             setFeedbackOrder(null);
           }}
           onClose={() => {
             try {
-              sessionStorage.setItem(`feedback_remind_later_${feedbackOrder.orderId}`, 'true');
+              localStorage.setItem(`feedback_dismissed_${feedbackOrder.orderId}`, 'true');
             } catch (e) {}
             setFeedbackOrder(null);
           }}
@@ -693,12 +720,18 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, on
   if (submitted) {
     return (
       <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-        <div className="bg-white rounded-2xl w-full max-w-sm p-8 text-center shadow-2xl transform scale-100 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto size-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle2 className="size-8" />
+        <div className="bg-white rounded-3xl w-full max-w-sm p-8 text-center shadow-2xl transform scale-100 animate-in zoom-in-95 duration-300 flex flex-col items-center">
+          <div className="mb-4 flex items-center justify-center">
+            <Image
+              src="/undraw_thumbs-up_f300.svg"
+              alt="Thank you for feedback"
+              width={140}
+              height={110}
+              className="h-auto w-[120px] object-contain select-none"
+            />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Thank you!</h2>
-          <p className="text-gray-500 text-sm">Your feedback will help others make better choices.</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-1.5">Thank you!</h2>
+          <p className="text-gray-500 text-sm leading-relaxed">Your feedback will help other shoppers make better choices.</p>
         </div>
       </div>
     );
@@ -709,17 +742,29 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, on
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-xl shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] h-auto animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 overflow-hidden">
         
         {/* Fixed Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 shrink-0 bg-white z-10">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 shrink-0 bg-white z-10 gap-3">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Review your items</h2>
             <p className="text-sm text-gray-500 mt-0.5">Order #{order.orderId} • {order.items.length} {order.items.length === 1 ? 'item' : 'items'}</p>
           </div>
-          <button 
-            onClick={onClose || onRemindLater}
-            className="size-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors"
-          >
-            <X className="size-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={onDismissPermanently}
+              className="text-xs text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer"
+              title="Don't ask for reviews on any order again"
+            >
+              Close All
+            </button>
+            <button 
+              type="button"
+              onClick={onClose}
+              className="size-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="size-4.5" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Products List (Mobile & PC) */}

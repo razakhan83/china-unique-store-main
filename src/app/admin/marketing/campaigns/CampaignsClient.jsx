@@ -230,10 +230,16 @@ export default function CampaignsClient({ initialDiscounted = [], allProducts = 
         </div>
 
         {products.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center gap-3 text-muted-foreground">
-            <Tag className="size-10 text-muted-foreground/40" />
-            <p className="font-medium text-foreground">No active special offers</p>
-            <p className="text-xs max-w-md">
+          <div className="p-12 sm:p-16 text-center flex flex-col items-center justify-center gap-3">
+            <Image
+              src="/undraw_social-ideas_3znc.svg"
+              alt="No campaigns"
+              width={160}
+              height={120}
+              className="h-auto w-[140px] sm:w-[160px] object-contain select-none opacity-90 mb-1"
+            />
+            <p className="font-semibold text-foreground text-base">No active special offers</p>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
               Click &quot;Add Special Offer&quot; to apply discounts to products and showcase them on your homepage.
             </p>
           </div>

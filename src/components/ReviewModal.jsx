@@ -131,14 +131,39 @@ export default function ReviewModal({ isOpen, onOpenChange, order, onComplete, o
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl max-h-[90dvh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden sm:rounded-2xl gap-0">
-        <DialogHeader className="p-4 sm:p-6 border-b border-border/80 shrink-0 bg-background">
-          <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Package className="size-5 sm:size-6 text-primary" />
-            Rate Your Experience
-          </DialogTitle>
-          <DialogDescription className="mt-1">
-            Order #{order.orderId} • {itemsToReview.length} {itemsToReview.length === 1 ? 'item' : 'items'} to review
-          </DialogDescription>
+        <DialogHeader className="p-4 sm:p-6 border-b border-border/80 shrink-0 bg-background flex flex-row items-center justify-between gap-3">
+          <div>
+            <DialogTitle className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Package className="size-5 sm:size-6 text-primary" />
+              Rate Your Experience
+            </DialogTitle>
+            <DialogDescription className="mt-1">
+              Order #{order.orderId} • {itemsToReview.length} {itemsToReview.length === 1 ? 'item' : 'items'} to review
+            </DialogDescription>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setActionTaken('dismiss_all');
+                onAction?.('dismiss_all');
+                onOpenChange(false);
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 px-2.5 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer"
+              title="Don't ask for reviews on any order again"
+            >
+              Close All
+            </button>
+            <div className="hidden sm:flex shrink-0 items-center justify-center">
+              <Image
+                src="/undraw_leave-a-review_uj9v.svg"
+                alt="Leave a review illustration"
+                width={70}
+                height={50}
+                className="h-auto w-[65px] object-contain opacity-95 select-none"
+              />
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y divide-y divide-border/60 space-y-6">

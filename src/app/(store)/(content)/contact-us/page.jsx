@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -41,14 +42,29 @@ export default async function ContactUsPage() {
           <span className="text-foreground font-medium">Contact Us</span>
         </nav>
 
-        {/* Page Header */}
-        <div className="mb-8 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Contact Us
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
-            Have questions about products, delivery, or an existing order? Get in touch with our team directly.
-          </p>
+        {/* Page Header with SVG */}
+        <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 rounded-2xl border border-border/80 bg-card p-6 sm:p-8">
+          <div className="max-w-md">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-2">
+              Customer Care
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              We&apos;re Here to Help
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              Have questions about products, delivery, or an existing order? Get in touch with our friendly support team.
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center justify-center">
+            <Image
+              src="/undraw_online-chat_qx4x.svg"
+              alt="Customer Support Illustration"
+              width={160}
+              height={130}
+              className="h-auto w-[130px] sm:w-[150px] object-contain select-none opacity-95"
+              priority
+            />
+          </div>
         </div>
 
         {/* WhatsApp Featured Row - Clean Box (No Gradient Tint) */}

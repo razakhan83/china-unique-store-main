@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Loader2, RadioTower, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,12 +49,27 @@ export default function AdminSocialSettingsClient({ initialSettings }) {
   }
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Social & Tracking</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage customer contact links, social destinations, and tracking credentials in one place.
-        </p>
+    <div className="w-full max-w-4xl space-y-6">
+      <div className="surface-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border border-border">
+        <div className="max-w-md">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-2">
+            Channels & Pixels
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Social & Tracking</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+            Manage customer contact links, social destinations, and tracking pixels (Facebook & TikTok) in one place.
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center justify-center">
+          <Image
+            src="/undraw_social-ideas_3znc.svg"
+            alt="Social Marketing Illustration"
+            width={160}
+            height={130}
+            className="h-auto w-[130px] sm:w-[150px] object-contain select-none opacity-95"
+            priority
+          />
+        </div>
       </div>
 
       <div className="space-y-6">

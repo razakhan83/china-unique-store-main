@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, ExternalLink, FileText, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -169,14 +170,30 @@ export default function AdminCustomPagesClient({ initialPages }) {
   }
 
   return (
-    <div className="w-full pb-10 md:pb-0">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+    <div className="w-full pb-10 md:pb-0 space-y-6">
+      <div className="surface-card rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border border-border">
+        <div className="max-w-md">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-2">
+            Content Management
+          </span>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Custom Pages</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
             Edit policy and information pages in the same clean admin style without touching code.
           </p>
         </div>
+        <div className="shrink-0 flex items-center justify-center">
+          <Image
+            src="/undraw_website-setup_o2zf.svg"
+            alt="Custom Pages Setup"
+            width={160}
+            height={130}
+            className="h-auto w-[130px] sm:w-[150px] object-contain select-none opacity-95"
+            priority
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="rounded-full px-3 py-1">
             {livePageCount} live

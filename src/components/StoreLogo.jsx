@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Store } from 'lucide-react';
@@ -39,11 +42,13 @@ export default function StoreLogo({
   onClick,
   isLink = true,
 }) {
+  const [imageError, setImageError] = useState(false);
+
   const prefersLightLogo = variant === 'dark-surface';
   const preferredLogoUrl = prefersLightLogo ? lightLogoUrl : darkLogoUrl;
   const fallbackLogoUrl = prefersLightLogo ? darkLogoUrl : lightLogoUrl;
   const logoUrl = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
-  const hasLogo = Boolean(String(logoUrl || '').trim());
+  const hasLogo = Boolean(String(logoUrl || '').trim()) && !imageError;
   const baseHeight = compact ? 52 : 48;
   const safeScalePercent = Math.min(200, Math.max(60, Number(logoScalePercent) || 100));
   const logoScale = 1 + ((safeScalePercent - 100) / 100) * 1.9;
@@ -64,6 +69,7 @@ export default function StoreLogo({
             sizes={compact ? '208px' : '192px'}
             className="h-auto w-auto object-contain origin-left-center pointer-events-none"
             style={{ height: `${baseHeight}px`, transform: `translateY(3px) scale(${logoScale})` }}
+            onError={() => setImageError(true)}
           />
         </div>
       ) : (

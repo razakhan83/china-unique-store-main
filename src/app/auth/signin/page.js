@@ -118,11 +118,11 @@ export default async function SignInPage() {
               {/* Vector Image for Mobile */}
               <div className="flex-1 flex items-center justify-center mt-6 mb-4 min-h-0">
                   <Image 
-                    src="/Tablet login-bro.svg" 
+                    src="/tablet-login-bro.svg" 
                     alt="Login Illustration" 
                     width={280}
                     height={220}
-                    className="w-full max-w-[220px] h-auto object-contain opacity-90 mix-blend-multiply"
+                    className="w-full max-w-[220px] h-auto object-contain opacity-90 mix-blend-multiply dark:mix-blend-normal"
                     priority
                   />
               </div>
@@ -170,10 +170,10 @@ export default async function SignInPage() {
               {/* Enhanced Svg Illustration Container */}
               <div className="relative w-full max-w-[280px] aspect-4/3 flex items-center justify-center">
                 <Image
-                  src="/undraw_secure-login_pdn4.svg"
+                  src="/tablet-login-bro.svg"
                   alt="Sign In Illustration"
                   fill
-                  className="object-contain drop-shadow-sm select-none"
+                  className="object-contain drop-shadow-sm select-none mix-blend-multiply dark:mix-blend-normal transition-transform duration-700 hover:scale-105"
                   priority
                 />
               </div>
