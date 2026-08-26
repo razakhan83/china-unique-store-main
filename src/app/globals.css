@@ -1004,3 +1004,42 @@ body:has(#checkout-root) .store-deferred-chrome {
     bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobile-bottom-nav-offset, 58px)) !important;
   }
 }
+
+/* Store footer responsive bottom padding */
+#store-footer {
+  padding-bottom: 3rem !important;
+}
+@media (max-width: 767px) {
+  #store-footer {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 58px + 1.75rem) !important;
+  }
+}
+
+/* TiltedProductMarquee custom infinite animation */
+:root {
+  --marquee-gap-half: 8px;
+}
+@media (min-width: 768px) {
+  :root {
+    --marquee-gap-half: 10px;
+  }
+}
+@keyframes marquee-left-custom {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - var(--marquee-gap-half))); }
+}
+@keyframes marquee-right-custom {
+  0% { transform: translateX(calc(-50% - var(--marquee-gap-half))); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee-left-custom {
+  animation: marquee-left-custom 25s linear infinite;
+}
+.animate-marquee-right-custom {
+  animation: marquee-right-custom 25s linear infinite;
+}
+.animate-marquee-left-custom:hover,
+.animate-marquee-right-custom:hover {
+  animation-play-state: paused;
+}
+

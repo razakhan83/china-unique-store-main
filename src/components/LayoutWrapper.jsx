@@ -110,17 +110,6 @@ export default function LayoutWrapper({ children, categories, settings }) {
         </HomeOnlyLayoutElements>
 
         <ConditionalLayoutElements>
-          <style dangerouslySetInnerHTML={{__html: `
-            #store-footer {
-              padding-bottom: 3rem !important;
-            }
-            @media (max-width: 767px) {
-              #store-footer {
-                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 58px + 1.75rem) !important;
-              }
-            }
-          `}} />
-
           <footer id="store-footer" className="border-t border-border bg-card pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
             <div className="container mx-auto max-w-7xl px-4">
 

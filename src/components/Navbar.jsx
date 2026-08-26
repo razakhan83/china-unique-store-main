@@ -556,14 +556,14 @@ function NavbarContent({
 
           {/* Top Secondary Navbar (now below header) */}
           <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
-            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-muted-foreground/90">
+            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
               <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
                 {/* Home Link */}
                 <Link 
                   href="/" 
                   className={cn(
                     "inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                    pathname === '/' ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                    pathname === '/' ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                   )}
                 >
                   <Home className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname === '/' ? 2.5 : 2.2} /> Home
@@ -585,7 +585,7 @@ function NavbarContent({
                       }}
                       className={cn(
                         "group/button flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out outline-none select-none active:scale-95 active:translate-y-0 hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)] cursor-pointer",
-                        pathname?.startsWith('/categories') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                        pathname?.startsWith('/categories') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                       )}
                     >
                       <LayoutGrid className="size-4 transition-transform duration-300 ease-out group-hover/button:scale-[1.15]" strokeWidth={pathname?.startsWith('/categories') ? 2.5 : 2.2} /> Categories
@@ -620,19 +620,19 @@ function NavbarContent({
                   href="/products" 
                   className={cn(
                     "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                    pathname === '/products' ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                    pathname === '/products' ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                   )}
                 >
                   <ShoppingBag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname === '/products' ? 2.5 : 2.2} /> All Products
                 </Link>
 
                 {/* Orders / Track Order */}
-                {session ? (
+                {mounted && session ? (
                   <Link 
                     href="/orders" 
                     className={cn(
                       "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                     )}
                   >
                     <Package className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname?.startsWith('/orders') ? 2.5 : 2.2} /> My Orders
@@ -642,7 +642,7 @@ function NavbarContent({
                     href="/orders" 
                     className={cn(
                       "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                     )}
                   >
                     <MapPin className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname?.startsWith('/orders') ? 2.5 : 2.2} /> Track Order
@@ -654,7 +654,7 @@ function NavbarContent({
                   href="/wishlist" 
                   className={cn(
                     "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                    pathname?.startsWith('/wishlist') ? "font-bold text-[#015347]" : "font-semibold text-muted-foreground/90"
+                    pathname?.startsWith('/wishlist') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
                   )}
                 >
                   <Heart className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname?.startsWith('/wishlist') ? 2.5 : 2.2} /> Wishlist
@@ -665,7 +665,7 @@ function NavbarContent({
                   href="/products?price=under300" 
                   className={cn(
                     "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
-                    pathname === '/products' ? "font-semibold text-muted-foreground/90" : "font-semibold text-muted-foreground/90"
+                    "font-semibold text-foreground/85"
                   )}
                 >
                   <Tag className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={2.2} /> Dollar Store
@@ -678,7 +678,7 @@ function NavbarContent({
                     "flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full transition-all duration-300 ease-out group active:scale-95 active:translate-y-0 select-none hover:bg-[#E3FCEF] hover:text-[#015347] hover:-translate-y-1.5 hover:scale-110 hover:shadow-[0_6px_20px_rgba(227,252,239,0.7)]",
                     pathname === '/contact' || pathname === '/about-us' || pathname === '/faq'
                       ? "font-bold text-[#015347]" 
-                      : "font-semibold text-muted-foreground/90"
+                      : "font-semibold text-foreground/85"
                   )}
                 >
                   <Phone className="size-4 transition-transform duration-300 ease-out group-hover:scale-110" strokeWidth={pathname === '/contact' ? 2.5 : 2.2} /> Contact Us

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Heart, LayoutGrid, LogOut, Settings, ShoppingBag, User, Package } from 'lucide-react';
@@ -24,33 +24,22 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
   const { data: session, status } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [loadedAvatarSrc, setLoadedAvatarSrc] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const avatarSrc = session?.user?.image || '';
   const isAvatarLoaded = !avatarSrc || loadedAvatarSrc === avatarSrc;
 
-  if (status === 'loading') {
+  if (!mounted || status === 'loading' || !session) {
     return (
       <div className="hidden md:block">
         <Button
           variant="ghost"
           size="icon-lg"
-          className={`nav-profile-button flex items-center justify-center overflow-hidden ${navActionButtonClass}`}
-          aria-label="Account"
-        >
-          <span className="relative flex size-6 items-center justify-center">
-            <User strokeWidth={1.5} className="size-[1.45rem]" />
-          </span>
-        </Button>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="hidden md:block">
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          onClick={() => setIsAuthModalOpen(true)}
+          onClick={() => mounted && !session && setIsAuthModalOpen(true)}
           className={`nav-profile-button overflow-hidden ${navActionButtonClass}`}
           title="Account"
         >
@@ -58,7 +47,7 @@ export default function NavbarDesktopAccountControl({ navActionButtonClass = '' 
             <User strokeWidth={1.5} className="size-[1.45rem]" />
           </span>
         </Button>
-        {isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
+        {mounted && isAuthModalOpen ? <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} /> : null}
       </div>
     );
   }

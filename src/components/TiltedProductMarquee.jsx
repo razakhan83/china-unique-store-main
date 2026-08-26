@@ -77,35 +77,6 @@ export default async function TiltedProductMarquee() {
       className="relative overflow-hidden w-full bg-background border-t border-border/50 py-8 md:py-12"
       style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 600px' }}
     >
-      {/* Dynamic CSS Injection with optimized speed and responsive gaps */}
-      <style dangerouslySetInnerHTML={{__html: `
-        :root {
-          --marquee-gap-half: 8px;
-        }
-        @media (min-width: 768px) {
-          :root {
-            --marquee-gap-half: 10px;
-          }
-        }
-        @keyframes marquee-left {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(calc(-50% - var(--marquee-gap-half))); }
-        }
-        @keyframes marquee-right {
-          0% { transform: translateX(calc(-50% - var(--marquee-gap-half))); }
-        }
-        .animate-marquee-left-custom {
-          animation: marquee-left 25s linear infinite;
-        }
-        .animate-marquee-right-custom {
-          animation: marquee-right 25s linear infinite;
-        }
-        .animate-marquee-left-custom:hover,
-        .animate-marquee-right-custom:hover {
-          animation-play-state: paused;
-        }
-      `}} />
-
       {/* Title / Intro */}
       <div className="container relative z-20 mx-auto px-4 mb-6 text-center max-w-2xl">
         <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-1.5">
