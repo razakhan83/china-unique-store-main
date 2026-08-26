@@ -75,24 +75,24 @@ export default function ProductsFilterSheet({ activeCategory = 'all', currentSor
   return (
     <Sheet>
       <SheetTrigger
-        className="relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/82 px-3 text-sm font-medium shadow-none transition-all outline-none hover:bg-muted hover:text-foreground md:h-11"
+        className="relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-background px-3 text-xs font-semibold shadow-2xs transition-all outline-none hover:bg-muted hover:text-foreground cursor-pointer"
         aria-label="Open filters"
       >
-        <SlidersHorizontal className="size-4" />
-        <span className="hidden sm:inline">Filters</span>
+        <SlidersHorizontal className="size-3.5 text-primary" />
+        <span>Filters</span>
         {activeFilterCount > 0 ? (
-          <Badge className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full p-0 text-[10px] leading-none">
+          <span className="flex size-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground leading-none shadow-xs">
             {activeFilterCount}
-          </Badge>
+          </span>
         ) : null}
       </SheetTrigger>
 
       <SheetContent side="bottom" className="rounded-t-2xl px-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-0 md:side-right md:rounded-l-2xl md:rounded-t-none">
-        <SheetHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-4">
-          <SheetTitle className="text-base font-bold">
+        <SheetHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 pr-14">
+          <SheetTitle className="text-base font-bold flex items-center gap-2">
             Filter Products
             {activeFilterCount > 0 ? (
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <Badge variant="secondary" className="text-[11px] font-semibold bg-muted text-muted-foreground">
                 {activeFilterCount} active
               </Badge>
             ) : null}
@@ -103,9 +103,8 @@ export default function ProductsFilterSheet({ activeCategory = 'all', currentSor
               variant="ghost"
               size="sm"
               onClick={handleClearAll}
-              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs font-semibold text-primary hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
             >
-              <X className="size-3.5" />
               Clear All
             </Button>
           ) : null}
