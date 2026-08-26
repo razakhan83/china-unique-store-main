@@ -51,7 +51,7 @@ async function createConnection() {
 }
 
 async function mongooseConnect() {
-  if (cached.conn) {
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
 
@@ -65,12 +65,8 @@ async function mongooseConnect() {
     return cached.conn;
   }
 
-  if (mongoose.connection.readyState === 0) {
-    cached.promise = null;
+  if (mongoose.connection.readyState === 0 || !cached.promise) {
     cached.conn = null;
-  }
-
-  if (!cached.promise) {
     cached.promise = createConnection();
   }
 
@@ -79,22 +75,7 @@ async function mongooseConnect() {
   } catch (e) {
     cached.promise = null;
     cached.conn = null;
-
-    // Keep the local workflow resilient, but fail fast in production so
-    // a bad connection moment does not double the user-visible wait time.
-    if (!isDev && !isBuildPhase) {
-      throw e;
-    }
-
-    try {
-      await mongoose.disconnect().catch(() => {});
-      cached.promise = createConnection();
-      cached.conn = await cached.promise;
-    } catch (retryError) {
-      cached.promise = null;
-      cached.conn = null;
-      throw retryError;
-    }
+    throw e;
   }
 
   return cached.conn;

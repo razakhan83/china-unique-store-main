@@ -268,8 +268,9 @@ export default function AddProduct() {
         );
         finalImages.push(uploaded);
       }
-    } catch {
-      toast.error("Image upload failed");
+    } catch (err) {
+      console.error("Image upload error:", err);
+      toast.error(err?.message ? `Image upload failed: ${err.message}` : "Image upload failed");
       setSaving(false);
       return;
     }
