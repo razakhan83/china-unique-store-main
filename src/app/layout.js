@@ -62,11 +62,6 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning data-scroll-behavior="smooth">
-      <head>
-        <meta name="google" content="notranslate" />
-        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-      </head>
       <body className={`${fontSans.variable} bg-background text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
