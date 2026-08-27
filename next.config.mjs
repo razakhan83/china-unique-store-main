@@ -4,6 +4,7 @@ const nextConfig = {
   logging: {
     browserToTerminal: true,
   },
+  compress: false,
   staticPageGenerationTimeout: 120,
   cacheComponents: true,
   cacheLife: {

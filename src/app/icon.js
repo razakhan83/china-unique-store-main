@@ -3,8 +3,6 @@ import path from 'node:path';
 
 import { getStoreSettings } from '@/lib/data';
 
-export const runtime = 'nodejs';
-
 async function readFallbackFavicon() {
   const faviconPath = path.join(process.cwd(), 'src', 'app', 'favicon.ico');
   const bytes = await readFile(faviconPath);

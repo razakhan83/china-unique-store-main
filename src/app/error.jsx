@@ -4,17 +4,17 @@ import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function StoreError({ error, reset }) {
+export default function GlobalError({ error, reset }) {
   useEffect(() => {
-    console.error('Store route error:', error);
+    console.error('Global application error:', error);
   }, [error]);
 
   return (
-    <section className="mx-auto flex min-h-[65vh] max-w-md flex-col items-center justify-center px-4 py-12 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12 text-center">
       <div className="mb-5 flex items-center justify-center select-none">
         <Image
           src="/undraw_fixing-bugs_13mt.svg"
-          alt="Something went wrong"
+          alt="Application error"
           width={220}
           height={160}
           className="h-auto w-[180px] sm:w-[220px] object-contain"
@@ -23,11 +23,11 @@ export default function StoreError({ error, reset }) {
       </div>
 
       <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-        Something Went Wrong
+        Application Error
       </h1>
 
       <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
-        We encountered an issue loading this section. Your cart and data are safe.
+        An unexpected error occurred. Please try refreshing or return to the home page.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -45,6 +45,6 @@ export default function StoreError({ error, reset }) {
           Back to Home
         </Link>
       </div>
-    </section>
+    </div>
   );
 }

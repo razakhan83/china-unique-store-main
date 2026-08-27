@@ -13,7 +13,8 @@ export default async function HomePage() {
   cacheLife('foreverish');
   cacheTag('home-page');
 
-  const { sections } = await getStorefrontHomePage();
+  const homeData = await getStorefrontHomePage().catch(() => ({ sections: [] }));
+  const sections = homeData?.sections || [];
 
   return <HomeSectionRenderer sections={sections} />;
 }

@@ -21,7 +21,7 @@ import LinkOrdersForm from '@/components/LinkOrdersForm';
 import OrdersClient from './OrdersClient';
 
 export const metadata = {
-  title: 'My Orders | Kifayatly',
+  title: 'My Orders | China Unique Store',
 };
 
 export default function OrdersPage() {

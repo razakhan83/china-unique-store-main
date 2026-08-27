@@ -8,11 +8,13 @@ const HomeScrollableBannerCarousel = dynamic(() => import('@/components/home/Hom
 const HomeVideoCatalog = dynamic(() => import('@/components/home/HomeVideoCatalog'));
 
 export default function HomeSectionRenderer({ sections = [] }) {
-  if (!sections.length) return null;
+  const safeSections = Array.isArray(sections) ? sections : [];
+  if (!safeSections.length) return null;
 
   return (
     <>
-      {sections.map((section) => {
+      {safeSections.map((section) => {
+        if (!section || !section.type) return null;
         if (section.type === 'HeroSlider') {
           return <HeroSlider key={section.id} slides={section.slides} />;
         }

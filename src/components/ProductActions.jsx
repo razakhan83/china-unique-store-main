@@ -80,14 +80,17 @@ export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', store
     };
 
     return (
-        <Button
+        <button
+            type="button"
             onClick={handleWhatsApp}
-            variant="outline"
-            className={cn("w-full h-12 rounded-xl text-[#128C7E] dark:text-[#25D366] border border-gray-200 dark:border-neutral-800 bg-[#25D366]/5 hover:bg-[#25D366]/10 shadow-none font-semibold", className)}
+            className={cn(
+                "w-full h-11 sm:h-12 flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/60 text-foreground font-bold text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-none",
+                className
+            )}
         >
-            <WhatsAppIcon className="size-5 mr-2" />
-            <span className="font-semibold text-sm">Order on WhatsApp</span>
-        </Button>
+            <WhatsAppIcon className="size-5 text-[#25D366] shrink-0" />
+            <span className="font-bold text-sm text-foreground">Order on WhatsApp</span>
+        </button>
     );
 }
 
@@ -306,23 +309,27 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             </div>
 
             {packOptions.length > 1 && (
-                <div className="space-y-3">
-                    <span className="text-sm font-semibold text-foreground">Pack Options</span>
+                <div className="space-y-2.5">
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">Pack Options</span>
                     <div className="flex flex-wrap gap-2">
-                        {packOptions.map((pack, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setSelectedPack(pack)}
-                                className={cn(
-                                    "flex h-7 sm:h-8 flex-none min-w-[70px] items-center justify-center whitespace-nowrap rounded-md px-3 text-[11px] sm:text-xs font-medium transition-colors outline-none",
-                                    selectedPack?.label === pack.label
-                                        ? "border-2 border-emerald-500 text-emerald-800 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                        : "border border-border/60 bg-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                                )}
-                            >
-                                {pack.label}
-                            </button>
-                        ))}
+                        {packOptions.map((pack, idx) => {
+                            const isSelected = selectedPack?.label === pack.label;
+                            return (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setSelectedPack(pack)}
+                                    className={cn(
+                                        "flex h-8 min-w-[62px] items-center justify-center whitespace-nowrap rounded-lg px-3 text-xs sm:text-[13px] font-semibold transition-all duration-200 active:scale-[0.96] outline-none cursor-pointer",
+                                        isSelected
+                                            ? "bg-foreground text-background border border-foreground shadow-sm"
+                                            : "border border-border bg-card text-foreground/75 hover:border-foreground/40 hover:text-foreground hover:bg-muted/50 font-medium"
+                                    )}
+                                >
+                                    {pack.label}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -330,7 +337,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             {!isOutOfStock ? (
                 <div className="hidden items-center gap-4 md:flex">
                     <span className="text-sm font-semibold text-foreground">Quantity</span>
-                    <div className="inline-flex items-center overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 hover:border-primary/40 bg-background shadow-none">
+                    <div className="inline-flex items-center overflow-hidden rounded-xl border border-border bg-background shadow-none">
                         <button
                             onClick={decrement}
                             className="inline-flex size-10 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -362,15 +369,14 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     </Button>
                 ) : (
                     <>
-                        <Button
+                        <button
+                            type="button"
                             onClick={handleAddToCart}
                             disabled={addLock.isPending || isOutOfStock}
-                            variant="outline"
                             className={cn(
-                                "add-to-cart-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50 hover:-translate-y-0.5",
-                                addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
+                                "add-to-cart-button h-11 flex-1 inline-flex items-center justify-center rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-border text-foreground bg-card hover:bg-muted/50 hover:border-border shadow-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+                                addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-border/40 opacity-80" : "bg-card text-foreground border-border hover:border-border"
                             )}
-                            size="lg"
                         >
                             <span className="relative inline-flex size-5 items-center justify-center mr-2">
                                 <Spinner
@@ -388,12 +394,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 />
                             </span>
                             {didJustAdd ? "Added" : "Add to Cart"}
-                        </Button>
+                        </button>
                         <Button
                             onClick={handleBuyNow}
                             disabled={buyLock.isPending || isOutOfStock}
                             className={cn(
-                                "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95 hover:-translate-y-0.5",
+                                "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95",
                                 buyLock.isPending ? "opacity-90 cursor-wait" : ""
                             )}
                             size="lg"
@@ -426,7 +432,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 {!isOutOfStock ? (
                     <>
                         <div className="flex items-center gap-2">
-                            <div className="inline-flex flex-[0.7] items-center justify-between overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 hover:border-primary/40 bg-background h-11 px-1 shadow-none">
+                            <div className="inline-flex flex-[0.7] items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-11 px-1 shadow-none">
                                 <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Minus className="size-3.5" />
                                 </button>
@@ -435,13 +441,13 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                     <Plus className="size-3.5" />
                                 </button>
                             </div>
-                            <Button
+                            <button
+                                type="button"
                                 onClick={handleAddToCart}
                                 disabled={addLock.isPending || isOutOfStock}
-                                variant="outline"
                                 className={cn(
-                                    "add-to-cart-button h-11 flex-[1.3] rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-300 ease-out border border-gray-200 dark:border-neutral-800 text-foreground shadow-none hover:bg-muted/50",
-                                    addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-gray-200/40 opacity-80" : "bg-background text-foreground border-gray-200 dark:border-neutral-800"
+                                    "add-to-cart-button h-11 flex-[1.3] inline-flex items-center justify-center rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-border text-foreground bg-card hover:bg-muted/50 hover:border-border shadow-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+                                    addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-border/40 opacity-80" : "bg-card text-foreground border-border hover:border-border"
                                 )}
                             >
                                 <span className="relative inline-flex size-4 items-center justify-center mr-1.5">
@@ -460,7 +466,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                     />
                                 </span>
                                 {didJustAdd ? "Added" : "Add to Cart"}
-                            </Button>
+                            </button>
                         </div>
                         <Button
                             onClick={handleBuyNow}

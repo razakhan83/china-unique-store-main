@@ -203,10 +203,6 @@ function NavbarContent({
   const router = useRouter();
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/checkout')) {
-    return null;
-  }
-
   const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
   const { activeCategory = 'all', isSidebarOpen = false, isCartOpen = false } = useCartUi() || {};
   const {
@@ -454,6 +450,10 @@ function NavbarContent({
     'nav-icon-button relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground transition-all duration-300 ease-out hover:-translate-y-1.5 hover:scale-110 hover:border-[#E3FCEF] hover:bg-[#E3FCEF] hover:text-[#015347] hover:shadow-[0_8px_25px_rgba(227,252,239,0.8)] active:scale-95 active:translate-y-0';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
   const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
+
+  if (pathname?.startsWith('/checkout')) {
+    return null;
+  }
 
   return (
     <>
@@ -804,28 +804,28 @@ export function NavbarStaticShell({
         </header>
 
         <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
-          <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-muted-foreground/90">
+          <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
             <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
-              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Home className="size-4" strokeWidth={2.2} /> Home
               </Link>
-              <span className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full text-muted-foreground">
-                <LayoutGrid className="size-4" strokeWidth={2.2} /> Categories / Collections
+              <Link href="/categories" className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+                <LayoutGrid className="size-4" strokeWidth={2.2} /> Categories
                 <ChevronDown className="size-3.5" />
-              </span>
-              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              </Link>
+              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <ShoppingBag className="size-4" strokeWidth={2.2} /> All Products
               </Link>
-              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <MapPin className="size-4" strokeWidth={2.2} /> Track Order
               </Link>
-              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Heart className="size-4" strokeWidth={2.2} /> Wishlist
               </Link>
-              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Tag className="size-4" strokeWidth={2.2} /> Dollar Store
               </Link>
-              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Phone className="size-4" strokeWidth={2.2} /> Contact Us
               </Link>
             </div>

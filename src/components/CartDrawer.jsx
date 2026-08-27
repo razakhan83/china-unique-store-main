@@ -260,14 +260,14 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                 </CardHeader>
               </Card>
               <div className="flex items-center gap-2.5 mt-1">
-                <Button
+                <button
                   type="button"
-                  className="flex-1 h-11 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/90 hover:bg-emerald-100/90 text-emerald-900 text-[12.5px] sm:text-sm font-bold shadow-none transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex-1 h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card hover:bg-muted/60 text-foreground text-[12.5px] sm:text-sm font-bold shadow-none transition-all duration-200 active:scale-[0.98] cursor-pointer"
                   onClick={handleWhatsAppDirectCheckout}
                 >
-                  <WhatsAppIcon className="mr-1.5 size-4.5 shrink-0 text-emerald-600" />
-                  <span className="truncate">Order on WhatsApp</span>
-                </Button>
+                  <WhatsAppIcon className="size-4.5 shrink-0 text-[#25D366]" />
+                  <span className="truncate text-foreground font-bold">Order on WhatsApp</span>
+                </button>
                 
                 <Link 
                   href="/checkout" 

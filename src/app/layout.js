@@ -62,7 +62,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body className={`${fontSans.variable} bg-background text-foreground antialiased`} suppressHydrationWarning>
+      <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="bottom-center" richColors />

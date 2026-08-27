@@ -2,6 +2,7 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowDownWideNarrow, Search, SearchX, Clock } from "lucide-react";
 
 import ProductCard from "@/components/ProductCard";
@@ -266,10 +267,10 @@ function ProductGridContent({
           </div>
         ) : (
           <div className="products-page-empty relative mt-4 sm:mt-6 w-full">
-            <div className="rounded-2xl border border-border/70 bg-card p-8 sm:p-12 text-center flex flex-col items-center justify-center">
+            <div className="rounded-2xl border border-border bg-card p-8 sm:p-12 text-center flex flex-col items-center justify-center">
               <div className="mb-5 flex items-center justify-center">
                 <Image
-                  src="/undraw_skateboarding_i2pz.svg"
+                  src="/undraw_no-data_ig65.svg"
                   alt="No products found"
                   width={180}
                   height={140}
@@ -277,9 +278,19 @@ function ProductGridContent({
                 />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-1.5">No products found</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Try adjusting your search or selecting another category to explore the catalog.
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                {searchTerm ? `No products matched your search for "${searchTerm}".` : 'Try adjusting your search query, filters, or category to explore the catalog.'}
               </p>
+              {searchTerm ? (
+                <div className="mt-5">
+                  <Link
+                    href="/products"
+                    className="h-10 px-5 inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm shadow-none transition-all active:scale-[0.98]"
+                  >
+                    Clear Search &amp; Show All Products
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

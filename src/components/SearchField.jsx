@@ -154,7 +154,16 @@ export default function SearchField({
               })}
             </ul>
           ) : (
-            <div className="px-5 py-6 text-center text-sm text-muted-foreground">{emptyLabel || `No products found for "${value}"`}</div>
+            <div className="px-5 py-6 text-center text-sm text-muted-foreground flex flex-col items-center justify-center gap-1.5">
+              <Image
+                src="/undraw_no-data_ig65.svg"
+                alt="No products found"
+                width={80}
+                height={55}
+                className="h-12 w-auto object-contain opacity-85 select-none mb-1"
+              />
+              <span className="text-xs sm:text-sm font-medium">{emptyLabel || `No products found for "${value}"`}</span>
+            </div>
           )}
         </div>
       ) : null}

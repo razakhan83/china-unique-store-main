@@ -56,6 +56,63 @@ import { cn } from '@/lib/utils';
 import CopyButton from '@/components/CopyButton';
 import InvoiceButton from '@/components/InvoiceButtonWrapper';
 
+const getOrderStatusDetails = (status) => {
+  const norm = normalizeOrderStatus(status);
+  switch (norm) {
+    case 'Order Confirmed':
+      return {
+        label: 'Order Confirmed',
+        icon: ClipboardCheck,
+        svgImage: '/undraw_order-confirmed_m9e9 (1).svg',
+        color: 'text-blue-600',
+      };
+    case 'In Process':
+    case 'Packed':
+      return {
+        label: norm,
+        icon: Clock,
+        svgImage: '/undraw_processing_bto8.svg',
+        color: 'text-amber-600',
+      };
+    case 'Shipped':
+    case 'Out for delivery':
+      return {
+        label: norm,
+        icon: Truck,
+        svgImage: '/undraw_delivery-address_409g.svg',
+        color: 'text-sky-600',
+      };
+    case 'Delivered':
+      return {
+        label: 'Delivered',
+        icon: BadgeCheck,
+        svgImage: '/undraw_order-delivered_gy61.svg',
+        color: 'text-emerald-600',
+      };
+    case 'Cancelled':
+      return {
+        label: 'Cancelled',
+        icon: X,
+        svgImage: null,
+        color: 'text-red-500',
+      };
+    case 'Returned':
+      return {
+        label: 'Returned',
+        icon: CheckCircle2,
+        svgImage: null,
+        color: 'text-purple-600',
+      };
+    default:
+      return {
+        label: norm,
+        icon: Package,
+        svgImage: '/undraw_order-confirmed_m9e9 (1).svg',
+        color: 'text-gray-600',
+      };
+  }
+};
+
 const ProgressTracker = ({ status }) => {
   const steps = [
     { label: 'Order Confirmed', key: 'Order Confirmed', Icon: ClipboardCheck },
@@ -325,44 +382,70 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
         {/* Left Column (80%) */}
         <div className="w-full lg:flex-1 flex flex-col min-w-0">
           
-          <div className="flex items-center gap-3 mb-6">
-            <h1 className="text-3xl sm:text-[32px] font-bold text-gray-900 tracking-tight">Your Orders</h1>
-            <Badge variant="secondary" className="bg-gray-100 text-gray-900 font-bold px-2.5 py-0.5 rounded-full text-sm">
-              {displayOrders.length}
-            </Badge>
+          <div className="mb-4">
+            <h1 className="text-2xl sm:text-[30px] font-bold text-gray-900 tracking-tight">Your Orders</h1>
           </div>
 
-          {/* Tabs & Filter Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex p-1 bg-[#F1F3F5] rounded-xl w-max overflow-x-auto max-w-full no-scrollbar ring-1 ring-black/5">
+          {/* Tabs Header */}
+          <div className="mb-3">
+            <div className="grid grid-cols-2 sm:inline-flex p-1 bg-[#F1F3F5] rounded-xl ring-1 ring-black/5 w-full sm:w-auto">
               <button 
+                type="button"
                 onClick={() => setActiveTab('not_shipped')} 
-                className={cn("px-5 py-2.5 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeTab === 'not_shipped' ? "bg-white text-gray-900 shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50")}
+                className={cn(
+                  "flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-[13px] font-semibold rounded-lg transition-all text-center cursor-pointer select-none",
+                  activeTab === 'not_shipped' 
+                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-black/5 font-bold" 
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                )}
               >
-                Not Yet Shipped ({activeOrders.length})
+                Not Yet Shipped
               </button>
               <button 
+                type="button"
                 onClick={() => setActiveTab('delivered')} 
-                className={cn("px-5 py-2.5 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeTab === 'delivered' ? "bg-white text-gray-900 shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50")}
+                className={cn(
+                  "flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-[13px] font-semibold rounded-lg transition-all text-center cursor-pointer select-none",
+                  activeTab === 'delivered' 
+                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-black/5 font-bold" 
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                )}
               >
-                Delivered Orders ({deliveredOrders.length})
+                Delivered Orders
               </button>
             </div>
-            
+          </div>
+
+          {/* Subtitle Count & Sort Filter Row */}
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <div className="text-xs sm:text-sm text-gray-500 font-medium min-w-0">
+              {activeTab === 'not_shipped' ? (
+                <span>
+                  You have <strong className="text-gray-900 font-semibold">{activeOrders.length} active {activeOrders.length === 1 ? 'order' : 'orders'}</strong>
+                </span>
+              ) : (
+                <span>
+                  You have <strong className="text-gray-900 font-semibold">{filteredDeliveredOrders.length} delivered {filteredDeliveredOrders.length === 1 ? 'order' : 'orders'}</strong>
+                </span>
+              )}
+            </div>
+
             {activeTab === 'delivered' && (
-              <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="w-[170px] bg-[#F1F3F5] border-transparent font-semibold text-gray-700 hover:bg-gray-200 focus:ring-0 rounded-xl h-10 px-4 ring-1 ring-black/5">
-                  <SelectValue placeholder="Time filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="past_30_days" className="font-medium">Last 30 Days</SelectItem>
-                  <SelectItem value="past_3_months" className="font-medium">Past 3 Months</SelectItem>
-                  <SelectItem value={String(currentYear)} className="font-medium">{currentYear}</SelectItem>
-                  <SelectItem value={String(prevYear)} className="font-medium">{prevYear}</SelectItem>
-                  <SelectItem value="older" className="font-medium">Older</SelectItem>
-                  <SelectItem value="all" className="font-medium">All Time</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="shrink-0">
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className="w-auto min-w-[120px] sm:min-w-[140px] bg-white border border-gray-200/90 font-medium text-[11.5px] sm:text-xs text-gray-700 hover:bg-gray-50/80 focus:ring-0 rounded-lg h-8 px-2.5 shadow-none ring-0">
+                    <SelectValue placeholder="Time filter" />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="past_30_days" className="font-medium text-xs sm:text-sm">Last 30 Days</SelectItem>
+                    <SelectItem value="past_3_months" className="font-medium text-xs sm:text-sm">Past 3 Months</SelectItem>
+                    <SelectItem value={String(currentYear)} className="font-medium text-xs sm:text-sm">{currentYear}</SelectItem>
+                    <SelectItem value={String(prevYear)} className="font-medium text-xs sm:text-sm">{prevYear}</SelectItem>
+                    <SelectItem value="older" className="font-medium text-xs sm:text-sm">Older</SelectItem>
+                    <SelectItem value="all" className="font-medium text-xs sm:text-sm">All Time</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
           
@@ -372,6 +455,8 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
               const isDelivered = normalizeOrderStatus(order.status) === 'Delivered';
               const norm = normalizeOrderStatus(order.status);
               const itemCount = order.items.reduce((acc, item) => acc + item.quantity, 0);
+              const statusDetails = getOrderStatusDetails(order.status);
+              const StatusIcon = statusDetails.icon;
               
               return (
                 <div key={order._id} className="rounded-xl border border-gray-200 bg-white shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col">
@@ -412,25 +497,53 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                   <div className="p-6">
                     <div className="mb-6">
                       {isDelivered ? (
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex flex-col gap-1">
-                            <h3 className="text-[17px] sm:text-[19px] font-bold text-gray-900 tracking-tight">
-                              Delivered {mounted ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <h3 className="text-[16px] sm:text-[19px] font-bold text-gray-900 tracking-tight leading-tight">
+                              Delivered {mounted ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                             </h3>
-                            <p className="text-sm text-gray-500 mt-0.5">Your package was delivered successfully.</p>
+                            <p className="text-xs sm:text-sm text-gray-500">Your package was delivered successfully.</p>
                           </div>
-                          <div className="shrink-0 ml-2 opacity-90 select-none">
-                             <DeliveredStamp className="origin-right" />
+                          <div className="shrink-0 select-none">
+                            <Image
+                              src="/undraw_order-delivered_gy61.svg"
+                              alt="Delivered"
+                              width={90}
+                              height={65}
+                              className="h-12 sm:h-16 w-auto object-contain"
+                            />
                           </div>
                         </div>
                       ) : (
-                        <h3 className="text-[17px] sm:text-[19px] font-bold text-gray-900 tracking-tight">
-                          Estimated Delivery: {mounted ? (() => {
-                            const minD = new Date(new Date(order.createdAt).getTime() + 3 * 24 * 60 * 60 * 1000);
-                            const maxD = new Date(new Date(order.createdAt).getTime() + 5 * 24 * 60 * 60 * 1000);
-                            return `${minD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${maxD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-                          })() : ''} — Currently {norm}
-                        </h3>
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <h3 className="text-[15px] sm:text-[19px] font-bold text-gray-900 tracking-tight leading-snug">
+                              <span className="block sm:inline text-gray-800">Estimated Delivery</span>
+                              <span className="hidden sm:inline sm:mx-1">:</span>
+                              <span className="block sm:inline text-gray-900 font-extrabold sm:font-bold">
+                                {mounted ? (() => {
+                                  const minD = new Date(new Date(order.createdAt).getTime() + 3 * 24 * 60 * 60 * 1000);
+                                  const maxD = new Date(new Date(order.createdAt).getTime() + 5 * 24 * 60 * 60 * 1000);
+                                  return `${minD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${maxD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                                })() : ''}
+                              </span>
+                            </h3>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-600">
+                              Currently <span className="text-gray-900 font-bold">{statusDetails.label}</span>
+                            </p>
+                          </div>
+                          {statusDetails.svgImage ? (
+                            <div className="shrink-0 select-none">
+                              <Image
+                                src={statusDetails.svgImage}
+                                alt={statusDetails.label}
+                                width={90}
+                                height={65}
+                                className="h-12 sm:h-16 w-auto object-contain"
+                              />
+                            </div>
+                          ) : null}
+                        </div>
                       )}
                     </div>
                     

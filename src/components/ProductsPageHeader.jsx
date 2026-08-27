@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Loader2, Search, Clock, Tag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Clock, Tag, X } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -312,6 +312,33 @@ export default function ProductsPageHeader({
         <h1 className="products-page-heading text-[1.8rem] font-bold tracking-tight text-foreground [text-wrap:balance] md:text-3xl">
           {pageTitle}
         </h1>
+
+        {searchTerm ? (
+          <div className="mt-3 inline-flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs sm:text-sm text-foreground">
+            <span>
+              Search active: <strong className="font-bold text-primary">&ldquo;{searchTerm}&rdquo;</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (activeCategory && activeCategory !== "all") {
+                  params.set("category", activeCategory);
+                }
+                if (sort && sort !== "newest") {
+                  params.set("sort", sort);
+                }
+                const qs = params.toString();
+                router.push(qs ? `/products?${qs}` : "/products");
+              }}
+              className="inline-flex items-center gap-1 rounded-md bg-muted hover:bg-muted/80 px-2 py-0.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <span>Clear</span>
+              <X className="size-3.5" />
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
