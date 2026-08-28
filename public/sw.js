@@ -1,5 +1,5 @@
-const CACHE_NAME = 'china-unique-shell-v1';
-const ASSETS_CACHE = 'china-unique-assets-v1';
+const CACHE_NAME = 'china-unique-shell-v2';
+const ASSETS_CACHE = 'china-unique-assets-v2';
 
 // Install event: cache core shell immediately
 self.addEventListener('install', (event) => {
@@ -38,12 +38,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Chunks, Fonts, and Next Static Files: Cache-First
+  // Hashed webpack/turbopack assets only — never cache arbitrary .js (RSC/HMR/new deploys)
   if (
     url.pathname.startsWith('/_next/static/') ||
-    url.pathname.endsWith('.woff2') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.js')
+    url.pathname.endsWith('.woff2')
   ) {
     event.respondWith(
       caches.open(ASSETS_CACHE).then(async (cache) => {
@@ -64,24 +62,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. HTML Page Navigations: Stale-While-Revalidate (Instant 0ms Page Shell, No Blank Screen)
+  // Navigations: network-first so App Router streaming and new deploys stay correct
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
-
-        const fetchPromise = fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse.ok) {
-              cache.put(request, networkResponse.clone());
-            }
-            return networkResponse;
-          })
-          .catch(() => cachedResponse);
-
-        // If cached page exists, return it instantly (0ms blank time)
-        // while fetchPromise runs in the background to update the cache
-        return cachedResponse || fetchPromise;
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          const cachedResponse = await cache.match(request);
+          return cachedResponse || new Response('', { status: 408 });
+        }
       })
     );
   }

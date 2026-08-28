@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getProductsList } from '@/lib/data';
 import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
+import MarqueeTrack from '@/components/home/MarqueeTrack';
 
 function MarqueeCard({ product }) {
   const primaryImage = product.Images?.[0]?.url;
@@ -10,7 +11,8 @@ function MarqueeCard({ product }) {
 
   return (
     <Link 
-      href={`/products/${product.slug || product.id}`} 
+      href={`/products/${product.slug || product.id}`}
+      prefetch={false}
       className="block relative aspect-[4/5] rounded-xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.02] transition-[transform,box-shadow,border-color,opacity] duration-300 w-[120px] sm:w-[150px] md:w-[180px] shrink-0 group/card flex flex-col"
     >
       {/* Product Image Area */}
@@ -22,6 +24,7 @@ function MarqueeCard({ product }) {
             fill 
             className="object-contain p-2 transition-transform duration-500 group-hover/card:scale-105" 
             sizes="(max-width: 640px) 25vw, 15vw" 
+            loading="lazy"
             priority={false}
           />
         ) : (
@@ -40,18 +43,14 @@ function MarqueeCard({ product }) {
 }
 
 function MarqueeRow({ products, direction, className = '' }) {
-  // We duplicate the list to make it infinite
   const items = [...products, ...products];
-  const animationClass = direction === 'left' ? 'animate-marquee-left-custom' : 'animate-marquee-right-custom';
-  
+
   return (
-    <div className={`overflow-hidden w-full relative py-1 ${className}`}>
-      <div className={`flex gap-4 md:gap-5 w-max ${animationClass}`}>
-        {items.map((product, idx) => (
-          <MarqueeCard key={`${product.id}-${idx}`} product={product} />
-        ))}
-      </div>
-    </div>
+    <MarqueeTrack direction={direction} className={className}>
+      {items.map((product, idx) => (
+        <MarqueeCard key={`${product.id}-${idx}`} product={product} />
+      ))}
+    </MarqueeTrack>
   );
 }
 

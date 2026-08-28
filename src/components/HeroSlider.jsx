@@ -43,12 +43,84 @@ function SlideFrame({ href, isActive, children }) {
   return (
     <Link
       href={href}
+      prefetch={false}
       tabIndex={isActive ? 0 : -1}
       aria-hidden={!isActive}
       className="block h-full w-full"
     >
       {children}
     </Link>
+  );
+}
+
+function isNearbySlide(index, activeIndex, total) {
+  if (total <= 1) return true;
+  if (index === 0) return true;
+  if (index === activeIndex) return true;
+  if (index === (activeIndex + 1) % total) return true;
+  if (index === (activeIndex - 1 + total) % total) return true;
+  return false;
+}
+
+function HeroSlideImage({ slide, isPriority }) {
+  const desktopSrc = slide.images.desktopSrc || slide.images.mobileSrc;
+  const mobileSrc = slide.images.mobileSrc || slide.images.desktopSrc;
+  const hasDistinct =
+    Boolean(slide.images.desktopSrc && slide.images.mobileSrc && slide.images.desktopSrc !== slide.images.mobileSrc);
+
+  if (!hasDistinct) {
+    const src = optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
+    const blur = slide.images.desktopBlur || slide.images.mobileBlur;
+    return (
+      <Image
+        src={src}
+        alt={slide.alt}
+        fill
+        sizes="100vw"
+        priority={isPriority}
+        fetchPriority={isPriority ? 'high' : 'auto'}
+        loading={isPriority ? 'eager' : 'lazy'}
+        className="object-cover"
+        quality={80}
+        {...getBlurPlaceholderProps(blur)}
+      />
+    );
+  }
+
+  return (
+    <>
+      {/* Mobile banner */}
+      <div className="relative h-full w-full md:hidden">
+        <Image
+          src={optimizeCloudinaryUrl(mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
+          alt={slide.alt}
+          fill
+          sizes="100vw"
+          priority={isPriority}
+          fetchPriority={isPriority ? 'high' : 'auto'}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="object-cover"
+          quality={80}
+          {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
+        />
+      </div>
+
+      {/* Desktop banner */}
+      <div className="relative hidden h-full w-full md:block">
+        <Image
+          src={optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
+          alt={slide.alt}
+          fill
+          sizes="100vw"
+          priority={isPriority}
+          fetchPriority={isPriority ? 'high' : 'auto'}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="object-cover"
+          quality={85}
+          {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
+        />
+      </div>
+    </>
   );
 }
 
@@ -166,36 +238,10 @@ export default function HeroSlider({ slides = [] }) {
               aria-hidden={!isActive}
             >
               <SlideFrame href={slide.link} isActive={isActive}>
-                {/* Mobile screen banner */}
-                <div className="relative h-full w-full md:hidden">
-                  <Image
-                    src={optimizeCloudinaryUrl(slide.images.mobileSrc || slide.images.desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
-                    alt={slide.alt}
-                    fill
-                    sizes="100vw"
-                    priority={index === 0}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    className="object-cover"
-                    quality={80}
-                    {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
-                  />
-                </div>
-
-                {/* Desktop screen banner */}
-                <div className="relative hidden h-full w-full md:block">
-                  <Image
-                    src={optimizeCloudinaryUrl(slide.images.desktopSrc || slide.images.mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
-                    alt={slide.alt}
-                    fill
-                    sizes="100vw"
-                    priority={index === 0}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    className="object-cover"
-                    quality={85}
-                    {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
-                  />
+                <div className="relative h-full w-full">
+                  {isNearbySlide(index, safeActiveIndex, resolvedSlides.length) ? (
+                    <HeroSlideImage slide={slide} isPriority={index === 0} />
+                  ) : null}
                 </div>
               </SlideFrame>
             </div>

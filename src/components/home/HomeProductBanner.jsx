@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 
@@ -11,10 +11,11 @@ function BannerFrame({ item, className = '', sizes }) {
   const content = (
     <div className={`relative overflow-hidden rounded-[1.75rem] ${className}`}>
       <Image
-        src={optimizeCloudinaryUrl(item.image.url)}
+        src={optimizeCloudinaryUrl(item.image.url, CLOUDINARY_IMAGE_PRESETS.storeBanner)}
         alt={item.alt || 'Store banner'}
         fill
         sizes={sizes}
+        loading="lazy"
         className="object-cover transition-transform duration-500 hover:scale-[1.02]"
         {...getBlurPlaceholderProps(item.image.blurDataURL)}
       />
@@ -22,7 +23,7 @@ function BannerFrame({ item, className = '', sizes }) {
   );
 
   return item.link ? (
-    <Link href={item.link} className="block">
+    <Link href={item.link} prefetch={false} className="block">
       {content}
     </Link>
   ) : (

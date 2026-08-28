@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 
@@ -15,10 +15,11 @@ function ScrollableBannerCard({ banner, index }) {
   const frame = (
     <div className="relative aspect-[16/7] overflow-hidden rounded-[1.75rem] bg-muted shadow-[0_18px_42px_rgba(10,61,46,0.09)]">
       <Image
-        src={optimizeCloudinaryUrl(banner.image.url)}
+        src={optimizeCloudinaryUrl(banner.image.url, CLOUDINARY_IMAGE_PRESETS.storeBanner)}
         alt={banner.alt || `Scrollable banner ${index + 1}`}
         fill
         sizes="(max-width: 768px) 88vw, (max-width: 1280px) 58vw, 42vw"
+        loading="lazy"
         className="object-cover transition-transform duration-500 hover:scale-[1.02]"
         {...getBlurPlaceholderProps(banner.image.blurDataURL)}
       />
@@ -28,7 +29,7 @@ function ScrollableBannerCard({ banner, index }) {
   return (
     <article className="min-w-[88%] scroll-ml-4 snap-start sm:min-w-[68%] lg:min-w-[44%]">
       {banner.link ? (
-        <Link href={banner.link} className="block">
+        <Link href={banner.link} prefetch={false} className="block">
           {frame}
         </Link>
       ) : (

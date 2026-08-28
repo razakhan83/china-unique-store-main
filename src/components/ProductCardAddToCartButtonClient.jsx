@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { flyToCart } from '@/lib/flyToCart';
+import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 export default function ProductCardAddToCartButtonClient({ product, isOutOfStock = false, mode = "full" }) {
   const router = useRouter();
@@ -37,7 +38,11 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
     if (isOutOfStock || isBusy || !addToCart) return;
 
     const sourceEl = event.currentTarget;
-    const imageSrc = product?.Images?.[0]?.url || product?.images?.[0]?.url || (typeof product?.images?.[0] === 'string' ? product.images[0] : '') || product?.image || product?.Image || '';
+    const rawImage =
+      product?.Images?.[0]?.url || product?.images?.[0]?.url || (typeof product?.images?.[0] === 'string' ? product.images[0] : '') || product?.image || product?.Image || '';
+    const imageSrc = rawImage
+      ? optimizeCloudinaryUrl(rawImage, CLOUDINARY_IMAGE_PRESETS.cartItem)
+      : '';
 
     // Trigger lightweight 60fps fly-to-cart animation
     flyToCart({ sourceEl, imageSrc });

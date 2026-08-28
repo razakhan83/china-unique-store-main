@@ -8,6 +8,7 @@ export default function HomeProductGridSection({
   category = null,
   products = [],
   viewAllHref = '',
+  priorityCount = 0,
 }) {
   if (!products.length) return null;
 
@@ -37,6 +38,7 @@ export default function HomeProductGridSection({
               product={product}
               className="h-full shadow-none"
               imageBg={sectionBg}
+              priority={index < priorityCount}
             />
           ))}
         </CategoryProductSlider>

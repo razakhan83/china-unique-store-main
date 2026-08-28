@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
+import { Suspense } from 'react';
 import HomeSectionRenderer from '@/components/home/HomeSectionRenderer';
+import HomeBelowFold from '@/components/home/HomeBelowFold';
 import { getStorefrontHomePage } from '@/lib/data';
 
 export const metadata = {
@@ -11,13 +13,17 @@ export const metadata = {
 export default async function HomePage() {
   'use cache';
   cacheLife('foreverish');
-  cacheTag('home-page');
+  cacheTag('home-page', 'settings', 'products');
 
   const homeData = await getStorefrontHomePage().catch(() => ({ sections: [] }));
   const sections = homeData?.sections || [];
 
-  return <HomeSectionRenderer sections={sections} />;
+  return (
+    <>
+      <HomeSectionRenderer sections={sections} />
+      <Suspense fallback={<div className="h-48 w-full bg-background" aria-hidden="true" />}>
+        <HomeBelowFold />
+      </Suspense>
+    </>
+  );
 }
-
-
-

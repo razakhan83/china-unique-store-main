@@ -22,7 +22,7 @@ export default function ProductReviewsClient({ productId, productName, reviewCou
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [canReview, setCanReview] = useState(false);
-  const [checkingPermission, setCheckingPermission] = useState(true);
+  const [checkingPermission, setCheckingPermission] = useState(false);
   const [guestOrderInfo, setGuestOrderInfo] = useState(null);
 
   useEffect(() => {
@@ -86,10 +86,27 @@ export default function ProductReviewsClient({ productId, productName, reviewCou
       }
     }
 
-    checkPermission();
+    let idleId = null;
+    let timer = null;
+
+    if (status === 'loading') {
+      return () => {
+        ignore = true;
+      };
+    }
+
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(checkPermission, { timeout: 2500 });
+    } else {
+      timer = window.setTimeout(checkPermission, 1800);
+    }
 
     return () => {
       ignore = true;
+      if (idleId != null && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timer != null) window.clearTimeout(timer);
     };
   }, [productId, session, status]);
 

@@ -74,10 +74,7 @@ export default function HomeFaqSection() {
 
             <span className="text-border">|</span>
 
-            <Link
-              href="/faq"
-              className="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
+            <Link href="/faq" prefetch={false} className="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary/80 transition-colors">
               <span>View all FAQs</span>
               <ArrowRight className="size-3.5" />
             </Link>

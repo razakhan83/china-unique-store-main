@@ -76,7 +76,6 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import StoreLogo from '@/components/StoreLogo';
-import MobileMenuContent from '@/components/MobileMenuContent';
 import { cn } from '@/lib/utils';
 
 import NavbarSearchPanel from '@/components/NavbarSearchPanel';
@@ -99,6 +98,10 @@ const NavbarSidebarFooter = dynamic(() => import('@/components/NavbarSidebarFoot
 const MobileBottomNav = dynamic(() => import('@/components/MobileBottomNav'), {
   ssr: false,
   loading: () => null,
+});
+
+const MobileMenuContent = dynamic(() => import('@/components/MobileMenuContent'), {
+  loading: () => <MobileMenuSkeleton />,
 });
 
 function MobileMenuSkeleton() {

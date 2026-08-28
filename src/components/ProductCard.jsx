@@ -6,7 +6,6 @@ import { ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
 import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -143,6 +142,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
 
         <Link
           href={productHref}
+          prefetch={false}
           scroll={true}
           className="relative block aspect-square w-full overflow-hidden rounded-t-[11px]"
           style={{ backgroundColor: resolvedBg }}
@@ -160,7 +160,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 fetchPriority={priority ? "high" : "auto"}
                 loading={priority ? "eager" : "lazy"}
                 className={cn(
-                  "object-cover transition-all duration-500 ease-out",
+                  "object-cover transition-transform duration-500 ease-out",
                   "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
                   (secondaryImageSrc && !isUnavailable) && "md:group-hover:opacity-0"
@@ -177,7 +177,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     sizes="(max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
                     className={cn(
-                      "object-cover transition-all duration-500 ease-out absolute inset-0 opacity-0",
+                      "object-cover transition-opacity duration-500 ease-out absolute inset-0 opacity-0",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",
                       isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75"
                     )}
@@ -206,6 +206,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
           <>
             <Link
               href={productHref}
+              prefetch={false}
               scroll={true}
               className="block text-left"
               draggable={false}

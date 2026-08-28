@@ -22,15 +22,19 @@ if (!cached) {
 
 const connectionOptions = {
   bufferCommands: false,
-  autoIndex: false, // Prevent costly runtime index recreation on each query
-  // Scaled pool size for Serverless (Vercel) vs local dev
+  autoIndex: false,
+  // Vercel/serverless: one pool per isolate. Keep this tiny so N instances × (pool+2 monitors)
+  // cannot exhaust Atlas. Long-running `next start` can hold a few more warm sockets.
   maxPoolSize: isServerlessLike ? 3 : 10,
-  minPoolSize: isDev ? 2 : 0, // Pre-warm 2 connections in dev for instant <10ms queries
-  maxConnecting: 2, // Prevent thundering herd connection storm during traffic spikes
-  maxIdleTimeMS: isDev ? 300000 : 15000, // 5 min keep-alive in dev, fast pruning in serverless
+  minPoolSize: isDev ? 2 : 0,
+  maxConnecting: 2,
+  maxIdleTimeMS: isDev ? 300000 : 15000,
+  waitQueueTimeoutMS: 5000,
   serverSelectionTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
   connectTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
   socketTimeoutMS: 30000,
+  // Pakistan → Atlas RTT is often >50ms; zlib is built into the driver (no extra native dep).
+  compressors: ['zlib'],
 };
 
 async function createConnection() {

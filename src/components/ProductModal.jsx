@@ -62,8 +62,9 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                                 <Image
                                     src={primaryImageSrc}
                                     alt={product.Name || product.name || 'Product'}
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 768px) 90vw, 28rem"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
                                 />
                             ) : (

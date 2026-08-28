@@ -1,12 +1,14 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ProductCardAddToCartButtonClient = dynamic(
   () => import('@/components/ProductCardAddToCartButtonClient'),
-  { ssr: false }
+  {
+    loading: () => <AddToCartSkeleton mode="icon" />,
+  }
 );
 
 function AddToCartSkeleton({ mode }) {
@@ -19,16 +21,6 @@ function AddToCartSkeleton({ mode }) {
 }
 
 export default function ProductCardAddToCartButton(props) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <AddToCartSkeleton mode={props.mode} />;
-  }
-
   return (
     <Suspense fallback={<AddToCartSkeleton mode={props.mode} />}>
       <ProductCardAddToCartButtonClient {...props} />

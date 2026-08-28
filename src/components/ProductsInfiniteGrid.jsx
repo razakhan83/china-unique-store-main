@@ -92,7 +92,7 @@ export default function ProductsInfiniteGrid({
       },
       {
         root: null,
-        rootMargin: '350px 0px', // Preload 350px before user reaches exact bottom
+        rootMargin: '80px 0px',
         threshold: 0,
       }
     );
@@ -122,6 +122,7 @@ export default function ProductsInfiniteGrid({
               alt="No products found"
               width={180}
               height={140}
+              loading="lazy"
               className="h-auto w-[150px] sm:w-[180px] object-contain opacity-95 select-none"
             />
           </div>

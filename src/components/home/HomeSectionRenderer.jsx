@@ -9,6 +9,11 @@ export default function HomeSectionRenderer({ sections = [] }) {
   const safeSections = Array.isArray(sections) ? sections : [];
   if (!safeSections.length) return null;
 
+  const hasHero = safeSections.some((section) => section?.type === 'HeroSlider');
+  const firstProductSectionId = safeSections.find(
+    (section) => section?.type === 'ProductGridByCategory' || section?.type === 'ProductCollection'
+  )?.id;
+
   return (
     <>
       {safeSections.map((section) => {
@@ -50,24 +55,16 @@ export default function HomeSectionRenderer({ sections = [] }) {
           );
         }
 
-        if (section.type === 'ProductGridByCategory') {
+        if (section.type === 'ProductGridByCategory' || section.type === 'ProductCollection') {
+          const priorityCount = !hasHero && section.id === firstProductSectionId ? 2 : 0;
           return (
             <HomeProductGridSection
               key={section.id}
               title={section.title}
               category={section.category}
               products={section.products}
-            />
-          );
-        }
-
-        if (section.type === 'ProductCollection') {
-          return (
-            <HomeProductGridSection
-              key={section.id}
-              title={section.title}
-              products={section.products}
               viewAllHref={section.viewAllHref}
+              priorityCount={priorityCount}
             />
           );
         }

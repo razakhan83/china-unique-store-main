@@ -1,11 +1,7 @@
-import { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck, Code } from 'lucide-react';
+import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
 
-import dynamic from 'next/dynamic';
-
-import ConditionalLayoutElements, { HomeOnlyLayoutElements } from '@/components/ConditionalLayoutElements';
+import ConditionalLayoutElements from '@/components/ConditionalLayoutElements';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import Navbar from '@/components/Navbar';
@@ -16,20 +12,6 @@ import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import WebsiteFeedbackButton from '@/components/WebsiteFeedbackButton';
 import FooterNewsletter from '@/components/FooterNewsletter';
-
-const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
-  loading: () => <div className="h-48 w-full bg-background" aria-hidden="true" />,
-});
-const TiltedProductMarquee = dynamic(() => import('@/components/TiltedProductMarquee'), {
-  loading: () => <div className="h-[700px] w-full bg-background" aria-hidden="true" />,
-});
-const HomeFaqSection = dynamic(() => import('@/components/HomeFaqSection'), {
-  loading: () => <div className="h-64 w-full bg-background" aria-hidden="true" />,
-});
-
-function NavbarFallback() {
-  return <div className="sticky top-0 z-40 h-[100px] bg-card" aria-hidden="true" />;
-}
 
 const TRUST_BADGES = [
   { icon: ShieldCheck, title: 'Secure Payment', sub: '100% encrypted checkout' },
@@ -68,47 +50,6 @@ export default function LayoutWrapper({ children, categories, settings }) {
         />
 
         <main className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
-
-        <HomeOnlyLayoutElements>
-          <div id="store-animated-stats">
-            <AnimatedStats />
-          </div>
-
-          <div id="store-marquee-wrapper">
-            <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
-              <TiltedProductMarquee />
-            </Suspense>
-          </div>
-
-          {/* ── Wholesale CTA (Only on Home Page) ── */}
-          <div id="store-wholesale-cta" className="mt-auto border-t border-border bg-primary/5 px-4 py-14 sm:py-16 text-center">
-            <div className="mx-auto max-w-3xl">
-              <h3 className="mb-3 text-lg font-bold text-primary sm:text-xl">
-                Are You a Wholesaler or Retailer?
-              </h3>
-              <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Wholesale & Bulk Orders
-              </h2>
-              <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Looking to stock premium imported gadgets, kitchenware, and lifestyle products? We supply top-notch quality items at competitive wholesale rates. Connect with us directly for <span className="font-semibold text-primary">bulk orders</span> and <span className="font-semibold text-primary">exclusive B2B pricing</span>.
-              </p>
-              <a
-                href={whatsappLink || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm border border-black/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#20ba59] active:translate-y-0 active:scale-[0.98]"
-              >
-                <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                Chat on WhatsApp
-              </a>
-            </div>
-          </div>
-
-          {/* ── FAQ Section (Only on Home Page) ── */}
-          <div id="store-faq-wrapper">
-            <HomeFaqSection />
-          </div>
-        </HomeOnlyLayoutElements>
 
         <ConditionalLayoutElements>
           <footer id="store-footer" className="border-t border-border bg-card pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
@@ -175,7 +116,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     {quickLinks.length > 0 ? (
                       quickLinks.map((item) => (
                         <li key={item.slug}>
-                          <Link href={`/${item.slug}`} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href={`/${item.slug}`} prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             {item.label || item.title}
                           </Link>
@@ -184,19 +125,19 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     ) : (
                       <>
                         <li>
-                          <Link href="/products" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             All Products
                           </Link>
                         </li>
                         <li>
-                          <Link href="/products?category=new-arrivals" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products?category=new-arrivals" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             New Arrivals
                           </Link>
                         </li>
                         <li>
-                          <Link href="/products?category=special-offers" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products?category=special-offers" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             Special Offers
                           </Link>
@@ -204,7 +145,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                       </>
                     )}
                     <li>
-                      <Link href="/contact-us" className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                      <Link href="/contact-us" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                         <ChevronRight className="size-4" />
                         Contact Support
                       </Link>
@@ -241,8 +182,9 @@ export default function LayoutWrapper({ children, categories, settings }) {
                       </div>
                     </li>
                     <li className="pt-1">
-                      <Link 
+                      <Link
                         href="/contact-us"
+                        prefetch={false}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
                       >
                         View all contact channels →
@@ -257,15 +199,15 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
                   <span className="hidden sm:inline text-border">·</span>
                   <div className="flex items-center gap-3">
-                    <Link href="/terms-of-service" className="transition-colors hover:text-foreground">
+                      <Link href="/terms-of-service" prefetch={false} className="transition-colors hover:text-foreground">
                       Terms of Service
                     </Link>
                     <span className="size-1 rounded-full bg-border" />
-                    <Link href="/privacy-policy" className="transition-colors hover:text-foreground">
+                    <Link href="/privacy-policy" prefetch={false} className="transition-colors hover:text-foreground">
                       Privacy Policy
                     </Link>
                     <span className="size-1 rounded-full bg-border" />
-                    <Link href="/contact-us" className="transition-colors hover:text-foreground">
+                    <Link href="/contact-us" prefetch={false} className="transition-colors hover:text-foreground">
                       Contact Us
                     </Link>
                   </div>

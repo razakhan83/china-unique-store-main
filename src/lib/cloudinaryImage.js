@@ -18,8 +18,11 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
   heroMobile: { width: 640, crop: 'fill', gravity: 'auto', format: 'avif', quality: 78 },
 
-  // Product detail gallery — main zoom image
-  productGalleryMain: { width: 1400, height: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 82 },
+  // Product detail gallery — main image (Next.js srcset handles DPR; keep master modest)
+  productGalleryMain: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+
+  // Home / category banners (below-fold; Next optimizer + sizes do the rest)
+  storeBanner: { width: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
 
   // Product detail gallery — thumbnail strip
   productGalleryThumb: { width: 240, height: 240, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
@@ -48,7 +51,9 @@ function buildCloudinaryTransformSegment(options = {}) {
 
   transforms.push(`q_${options.quality || 'auto'}`);
   transforms.push(`f_${options.format || 'avif'}`);
-  if (options.includeDpr !== false) {
+  // Default off: next/image already builds a device srcset. Cloudinary dpr_auto
+  // would follow the optimizer server's UA, not the shopper's phone.
+  if (options.includeDpr === true) {
     transforms.push(`dpr_${options.dpr || 'auto'}`);
   }
 

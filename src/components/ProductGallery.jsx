@@ -176,7 +176,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
                   onClick={() => handleThumbnailClick(index)}
                   aria-label={`Show product image ${index + 1}`}
                   aria-pressed={index === selectedIndex}
-                  className={`relative block aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-300 ease-out ${
+                  className={`relative block aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg border-2 transition-[opacity,transform,border-color,box-shadow] duration-300 ease-out ${
                     index === selectedIndex
                       ? 'border-primary shadow-sm shadow-primary/30 opacity-100'
                       : 'border-transparent opacity-60 hover:scale-[1.02] hover:opacity-100'
