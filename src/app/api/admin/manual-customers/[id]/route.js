@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import mongooseConnect from '@/lib/mongooseConnect';
 import ManualCustomer from '@/models/ManualCustomer';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function PUT(req, { params }) {
   try {
-    await requireAdmin();
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
     await mongooseConnect();
 
     const { id } = await params;
@@ -34,7 +35,8 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    await requireAdmin();
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
     await mongooseConnect();
 
     const { id } = await params;

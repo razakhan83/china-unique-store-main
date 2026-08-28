@@ -12,16 +12,10 @@ export default async function FeaturedProductsPage() {
   await requireAdmin();
   await mongooseConnect();
 
-  const [featuredProducts, allProducts] = await Promise.all([
-    Product.find({ isFeatured: true })
+  const featuredProducts = await Product.find({ isFeatured: true })
       .select('Name Price Images slug isFeatured featuredPriority StockStatus')
       .sort({ featuredPriority: -1, createdAt: -1 })
-      .lean(),
-    Product.find({ showOnStore: true })
-      .select('Name Price Images slug isFeatured featuredPriority StockStatus')
-      .sort({ createdAt: -1 })
-      .lean(),
-  ]);
+      .lean();
 
   const serialize = (p) => ({
     _id: p._id.toString(),
@@ -38,7 +32,6 @@ export default async function FeaturedProductsPage() {
   return (
     <FeaturedProductsClient
       initialFeatured={featuredProducts.map(serialize)}
-      allProducts={allProducts.map(serialize)}
     />
   );
 }

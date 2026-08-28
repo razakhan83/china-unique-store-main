@@ -30,6 +30,7 @@ function makeOrderId() {
 }
 
 export async function getNextInvoiceNumberAction() {
+  await assertAdmin(true);
   await mongooseConnect();
   
   // Atomic increment for unique sequential INV-00001
@@ -55,6 +56,7 @@ export async function getNextInvoiceNumberAction() {
 }
 
 export async function getNextPaymentNumberAction() {
+  await assertAdmin(true);
   await mongooseConnect();
   const counter = await Counter.findOneAndUpdate(
     { _id: 'payment_number' },
@@ -65,6 +67,7 @@ export async function getNextPaymentNumberAction() {
 }
 
 export async function getCustomerPreviousBalanceAction(phone) {
+  await assertAdmin(false);
   if (!phone) return { previousBalance: 0, unpaidCount: 0 };
   await mongooseConnect();
 
@@ -638,6 +641,7 @@ export async function updateInvoiceStatusAction(invoiceId, newStatus) {
 }
 
 export async function getInvoicesAction({ page = 1, limit = 20, search = '', status = 'ALL' }) {
+  await assertAdmin(false);
   await connection();
   await mongooseConnect();
 
@@ -709,6 +713,7 @@ export async function getInvoicesAction({ page = 1, limit = 20, search = '', sta
 }
 
 export async function getInvoiceByIdAction(id) {
+  await assertAdmin(false);
   await connection();
   await mongooseConnect();
 

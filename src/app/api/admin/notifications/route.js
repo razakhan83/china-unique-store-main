@@ -1,18 +1,13 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Notification from '@/models/Notification';
 
 // GET recent notifications
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin();
+    if (auth.error) return auth.error;
 
     await mongooseConnect();
     const notifications = await Notification.find()
@@ -22,17 +17,16 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: notifications });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Admin notifications GET error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to load notifications' }, { status: 500 });
   }
 }
 
 // PATCH mark as read
 export async function PATCH(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
 
     const { id, all } = await req.json();
     await mongooseConnect();
@@ -45,7 +39,8 @@ export async function PATCH(req) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Admin notifications PATCH error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update notifications' }, { status: 500 });
   }
 }
 

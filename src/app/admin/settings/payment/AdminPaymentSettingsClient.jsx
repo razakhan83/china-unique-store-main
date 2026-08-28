@@ -58,7 +58,7 @@ export default function AdminPaymentSettingsClient({ initialSettings }) {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Payment Methods</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Manage your store's payment options.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Manage your store&apos;s payment options.</p>
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="min-w-32 shadow-sm">
           {isSaving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}

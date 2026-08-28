@@ -2,6 +2,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { resolveCloudinaryFolder } from "@/lib/cloudinaryFolders";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,8 +13,11 @@ cloudinary.config({
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized access: Please log in as admin." }, { status: 401 });
+    const { searchParams } = new URL(req.url);
+    const resolved = resolveCloudinaryFolder(searchParams.get("folder"), session);
+
+    if (resolved.error) {
+      return NextResponse.json({ error: resolved.error }, { status: resolved.status || 400 });
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -22,20 +26,16 @@ export async function GET(req) {
 
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json(
-        {
-          error: "Cloudinary environment variables (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) are missing or undefined in .env.local",
-        },
+        { error: "Image upload is not configured." },
         { status: 500 }
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    const folder = searchParams.get("folder") || "kifayatly_products";
     const timestamp = Math.round(new Date().getTime() / 1000);
     const signature = cloudinary.utils.api_sign_request(
       {
         timestamp: timestamp,
-        folder,
+        folder: resolved.folder,
       },
       apiSecret,
     );
@@ -45,9 +45,10 @@ export async function GET(req) {
       timestamp,
       cloudName,
       apiKey,
-      folder,
+      folder: resolved.folder,
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Cloudinary sign error:", error);
+    return NextResponse.json({ error: "Failed to sign upload" }, { status: 500 });
   }
 }

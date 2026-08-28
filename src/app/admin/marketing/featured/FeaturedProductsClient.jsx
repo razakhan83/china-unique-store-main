@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -30,21 +30,42 @@ import {
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { getPrimaryProductImage } from '@/lib/productImages';
 
-export default function FeaturedProductsClient({ initialFeatured = [], allProducts = [] }) {
+export default function FeaturedProductsClient({ initialFeatured = [] }) {
   const router = useRouter();
   const [featured, setFeatured] = useState(initialFeatured);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const featuredIds = new Set(featured.map((p) => p._id));
-  const availableProducts = allProducts.filter(
-    (p) =>
-      !featuredIds.has(p._id) &&
-      (searchQuery.trim() === '' ||
-        p.Name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const availableProducts = searchResults.filter((p) => !featuredIds.has(p._id));
+
+  useEffect(() => {
+    if (!isAddModalOpen) return undefined;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const q = searchQuery.trim();
+      const url = q
+        ? `/api/admin/products/catalog?q=${encodeURIComponent(q)}&limit=40`
+        : '/api/admin/products/catalog?limit=40';
+      fetch(url, { signal: controller.signal })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.products) setSearchResults(data.products);
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') console.error(err);
+        });
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [isAddModalOpen, searchQuery]);
 
   async function handleToggleFeatured(product, makeFeatured) {
     setSaving(true);

@@ -44,7 +44,7 @@ export default async function CouponCodesPage() {
               <EmptyHeader>
                 <EmptyMedia variant="icon"><Ticket /></EmptyMedia>
                 <EmptyTitle>No coupons found</EmptyTitle>
-                <EmptyDescription>You haven't created any coupons yet.</EmptyDescription>
+                <EmptyDescription>You haven&apos;t created any coupons yet.</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button nativeButton={false} render={<Link href="/admin/marketing/coupons/create" />} variant="outline">

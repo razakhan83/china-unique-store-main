@@ -88,7 +88,7 @@ export default function BulkImportModal({ open, onOpenChange, onSuccess }) {
         <DialogHeader>
           <DialogTitle>Bulk Product Import</DialogTitle>
           <DialogDescription>
-            Upload a .csv or .xlsx file to bulk import products. Products will be added as "Draft" by default.
+            Upload a .csv or .xlsx file to bulk import products. Products will be added as &quot;Draft&quot; by default.
           </DialogDescription>
         </DialogHeader>
 

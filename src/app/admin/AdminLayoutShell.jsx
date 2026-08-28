@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { signOut } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
-  Activity,
   Bell,
   Box,
   ChartColumn,
@@ -26,7 +26,6 @@ import {
   PanelLeftOpen,
   PanelsTopLeft,
   FileText,
-  Search,
   Settings,
   Shield,
   Smartphone,
@@ -36,12 +35,10 @@ import {
   Store,
   Tag,
   Tags,
-  TrendingUp,
   Truck,
   Users,
 } from 'lucide-react';
 
-import AdminNotificationCenter from '@/components/AdminNotificationCenter';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   Avatar,
@@ -61,6 +58,10 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
+const AdminNotificationCenter = dynamic(() => import('@/components/AdminNotificationCenter'), {
+  ssr: false,
+});
+
 // 1. Dashboard
 const primaryNavItems = [
   { href: '/admin', label: 'Dashboard', icon: ChartColumn, match: (pathname) => pathname === '/admin' },
@@ -74,7 +75,6 @@ const productNavItems = [
   { href: '/admin/vendors', label: 'Vendors', icon: Store, match: (pathname) => pathname.startsWith('/admin/vendors') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/reviews') },
-  { href: '/admin/stock', label: 'Stock Management', icon: Box, match: (pathname) => pathname.startsWith('/admin/stock') },
 ];
 
 // 3. Orders & Sales Management
@@ -96,19 +96,10 @@ const marketingNavItems = [
   { href: '/admin/marketing/featured', label: 'Featured (Ads)', icon: Sparkles, match: (pathname) => pathname.startsWith('/admin/marketing/featured') },
   { href: '/admin/marketing/campaigns', label: 'Special Offers', icon: Tag, match: (pathname) => pathname.startsWith('/admin/marketing/campaigns') },
   { href: '/admin/marketing/coupons', label: 'Coupon Codes', icon: Tags, match: (pathname) => pathname.startsWith('/admin/marketing/coupons') },
-  { href: '/admin/marketing/banners', label: 'Banner Management', icon: Images, match: (pathname) => pathname.startsWith('/admin/marketing/banners') },
   { href: '/admin/marketing/social', label: 'Social & Tracking', icon: Globe, match: (pathname) => pathname.startsWith('/admin/marketing/social') },
 ];
 
-// 6. Analytics
-const analyticsNavItems = [
-  { href: '/admin/analytics/sales', label: 'Sales Reports', icon: ChartColumn, match: (pathname) => pathname.startsWith('/admin/analytics/sales') },
-  { href: '/admin/analytics/best-selling', label: 'Best Selling Products', icon: TrendingUp, match: (pathname) => pathname.startsWith('/admin/analytics/best-selling') },
-  { href: '/admin/analytics/revenue', label: 'Revenue Charts', icon: ChartColumn, match: (pathname) => pathname.startsWith('/admin/analytics/revenue') },
-  { href: '/admin/analytics/growth', label: 'Customer Growth', icon: Users, match: (pathname) => pathname.startsWith('/admin/analytics/growth') },
-];
-
-// 7. Website Management
+// 6. Website Management
 const websiteNavItems = [
   { href: '/admin/website/general', label: 'General Information', icon: FileText, match: (pathname) => pathname.startsWith('/admin/website/general') },
   { href: '/admin/home-page', label: 'Home Layout Settings', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
@@ -118,7 +109,6 @@ const websiteNavItems = [
 
 // 8. Pages Management
 const pagesNavItems = [
-  { href: '/admin/pages/seo', label: 'SEO Settings', icon: Search, match: (pathname) => pathname.startsWith('/admin/pages/seo') },
   { href: '/admin/custom-pages', label: 'Custom Pages', icon: FileText, match: (pathname) => pathname.startsWith('/admin/custom-pages') },
 ];
 
@@ -129,13 +119,11 @@ const settingsNavItems = [
   { href: '/admin/settings/whatsapp', label: 'WhatsApp Order Notifications', icon: Smartphone, match: (pathname) => pathname.startsWith('/admin/settings/whatsapp') },
   { href: '/admin/settings/email', label: 'Email Notifications', icon: Bell, match: (pathname) => pathname.startsWith('/admin/settings/email') },
   { href: '/admin/settings/dark-mode', label: 'Dark Mode', icon: Moon, match: (pathname) => pathname.startsWith('/admin/settings/dark-mode') },
-  { href: '/admin/settings/activity-logs', label: 'Activity Logs', icon: Activity, match: (pathname) => pathname.startsWith('/admin/settings/activity-logs') },
 ];
 
 // 10. User Roles & Permissions / Access Management
 const accessNavItems = [
   { href: '/admin/roles/access', label: 'Access Management', icon: Shield, match: (pathname) => pathname.startsWith('/admin/roles/access') },
-  { href: '/admin/roles/permissions', label: 'User Roles & Permissions', icon: Users, match: (pathname) => pathname.startsWith('/admin/roles/permissions') },
 ];
 
 const compactDesktopNavItems = [
@@ -144,7 +132,6 @@ const compactDesktopNavItems = [
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => ordersNavItems.some(i => i.match(pathname)) },
   { href: '/admin/users', label: 'Customers', icon: Users, match: (pathname) => customersNavItems.some(i => i.match(pathname)) },
   { href: '/admin/marketing/coupons', label: 'Marketing', icon: Megaphone, match: (pathname) => marketingNavItems.some(i => i.match(pathname)) },
-  { href: '/admin/analytics/sales', label: 'Analytics', icon: ChartColumn, match: (pathname) => analyticsNavItems.some(i => i.match(pathname)) },
   { href: '/admin/home-page', label: 'Website', icon: Globe, match: (pathname) => websiteNavItems.some(i => i.match(pathname)) },
   { href: '/admin/custom-pages', label: 'Pages', icon: FileText, match: (pathname) => pagesNavItems.some(i => i.match(pathname)) },
   { href: '/admin/settings/payment', label: 'Settings', icon: Settings, match: (pathname) => settingsNavItems.some(i => i.match(pathname)) },
@@ -164,7 +151,6 @@ function getOpenSections(pathname) {
     ordersNavItems.some((item) => item.match(pathname)) ? 'orders' : null,
     customersNavItems.some((item) => item.match(pathname)) ? 'customers' : null,
     marketingNavItems.some((item) => item.match(pathname)) ? 'marketing' : null,
-    analyticsNavItems.some((item) => item.match(pathname)) ? 'analytics' : null,
     websiteNavItems.some((item) => item.match(pathname)) ? 'website' : null,
     pagesNavItems.some((item) => item.match(pathname)) ? 'pages' : null,
     settingsNavItems.some((item) => item.match(pathname)) ? 'settings' : null,
@@ -319,7 +305,6 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     if (value === 'products') active = productNavItems.some((item) => item.match(pathname));
     else if (value === 'orders') active = ordersNavItems.some((item) => item.match(pathname));
     else if (value === 'marketing') active = marketingNavItems.some((item) => item.match(pathname));
-    else if (value === 'analytics') active = analyticsNavItems.some((item) => item.match(pathname));
     else if (value === 'website') active = websiteNavItems.some((item) => item.match(pathname));
     else if (value === 'pages') active = pagesNavItems.some((item) => item.match(pathname));
     else if (value === 'settings') active = settingsNavItems.some((item) => item.match(pathname));
@@ -399,15 +384,6 @@ export default function AdminLayoutShell({ children, sessionUser }) {
                 <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
                   <div className="ml-5 flex flex-col gap-1">
                     {marketingNavItems.map((item) => renderNestedNavLink(item))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="analytics" className="border-none">
-                {renderSectionTrigger({ icon: ChartColumn, label: 'Analytics', value: 'analytics' })}
-                <AccordionContent className="px-0 pb-0 pt-2 [&_a]:no-underline [&_a:hover]:no-underline">
-                  <div className="ml-5 flex flex-col gap-1">
-                    {analyticsNavItems.map((item) => renderNestedNavLink(item))}
                   </div>
                 </AccordionContent>
               </AccordionItem>

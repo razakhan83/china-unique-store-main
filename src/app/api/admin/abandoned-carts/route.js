@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import AbandonedCart from '@/models/AbandonedCart';
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin();
+    if (auth.error) return auth.error;
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') || 'all';
@@ -41,16 +38,14 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error('Failed to fetch abandoned carts:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch abandoned carts' }, { status: 500 });
   }
 }
 
 export async function PATCH(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
 
     const { id, status } = await req.json();
     if (!id || !['ABANDONED', 'RECOVERED', 'DISMISSED'].includes(status)) {
@@ -66,6 +61,7 @@ export async function PATCH(req) {
 
     return NextResponse.json({ success: true, data: JSON.parse(JSON.stringify(updated)) });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Failed to update abandoned cart:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update abandoned cart' }, { status: 500 });
   }
 }

@@ -3,8 +3,12 @@ import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { bookNocParcels } from '@/lib/nocCourier';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function POST(request) {
+  const auth = await requireApiAdmin({ mutation: true });
+  if (auth.error) return auth.error;
+
   try {
     const body = await request.json();
     const { orderIds, portalKey = 'portal_1' } = body;
@@ -90,7 +94,6 @@ export async function POST(request) {
         {
           success: false,
           error: apiResult.ErrorDescription || 'NOC Courier booking failed. Please verify credentials and order details.',
-          rawResponse: apiResult,
         },
         { status: 400 }
       );
@@ -154,7 +157,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error booking NOC parcel:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Server error while booking NOC parcel' },
+      { success: false, error: 'Server error while booking NOC parcel' },
       { status: 500 }
     );
   }

@@ -536,7 +536,7 @@ export default function AdminUsersClient({
               Order History
             </SheetTitle>
             <SheetDescription>
-              {selectedCustomerForHistory?.name}'s past orders
+              {selectedCustomerForHistory?.name}&apos;s past orders
             </SheetDescription>
           </SheetHeader>
           
@@ -569,7 +569,7 @@ export default function AdminUsersClient({
                 </div>
                 <div>
                   <p className="font-medium text-foreground">No Orders Found</p>
-                  <p className="text-sm">This customer hasn't placed any orders yet.</p>
+                  <p className="text-sm">This customer hasn&apos;t placed any orders yet.</p>
                 </div>
               </div>
             ) : (

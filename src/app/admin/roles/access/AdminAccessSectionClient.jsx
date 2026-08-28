@@ -228,7 +228,7 @@ export default function AdminAccessSectionClient({ isConfiguredAdmin, initialGue
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
             <div className="space-y-0.5">
               <div className="text-sm font-medium text-foreground">
-                Enable "Explore as Guest"
+                Enable &quot;Explore as Guest&quot;
               </div>
               <div className="text-xs text-muted-foreground">
                 Displays the guest login button on the admin login page.

@@ -12,19 +12,13 @@ export default async function DiscountCampaignsPage() {
   await requireAdmin();
   await mongooseConnect();
 
-  const [discountedProducts, allProducts] = await Promise.all([
-    Product.find({
+  const discountedProducts = await Product.find({
       showOnStore: true,
       $or: [{ isDiscounted: true }, { discountPercentage: { $gt: 0 } }],
     })
       .select('Name Price discountPercentage isDiscounted discountedPrice Images slug StockStatus')
       .sort({ discountPercentage: -1, updatedAt: -1 })
-      .lean(),
-    Product.find({ showOnStore: true })
-      .select('Name Price discountPercentage isDiscounted discountedPrice Images slug StockStatus')
-      .sort({ createdAt: -1 })
-      .lean(),
-  ]);
+      .lean();
 
   const serialize = (p) => ({
     _id: p._id.toString(),
@@ -41,7 +35,6 @@ export default async function DiscountCampaignsPage() {
   return (
     <CampaignsClient
       initialDiscounted={discountedProducts.map(serialize)}
-      allProducts={allProducts.map(serialize)}
     />
   );
 }

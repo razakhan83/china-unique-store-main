@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { generateBlurDataURLFromRemoteUrl } from "@/lib/imagePlaceholders";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
+import { resolveCloudinaryFolder } from "@/lib/cloudinaryFolders";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -16,10 +17,13 @@ export const maxDuration = 60; // Allow up to 60s for high-res uploads
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const { file, folder = "kifayatly_products" } = await req.json();
+    const resolved = resolveCloudinaryFolder(folder, session);
+
+    if (resolved.error) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized access. Please log in as admin." },
-        { status: 401 }
+        { success: false, error: resolved.error },
+        { status: resolved.status || 400 }
       );
     }
 
@@ -29,16 +33,10 @@ export async function POST(req) {
       !process.env.CLOUDINARY_API_SECRET
     ) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Cloudinary credentials (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) are missing or invalid in your .env.local file.",
-        },
+        { success: false, error: "Image upload is not configured." },
         { status: 500 }
       );
     }
-
-    const { file, folder = "kifayatly_products" } = await req.json();
 
     if (!file) {
       return NextResponse.json(
@@ -48,7 +46,7 @@ export async function POST(req) {
     }
 
     const uploadResult = await cloudinary.uploader.upload(file, {
-      folder,
+      folder: resolved.folder,
       resource_type: "auto",
     });
 
@@ -77,7 +75,7 @@ export async function POST(req) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to upload image to Cloudinary",
+        error: "Failed to upload image",
       },
       { status: 500 }
     );

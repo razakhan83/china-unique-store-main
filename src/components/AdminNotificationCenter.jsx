@@ -63,7 +63,7 @@ export default function AdminNotificationCenter() {
     '/api/admin/notifications', 
     fetcher, 
     { 
-      refreshInterval: liveEnabled ? 5000 : 0,
+      refreshInterval: liveEnabled ? 30000 : 0,
       revalidateOnFocus: true
     }
   );

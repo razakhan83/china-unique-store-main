@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getAdminOrderProductCatalog, getAdminOrdersPage, getAdminTrashOrders } from '@/lib/data';
+import { getAdminOrdersPage, getAdminTrashOrders } from '@/lib/data';
 import { DEFAULT_ORDER_STATUS } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 import AdminOrdersClient from './AdminOrdersClient';
@@ -15,12 +15,14 @@ export default async function AdminOrdersPage({ searchParams }) {
   const endDate = String(params?.endDate || '').trim();
   const page = Math.max(1, Number(params?.page) || 1);
   const initialCreateOrder = params?.createOrder === '1';
-  
-  // Page size 15 for lightning fast loading
-  const limit = (startDate || endDate) ? 999999 : 15;
-  
-  // Fast single query for current page only
-  const orders = await getAdminOrdersPage({ search, status, startDate, endDate, page, limit });
+  const dateFiltered = Boolean(startDate || endDate);
+  // Date filters stay paginated; cap keeps RSC payload bounded for exports/filters.
+  const limit = dateFiltered ? 200 : 15;
+
+  const [orders, trashOrders] = await Promise.all([
+    getAdminOrdersPage({ search, status, startDate, endDate, page, limit }),
+    getAdminTrashOrders(),
+  ]);
 
   return (
     <Suspense fallback={<AdminOrdersSkeleton />}>
@@ -36,6 +38,7 @@ export default async function AdminOrdersPage({ searchParams }) {
         initialEndDate={orders.endDate}
         summary={orders.summary}
         initialCreateOrder={initialCreateOrder}
+        initialTrashOrders={trashOrders}
       />
     </Suspense>
   );

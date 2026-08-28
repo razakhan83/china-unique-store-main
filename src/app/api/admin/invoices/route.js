@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import { getInvoicesAction, createInvoiceAction } from '@/app/actions/invoice.actions';
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin();
+    if (auth.error) return auth.error;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
@@ -19,21 +16,21 @@ export async function GET(request) {
     const result = await getInvoicesAction({ page, limit, search, status });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Failed to fetch invoices' }, { status: 500 });
+    console.error('Admin invoices GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
 
     const body = await request.json();
     const result = await createInvoiceAction(body);
     return NextResponse.json(result);
   } catch (error) {
+    console.error('Admin invoices POST error:', error);
     return NextResponse.json({ error: error.message || 'Failed to create invoice' }, { status: 500 });
   }
 }

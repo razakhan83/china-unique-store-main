@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { cancelNocParcel } from '@/lib/nocCourier';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function POST(request) {
+  const auth = await requireApiAdmin({ mutation: true });
+  if (auth.error) return auth.error;
+
   try {
     const body = await request.json();
     const { orderId, trackingNumber, portalKey } = body;
@@ -12,12 +16,17 @@ export async function POST(request) {
 
     let order = null;
     if (orderId) {
+      const orderIdStr = String(orderId).trim();
+      const orConditions = [{ orderId: orderIdStr }];
+      if (mongoose.Types.ObjectId.isValid(orderIdStr) && orderIdStr.length === 24) {
+        orConditions.push({ _id: new mongoose.Types.ObjectId(orderIdStr) });
+      }
       order = await Order.findOne({
-        $or: [{ orderId }, { _id: orderId.match(/^[0-9a-fA-F]{24}$/) ? orderId : null }],
+        $or: orConditions,
         isDeleted: { $ne: true },
       });
     } else if (trackingNumber) {
-      order = await Order.findOne({ trackingNumber, isDeleted: { $ne: true } });
+      order = await Order.findOne({ trackingNumber: String(trackingNumber).trim(), isDeleted: { $ne: true } });
     }
 
     const targetParcelNo = trackingNumber || order?.trackingNumber;
@@ -45,12 +54,11 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       message: `Cancellation request submitted to NOC Express for parcel #${targetParcelNo}.`,
-      rawResponse: apiResult,
     });
   } catch (error) {
     console.error('Error cancelling NOC parcel:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Server error cancelling NOC parcel' },
+      { success: false, error: 'Server error cancelling NOC parcel' },
       { status: 500 }
     );
   }

@@ -463,20 +463,32 @@ export default function AdminOrdersClient({
 
   const [catalog, setCatalog] = useState(productCatalog || []);
   const catalogFetchedRef = useRef(false);
+  const catalogQueryRef = useRef('');
+  const catalogSearchTimerRef = useRef(null);
 
   useEffect(() => {
-    if (isCreateModalOpen && !catalogFetchedRef.current) {
-      catalogFetchedRef.current = true;
-      fetch('/api/admin/products/catalog')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.products) setCatalog(data.products);
-        })
-        .catch((err) => {
-          console.error(err);
-          catalogFetchedRef.current = false;
-        });
-    }
+    if (!isCreateModalOpen) return;
+
+    let cancelled = false;
+    const q = catalogQueryRef.current;
+    const url = q
+      ? `/api/admin/products/catalog?q=${encodeURIComponent(q)}&limit=40`
+      : '/api/admin/products/catalog?limit=40';
+
+    catalogFetchedRef.current = true;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.products) setCatalog(data.products);
+      })
+      .catch((err) => {
+        console.error(err);
+        catalogFetchedRef.current = false;
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isCreateModalOpen]);
 
   const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
@@ -2667,8 +2679,26 @@ export default function AdminOrdersClient({
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="z-[300] w-[min(24rem,calc(100vw-2rem))] overflow-hidden p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search product..." />
+                          <Command shouldFilter={false}>
+                            <CommandInput
+                              placeholder="Search product..."
+                              onValueChange={(value) => {
+                                catalogQueryRef.current = value;
+                                window.clearTimeout(catalogSearchTimerRef.current);
+                                catalogSearchTimerRef.current = window.setTimeout(() => {
+                                  const q = String(value || '').trim();
+                                  const url = q
+                                    ? `/api/admin/products/catalog?q=${encodeURIComponent(q)}&limit=40`
+                                    : '/api/admin/products/catalog?limit=40';
+                                  fetch(url)
+                                    .then((res) => res.json())
+                                    .then((data) => {
+                                      if (data.products) setCatalog(data.products);
+                                    })
+                                    .catch((err) => console.error(err));
+                                }, 250);
+                              }}
+                            />
                           <CommandList>
                             <CommandEmpty>No matching product found.</CommandEmpty>
                             <CommandGroup className="max-h-80 overflow-y-auto">

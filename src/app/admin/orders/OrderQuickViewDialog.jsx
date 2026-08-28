@@ -204,7 +204,7 @@ export default function OrderQuickViewDialog({
                   </span>
                 )}
                 {order.notes && (
-                  <span className="text-[11px] italic text-muted-foreground">"{order.notes}"</span>
+                  <span className="text-[11px] italic text-muted-foreground">&quot;{order.notes}&quot;</span>
                 )}
               </div>
             )}

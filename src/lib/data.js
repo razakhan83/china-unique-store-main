@@ -1928,7 +1928,7 @@ export async function getAdminOrdersPage({
   const safeStartDate = String(startDate || '').trim();
   const safeEndDate = String(endDate || '').trim();
   const safePage = Math.max(1, Number(page) || 1);
-  const safeLimit = Math.max(1, Number(limit) || 12);
+  const safeLimit = Math.min(200, Math.max(1, Number(limit) || 12));
 
   const query = { isDeleted: { $ne: true } };
 

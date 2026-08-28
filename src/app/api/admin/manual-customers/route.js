@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import mongooseConnect from '@/lib/mongooseConnect';
 import ManualCustomer from '@/models/ManualCustomer';
-import { requireAdmin } from '@/lib/requireAdmin';
-
+import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function GET(req) {
   try {
-    await requireAdmin();
+    const auth = await requireApiAdmin();
+    if (auth.error) return auth.error;
     await mongooseConnect();
 
     const { searchParams } = new URL(req.url);
@@ -52,7 +52,8 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    await requireAdmin();
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
     await mongooseConnect();
 
     const body = await req.json();

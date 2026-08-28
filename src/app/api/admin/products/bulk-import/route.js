@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Product from '@/models/Product';
 import Category from '@/models/Category';
@@ -18,10 +17,8 @@ const slugify = (text) => {
 
 export async function POST(req) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user?.isAdmin) {
-            return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
-        }
+        const auth = await requireApiAdmin({ mutation: true });
+        if (auth.error) return auth.error;
 
         const formData = await req.formData();
         const file = formData.get('file');

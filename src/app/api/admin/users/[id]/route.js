@@ -11,6 +11,9 @@ export async function PATCH(request, { params }) {
     if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
+    if (session.user?.isDemo) {
+      return NextResponse.json({ success: false, message: 'Demo Mode: Actions are disabled. You have read-only access.' }, { status: 403 });
+    }
 
     const { id } = await params;
     const { disabled, action } = await request.json();

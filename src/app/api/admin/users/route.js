@@ -14,7 +14,11 @@ export async function GET() {
     }
 
     await mongooseConnect();
-    const users = await User.find({}).sort({ createdAt: -1 }).lean();
+    const users = await User.find({})
+      .select('name email image createdAt disabled forceLogoutAt')
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
 
     return NextResponse.json({
       success: true,

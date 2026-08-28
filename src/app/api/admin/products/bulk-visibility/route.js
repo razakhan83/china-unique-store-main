@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Product from '@/models/Product';
 import { revalidateTag } from 'next/cache';
 
 export async function PATCH(req) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user?.isAdmin) {
-            return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
-        }
+        const auth = await requireApiAdmin({ mutation: true });
+        if (auth.error) return auth.error;
 
         const body = await req.json();
         const { action } = body; // 'live' or 'hidden'
