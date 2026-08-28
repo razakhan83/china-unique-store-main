@@ -114,8 +114,10 @@ export default function LayoutWrapper({ children, categories, settings }) {
           <footer id="store-footer" className="border-t border-border bg-card pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
             <div className="container mx-auto max-w-7xl px-4">
 
-              {/* ── Newsletter Subscription Banner ── */}
-              <FooterNewsletter />
+              {/* ── Newsletter Subscription Banner (Only on Home Page) ── */}
+              <HomeOnlyLayoutElements>
+                <FooterNewsletter />
+              </HomeOnlyLayoutElements>
 
               {/* ── Trust Badge Strip ── */}
               <div className="mb-10 grid grid-cols-2 gap-5 border-b border-border/60 pb-10 md:grid-cols-4 md:gap-6">

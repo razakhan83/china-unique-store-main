@@ -26,15 +26,15 @@ export default function FooterNewsletter() {
   };
 
   return (
-    <div className="mb-10 rounded-2xl border border-border bg-card p-6 sm:p-8">
+    <div className="mb-10 rounded-2xl border border-border bg-card p-4 sm:p-8">
       <div className="flex flex-col items-center justify-between gap-6 md:flex-row md:gap-8">
         {/* Left Side: Text & Form */}
         <div className="flex-1 max-w-lg text-center md:text-left">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+          <h2 className="text-sm min-[360px]:text-[15px] min-[400px]:text-base sm:text-xl md:text-2xl font-bold text-foreground tracking-tight whitespace-nowrap sm:whitespace-normal">
             Subscribe for discounts &amp; new arrivals
           </h2>
           
-          <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground">
+          <p className="mt-1 text-[11px] min-[360px]:text-xs sm:text-sm text-muted-foreground whitespace-nowrap sm:whitespace-normal">
             Get updates on special discounts, offers, and new products.
           </p>
 
