@@ -61,19 +61,34 @@ export async function bookNocParcels(parcels, portalKey = 'portal_1') {
     })),
   };
 
-  const response = await fetch(`${BASE_URL}/BookParcel`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    cache: 'no-store',
-  });
+  const urls = [
+    'https://api.shipnoc.com/api/BookParcel',
+    'http://api.shipnoc.com/api/BookParcel',
+  ];
 
-  if (!response.ok) {
-    throw new Error(`NOC API HTTP error: ${response.status} ${response.statusText}`);
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`NOC API HTTP error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  return data;
+  throw lastError || new Error('NOC API BookParcel service unreachable. Please check network connection.');
 }
 
 /**
@@ -82,20 +97,32 @@ export async function bookNocParcels(parcels, portalKey = 'portal_1') {
  */
 export async function fetchNocCities(portalKey = 'portal_1') {
   const { userName, password, signature } = getNocCredentials(portalKey);
-  const url = `${BASE_URL}/GetCity?UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}`;
+  const query = `UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}`;
+  const urls = [
+    `https://api.shipnoc.com/api/GetCity?${query}`,
+    `http://api.shipnoc.com/api/GetCity?${query}`,
+  ];
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    next: { revalidate: 3600 }, // Cache for 1 hour
-  });
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(10000),
+      });
 
-  if (!response.ok) {
-    throw new Error(`NOC API HTTP error: ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  return data;
+  throw lastError || new Error('NOC API GetCity service unreachable');
 }
 
 /**

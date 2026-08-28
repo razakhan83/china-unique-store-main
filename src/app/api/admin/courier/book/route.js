@@ -123,11 +123,14 @@ export async function POST(request) {
       const order = targetOrders[i];
       const trackingNo = parcelNumbers[i] || (parcelNumbers.length === 1 ? parcelNumbers[0] : '');
 
+      const formattedNow = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
       order.courierName = 'NOC Express';
       if (trackingNo) order.trackingNumber = trackingNo;
       order.nocLabelUrl = labelUrl;
       order.nocAccountId = portalKey;
       order.courierBookingStatus = 'booked';
+      order.nocStatus = 'Booked';
+      order.nocStatusTime = formattedNow;
       order.courierBookingDate = now;
       order.courierResponseDetails = apiResult;
 
@@ -155,9 +158,12 @@ export async function POST(request) {
       updatedOrders,
     });
   } catch (error) {
+    if (error?.digest?.startsWith('NEXT_') || error?.digest === 'HANGING_PROMISE_REJECTION') {
+      throw error;
+    }
     console.error('Error booking NOC parcel:', error);
     return NextResponse.json(
-      { success: false, error: 'Server error while booking NOC parcel' },
+      { success: false, error: error.message || 'Server error while booking NOC parcel' },
       { status: 500 }
     );
   }

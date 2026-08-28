@@ -154,6 +154,35 @@ const OrderSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.Mixed,
             default: null,
         },
+        nocStatus: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        nocStatusTime: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        nocParcelNo: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        nocThirdPartyNo: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        nocRemarks: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        nocLastTrackedAt: {
+            type: Date,
+            default: null,
+        },
         notes: {
             type: String,
             required: false,

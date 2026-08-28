@@ -167,15 +167,20 @@ function buildHref(pathname, searchParams, updates) {
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function OrdersTablePendingSkeleton() {
+function OrdersTablePendingSkeleton({ showNocColumns = false }) {
+  const gridClass = showNocColumns
+    ? 'grid-cols-[40px_105px_1.2fr_80px_95px_75px_110px_95px_95px_110px_70px_85px_100px_55px]'
+    : 'grid-cols-[40px_120px_1.4fr_90px_110px_90px_90px_100px_120px_70px]';
+  const columnCount = showNocColumns ? 14 : 10;
+
   return (
     <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
       <div className="overflow-x-auto">
         <div className="min-w-[960px]">
-          <div className="grid grid-cols-[40px_120px_1.4fr_90px_110px_90px_120px_90px_100px_120px_70px] gap-0 border-b border-border bg-muted/40 px-3 py-2">
-            {Array.from({ length: 11 }).map((_, index) => (
+          <div className={cn('grid gap-0 border-b border-border bg-muted/40 px-3 py-2', gridClass)}>
+            {Array.from({ length: columnCount }).map((_, index) => (
               <div key={index} className="px-2 py-1">
-                <Skeleton className="h-3 w-full max-w-[72px] rounded-md" />
+                <Skeleton className="h-3 w-full max-w-[65px] rounded-md" />
               </div>
             ))}
           </div>
@@ -183,43 +188,59 @@ function OrdersTablePendingSkeleton() {
             {Array.from({ length: 7 }).map((_, rowIndex) => (
               <div
                 key={rowIndex}
-                className="grid grid-cols-[40px_120px_1.4fr_90px_110px_90px_120px_90px_100px_120px_70px] items-center px-3 py-3"
+                className={cn('grid items-center px-3 py-2.5', gridClass)}
               >
                 <div className="px-2">
                   <Skeleton className="size-4 rounded-sm" />
                 </div>
                 <div className="px-2">
-                  <Skeleton className="h-4 w-20 rounded-md" />
+                  <Skeleton className="h-4 w-18 rounded-md" />
                 </div>
-                <div className="space-y-2 px-2">
-                  <Skeleton className="h-4 w-32 rounded-md" />
-                  <Skeleton className="h-3 w-24 rounded-md" />
+                <div className="space-y-1.5 px-2">
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="h-3 w-20 rounded-md" />
                 </div>
                 <div className="px-2">
-                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-14 rounded-full" />
                 </div>
-                <div className="space-y-2 px-2">
-                  <Skeleton className="h-4 w-20 rounded-md" />
-                  <Skeleton className="h-3 w-16 rounded-md" />
+                <div className="space-y-1.5 px-2">
+                  <Skeleton className="h-4 w-18 rounded-md" />
+                  <Skeleton className="h-3 w-14 rounded-md" />
                 </div>
+                <div className="px-2">
+                  <Skeleton className="h-4 w-10 rounded-md" />
+                </div>
+                {showNocColumns && (
+                  <div className="px-2">
+                    <Skeleton className="h-4 w-24 rounded-md" />
+                  </div>
+                )}
+                {showNocColumns && (
+                  <div className="px-2">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </div>
+                )}
+                {showNocColumns && (
+                  <div className="px-2">
+                    <Skeleton className="h-4 w-18 rounded-md" />
+                  </div>
+                )}
+                {showNocColumns && (
+                  <div className="px-2">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </div>
+                )}
                 <div className="px-2">
                   <Skeleton className="h-4 w-12 rounded-md" />
                 </div>
-                <div className="space-y-2 px-2">
-                  <Skeleton className="h-4 w-24 rounded-md" />
-                  <Skeleton className="h-3 w-16 rounded-md" />
+                <div className="px-2">
+                  <Skeleton className="ml-auto h-4 w-18 rounded-md" />
                 </div>
                 <div className="px-2">
-                  <Skeleton className="h-4 w-14 rounded-md" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
                 </div>
                 <div className="px-2">
-                  <Skeleton className="ml-auto h-4 w-20 rounded-md" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="h-5 w-24 rounded-full" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="ml-auto h-7 w-10 rounded-md" />
+                  <Skeleton className="ml-auto h-6 w-8 rounded-md" />
                 </div>
               </div>
             ))}
@@ -396,6 +417,88 @@ export default function AdminOrdersClient({
       toast.error('Connection error while booking with NOC Express');
     } finally {
       setIsBookingNoc(false);
+    }
+  };
+
+  // NOC Status Sync State & Handler
+  const [syncingOrderId, setSyncingOrderId] = useState(null);
+  const [isBulkSyncingNoc, setIsBulkSyncingNoc] = useState(false);
+
+  const getNocStatusBadgeClass = (status) => {
+    if (!status) return 'border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300';
+    const s = String(status).toLowerCase();
+    if (s.includes('delivered') || s.includes('complete')) {
+      return 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300';
+    }
+    if (s.includes('transit') || s.includes('dispatch') || s.includes('pickup') || s.includes('arrival')) {
+      return 'border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
+    }
+    if (s.includes('out for delivery') || s.includes('delivery') || s.includes('courier')) {
+      return 'border-purple-300 bg-purple-50 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300';
+    }
+    if (s.includes('return') || s.includes('fail') || s.includes('cancel') || s.includes('refuse')) {
+      return 'border-rose-300 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300';
+    }
+    return 'border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300';
+  };
+
+  const handleSyncNocStatus = async (orderIdList) => {
+    const rawIds = Array.isArray(orderIdList) ? orderIdList : [orderIdList];
+    const ids = rawIds.filter(Boolean);
+    if (ids.length === 0) return;
+
+    if (ids.length === 1) {
+      setSyncingOrderId(String(ids[0]));
+    } else {
+      setIsBulkSyncingNoc(true);
+    }
+
+    try {
+      const res = await fetch('/api/admin/courier/sync-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: ids }),
+      });
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.results)) {
+        const resultMap = new Map();
+        data.results.forEach((r) => {
+          if (r.nocStatus) {
+            resultMap.set(String(r._id), r);
+            if (r.orderId) resultMap.set(String(r.orderId), r);
+          }
+        });
+
+        setOrders((prev) =>
+          prev.map((o) => {
+            const found = resultMap.get(String(o._id)) || (o.orderId ? resultMap.get(String(o.orderId)) : null);
+            if (found) {
+              return {
+                ...o,
+                courierName: found.courierName || o.courierName,
+                nocParcelNo: found.nocParcelNo || o.nocParcelNo,
+                nocThirdPartyNo: found.nocThirdPartyNo !== undefined ? found.nocThirdPartyNo : o.nocThirdPartyNo,
+                nocStatus: found.nocStatus,
+                nocStatusTime: found.nocStatusTime,
+                nocRemarks: found.nocRemarks,
+                nocLastTrackedAt: found.nocLastTrackedAt,
+              };
+            }
+            return o;
+          })
+        );
+
+        toast.success(data.message || `Synced NOC status for ${ids.length} order(s)`);
+      } else {
+        toast.error(data.error || 'Failed to sync NOC status');
+      }
+    } catch (err) {
+      console.error('NOC status sync error:', err);
+      toast.error('Connection error syncing NOC status');
+    } finally {
+      setSyncingOrderId(null);
+      setIsBulkSyncingNoc(false);
     }
   };
 
@@ -1504,6 +1607,7 @@ export default function AdminOrdersClient({
       : null,
   ].filter(Boolean);
   const isTrashView = statusFilter === TRASH_TAB_ID;
+  const showNocColumns = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned'].includes(statusFilter);
 
   return (
     <div className="flex flex-col gap-4">
@@ -1996,6 +2100,19 @@ export default function AdminOrdersClient({
           </Button>
         ) : null}
 
+        {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery') ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => handleSyncNocStatus(selectedOrders)}
+            disabled={selectedOrders.length === 0 || isBulkSyncingNoc}
+            className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
+            Sync NOC Status{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+          </Button>
+        ) : null}
+
         {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
           <Button
             type="button"
@@ -2089,203 +2206,260 @@ export default function AdminOrdersClient({
       )}
 
       {/* ── Desktop Table ── */}
-      {isPending ? <OrdersTablePendingSkeleton /> : (
+      {isPending ? <OrdersTablePendingSkeleton showNocColumns={showNocColumns} /> : (
       <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px]">
-            <thead>
-              <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-                <th className="w-10 px-3 py-2">
-                  <Checkbox 
-                    checked={isAllPaginatedSelected} 
-                    onCheckedChange={handleSelectAll} 
-                    aria-label="Select all on page"
-                  />
-                </th>
-                <th className="px-3 py-2">Order</th>
-                <th className="px-3 py-2">Customer</th>
-                <th className="px-3 py-2">City</th>
-                <th className="px-3 py-2">Date</th>
-                <th className="px-3 py-2">Payment</th>
-                <th className="px-3 py-2">Tracking</th>
-                <th className="px-3 py-2">Weight</th>
-                <th className="px-3 py-2 text-right">Total</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="w-10 px-3 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {displayOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="px-3 py-14 text-center">
-                    <Receipt className="mx-auto mb-2 text-muted-foreground/30" />
-                    <p className="text-sm font-medium text-foreground">No orders found</p>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
-                    {hasActiveFilters && (
-                      <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3">
-                        Clear all filters
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                displayOrders.map((order) => {
-                  if (!order) return null;
-                  return (
-                    <tr key={order._id} className="transition-colors hover:bg-muted/25">
-                    <td className="px-3 py-2">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="w-10 px-3 py-2">
                       <Checkbox 
-                        checked={selectedOrders.includes(order._id)} 
-                        onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
-                        aria-label={`Select order ${order.orderId}`}
+                        checked={isAllPaginatedSelected} 
+                        onCheckedChange={handleSelectAll} 
+                        aria-label="Select all on page"
                       />
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
-                          {order.orderId}
-                        </Link>
-                        {isNewOrder(order.createdAt) && (
-                          <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-                            New
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-col">
-                        <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
-                        <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
-                        {order.customerCity || 'N/A'}
-                      </Badge>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-col">
-                        <span className="text-[12px] text-foreground">{formatDate(order.createdAt)}</span>
-                        <span className="text-[11px] text-muted-foreground">{formatTime(order.createdAt)}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-[12px] text-foreground">{order.paymentStatus || 'COD'}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex max-w-[160px] flex-col">
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate text-[12px] font-medium text-foreground">{order.trackingNumber || '—'}</span>
-                          {order.trackingNumber && (
-                            <span
-                              className={cn(
-                                'inline-flex items-center px-1.5 py-0.5 text-[10px] font-black rounded border uppercase tracking-wider shrink-0 shadow-2xs',
-                                order.nocAccountId === 'portal_2'
-                                  ? 'bg-purple-100 text-purple-950 border-purple-400 dark:bg-purple-900/90 dark:text-purple-100 dark:border-purple-500'
-                                  : 'bg-sky-100 text-sky-950 border-sky-400 dark:bg-sky-900/90 dark:text-sky-100 dark:border-sky-500'
-                              )}
-                              title={order.nocAccountId === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)'}
-                            >
-                              {order.nocAccountId === 'portal_2' ? 'AS' : 'UI'}
-                            </span>
+                    </th>
+                    <th className="px-3 py-2">Order</th>
+                    <th className="px-3 py-2">Customer</th>
+                    <th className="px-3 py-2">City</th>
+                    <th className="px-3 py-2">Date</th>
+                    <th className="px-3 py-2">Payment</th>
+                    {showNocColumns && <th className="px-3 py-2">Tracking</th>}
+                    {showNocColumns && <th className="px-3 py-2">Courier</th>}
+                    {showNocColumns && <th className="px-3 py-2">NOC Status</th>}
+                    {showNocColumns && <th className="px-3 py-2">Status Time</th>}
+                    <th className="px-3 py-2">Weight</th>
+                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="w-10 px-3 py-2" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {displayOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={showNocColumns ? 14 : 10} className="px-3 py-12 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <Image
+                            src="/undraw_relaxing-outdoors_s653.svg"
+                            alt="No orders found"
+                            width={160}
+                            height={120}
+                            className="mb-3 h-auto w-36 object-contain opacity-90"
+                          />
+                          <p className="text-sm font-medium text-foreground">No orders found</p>
+                          <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
+                          {hasActiveFilters && (
+                            <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3">
+                              Clear all filters
+                            </Button>
                           )}
                         </div>
-                        <span className="truncate text-[11px] text-muted-foreground">{order.courierName || ''}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
-                    <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</td>
-                    <td className="px-3 py-2">
-                      <Badge
-                        variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                        className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
-                      >
-                        {getOrderDisplayStatus(order)}
-                      </Badge>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <OrderQuickViewDialog
-                          order={order}
-                          triggerLabel="View"
-                          triggerSize="sm"
-                          triggerClassName="admin-cta-button"
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                              <MoreHorizontal />
-                              <span className="sr-only">Order actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
-                                  <Receipt data-icon="inline-start" />
-                                  Order details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setEditingOrder(order);
-                                  setIsEditModalOpen(true);
-                                }}
-                              >
-                                <Edit data-icon="inline-start" />
-                                Edit order
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setQuickActionOrder(order._id);
-                                  setQuickStatus(order.status);
-                                  setQuickTracking(order.trackingNumber || '');
-                                  setEditingOrder(order);
-                                }}
-                              >
-                                <Zap data-icon="inline-start" />
-                                Quick update
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => setNocTrackingOrder(order)}
-                              >
-                                <Truck className="size-4 text-sky-600 mr-2" />
-                                Track Order
-                              </DropdownMenuItem>
-                              {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || (order.status !== 'Shipped' && order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Returned')) && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedOrders([order._id]);
-                                    setNocBookingOpen(true);
-                                  }}
-                                >
-                                  <Send className="size-4 text-sky-600 mr-2" />
-                                  Book NOC Express
-                                </DropdownMenuItem>
+                      </td>
+                    </tr>
+                  ) : (
+                    displayOrders.map((order) => {
+                      if (!order) return null;
+                      const has3rdParty = order.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
+                      const displayTracking = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order.nocParcelNo || order.trackingNumber || '');
+                      const rawCourier = order.courierName || (order.trackingNumber ? 'NOC Express' : '—');
+                      const courierToDisplay = (rawCourier.trim().toLowerCase() === 'noc' || rawCourier.trim().toLowerCase() === 'noc express') ? 'NOC Express' : rawCourier;
+                      const statusTimeDisplay = (() => {
+                        if (order.nocStatusTime && String(order.nocStatusTime).trim() !== '') {
+                          return String(order.nocStatusTime).trim();
+                        }
+                        if (order.courierBookingDate) {
+                          return `${formatDate(order.courierBookingDate)} ${formatTime(order.courierBookingDate)}`;
+                        }
+                        if (order.createdAt && (order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Out For Delivery' || order.status === 'Returned')) {
+                          return `${formatDate(order.createdAt)} ${formatTime(order.createdAt)}`;
+                        }
+                        return '—';
+                      })();
+
+                      return (
+                        <tr key={order._id} className="transition-colors hover:bg-muted/25">
+                          <td className="px-3 py-2">
+                            <Checkbox 
+                              checked={selectedOrders.includes(order._id)} 
+                              onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
+                              aria-label={`Select order ${order.orderId}`}
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
+                                {order.orderId}
+                              </Link>
+                              {isNewOrder(order.createdAt) && (
+                                <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
+                                  New
+                                </span>
                               )}
-                              {order.nocLabelUrl && (
-                                <DropdownMenuItem
-                                  onClick={() => window.open(order.nocLabelUrl, '_blank')}
-                                >
-                                  <FileText className="size-4 text-emerald-600 mr-2" />
-                                  Print NOC Slip
-                                </DropdownMenuItem>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
+                              <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
+                              {order.customerCity || 'N/A'}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex flex-col">
+                              <span className="text-[12px] text-foreground">{formatDate(order.createdAt)}</span>
+                              <span className="text-[11px] text-muted-foreground">{formatTime(order.createdAt)}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-[12px] text-foreground">{order.paymentStatus || 'COD'}</td>
+
+                          {/* 1. Tracking Column (Only on Post-Pack tabs) */}
+                          {showNocColumns && (
+                            <td className="px-3 py-2">
+                              {displayTracking ? (
+                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                  <span className="font-mono text-[12px] font-medium text-foreground" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                                    {displayTracking}
+                                  </span>
+                                  {order.trackingNumber && (
+                                    <span
+                                      className={cn(
+                                        'inline-flex items-center px-1.5 py-0.5 text-[9px] font-black rounded border uppercase tracking-wider shrink-0 shadow-2xs',
+                                        order.nocAccountId === 'portal_2'
+                                          ? 'bg-purple-100 text-purple-950 border-purple-400 dark:bg-purple-900/90 dark:text-purple-100 dark:border-purple-500'
+                                          : 'bg-sky-100 text-sky-950 border-sky-400 dark:bg-sky-900/90 dark:text-sky-100 dark:border-sky-500'
+                                      )}
+                                      title={order.nocAccountId === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)'}
+                                    >
+                                      {order.nocAccountId === 'portal_2' ? 'AS' : 'UI'}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground">—</span>
                               )}
-                            </DropdownMenuGroup>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteOrder(order)}
+                            </td>
+                          )}
+
+                          {/* 2. Courier Column (Only on Post-Pack tabs) */}
+                          {showNocColumns && (
+                            <td className="px-3 py-2">
+                              <span className="text-[12px] font-medium text-foreground whitespace-nowrap">
+                                {courierToDisplay}
+                              </span>
+                            </td>
+                          )}
+
+                          {/* 3. NOC Status Column (Only on Post-Pack tabs) */}
+                          {showNocColumns && (
+                            <td className="px-3 py-2">
+                              {(order.trackingNumber || has3rdParty) ? (
+                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setNocTrackingOrder(order)}
+                                    title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
+                                    className="text-[12px] font-medium text-foreground hover:text-primary hover:underline cursor-pointer text-left"
+                                  >
+                                    {order.nocStatus || 'Booked'}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSyncNocStatus(order._id || order.orderId);
+                                    }}
+                                    disabled={syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId)}
+                                    title="Refresh live status from NOC"
+                                    className="size-5 rounded inline-flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 cursor-pointer"
+                                  >
+                                    {syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId) ? (
+                                      <Spinner className="size-3" />
+                                    ) : (
+                                      <RotateCcw className="size-3" />
+                                    )}
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          )}
+
+                          {/* 4. Status Time Column (Only on Post-Pack tabs) */}
+                          {showNocColumns && (
+                            <td className="px-3 py-2 text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
+                              {statusTimeDisplay}
+                            </td>
+                          )}
+
+                          <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
+                          <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</td>
+                          <td className="px-3 py-2">
+                            <Badge
+                              variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
+                              className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                             >
-                              <Trash2 data-icon="inline-start" />
-                              Move to Trash
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                              {getOrderDisplayStatus(order)}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <OrderQuickViewDialog
+                                order={order}
+                                triggerLabel="View"
+                                triggerSize="sm"
+                                triggerClassName="admin-cta-button"
+                              />
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
+                                    <MoreHorizontal />
+                                    <span className="sr-only">Order actions</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                  <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/admin/orders/${order._id}`}>
+                                        <Eye />
+                                        View details
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setQuickActionOrder(order);
+                                        setQuickStatus(order.status);
+                                        setQuickTracking(order.trackingNumber || '');
+                                        setEditingOrder(order);
+                                      }}
+                                    >
+                                      <Edit />
+                                      Quick update
+                                    </DropdownMenuItem>
+                                  </DropdownMenuGroup>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => handleDeleteOrder(order._id, order.orderId)}
+                                  >
+                                    <Trash2 />
+                                    Move to Trash
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
         </div>
       </div>
       )}
@@ -2325,8 +2499,14 @@ export default function AdminOrdersClient({
         )}
 
         {displayOrders.length === 0 ? (
-          <div className="border-y border-border bg-card px-3 py-8 text-center">
-            <Receipt className="mx-auto mb-2 text-muted-foreground/30 size-8" />
+          <div className="border-y border-border bg-card px-3 py-8 text-center flex flex-col items-center justify-center">
+            <Image
+              src="/undraw_relaxing-outdoors_s653.svg"
+              alt="No orders found"
+              width={140}
+              height={105}
+              className="mb-3 h-auto w-32 object-contain opacity-90"
+            />
             <p className="text-sm font-medium text-foreground">No orders found</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
             {hasActiveFilters && (
@@ -2391,6 +2571,18 @@ export default function AdminOrdersClient({
                               <Edit data-icon="inline-start" />
                               Edit Order
                             </DropdownMenuItem>
+                            {order.trackingNumber && (
+                              <DropdownMenuItem onClick={() => handleSyncNocStatus(order._id || order.orderId)}>
+                                <RotateCcw className="size-4 mr-2" />
+                                Sync NOC Status
+                              </DropdownMenuItem>
+                            )}
+                            {order.trackingNumber && (
+                              <DropdownMenuItem onClick={() => setNocTrackingOrder(order)}>
+                                <Truck className="size-4 text-sky-600 mr-2" />
+                                Track Order
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuGroup>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -2404,12 +2596,70 @@ export default function AdminOrdersClient({
                       </DropdownMenu>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] text-muted-foreground truncate leading-none">
                         <span className="font-medium text-foreground">{order.customerName}</span>
                         {order.customerCity ? ` • ${order.customerCity}` : ''}
                       </p>
+                      <Badge
+                        variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
+                        className={cn('text-[9px] px-1.5 py-0 h-4', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                      >
+                        {getOrderDisplayStatus(order)}
+                      </Badge>
                     </div>
+
+                    {(() => {
+                      const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned'].includes(order.status) || showNocColumns;
+                      const has3rdParty = order.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
+                      const displayTracking = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order.nocParcelNo || order.trackingNumber);
+                      const courierToDisplay = order.courierName || 'NOC Express';
+
+                      if (!isShippedPhase || !displayTracking) return null;
+
+                      return (
+                        <div className="flex flex-col gap-1 py-1 border-t border-border/40 text-[10px]">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-mono text-[10px] font-semibold text-foreground truncate" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                                {displayTracking}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground truncate">({courierToDisplay})</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setNocTrackingOrder(order)}
+                                className="text-[11px] font-medium text-foreground hover:underline cursor-pointer"
+                              >
+                                {order.nocStatus || 'Booked'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSyncNocStatus(order._id || order.orderId);
+                                }}
+                                disabled={syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId)}
+                                title="Refresh status from NOC"
+                                className="size-5 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                              >
+                                {syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId) ? (
+                                  <Spinner className="size-3" />
+                                ) : (
+                                  <RotateCcw className="size-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          {statusTimeDisplay !== '—' ? (
+                            <span className="text-[9px] text-muted-foreground leading-none">
+                              🕒 {statusTimeDisplay}
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
 
                     <div className="flex items-center justify-between gap-2 mt-0.5">
                       <div className="flex items-center gap-1 flex-wrap">
@@ -3094,22 +3344,41 @@ export default function AdminOrdersClient({
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">
-                NOC Account
+                Select NOC Account
               </span>
-              <Select value={selectedNocPortal} onValueChange={setSelectedNocPortal}>
-                <SelectTrigger className="w-full h-11 text-sm font-semibold bg-white text-gray-900 border-gray-300 rounded-xl">
-                  <SelectValue placeholder="Select Account" />
-                </SelectTrigger>
-                <SelectContent className="bg-white text-gray-900 border-gray-200 rounded-xl">
-                  {NOC_PORTALS.map((portal) => (
-                    <SelectItem key={portal.id} value={portal.id} className="font-medium text-gray-900">
-                      {portal.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-1 gap-2">
+                {NOC_PORTALS.map((portal) => {
+                  const isSelected = selectedNocPortal === portal.id;
+                  return (
+                    <button
+                      key={portal.id}
+                      type="button"
+                      onClick={() => setSelectedNocPortal(portal.id)}
+                      className={`flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-sky-600 bg-sky-50 text-sky-900 ring-2 ring-sky-500/20 font-semibold'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-gray-300 bg-white'
+                        }`}>
+                          {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+                        </div>
+                        <span className="text-sm font-medium">{portal.name}</span>
+                      </div>
+                      {isSelected && (
+                        <span className="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Simple White Light Summary Box */}

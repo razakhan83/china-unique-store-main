@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
 
-import ConditionalLayoutElements from '@/components/ConditionalLayoutElements';
+import ConditionalLayoutElements, { HomeOnlyLayoutElements } from '@/components/ConditionalLayoutElements';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import Navbar from '@/components/Navbar';
