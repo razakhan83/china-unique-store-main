@@ -2432,7 +2432,7 @@ export default function AdminOrdersClient({
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => {
-                                        setQuickActionOrder(order);
+                                        setQuickActionOrder(order._id);
                                         setQuickStatus(order.status);
                                         setQuickTracking(order.trackingNumber || '');
                                         setEditingOrder(order);
@@ -2445,7 +2445,7 @@ export default function AdminOrdersClient({
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     variant="destructive"
-                                    onClick={() => handleDeleteOrder(order._id, order.orderId)}
+                                    onClick={() => handleDeleteOrder(order)}
                                   >
                                     <Trash2 />
                                     Move to Trash
@@ -2547,9 +2547,11 @@ export default function AdminOrdersClient({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuGroup>
-                            <DropdownMenuItem render={<Link href={`/admin/orders/${order._id}`} />}>
-                              <Receipt data-icon="inline-start" />
-                              Order details
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/orders/${order._id}`}>
+                                <Receipt data-icon="inline-start" />
+                                Order details
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
@@ -2616,6 +2618,19 @@ export default function AdminOrdersClient({
                       const courierToDisplay = order.courierName || 'NOC Express';
 
                       if (!isShippedPhase || !displayTracking) return null;
+
+                      const statusTimeDisplay = (() => {
+                        if (order.nocStatusTime && String(order.nocStatusTime).trim() !== '') {
+                          return String(order.nocStatusTime).trim();
+                        }
+                        if (order.courierBookingDate) {
+                          return `${formatDate(order.courierBookingDate)} ${formatTime(order.courierBookingDate)}`;
+                        }
+                        if (order.createdAt && (order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Out For Delivery' || order.status === 'Returned')) {
+                          return `${formatDate(order.createdAt)} ${formatTime(order.createdAt)}`;
+                        }
+                        return '—';
+                      })();
 
                       return (
                         <div className="flex flex-col gap-1 py-1 border-t border-border/40 text-[10px]">
