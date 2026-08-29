@@ -5,12 +5,22 @@ import { AlertTriangle, RotateCcw, LayoutDashboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
-export default function AdminError({ error, unstable_retry }) {
+export default function AdminError({ error, reset, unstable_retry }) {
   const router = useRouter();
 
   useEffect(() => {
     console.error(error);
   }, [error]);
+
+  const handleRetry = () => {
+    if (typeof reset === 'function') {
+      reset();
+    } else if (typeof unstable_retry === 'function') {
+      unstable_retry();
+    } else {
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-6 px-4 text-center">
@@ -24,7 +34,7 @@ export default function AdminError({ error, unstable_retry }) {
         </p>
       </div>
       <div className="flex gap-3">
-        <Button onClick={() => unstable_retry()} variant="outline" className="gap-2">
+        <Button onClick={handleRetry} variant="outline" className="gap-2">
           <RotateCcw className="size-4" />
           Try again
         </Button>

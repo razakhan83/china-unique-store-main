@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer, Send, FileText } from 'lucide-react';
+import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer, Send, FileText, Upload } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import NocTrackingModal from '@/components/NocTrackingModal';
+import SyncNocSheetModal from '@/components/admin/SyncNocSheetModal';
 import { NOC_PORTALS } from '@/lib/nocCourier';
 import {
   sanitizePdfText,
@@ -352,6 +353,7 @@ export default function AdminOrdersClient({
   const [nocTrackingOrder, setNocTrackingOrder] = useState(null);
   const [nocPrintResult, setNocPrintResult] = useState(null);
   const [nocPrintAccountModal, setNocPrintAccountModal] = useState(null);
+  const [isSyncSheetModalOpen, setIsSyncSheetModalOpen] = useState(false);
 
   const handleBulkNocBooking = async () => {
     if (selectedOrders.length === 0) {
@@ -427,6 +429,9 @@ export default function AdminOrdersClient({
   const getNocStatusBadgeClass = (status) => {
     if (!status) return 'border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300';
     const s = String(status).toLowerCase();
+    if (s.includes('payment') || s.includes('paid') || s.includes('remit') || s.includes('cr done')) {
+      return 'border-teal-400 bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-200';
+    }
     if (s.includes('delivered') || s.includes('complete')) {
       return 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300';
     }
@@ -1485,7 +1490,10 @@ export default function AdminOrdersClient({
       orderQuantity: form.orderQuantity.value,
       weight: form.weight.value,
       manualCodAmount: form.manualCodAmount.value,
-      courierName: editingOrder.courierName || '',
+      courierName: form.courierName ? form.courierName.value : (editingOrder.courierName || ''),
+      nocThirdPartyNo: form.nocThirdPartyNo ? form.nocThirdPartyNo.value : (editingOrder.nocThirdPartyNo || ''),
+      nocParcelNo: form.trackingNumber ? form.trackingNumber.value : (editingOrder.nocParcelNo || editingOrder.trackingNumber || ''),
+      trackingNumber: form.trackingNumber ? form.trackingNumber.value : (editingOrder.trackingNumber || ''),
     };
     const res = await updateOrderAction(editingOrder._id, updates);
     if (res.success) {
@@ -2101,16 +2109,30 @@ export default function AdminOrdersClient({
         ) : null}
 
         {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery') ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => handleSyncNocStatus(selectedOrders)}
-            disabled={selectedOrders.length === 0 || isBulkSyncingNoc}
-            className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
-            Sync NOC Status{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
-          </Button>
+          <>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handleSyncNocStatus(selectedOrders)}
+              disabled={selectedOrders.length === 0 || isBulkSyncingNoc}
+              className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
+            >
+              {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
+              Sync NOC Status{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setIsSyncSheetModalOpen(true)}
+              className="h-7 px-2.5 text-[11px] font-medium flex items-center gap-1.5 cursor-pointer rounded-md border border-border bg-card hover:bg-muted text-foreground shadow-2xs transition-colors"
+              title="Upload NOC Excel file to auto-sync 3rd Party CNs and Courier Partners"
+            >
+              <Upload className="size-3.5 text-muted-foreground" />
+              Sync NOC Sheet
+            </Button>
+          </>
         ) : null}
 
         {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
@@ -2261,8 +2283,8 @@ export default function AdminOrdersClient({
                       if (!order) return null;
                       const has3rdParty = order.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
                       const displayTracking = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order.nocParcelNo || order.trackingNumber || '');
-                      const rawCourier = order.courierName || (order.trackingNumber ? 'NOC Express' : '—');
-                      const courierToDisplay = (rawCourier.trim().toLowerCase() === 'noc' || rawCourier.trim().toLowerCase() === 'noc express') ? 'NOC Express' : rawCourier;
+                      const rawCourier = order.courierName || (order.trackingNumber ? 'NOC' : '—');
+                      const courierToDisplay = rawCourier;
                       const statusTimeDisplay = (() => {
                         if (order.nocStatusTime && String(order.nocStatusTime).trim() !== '') {
                           return String(order.nocStatusTime).trim();
@@ -2599,13 +2621,13 @@ export default function AdminOrdersClient({
                     </div>
                     
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] text-muted-foreground truncate leading-none">
-                        <span className="font-medium text-foreground">{order.customerName}</span>
-                        {order.customerCity ? ` • ${order.customerCity}` : ''}
+                      <p className="text-[13px] text-muted-foreground truncate leading-tight">
+                        <span className="font-semibold text-foreground">{order.customerName}</span>
+                        {order.customerCity ? <span className="text-[12px]"> • {order.customerCity}</span> : ''}
                       </p>
                       <Badge
                         variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                        className={cn('text-[9px] px-1.5 py-0 h-4', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                        className={cn('text-[10px] px-2 py-0.5 font-semibold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                       >
                         {getOrderDisplayStatus(order)}
                       </Badge>
@@ -2615,7 +2637,7 @@ export default function AdminOrdersClient({
                       const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned'].includes(order.status) || showNocColumns;
                       const has3rdParty = order.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
                       const displayTracking = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order.nocParcelNo || order.trackingNumber);
-                      const courierToDisplay = order.courierName || 'NOC Express';
+                      const courierToDisplay = order.courierName || (order.trackingNumber ? 'NOC' : '—');
 
                       if (!isShippedPhase || !displayTracking) return null;
 
@@ -2633,19 +2655,19 @@ export default function AdminOrdersClient({
                       })();
 
                       return (
-                        <div className="flex flex-col gap-1 py-1 border-t border-border/40 text-[10px]">
+                        <div className="flex flex-col gap-1.5 py-1.5 border-t border-border/40 text-[12px]">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="font-mono text-[10px] font-semibold text-foreground truncate" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                              <span className="font-mono text-[12px] font-bold text-foreground truncate" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
                                 {displayTracking}
                               </span>
-                              <span className="text-[10px] text-muted-foreground truncate">({courierToDisplay})</span>
+                              <span className="text-[11px] font-semibold text-muted-foreground truncate">({courierToDisplay})</span>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => setNocTrackingOrder(order)}
-                                className="text-[11px] font-medium text-foreground hover:underline cursor-pointer"
+                                className="text-[12px] font-semibold text-foreground hover:underline cursor-pointer"
                               >
                                 {order.nocStatus || 'Booked'}
                               </button>
@@ -2657,18 +2679,18 @@ export default function AdminOrdersClient({
                                 }}
                                 disabled={syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId)}
                                 title="Refresh status from NOC"
-                                className="size-5 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                                className="size-6 inline-flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                               >
                                 {syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId) ? (
-                                  <Spinner className="size-3" />
+                                  <Spinner className="size-3.5" />
                                 ) : (
-                                  <RotateCcw className="size-3" />
+                                  <RotateCcw className="size-3.5" />
                                 )}
                               </button>
                             </div>
                           </div>
                           {statusTimeDisplay !== '—' ? (
-                            <span className="text-[9px] text-muted-foreground leading-none">
+                            <span className="text-[11px] text-muted-foreground leading-none">
                               🕒 {statusTimeDisplay}
                             </span>
                           ) : null}
@@ -3315,6 +3337,33 @@ export default function AdminOrdersClient({
                 </FieldGroup>
               </div>
 
+              <Separator />
+
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fulfillment & Tracking</p>
+                <Separator />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mt-2">
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="courierName" className="text-[12px]">Courier Partner</FieldLabel>
+                      <Input id="courierName" name="courierName" className="h-8 text-[13px]" defaultValue={editingOrder.courierName || 'NOC'} placeholder="e.g. Leopard, TCS, NOC" />
+                    </Field>
+                  </FieldGroup>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="nocThirdPartyNo" className="text-[12px]">3rd Party Tracking #</FieldLabel>
+                      <Input id="nocThirdPartyNo" name="nocThirdPartyNo" className="h-8 text-[13px] font-mono" defaultValue={editingOrder.nocThirdPartyNo || ''} placeholder="e.g. KI7541520478" />
+                    </Field>
+                  </FieldGroup>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="trackingNumber" className="text-[12px]">Parcel #</FieldLabel>
+                      <Input id="trackingNumber" name="trackingNumber" className="h-8 text-[13px] font-mono" defaultValue={editingOrder.nocParcelNo || editingOrder.trackingNumber || ''} placeholder="e.g. 16226706434798" />
+                    </Field>
+                  </FieldGroup>
+                </div>
+              </div>
+
               <DialogFooter className="gap-1.5 sm:gap-0">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)} className="admin-cta-button">Cancel</Button>
                 <Button type="submit" size="sm" disabled={isUpdating} className="admin-cta-button min-w-[100px]">
@@ -3426,10 +3475,21 @@ export default function AdminOrdersClient({
       <NocTrackingModal
         open={!!nocTrackingOrder}
         onOpenChange={(open) => !open && setNocTrackingOrder(null)}
-        trackingNumber={nocTrackingOrder?.trackingNumber}
+        trackingNumber={
+          (nocTrackingOrder?.nocThirdPartyNo && String(nocTrackingOrder.nocThirdPartyNo).trim() !== '' && String(nocTrackingOrder.nocThirdPartyNo).trim().toUpperCase() !== 'N/A')
+            ? String(nocTrackingOrder.nocThirdPartyNo).trim()
+            : (nocTrackingOrder?.nocParcelNo || nocTrackingOrder?.trackingNumber)
+        }
         orderId={nocTrackingOrder?.orderId}
-        courierName={nocTrackingOrder?.courierName || 'NOC Express'}
+        courierName={nocTrackingOrder?.courierName || 'NOC'}
         nocLabelUrl={nocTrackingOrder?.nocLabelUrl}
+      />
+
+      {/* Sync NOC Excel / Loadsheet Modal */}
+      <SyncNocSheetModal
+        open={isSyncSheetModalOpen}
+        onOpenChange={setIsSyncSheetModalOpen}
+        onSuccess={() => router.refresh()}
       />
 
       {/* NOC Express Booking Success & Print Slips Popup Dialog */}

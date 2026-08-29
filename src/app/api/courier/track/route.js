@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
-import { trackNocParcel } from '@/lib/nocCourier';
+import { trackNocParcel, fetchNocPortalDashboard } from '@/lib/nocCourier';
 
 export async function GET(request) {
   try {
@@ -18,13 +18,38 @@ export async function GET(request) {
       order = await Order.findOne({
         $or: [{ orderId }, { _id: orderId.match(/^[0-9a-fA-F]{24}$/) ? orderId : null }],
         isDeleted: { $ne: true },
-      }).lean();
+      });
     } else if (trackingNumber) {
-      order = await Order.findOne({ trackingNumber, isDeleted: { $ne: true } }).lean();
+      order = await Order.findOne({
+        $or: [
+          { trackingNumber },
+          { nocParcelNo: trackingNumber },
+          { nocThirdPartyNo: trackingNumber }
+        ],
+        isDeleted: { $ne: true }
+      });
     }
 
-    const targetParcelNo = trackingNumber || order?.trackingNumber;
+    const targetParcelNo = order?.nocParcelNo || order?.trackingNumber || trackingNumber;
     const targetPortalKey = portalKeyParam || order?.nocAccountId || 'portal_1';
+
+    // If order has no 3rd party CN or courier is generic, attempt live portal resolution
+    if (order && (!order.nocThirdPartyNo || order.courierName === 'NOC Express')) {
+      try {
+        const portalRows = await fetchNocPortalDashboard(targetPortalKey);
+        const match = portalRows.find(
+          (r) => r.parcelNo === targetParcelNo || (order.nocParcelNo && r.parcelNo === order.nocParcelNo)
+        );
+        if (match) {
+          if (match.courier) order.courierName = match.courier;
+          if (match.thirdPartyNo) order.nocThirdPartyNo = match.thirdPartyNo;
+          if (match.parcelNo) order.nocParcelNo = match.parcelNo;
+          await order.save();
+        }
+      } catch (e) {
+        console.warn('Live portal resolution in track route skipped:', e?.message);
+      }
+    }
 
     if (!targetParcelNo) {
       return NextResponse.json(
@@ -41,11 +66,26 @@ export async function GET(request) {
     try {
       trackingResult = await trackNocParcel(targetParcelNo, targetPortalKey);
       if (trackingResult?.Response === 'success' && Array.isArray(trackingResult?.detail)) {
-        events = trackingResult.detail.map((item) => ({
-          status: item.PacelStatus || item.ParcelStatus || 'Status Update',
-          remarks: item.Remarks || '',
-          dateTime: item.DateTime || '',
-        }));
+        events = trackingResult.detail
+          .filter((item) => {
+            const st = String(item.PacelStatus || item.ParcelStatus || item.Status || '').toLowerCase();
+            const rem = String(item.Remarks || '').toLowerCase();
+            const isInternalPaymentEvent =
+              st.includes('payment done') ||
+              st.includes('payment received') ||
+              st.includes('payment remitted') ||
+              st.includes('paid to') ||
+              st.includes('cheque') ||
+              st.includes('cr done') ||
+              rem.includes('payment done') ||
+              rem.includes('payment remitted');
+            return !isInternalPaymentEvent;
+          })
+          .map((item) => ({
+            status: item.PacelStatus || item.ParcelStatus || 'Status Update',
+            remarks: item.Remarks || '',
+            dateTime: item.DateTime || '',
+          }));
       } else if (trackingResult?.Response === 'failure') {
         fetchError = trackingResult.ErrorDescription || 'Unable to retrieve tracking data from NOC Courier.';
       }
@@ -117,11 +157,17 @@ export async function GET(request) {
       events = fallbackEvents;
     }
 
+    const has3rdParty = order?.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
+    const effectiveTrackingNumber = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order?.nocParcelNo || targetParcelNo);
+    const effectiveCourierName = order?.courierName || 'NOC';
+
     return NextResponse.json({
       success: true,
       orderId: order?.orderId || null,
-      courierName: order?.courierName || 'NOC Express',
-      trackingNumber: targetParcelNo,
+      courierName: effectiveCourierName,
+      trackingNumber: effectiveTrackingNumber,
+      parcelNo: order?.nocParcelNo || targetParcelNo,
+      thirdPartyNo: has3rdParty ? String(order.nocThirdPartyNo).trim() : '',
       nocLabelUrl: order?.nocLabelUrl || '',
       orderStatus: order?.status || 'Shipped',
       customerCity: order?.customerCity || '',

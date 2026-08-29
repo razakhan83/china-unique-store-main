@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
-import { trackNocParcel } from '@/lib/nocCourier';
+import { trackNocParcel, fetchNocPortalDashboard } from '@/lib/nocCourier';
 import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function POST(request) {
@@ -44,6 +45,23 @@ export async function POST(request) {
       );
     }
 
+    // Automatically scrape live portal dashboard to get latest 3rd Party CNs and Courier partners (Leopard/TCS/etc.)
+    const portalKeys = [...new Set(orders.map((o) => o.nocAccountId || 'portal_1'))];
+    const portalRowsMap = new Map();
+
+    for (const pKey of portalKeys) {
+      try {
+        const rows = await fetchNocPortalDashboard(pKey);
+        for (const r of rows) {
+          if (r.parcelNo) {
+            portalRowsMap.set(r.parcelNo, r);
+          }
+        }
+      } catch (err) {
+        console.warn(`[Sync Status] Portal dashboard fetch failed for ${pKey}:`, err?.message);
+      }
+    }
+
     const results = [];
     const now = new Date();
 
@@ -61,6 +79,14 @@ export async function POST(request) {
         continue;
       }
 
+      // Auto-update from live portal dashboard if 3rd party CN or specific courier was assigned
+      const portalInfo = portalRowsMap.get(trackingNumber) || portalRowsMap.get(order.nocParcelNo);
+      if (portalInfo) {
+        if (portalInfo.courier) order.courierName = portalInfo.courier;
+        if (portalInfo.thirdPartyNo) order.nocThirdPartyNo = portalInfo.thirdPartyNo;
+        if (portalInfo.parcelNo) order.nocParcelNo = portalInfo.parcelNo;
+      }
+
       try {
         const trackingData = await trackNocParcel(trackingNumber, portalKey);
 
@@ -71,8 +97,8 @@ export async function POST(request) {
           const rawTime = latest.DateTime || latest.dateTime || latest.Date_Time || latest.Date || '';
           const remarks = latest.Remarks || '';
 
-          // 1. Courier Name from NOC
-          const rawCourier = 
+          // 1. Courier Name from NOC (e.g. TCS, Leopard, NOC, etc.)
+          const rawCourierCandidate = 
             latest.CourierName || 
             latest.Courier || 
             latest.ThirdPartyCourier || 
@@ -81,7 +107,9 @@ export async function POST(request) {
             trackingData.CourierName || 
             trackingData.Courier || 
             order.courierName || 
-            'NOC Express';
+            'NOC';
+
+          const rawCourier = String(rawCourierCandidate || 'NOC').trim();
 
           // 2. 3rd Party No vs ParcelNo logic
           const raw3rdParty = 
@@ -108,8 +136,15 @@ export async function POST(request) {
           const finalThirdPartyNo = is3rdPartyValid ? String(raw3rdParty).trim() : '';
           const finalParcelNo = String(rawParcelNo || trackingNumber).trim();
 
-          // If 3rd party exists and valid, we highlight it; otherwise fallback to ParcelNo
+          // If 3rd party exists, it is the sole tracking number; otherwise ParcelNo
           const effectiveTrackingNumber = is3rdPartyValid ? finalThirdPartyNo : finalParcelNo;
+
+          const lowerRawStatus = rawStatus.toLowerCase();
+          const isPaymentDone =
+            lowerRawStatus.includes('payment') ||
+            lowerRawStatus.includes('paid') ||
+            lowerRawStatus.includes('remit') ||
+            lowerRawStatus.includes('cr done');
 
           order.nocStatus = rawStatus;
           order.nocStatusTime = rawTime;
@@ -118,6 +153,16 @@ export async function POST(request) {
           order.nocThirdPartyNo = finalThirdPartyNo;
           order.nocRemarks = remarks;
           order.nocLastTrackedAt = now;
+
+          // If NOC confirms Payment Done:
+          // 1. Admin order paymentStatus becomes 'Paid' (COD amount collected)
+          // 2. Customer's public order.status remains 'Delivered'
+          if (isPaymentDone) {
+            order.paymentStatus = 'Paid';
+            if (order.status !== 'Completed' && order.status !== 'Returned') {
+              order.status = 'Delivered';
+            }
+          }
 
           await order.save();
 
@@ -157,6 +202,16 @@ export async function POST(request) {
     }
 
     const successfulCount = results.filter((r) => r.success).length;
+
+    if (successfulCount > 0) {
+      try {
+        revalidateTag('orders');
+        revalidateTag('admin-dashboard');
+        revalidatePath('/admin/orders');
+      } catch (revErr) {
+        console.error('Error revalidating orders cache after NOC sync:', revErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,

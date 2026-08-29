@@ -190,3 +190,132 @@ export async function cancelNocParcel(parcelNos, portalKey = 'portal_1') {
   const data = await response.json();
   return data;
 }
+
+/**
+ * 5. Fetch Live NOC Portal Dashboard (Automated Scraper)
+ * Automatically logs in to shipnoc.com and fetches the live table of booked parcels,
+ * extracting Courier Partners (Leopard, TCS, NOC, etc.) and 3rd Party CNs.
+ */
+export async function fetchNocPortalDashboard(portalKey = 'portal_1', fromDate, toDate) {
+  const creds = getNocCredentials(portalKey);
+  if (!creds.userName || !creds.password) {
+    return [];
+  }
+
+  try {
+    // 1. Fetch Login Page to retrieve ASP.NET ViewState & Session Cookie
+    const getRes = await fetch('https://shipnoc.com/login.aspx', {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    });
+
+    const getHtml = await getRes.text();
+    const setCookies = getRes.headers.get('set-cookie')?.split(';')[0] || '';
+
+    const vs = getHtml.match(/id="__VIEWSTATE"\s+value="([^"]+)"/)?.[1] || '';
+    const vsg = getHtml.match(/id="__VIEWSTATEGENERATOR"\s+value="([^"]+)"/)?.[1] || '';
+    const ev = getHtml.match(/id="__EVENTVALIDATION"\s+value="([^"]+)"/)?.[1] || '';
+
+    const params = new URLSearchParams();
+    params.set('__VIEWSTATE', vs);
+    params.set('__VIEWSTATEGENERATOR', vsg);
+    params.set('__EVENTVALIDATION', ev);
+    params.set('txtLoginName', creds.userName);
+    params.set('txtPassword', creds.password);
+    params.set('btnLogin', 'Login');
+
+    // 2. Submit Login
+    const loginRes = await fetch('https://shipnoc.com/login.aspx', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': setCookies,
+        'User-Agent': 'Mozilla/5.0',
+      },
+      body: params.toString(),
+      redirect: 'manual',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    });
+
+    const sessionCookie = loginRes.headers.get('set-cookie')?.split(';')[0] || setCookies;
+
+    // 3. Fetch UserDashboard.aspx to get dashboard viewstate
+    const dashGet = await fetch('https://shipnoc.com/UserDashboard.aspx', {
+      headers: { 'Cookie': sessionCookie, 'User-Agent': 'Mozilla/5.0' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    });
+
+    const dashHtml = await dashGet.text();
+    const dVs = dashHtml.match(/id="__VIEWSTATE"\s+value="([^"]+)"/)?.[1] || '';
+    const dVsg = dashHtml.match(/id="__VIEWSTATEGENERATOR"\s+value="([^"]+)"/)?.[1] || '';
+    const dEv = dashHtml.match(/id="__EVENTVALIDATION"\s+value="([^"]+)"/)?.[1] || '';
+
+    // Calculate search date range (default to last 45 days)
+    const now = new Date();
+    const defaultFrom = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const defaultTo = now.toISOString().slice(0, 10);
+
+    const searchParams = new URLSearchParams();
+    searchParams.set('__VIEWSTATE', dVs);
+    searchParams.set('__VIEWSTATEGENERATOR', dVsg);
+    searchParams.set('__EVENTVALIDATION', dEv);
+    searchParams.set('ctl00$ContentPlaceHolder1$txtfromdate', fromDate || defaultFrom);
+    searchParams.set('ctl00$ContentPlaceHolder1$txttodate', toDate || defaultTo);
+    searchParams.set('ctl00$ContentPlaceHolder1$btnseacrh', 'Search');
+
+    // 4. Submit Search
+    const searchRes = await fetch('https://shipnoc.com/UserDashboard.aspx', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': sessionCookie,
+        'User-Agent': 'Mozilla/5.0',
+      },
+      body: searchParams.toString(),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12000),
+    });
+
+    const resultHtml = await searchRes.text();
+    const trMatches = resultHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+
+    const parsedRows = [];
+    for (const tr of trMatches) {
+      const tdMatches = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
+      if (tdMatches.length >= 6) {
+        const cleanTds = tdMatches.map((td) => td.replace(/<[^>]+>/g, '').trim());
+        const courier = cleanTds[2];
+        const parcelNo = cleanTds[3];
+        const thirdPartyNo = cleanTds[4];
+        const consignee = cleanTds[6];
+        const city = cleanTds[8];
+
+        if (parcelNo && (parcelNo.match(/^\d+$/) || parcelNo.length > 5)) {
+          const is3rdPartyValid =
+            thirdPartyNo &&
+            thirdPartyNo !== 'N/A' &&
+            thirdPartyNo !== 'NA' &&
+            thirdPartyNo.toLowerCase() !== 'null' &&
+            thirdPartyNo.toLowerCase() !== 'undefined';
+
+          parsedRows.push({
+            courier: courier || 'NOC',
+            parcelNo: parcelNo.trim(),
+            thirdPartyNo: is3rdPartyValid ? thirdPartyNo.trim() : '',
+            consignee: consignee || '',
+            city: city || '',
+            portalKey,
+          });
+        }
+      }
+    }
+
+    return parsedRows;
+  } catch (err) {
+    console.error(`[NOC Portal Auto-Scrape Error] Failed to fetch portal dashboard for ${portalKey}:`, err);
+    return [];
+  }
+}

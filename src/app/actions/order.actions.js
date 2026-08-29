@@ -772,6 +772,8 @@ export async function updateOrderAction(id, updates) {
       order.isDraft = false;
     }
     if (validatedData.trackingNumber !== undefined) order.trackingNumber = validatedData.trackingNumber;
+    if (validatedData.nocThirdPartyNo !== undefined) order.nocThirdPartyNo = validatedData.nocThirdPartyNo;
+    if (validatedData.nocParcelNo !== undefined) order.nocParcelNo = validatedData.nocParcelNo;
     if (validatedData.courierName !== undefined) order.courierName = validatedData.courierName;
 
     if (validatedData.weight !== undefined) order.weight = validatedData.weight;

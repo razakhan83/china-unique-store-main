@@ -54,6 +54,8 @@ export const draftOrderSchema = z.object({
 
 export const updateOrderSchema = draftOrderSchema.partial().extend({
   trackingNumber: z.string().trim().max(100).optional().or(z.literal('')),
+  nocThirdPartyNo: z.string().trim().max(100).optional().or(z.literal('')),
+  nocParcelNo: z.string().trim().max(100).optional().or(z.literal('')),
   courierName: z.string().trim().max(100).optional().or(z.literal('')),
   status: z.string().trim().max(50).optional(),
   orderQuantity: z.coerce.number().int().nonnegative().optional(),

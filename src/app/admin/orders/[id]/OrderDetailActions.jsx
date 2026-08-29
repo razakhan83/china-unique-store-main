@@ -169,7 +169,7 @@ export default function OrderDetailActions({ order }) {
           {order.trackingNumber && (() => {
             const has3rdParty = order.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
             const displayTracking = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order.nocParcelNo || order.trackingNumber);
-            const courierToDisplay = order.courierName || 'NOC Express';
+            const courierToDisplay = order.courierName || 'NOC';
 
             return (
               <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-sky-200/80 dark:border-slate-800 text-xs space-y-2">

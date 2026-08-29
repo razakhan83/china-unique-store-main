@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
@@ -147,6 +148,14 @@ export async function POST(request) {
         labelUrl: labelUrl,
         status: 'Shipped',
       });
+    }
+
+    try {
+      revalidateTag('orders');
+      revalidateTag('admin-dashboard');
+      revalidatePath('/admin/orders');
+    } catch (revErr) {
+      console.error('Error revalidating orders cache after NOC booking:', revErr);
     }
 
     return NextResponse.json({

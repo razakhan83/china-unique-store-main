@@ -414,6 +414,14 @@ function toOrderSummaryRow(order) {
     nocAccountId: order.nocAccountId || 'portal_1',
     nocLabelUrl: order.nocLabelUrl || '',
     courierBookingStatus: order.courierBookingStatus || 'none',
+    nocStatus: order.nocStatus || '',
+    nocStatusTime: order.nocStatusTime || '',
+    nocParcelNo: order.nocParcelNo || '',
+    nocThirdPartyNo: order.nocThirdPartyNo || '',
+    nocRemarks: order.nocRemarks || '',
+    nocLastTrackedAt: order.nocLastTrackedAt ? new Date(order.nocLastTrackedAt).toISOString() : null,
+    courierBookingDate: order.courierBookingDate ? new Date(order.courierBookingDate).toISOString() : null,
+    courierResponseDetails: order.courierResponseDetails || null,
     items: Array.isArray(order.items)
       ? order.items.map((item) => ({
           ...item,
