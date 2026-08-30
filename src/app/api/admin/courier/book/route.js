@@ -126,7 +126,13 @@ export async function POST(request) {
 
       const formattedNow = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
       order.courierName = 'NOC Express';
-      if (trackingNo) order.trackingNumber = trackingNo;
+      if (trackingNo) {
+        order.trackingNumber = trackingNo;
+        order.nocParcelNo = trackingNo;
+      }
+      // Wipe old 3rd party CN & tracking state from previous bookings
+      order.nocThirdPartyNo = '';
+      order.nocRemarks = '';
       order.nocLabelUrl = labelUrl;
       order.nocAccountId = portalKey;
       order.courierBookingStatus = 'booked';
@@ -134,6 +140,7 @@ export async function POST(request) {
       order.nocStatusTime = formattedNow;
       order.courierBookingDate = now;
       order.courierResponseDetails = apiResult;
+      order.nocLastTrackedAt = null;
 
       // Update status to Shipped & convert draft if needed
       order.status = 'Shipped';

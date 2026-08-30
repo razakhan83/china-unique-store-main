@@ -776,6 +776,14 @@ export async function updateOrderAction(id, updates) {
     if (validatedData.nocParcelNo !== undefined) order.nocParcelNo = validatedData.nocParcelNo;
     if (validatedData.courierName !== undefined) order.courierName = validatedData.courierName;
 
+    if (validatedData.notes !== undefined) order.notes = validatedData.notes;
+    if (validatedData.items !== undefined && Array.isArray(validatedData.items)) {
+      order.items = validatedData.items;
+      const subtotal = validatedData.items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0);
+      order.totalAmount = Math.max(0, subtotal - (Number(order.discountAmount) || 0) + (Number(order.shippingAmount) || 0));
+      order.orderQuantity = validatedData.items.reduce((s, i) => s + Number(i.quantity || 1), 0);
+    }
+
     if (validatedData.weight !== undefined) order.weight = validatedData.weight;
     if (validatedData.itemType !== undefined) order.itemType = validatedData.itemType;
     if (validatedData.orderQuantity !== undefined) order.orderQuantity = validatedData.orderQuantity;

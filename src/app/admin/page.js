@@ -31,6 +31,20 @@ const statsConfig = [
   { title: 'Customers', icon: Users, key: 'totalCustomers' },
 ];
 
+function getDashboardStatusBadgeClass(status) {
+  const s = normalizeOrderStatus(status);
+  if (s === 'Order Confirmed' || s === 'Shipped' || s === 'Out For Delivery' || s === 'Delivered') {
+    return 'bg-emerald-50 text-black border-emerald-300';
+  }
+  if (s === 'In Process' || s === 'Packed') {
+    return 'bg-amber-50 text-black border-amber-300';
+  }
+  if (s === 'Returned' || s === 'Cancelled') {
+    return 'bg-rose-50 text-black border-rose-300';
+  }
+  return 'bg-emerald-50 text-black border-emerald-300';
+}
+
 function formatAdminTimestamp(value) {
   return new Intl.DateTimeFormat('en-PK', {
     dateStyle: 'medium',
@@ -180,12 +194,12 @@ async function DashboardContent({ session }) {
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-end">
                     <p className="text-[15px] font-bold tabular-nums leading-none text-foreground">{summary.dailyConfirmedOrders}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Today</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest font-medium">Today</p>
                 </div>
                 <div className="h-6 w-px bg-border/80"></div>
                 <div className="flex flex-col items-end">
-                    <p className="text-[15px] font-bold tabular-nums leading-none text-foreground">{summary.pendingOrders}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Order Confirmed</p>
+                    <p className="text-[15px] font-bold tabular-nums leading-none text-emerald-700 dark:text-emerald-400">{summary.pendingOrders}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest font-medium">Order Confirmed</p>
                 </div>
               </div>
             </div>
@@ -197,15 +211,15 @@ async function DashboardContent({ session }) {
                     <Link key={order._id} href={`/admin/orders/${order._id}`} className="flex items-center justify-between gap-2 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-md">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-medium text-foreground truncate">{order.customerName}</p>
-                          <Badge variant={STATUS_VARIANT[normalizeOrderStatus(order.status)] || 'outline'} className="text-[9px] px-1.5 py-0 h-4 shrink-0">
+                          <p className="text-[13px] font-semibold text-foreground truncate">{order.customerName}</p>
+                          <span className={`inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs ${getDashboardStatusBadgeClass(order.status)}`}>
                             {normalizeOrderStatus(order.status)}
-                          </Badge>
+                          </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-0.5">{order.orderId}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-[13px] font-medium text-foreground tabular-nums">Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
+                        <p className="text-[13px] font-bold text-foreground tabular-nums">Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{formatAdminTimestamp(order.createdAt)}</p>
                       </div>
                     </Link>

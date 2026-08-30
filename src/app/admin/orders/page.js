@@ -15,12 +15,14 @@ export default async function AdminOrdersPage({ searchParams }) {
   const endDate = String(params?.endDate || '').trim();
   const page = Math.max(1, Number(params?.page) || 1);
   const initialCreateOrder = params?.createOrder === '1';
-  const dateFiltered = Boolean(startDate || endDate);
-  // Date filters stay paginated; cap keeps RSC payload bounded for exports/filters.
-  const limit = dateFiltered ? 200 : 15;
+  const isAllOrdersTab = status === 'all';
+  const isDateFiltered = Boolean(startDate || endDate);
+  // Status workflow tabs (Pending, Packed, Shipped, etc.) show all active orders in one view for bulk actions.
+  // All Orders tab maintains standard pagination.
+  const limit = isAllOrdersTab ? (isDateFiltered ? 200 : 25) : 500;
 
   const [orders, trashOrders] = await Promise.all([
-    getAdminOrdersPage({ search, status, startDate, endDate, page, limit }),
+    getAdminOrdersPage({ search, status, startDate, endDate, page: isAllOrdersTab ? page : 1, limit }),
     getAdminTrashOrders(),
   ]);
 

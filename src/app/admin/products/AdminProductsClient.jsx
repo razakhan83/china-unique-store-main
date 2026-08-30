@@ -7,28 +7,26 @@ import { useState, useMemo, useEffect, startTransition, useTransition } from "re
 import dynamic from 'next/dynamic';
 import {
   ArrowDownWideNarrow,
-  Copy,
   ImageIcon,
-  MessageSquare,
   Minus,
-  MoreVertical,
+  MoreHorizontal,
   Pencil,
   Plus,
   Search,
   Store,
-  Tag,
   Trash2,
   TrendingUp,
   X,
   Eye,
   EyeOff,
-  Sparkles,
-  Flame,
-  Clock,
+  Package,
+  Layers,
+  CheckCircle2,
+  XCircle,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import AdminReviewsDialog from "@/components/AdminReviewsDialog";
 import BulkImportModal from "@/components/admin/BulkImportModal";
 import AppPagination from "@/components/AppPagination";
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
@@ -43,13 +41,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-const ProductQuickViewDialog = dynamic(() => import('./ProductQuickViewDialog').then((mod) => mod.ProductQuickViewDialog));
+import { Checkbox } from "@/components/ui/checkbox";
+import ProductQuickViewDialog from "./ProductQuickViewDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -91,131 +89,64 @@ function buildHref(pathname, searchParams, updates) {
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function DiscountDialog({ open, product, onOpenChange, onSuccess }) {
-  const [pct, setPct] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open && product) {
-      setPct(String(product.discountPercentage > 0 ? product.discountPercentage : ""));
-    }
-  }, [open, product]);
-
-  async function sendDiscount(discountPercentage) {
-    const res = await fetch(`/api/products/${product._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discountPercentage }),
-    });
-    const json = await res.json();
-    if (!res.ok || !json.success) {
-      throw new Error(json.error || json.message || "Failed to update discount");
-    }
-    return json.data;
-  }
-
-  async function handleApply() {
-    const value = Number(pct);
-    if (Number.isNaN(value) || value < 0 || value > 100) {
-      toast.error("Enter a valid percentage between 0 and 100.");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const result = await sendDiscount(value);
-      toast.success(
-        value > 0
-          ? `${value}% discount applied to "${product.Name}".`
-          : `Discount removed from "${product.Name}".`,
-      );
-      onSuccess(product._id, result.discountPercentage, result.isDiscounted, result.discountedPrice);
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(error.message || "Failed to update discount.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleRemove() {
-    setSaving(true);
-    try {
-      const result = await sendDiscount(0);
-      toast.success(`Discount removed from "${product.Name}".`);
-      onSuccess(product._id, result.discountPercentage, result.isDiscounted, result.discountedPrice);
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(error.message || "Failed to remove discount.");
-    } finally {
-      setSaving(false);
-    }
+function ProductVisibilityButton({ isLive, onToggle, disabled, isPending }) {
+  if (isPending) {
+    return (
+      <button
+        disabled
+        className="inline-flex items-center justify-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold border border-border bg-muted/60 text-muted-foreground opacity-80 cursor-wait shadow-2xs min-w-[64px]"
+      >
+        <Loader2 className="size-3 animate-spin mr-0.5" />
+        Updating...
+      </button>
+    );
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Tag className="size-4 text-foreground" />
-            Set Discount
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Enter a discount percentage for{" "}
-            <span className="font-semibold text-foreground uppercase tracking-wide">{product?.Name}</span>.
-            Set to 0 to remove the discount.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onToggle}
+      title={isLive ? "Click to set as Draft" : "Click to publish Live"}
+      className={cn(
+        "inline-flex items-center justify-center rounded-md px-2.5 py-1 text-[11px] font-bold tracking-tight cursor-pointer transition-all duration-150 border shadow-2xs min-w-[64px] active:scale-95",
+        isLive
+          ? "border-green-200 bg-green-100/60 text-green-900 hover:bg-green-100"
+          : "border-yellow-200 bg-yellow-100/60 text-yellow-900 hover:bg-yellow-100"
+      )}
+    >
+      {isLive ? "Live" : "Draft"}
+    </button>
+  );
+}
 
-        <div className="px-0 py-2">
-          <div className="relative flex items-center">
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              placeholder="e.g. 20"
-              value={pct}
-              onChange={(event) => setPct(event.target.value)}
-              className="pr-10"
-              onKeyDown={(event) => event.key === "Enter" && handleApply()}
-            />
-            <span className="pointer-events-none absolute right-3 text-sm font-medium text-muted-foreground">%</span>
-          </div>
+function ProductStockButton({ isInStock, onToggle, isPending }) {
+  if (isPending) {
+    return (
+      <button
+        disabled
+        className="inline-flex items-center justify-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold border border-border bg-muted/60 text-muted-foreground opacity-80 cursor-wait shadow-2xs min-w-[76px]"
+      >
+        <Loader2 className="size-3 animate-spin mr-0.5" />
+        Updating...
+      </button>
+    );
+  }
 
-          {product?.Price > 0 && Number(pct) > 0 && Number(pct) <= 100 && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Discounted price:{" "}
-              <span className="font-semibold text-foreground">
-                PKR {Math.round(product.Price * (1 - Number(pct) / 100)).toLocaleString("en-PK")}
-              </span>{" "}
-              <span className="line-through text-muted-foreground/70">
-                PKR {Number(product.Price).toLocaleString("en-PK")}
-              </span>
-            </p>
-          )}
-        </div>
-
-        <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-          {product?.isDiscounted && (
-            <Button
-              variant="outline"
-              className="text-destructive hover:text-destructive"
-              onClick={handleRemove}
-              disabled={saving}
-            >
-              Remove Discount
-            </Button>
-          )}
-          <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} disabled={saving}>
-            Cancel
-          </AlertDialogCancel>
-          <Button onClick={handleApply} disabled={saving}>
-            {saving ? "Saving..." : "Apply Discount"}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title="Click to toggle In Stock / Out of Stock"
+      className={cn(
+        "inline-flex items-center justify-center rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-[0.02em] cursor-pointer transition-all duration-150 border shadow-2xs min-w-[76px] active:scale-95",
+        isInStock
+          ? "border-border bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          : "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20"
+      )}
+    >
+      {isInStock ? "In Stock" : "Out of Stock"}
+    </button>
   );
 }
 
@@ -227,26 +158,26 @@ function StockDialog({ open, product, quantity, onQuantityChange, saving, onOpen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Adjust Stock</DialogTitle>
-          <DialogDescription>
-            Update available quantity for <span className="font-semibold text-foreground">{product?.Name}</span>.
+          <DialogTitle className="text-base font-bold">Adjust Stock Quantity</DialogTitle>
+          <DialogDescription className="text-xs">
+            Update available inventory for <span className="font-semibold text-foreground">{product?.Name}</span>.
           </DialogDescription>
         </DialogHeader>
 
         <FieldGroup className="gap-4 py-2">
           <Field>
-            <FieldLabel htmlFor="stock-quantity">Quantity</FieldLabel>
+            <FieldLabel htmlFor="stock-quantity" className="text-xs font-semibold">Quantity</FieldLabel>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-10 shrink-0"
+                className="size-9 shrink-0 cursor-pointer"
                 onClick={() => onQuantityChange(String(Math.max(0, previewQuantity - 1)))}
                 disabled={saving}
               >
-                <Minus />
-                <span className="sr-only">Decrease stock quantity</span>
+                <Minus className="size-4" />
+                <span className="sr-only">Decrease stock</span>
               </Button>
               <Input
                 id="stock-quantity"
@@ -255,31 +186,31 @@ function StockDialog({ open, product, quantity, onQuantityChange, saving, onOpen
                 inputMode="numeric"
                 value={quantity}
                 onChange={(event) => onQuantityChange(event.target.value)}
-                className="h-10 text-center text-sm font-semibold"
+                className="h-9 text-center text-sm font-bold tabular-nums"
                 disabled={saving}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-10 shrink-0"
+                className="size-9 shrink-0 cursor-pointer"
                 onClick={() => onQuantityChange(String(previewQuantity + 1))}
                 disabled={saving}
               >
-                <Plus />
-                <span className="sr-only">Increase stock quantity</span>
+                <Plus className="size-4" />
+                <span className="sr-only">Increase stock</span>
               </Button>
             </div>
           </Field>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-4 gap-1.5">
             {[-10, -5, 5, 10].map((step) => (
               <Button
                 key={step}
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9"
+                className="h-8 text-xs font-semibold cursor-pointer"
                 onClick={() => onQuantityChange(String(Math.max(0, previewQuantity + step)))}
                 disabled={saving}
               >
@@ -288,19 +219,91 @@ function StockDialog({ open, product, quantity, onQuantityChange, saving, onOpen
             ))}
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm">
-            <span className="text-muted-foreground">Status Preview</span>
-            <Badge variant={previewStatus === "In Stock" ? "secondary" : "destructive"}>{previewStatus}</Badge>
+          <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/30 px-3 py-2 text-xs">
+            <span className="text-muted-foreground font-medium">Status Preview:</span>
+            <span className={cn(
+              "font-bold px-2 py-0.5 rounded text-[11px] border",
+              previewStatus === "In Stock" 
+                ? "bg-emerald-50 text-emerald-950 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-200" 
+                : "bg-rose-50 text-rose-950 border-rose-300 dark:bg-rose-950/60 dark:text-rose-200"
+            )}>
+              {previewStatus}
+            </span>
           </div>
         </FieldGroup>
 
         <DialogFooter className="gap-2 sm:justify-end">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button type="button" onClick={onSave} disabled={saving}>
+          <Button type="button" size="sm" onClick={onSave} disabled={saving}>
             {saving ? "Saving..." : "Save Stock"}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function VendorsModal({ open, product, onOpenChange }) {
+  const vendors = Array.isArray(product?.vendors) ? product.vendors : [];
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base font-bold">
+            <Store className="size-4 text-muted-foreground" />
+            Vendor Details
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Sourcing and vendor contacts for <span className="font-semibold text-foreground">{product?.Name}</span>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-2 space-y-2.5 max-h-[350px] overflow-y-auto">
+          {vendors.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">
+              No vendors assigned to this product yet.
+            </div>
+          ) : (
+            vendors.map((v, i) => (
+              <div key={i} className="rounded-lg border border-border/80 bg-muted/20 p-3 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground text-[13px]">{v.name || "Vendor " + (i + 1)}</span>
+                  {v.vendorPrice != null && (
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      Cost: PKR {Number(v.vendorPrice).toLocaleString("en-PK")}
+                    </span>
+                  )}
+                </div>
+                {v.vendorProductName && (
+                  <p className="text-muted-foreground">Item Name: <span className="text-foreground font-medium">{v.vendorProductName}</span></p>
+                )}
+                {v.phone && (
+                  <p className="text-muted-foreground">Phone: <span className="text-foreground font-mono font-medium">{v.phone}</span></p>
+                )}
+                {v.whatsappNumber && (
+                  <p className="text-muted-foreground">WhatsApp: <span className="text-foreground font-mono font-medium">{v.whatsappNumber}</span></p>
+                )}
+                {(v.shopNumber || v.address) && (
+                  <p className="text-muted-foreground">Address: <span className="text-foreground font-medium">{[v.shopNumber, v.address].filter(Boolean).join(", ")}</span></p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          {product && (
+            <Link href={`/admin/products/edit/${product._id}`} className={cn(buttonVariants({ size: "sm" }))}>
+              <Pencil className="size-3.5 mr-1.5" />
+              Edit Sourcing Details
+            </Link>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -331,24 +334,27 @@ export default function AdminProductsClient({
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [stockFilter, setStockFilter] = useState(initialStockFilter);
   const [categoryFilter, setCategoryFilter] = useState(initialCategoryFilter);
-  const [deleteModal, setDeleteModal] = useState({ open: false, product: null });
+  
+  // Selection State
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  
+  // Modals State
+  const [deleteModal, setDeleteModal] = useState({ open: false, product: null, isBulk: false });
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
   const [togglingStockId, setTogglingStockId] = useState(null);
-  const [togglingFlagId, setTogglingFlagId] = useState(null);
-  const [discountModal, setDiscountModal] = useState({ open: false, product: null });
-  const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
-  const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [stockModal, setStockModal] = useState({ open: false, product: null });
   const [stockQuantityInput, setStockQuantityInput] = useState("0");
   const [isSavingStock, setIsSavingStock] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [quickViewModal, setQuickViewModal] = useState({ open: false, product: null });
+  const [vendorsModal, setVendorsModal] = useState({ open: false, product: null });
   const [optimisticToggles, setOptimisticToggles] = useState({});
 
   useEffect(() => {
     setProducts(initialProducts);
+    setSelectedProducts([]);
   }, [initialProducts]);
 
   useEffect(() => {
@@ -384,7 +390,32 @@ export default function AdminProductsClient({
     navigate({ search: null, sort: null, status: null, stock: null, category: null, page: null });
   }
 
-  async function handleDelete() {
+  // Multi-select handlers
+  const isAllSelected = products.length > 0 && selectedProducts.length === products.length;
+  const isSomeSelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
+
+  function handleSelectAll(checked) {
+    if (checked) {
+      setSelectedProducts(products.map((p) => p._id));
+    } else {
+      setSelectedProducts([]);
+    }
+  }
+
+  function handleSelectOne(checked, id) {
+    setSelectedProducts((prev) =>
+      checked ? [...prev, id] : prev.filter((pId) => pId !== id)
+    );
+  }
+
+  // Delete Handlers
+  async function handleDeleteConfirm() {
+    if (deleteModal.isBulk) {
+      await handleBulkAction("delete");
+      setDeleteModal({ open: false, product: null, isBulk: false });
+      return;
+    }
+
     if (!deleteModal.product) return;
     setDeleting(true);
     startTransition(async () => {
@@ -392,7 +423,7 @@ export default function AdminProductsClient({
         await deleteProductAction(deleteModal.product._id);
         setProducts((previous) => previous.filter((product) => product._id !== deleteModal.product._id));
         toast.success(`Product "${deleteModal.product.Name}" deleted.`);
-        setDeleteModal({ open: false, product: null });
+        setDeleteModal({ open: false, product: null, isBulk: false });
         router.refresh();
       } catch (error) {
         toast.error(error.message || "Could not delete the product.");
@@ -402,6 +433,7 @@ export default function AdminProductsClient({
     });
   }
 
+  // Visibility Single Toggle
   async function handleToggleLive(product) {
     const currentState = optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore;
     const nextState = !currentState;
@@ -430,31 +462,7 @@ export default function AdminProductsClient({
     });
   }
 
-  async function handleBulkVisibility(action) {
-    setIsBulkUpdating(true);
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/admin/products/bulk-visibility", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
-        });
-        const json = await res.json();
-        
-        if (!res.ok || !json.success) {
-          throw new Error(json.message || "Failed to bulk update visibility");
-        }
-        
-        toast.success(json.message);
-        router.refresh(); // Refresh to fetch updated data
-      } catch (error) {
-        toast.error(error.message);
-      } finally {
-        setIsBulkUpdating(false);
-      }
-    });
-  }
-
+  // Stock Status 1-Click Toggle
   async function handleToggleStock(product) {
     setTogglingStockId(product._id);
     const newStockStatus = product.StockStatus === "In Stock" ? "Out of Stock" : "In Stock";
@@ -462,6 +470,7 @@ export default function AdminProductsClient({
       newStockStatus === "In Stock" && Number(product.stockQuantity || 0) <= 0
         ? 1
         : Number(product.stockQuantity || 0);
+
     startTransition(async () => {
       try {
         const res = await fetch(`/api/products/${product._id}`, {
@@ -492,6 +501,38 @@ export default function AdminProductsClient({
         toast.error(error.message || "Could not update stock status.");
       } finally {
         setTogglingStockId(null);
+      }
+    });
+  }
+
+  // Bulk Actions
+  async function handleBulkAction(action) {
+    if (selectedProducts.length === 0) {
+      toast.error("Please select at least one product.");
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/admin/products/bulk-visibility", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, productIds: selectedProducts }),
+        });
+        const json = await res.json();
+        
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Failed to bulk update products");
+        }
+        
+        toast.success(json.message);
+        setSelectedProducts([]);
+        router.refresh();
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setIsBulkUpdating(false);
       }
     });
   }
@@ -540,115 +581,20 @@ export default function AdminProductsClient({
     }
   }
 
-  async function toggleProductFlag(productId, flag, currentStatus) {
-    if (togglingFlagId) return;
-    setTogglingFlagId(productId);
-    const originalProducts = [...products];
-    const newStatus = !currentStatus;
-
-    try {
-      setProducts((prev) => prev.map((product) => (
-        product._id === productId ? { ...product, [flag]: newStatus } : product
-      )));
-
-      const res = await fetch(`/api/products/${productId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [flag]: newStatus }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update flag");
-      toast.success(
-        flag === "isNewArrival"
-          ? `New Arrival ${newStatus ? "enabled" : "disabled"} for this product.`
-          : flag === "isFeatured"
-          ? `Featured (Ads) ${newStatus ? "enabled" : "disabled"} for this product.`
-          : `Best Selling ${newStatus ? "enabled" : "disabled"} for this product.`
-      );
-      router.refresh();
-    } catch (error) {
-      setProducts(originalProducts);
-      toast.error(error.message || "Could not update the product badge.");
-    } finally {
-      setTogglingFlagId(null);
-    }
-  }
-
-  function handleDiscountSuccess(productId, discountPercentage, isDiscounted, discountedPrice) {
-    setProducts((previous) =>
-      previous.map((entry) =>
-        entry._id === productId
-          ? { ...entry, discountPercentage, isDiscounted, discountedPrice: discountedPrice ?? null }
-          : entry,
-      ),
-    );
-    router.refresh();
-  }
-
-  const formatPrice = (price) => `PKR ${Number(price).toLocaleString("en-PK")}`;
-  const formatDate = (value) =>
-    value
-      ? new Date(value).toLocaleDateString("en-PK", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
-      : "N/A";
-
-  async function handleCopy(value, label) {
-    const text = typeof value === "string" ? value.trim() : String(value ?? "").trim();
-
-    if (!text) {
-      toast.error(`${label} not added yet.`);
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied.`);
-    } catch {
-      toast.error(`Could not copy ${label.toLowerCase()}.`);
-    }
-  }
+  const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString("en-PK")}`;
 
   const selectedCategoryLabel =
     categoryFilter === "all"
       ? "All Categories"
       : categoryOptions.find((category) => category.id === categoryFilter || category._id === categoryFilter)?.label ||
         categoryFilter;
+
   const hasActiveFilters =
     searchQuery ||
     statusFilter !== "all" ||
     stockFilter !== "all" ||
     categoryFilter !== "all" ||
     sortOption !== "newest";
-  const appliedFilters = [
-    initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
-    initialStatusFilter !== "all" ? `Status: ${initialStatusFilter}` : null,
-    initialStockFilter !== "all"
-      ? `Stock: ${initialStockFilter === "in-stock" ? "In Stock" : "Out of Stock"}`
-      : null,
-    initialCategoryFilter !== "all"
-      ? `Category: ${
-          categoryOptions.find(
-            (category) => category.id === initialCategoryFilter || category._id === initialCategoryFilter,
-          )?.label || initialCategoryFilter
-        }`
-      : null,
-    initialSortOption !== "newest"
-      ? `Sort: ${
-          initialSortOption === "oldest"
-            ? "Oldest"
-            : initialSortOption === "updated"
-              ? "Last Updated"
-              : initialSortOption === "name"
-                ? "Name"
-                : initialSortOption === "price-high"
-                  ? "Price High"
-                  : "Price Low"
-        }`
-      : null,
-  ].filter(Boolean);
 
   return (
     <div className="admin-page-stack pb-24 md:pb-0">
@@ -664,6 +610,54 @@ export default function AdminProductsClient({
         product={quickViewModal.product}
         categoryOptions={categoryOptions}
       />
+
+      <VendorsModal
+        open={vendorsModal.open}
+        onOpenChange={(open) => setVendorsModal((prev) => ({ ...prev, open }))}
+        product={vendorsModal.product}
+      />
+
+      <StockDialog
+        open={stockModal.open}
+        product={stockModal.product}
+        quantity={stockQuantityInput}
+        onQuantityChange={setStockQuantityInput}
+        saving={isSavingStock}
+        onOpenChange={(open) => setStockModal((prev) => ({ ...prev, open }))}
+        onSave={handleSaveStock}
+      />
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deleteModal.open} onOpenChange={(open) => setDeleteModal(prev => ({ ...prev, open }))}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
+              <Trash2 className="size-4" />
+              {deleteModal.isBulk ? `Delete ${selectedProducts.length} Products?` : "Delete Product?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              {deleteModal.isBulk
+                ? `Are you sure you want to permanently delete ${selectedProducts.length} selected products? This action cannot be undone.`
+                : `Are you sure you want to delete "${deleteModal.product?.Name}"? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel disabled={deleting || isBulkUpdating} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteConfirm}
+              disabled={deleting || isBulkUpdating}
+            >
+              {deleting || isBulkUpdating ? "Deleting..." : "Delete Permanently"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Header Area */}
       <div className="admin-page-header flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-0">
         <div>
           <p className="admin-page-kicker">Catalog</p>
@@ -672,42 +666,24 @@ export default function AdminProductsClient({
             {summary.totalProducts} total | {summary.liveProducts} live | {summary.draftProducts} draft
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-nowrap sm:w-auto">
-          <Link href="/admin/top-performing-products" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3")}>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Link href="/admin/top-performing-products" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "admin-cta-button flex-1 sm:flex-initial bg-background px-3")}>
             <TrendingUp className="mr-1.5 size-4 shrink-0" />
-            <span className="truncate">Top Products</span>
+            <span>Top Products</span>
           </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3" disabled={isBulkUpdating}>
-                <Eye className="mr-1.5 size-4 shrink-0" />
-                <span className="truncate">Bulk Visibility</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleBulkVisibility('live')} disabled={isBulkUpdating} className="cursor-pointer font-medium text-green-600 focus:text-green-600">
-                <Eye className="mr-2 size-4" />
-                Make All Live
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkVisibility('hidden')} disabled={isBulkUpdating} className="cursor-pointer font-medium text-red-600 focus:text-red-600">
-                <EyeOff className="mr-2 size-4" />
-                Make All Draft
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)} className="admin-cta-button w-full bg-background px-2 sm:w-auto sm:px-3">
+          <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)} className="admin-cta-button flex-1 sm:flex-initial bg-background px-3">
             <Store className="mr-1.5 size-4 shrink-0" />
-            <span className="truncate">Bulk Import</span>
+            <span>Bulk Import</span>
           </Button>
-          <Link href="/admin/products/add" className={cn(buttonVariants({ variant: "default", size: "sm" }), "admin-cta-button w-full px-2 sm:w-auto sm:px-3")}>
+          <Link href="/admin/products/add" className={cn(buttonVariants({ variant: "default", size: "sm" }), "admin-cta-button flex-1 sm:flex-initial px-3 font-semibold")}>
             <Plus className="mr-1.5 size-4 shrink-0" />
-            <span className="truncate">Add Product</span>
+            <span>Add Product</span>
           </Link>
         </div>
       </div>
 
-
-      <div className="admin-filter-shell flex flex-col gap-4 mb-4">
+      {/* Filters & Search Toolbar */}
+      <div className="admin-filter-shell flex flex-col gap-3 mb-3">
         {/* Search Bar */}
         <form
           className="w-full"
@@ -720,18 +696,18 @@ export default function AdminProductsClient({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search products, categories, or vendors"
+              placeholder="Search products by title, category, or SKU..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-11 pl-10 md:h-10 w-full"
+              className="h-10 pl-10 w-full text-xs font-medium"
             />
           </div>
         </form>
 
-        {/* Sort & Filters (Responsive 2x2 Grid on Mobile) */}
+        {/* Filters Row */}
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           {/* Sort */}
-          <div className="w-full sm:w-[160px]">
+          <div className="w-full sm:w-[150px]">
             <Select
               value={sortOption}
               onValueChange={(value) => {
@@ -739,7 +715,7 @@ export default function AdminProductsClient({
                 navigate({ sort: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+              <SelectTrigger className="h-9 w-full bg-background text-xs truncate">
                 <div className="flex items-center gap-1.5 overflow-hidden">
                   <ArrowDownWideNarrow className="size-3.5 shrink-0 text-muted-foreground" />
                   <SelectValue placeholder="Sort" className="truncate" />
@@ -748,15 +724,13 @@ export default function AdminProductsClient({
               <SelectContent>
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="updated">Last Updated</SelectItem>
-                <SelectItem value="name">Name (A-Z)</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Status Filter */}
+          {/* Visibility Status Filter */}
           <div className="w-full sm:w-[130px]">
             <Select
               value={statusFilter}
@@ -765,8 +739,8 @@ export default function AdminProductsClient({
                 navigate({ status: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="h-9 w-full bg-background text-xs truncate">
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -785,8 +759,8 @@ export default function AdminProductsClient({
                 navigate({ stock: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
-                <SelectValue placeholder="Stock" />
+              <SelectTrigger className="h-9 w-full bg-background text-xs truncate">
+                <SelectValue placeholder="All Stock" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Stock</SelectItem>
@@ -797,7 +771,7 @@ export default function AdminProductsClient({
           </div>
 
           {/* Category Filter */}
-          <div className="w-full sm:w-[150px]">
+          <div className="w-full sm:w-[160px]">
             <Select
               value={categoryFilter}
               onValueChange={(value) => {
@@ -805,7 +779,7 @@ export default function AdminProductsClient({
                 navigate({ category: value, page: null });
               }}
             >
-              <SelectTrigger className="h-10 w-full bg-background text-xs truncate">
+              <SelectTrigger className="h-9 w-full bg-background text-xs truncate">
                 <SelectValue placeholder="Category">{selectedCategoryLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -825,559 +799,463 @@ export default function AdminProductsClient({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="col-span-2 sm:col-span-1 h-10 px-3 flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground"
+              className="col-span-2 sm:col-span-1 h-9 px-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="size-3.5 shrink-0" />
-              <span className="text-xs">Clear Filters</span>
+              <span>Clear Filters</span>
             </Button>
           )}
         </div>
       </div>
 
-      {appliedFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {appliedFilters.map((filter) => (
-            <Badge key={filter} variant="outline" className="rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              {filter}
-            </Badge>
-          ))}
+      {/* Bulk Action Toolbar - appears when products are selected */}
+      {selectedProducts.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-border bg-muted/40 p-2.5 sm:px-4 shadow-xs animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-2">
+            <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
+              {selectedProducts.length}
+            </span>
+            <span className="text-xs font-semibold text-foreground">
+              {selectedProducts.length === 1 ? "1 product selected" : `${selectedProducts.length} products selected`}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium bg-background hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => handleBulkAction("live")}
+              disabled={isBulkUpdating}
+            >
+              <CheckCircle2 className="mr-1 size-3 text-muted-foreground" />
+              Make Live
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium bg-background hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => handleBulkAction("hidden")}
+              disabled={isBulkUpdating}
+            >
+              <EyeOff className="mr-1 size-3 text-muted-foreground" />
+              Make Draft
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium bg-background hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => handleBulkAction("in-stock")}
+              disabled={isBulkUpdating}
+            >
+              <Package className="mr-1 size-3 text-muted-foreground" />
+              In Stock
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium bg-background hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => handleBulkAction("out-of-stock")}
+              disabled={isBulkUpdating}
+            >
+              <XCircle className="mr-1 size-3 text-muted-foreground" />
+              Out of Stock
+            </Button>
+
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium transition-colors cursor-pointer"
+              onClick={() => setDeleteModal({ open: true, product: null, isBulk: true })}
+              disabled={isBulkUpdating}
+            >
+              <Trash2 className="mr-1 size-3" />
+              Delete Selected
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+              onClick={() => setSelectedProducts([])}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
 
+      {/* Desktop Products Table - Clean Order Management Style */}
       <div className={cn("hidden overflow-hidden rounded-lg border border-border bg-card md:block transition-opacity", isPending && "opacity-70")}>
         <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                <th className="px-4 py-2.5">Product</th>
-                <th className="px-4 py-2.5 hidden md:table-cell">Price</th>
-                <th className="px-4 py-2.5 hidden lg:table-cell">Category</th>
-                <th className="px-4 py-2.5 hidden xl:table-cell">Vendors</th>
-                <th className="px-4 py-2.5 hidden lg:table-cell">Updated</th>
-                <th className="px-4 py-2.5 hidden md:table-cell">Stock Status</th>
-                <th className="px-4 py-2.5 text-center hidden sm:table-cell">Visibility</th>
-                <th className="px-4 py-2.5 text-center">Actions</th>
+              <tr className="border-b border-border bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <th className="w-10 px-3 py-3 text-center">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all products"
+                    />
+                  </div>
+                </th>
+                <th className="px-3 py-3">Product</th>
+                <th className="px-3 py-3">Price</th>
+                <th className="px-3 py-3">Category</th>
+                <th className="px-3 py-3">Vendor</th>
+                <th className="px-3 py-3 text-center">Stock Status</th>
+                <th className="px-3 py-3 text-center">Quantity</th>
+                <th className="px-3 py-3 text-center">Visibility</th>
+                <th className="px-3 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-20 text-center">
-                    <p className="font-medium text-muted-foreground">No products found for the selected criteria.</p>
+                  <td colSpan={9} className="px-6 py-20 text-center text-sm font-medium text-muted-foreground">
+                    No products found for the selected criteria.
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
-                  <tr key={product._id} className="transition-colors hover:bg-muted/35">
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-3">
-                        <button 
-                          className="relative size-12 overflow-hidden rounded-lg border border-border bg-muted cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setQuickViewModal({ open: true, product })}
-                        >
-                          {getPrimaryProductImage(product)?.url ? (
-                            <Image
-                              src={getPrimaryProductImage(product).url}
-                              alt={product.Name}
-                              fill
-                              className="object-cover"
-                              {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
-                            />
-                          ) : (
-                            <div className="flex size-full items-center justify-center text-muted-foreground">
-                              <ImageIcon className="size-4" />
-                            </div>
-                          )}
-                        </button>
-                        <span className="max-w-[220px] line-clamp-2 text-[13px] font-semibold text-foreground">{product.Name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 hidden md:table-cell">
-                      {product.isDiscounted && product.discountPercentage > 0 ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] font-bold text-foreground">
-                            PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
-                          </span>
-                          <span className="text-xs text-muted-foreground line-through">{formatPrice(product.Price)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-[13px] font-semibold text-foreground">{formatPrice(product.Price)}</span>
+                products.map((product) => {
+                  const isSelected = selectedProducts.includes(product._id);
+                  const isLive = optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore;
+                  const isInStock = product.StockStatus === "In Stock";
+                  const qty = Math.max(0, Number(product.stockQuantity) || 0);
+
+                  return (
+                    <tr
+                      key={product._id}
+                      className={cn(
+                        "transition-colors hover:bg-muted/30",
+                        isSelected && "bg-muted/40"
                       )}
-                    </td>
-                    <td className="px-4 py-2 hidden lg:table-cell">
-                      <div className="flex max-w-[180px] flex-wrap gap-1.5">
-                        {getProductCategoryNames(product).map((category) => (
-                          <Badge key={category} variant="secondary" className="text-[10px]">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 text-sm font-medium text-foreground hidden xl:table-cell">
-                      <div className="flex max-w-[180px] flex-col gap-0.5">
-                        <span>
-                          {Array.isArray(product.vendors) && product.vendors.length > 0
-                            ? product.vendors[0]?.name || "Vendor assigned"
-                            : "No vendor"}
-                        </span>
-                        {Array.isArray(product.vendors) && product.vendors.length > 1 ? (
-                          <span className="text-xs text-muted-foreground">
-                            +{product.vendors.length - 1} more
-                          </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 text-sm font-medium text-foreground hidden lg:table-cell">{formatDate(product.updatedAt || product.createdAt)}</td>
-                    <td className="px-4 py-2 hidden md:table-cell">
-                      <div className="flex min-w-[176px] items-center gap-2">
-                        <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="min-w-[85px] justify-center">
-                          {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
-                        </Badge>
-                        <Badge variant="outline">
-                          Qty {Math.max(0, Number(product.stockQuantity) || 0)}
-                        </Badge>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => openStockDialog(product)}
-                          disabled={togglingStockId === product._id}
-                        >
-                          Adjust
-                        </Button>
-                        {product.isDiscounted && product.discountPercentage > 0 ? (
-                          <Badge variant="outline" className="text-xs">
-                            {product.discountPercentage}% off
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 text-center hidden sm:table-cell">
-                      <div className="flex flex-col items-center gap-1.5">
+                    >
+                      {/* Checkbox */}
+                      <td className="w-10 px-3 py-2.5 text-center">
                         <div className="flex items-center justify-center">
-                          {isPending && togglingId === product._id ? (
-                            <span className="text-muted-foreground">...</span>
-                          ) : (
-                            <Switch
-                              checked={optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore}
-                              onCheckedChange={() => handleToggleLive(product)}
-                            />
-                          )}
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectOne(checked, product._id)}
+                            aria-label={`Select ${product.Name}`}
+                          />
                         </div>
-                        {(optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore) ? (
-                          <Badge variant="default" className="w-[60px] justify-center px-1 py-0 text-[10px]">Live</Badge>
-                        ) : (
-                          <Badge variant="secondary" className="w-[60px] justify-center px-1 py-0 text-[10px]">Draft</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 relative">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1 shadow-sm"
-                          onClick={() => setQuickViewModal({ open: true, product })}
-                        >
-                          <Eye className="size-3.5" />
-                          View
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            className={cn(
-                              "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 outline-none select-none hover:bg-muted hover:text-foreground text-muted-foreground size-8 border border-transparent hover:border-border",
-                            )}
-                            title="Actions"
+                      </td>
+
+                      {/* Product Thumbnail & Name */}
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            className="relative size-10 overflow-hidden rounded-md border border-border bg-muted cursor-pointer shrink-0 hover:opacity-85 transition-opacity"
+                            onClick={() => setQuickViewModal({ open: true, product })}
                           >
-                            <MoreVertical className="size-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[200px]">
-                            <DropdownMenuGroup>
-                              <DropdownMenuLabel>Quick View</DropdownMenuLabel>
-                              <DropdownMenuItem disabled>Stock: {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>
-                                Discount: {product.isDiscounted ? `${product.discountPercentage}%` : "None"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem disabled>
-                                Flags: {[product.isFeatured ? "ADS/FEATURED" : null, product.isNewArrival ? "NEW" : null, product.isBestSelling ? "HOT" : null].filter(Boolean).join(", ") || "None"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem disabled>Vendors: {Array.isArray(product.vendors) ? product.vendors.length : 0}</DropdownMenuItem>
-                              <DropdownMenuItem disabled>Updated: {formatDate(product.updatedAt || product.createdAt)}</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Catalog & Badges</DropdownMenuLabel>
-                              <DropdownMenuItem className="cursor-pointer" disabled={isPending && togglingId === product._id} onClick={() => handleToggleLive(product)}>
-                                {optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore ? "Mark as Draft" : "Publish to Store"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
-                                {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => openStockDialog(product)}>
-                                Adjust Stock Quantity
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
-                                <Tag className="mr-2 size-4" />
-                                {product.isDiscounted ? "Edit Discount" : "Set Discount"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                disabled={togglingFlagId === product._id}
-                                onClick={() => toggleProductFlag(product._id, "isFeatured", product.isFeatured)}
-                              >
-                                <Sparkles className="mr-2 size-4 text-amber-500" />
-                                {product.isFeatured ? "Remove Featured (Ads)" : "Mark as Featured (Ads)"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                disabled={togglingFlagId === product._id}
-                                onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
-                              >
-                                <Clock className="mr-2 size-4 text-emerald-600" />
-                                {product.isNewArrival ? "Remove New Arrival" : "Mark as New Arrival"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                disabled={togglingFlagId === product._id}
-                                onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
-                              >
-                                <Flame className="mr-2 size-4 text-rose-500" />
-                                {product.isBestSelling ? "Remove Best Seller" : "Mark as Best Seller"}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="cursor-pointer">
-                                <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
-                                  <Pencil className="mr-2 size-4" />
-                                  Edit
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer" onClick={() => setReviewsModal({ open: true, product })}>
-                                <MessageSquare className="mr-2 size-4" />
-                                Reviews
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer" onClick={() => setVendorsModal({ open: true, product })}>
-                                <Store className="mr-2 size-4" />
-                                View Vendors
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
-                                onClick={() => setDeleteModal({ open: true, product })}
-                              >
-                                <Trash2 className="mr-2 size-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                            {getPrimaryProductImage(product)?.url ? (
+                              <Image
+                                src={getPrimaryProductImage(product).url}
+                                alt={product.Name}
+                                fill
+                                className="object-cover"
+                                {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-muted-foreground">
+                                <ImageIcon className="size-4" />
+                              </div>
+                            )}
+                          </button>
+                          <div className="min-w-0 max-w-[260px]">
+                            <button
+                              type="button"
+                              onClick={() => setQuickViewModal({ open: true, product })}
+                              className="text-left line-clamp-2 text-[13px] font-semibold text-foreground hover:underline cursor-pointer leading-tight"
+                            >
+                              {product.Name}
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Price */}
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        {product.isDiscounted && product.discountPercentage > 0 ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[13px] font-bold text-foreground tabular-nums">
+                              PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground line-through tabular-nums">{formatPrice(product.Price)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[13px] font-bold text-foreground tabular-nums">{formatPrice(product.Price)}</span>
+                        )}
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-3 py-2.5">
+                        <div className="flex max-w-[150px] flex-wrap gap-1">
+                          {getProductCategoryNames(product).map((category) => (
+                            <span
+                              key={category}
+                              className="inline-flex items-center rounded border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-foreground"
+                            >
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Vendor */}
+                      <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">
+                        {Array.isArray(product.vendors) && product.vendors.length > 0 ? (
+                          <span className="font-medium text-foreground text-[12px]">{product.vendors[0]?.name || "Assigned"}</span>
+                        ) : (
+                          <span className="text-muted-foreground/60 text-xs">No vendor</span>
+                        )}
+                      </td>
+
+                      {/* 1-Click Interactive Stock Status Button */}
+                      <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                        <ProductStockButton
+                          isInStock={isInStock}
+                          onToggle={() => handleToggleStock(product)}
+                          isPending={togglingStockId === product._id}
+                        />
+                      </td>
+
+                      {/* Quantity */}
+                      <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                        <span className="text-[12px] font-bold tabular-nums text-foreground">
+                          Qty: {qty}
+                        </span>
+                      </td>
+
+                      {/* Visibility 1-Click Interactive Button */}
+                      <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                        <ProductVisibilityButton
+                          isLive={isLive}
+                          onToggle={() => handleToggleLive(product)}
+                          disabled={togglingId === product._id}
+                          isPending={togglingId === product._id}
+                        />
+                      </td>
+
+                      {/* Actions: View (Orders page style) + 3-Dot Dropdown */}
+                      <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 px-2.5 text-[12px] rounded-md border border-border shadow-xs font-medium cursor-pointer"
+                            onClick={() => setQuickViewModal({ open: true, product })}
+                          >
+                            <Eye data-icon="inline-start" />
+                            View
+                          </Button>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="size-7 text-muted-foreground cursor-pointer">
+                                <MoreHorizontal className="size-4" />
+                                <span className="sr-only">Product actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[160px]">
+                              <DropdownMenuGroup>
+                                {/* 1. Edit Product */}
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                  <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
+                                    <Pencil className="mr-2 size-3.5" />
+                                    Edit Product
+                                  </Link>
+                                </DropdownMenuItem>
+
+                                {/* 2. View Vendor */}
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-xs"
+                                  onClick={() => setVendorsModal({ open: true, product })}
+                                >
+                                  <Store className="mr-2 size-3.5" />
+                                  View Vendor
+                                </DropdownMenuItem>
+
+                                {/* 3. Adjust Quantity */}
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-xs"
+                                  onClick={() => openStockDialog(product)}
+                                >
+                                  <Package className="mr-2 size-3.5" />
+                                  Adjust Quantity
+                                </DropdownMenuItem>
+
+                                <DropdownMenuSeparator />
+
+                                {/* 4. Delete Product */}
+                                <DropdownMenuItem
+                                  className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground text-xs font-semibold"
+                                  onClick={() => setDeleteModal({ open: true, product, isBulk: false })}
+                                >
+                                  <Trash2 className="mr-2 size-3.5" />
+                                  Delete Product
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className={cn("md:hidden flex flex-col transition-opacity", isPending && "opacity-70")}>
+      {/* Mobile Card List - Order Management Style */}
+      <div className={cn("md:hidden flex flex-col gap-2.5 transition-opacity", isPending && "opacity-70")}>
         {products.length === 0 ? (
-          <div className="px-4 py-10 text-center">
-            <p className="text-[12px] text-muted-foreground">No products found.</p>
+          <div className="rounded-lg border border-border bg-card px-4 py-12 text-center text-xs text-muted-foreground">
+            No products found.
           </div>
         ) : (
-          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
-            {products.map((product) => (
-              <div key={product._id} className="flex gap-2.5 border-b border-border/50 p-2.5 last:border-b-0">
-                <div className="relative size-[50px] shrink-0 overflow-hidden rounded border border-border bg-muted">
-                  {getPrimaryProductImage(product)?.url ? (
-                    <Image
-                      src={getPrimaryProductImage(product).url}
-                      alt={product.Name}
-                      fill
-                      className="object-cover"
-                      {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
+          products.map((product) => {
+            const isSelected = selectedProducts.includes(product._id);
+            const isLive = optimisticToggles[product._id] !== undefined ? optimisticToggles[product._id] : product.showOnStore;
+            const isInStock = product.StockStatus === "In Stock";
+            const qty = Math.max(0, Number(product.stockQuantity) || 0);
+
+            return (
+              <div
+                key={product._id}
+                className={cn(
+                  "flex flex-col gap-2.5 rounded-lg border border-border bg-card p-3 shadow-xs transition-colors",
+                  isSelected && "bg-muted/40 border-primary/40"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handleSelectOne(checked, product._id)}
+                      aria-label={`Select ${product.Name}`}
                     />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-muted-foreground">
-                      <ImageIcon className="size-3" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="line-clamp-2 text-[12px] font-semibold leading-tight text-foreground">{product.Name}</p>
-                      
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        {product.isDiscounted && product.discountPercentage > 0 ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-[11px] font-bold text-foreground">
-                              PKR {Math.round(product.Price * (1 - product.discountPercentage / 100)).toLocaleString("en-PK")}
-                            </span>
-                            <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.Price)}</span>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] font-bold text-foreground">{formatPrice(product.Price)}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted outline-none">
-                        <MoreVertical className="size-3.5" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/products/edit/${product._id}`} className="flex w-full cursor-pointer items-center">
-                              <Pencil className="mr-2 size-3.5" />
-                              Edit Product
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal py-1">Visibility: {product.showOnStore ? "Live" : "Draft"}</DropdownMenuLabel>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => handleToggleLive(product)}>
-                            {product.showOnStore ? "Set as Draft" : "Set as Live"}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal py-1">Stock: Qty {Math.max(0, Number(product.stockQuantity) || 0)}</DropdownMenuLabel>
-                          <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => handleToggleStock(product)}>
-                            {product.StockStatus === "In Stock" ? "Mark Out of Stock" : "Mark In Stock"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" disabled={togglingStockId === product._id} onClick={() => openStockDialog(product)}>
-                            Adjust Stock Quantity
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => setDiscountModal({ open: true, product })}>
-                            <Tag className="mr-2 size-3.5" />
-                            {product.isDiscounted ? "Edit Discount" : "Set Discount"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            disabled={togglingFlagId === product._id}
-                            onClick={() => toggleProductFlag(product._id, "isFeatured", product.isFeatured)}
-                          >
-                            <Sparkles className="mr-2 size-3.5 text-amber-500" />
-                            {product.isFeatured ? "Remove Featured" : "Mark as Featured"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            disabled={togglingFlagId === product._id}
-                            onClick={() => toggleProductFlag(product._id, "isNewArrival", product.isNewArrival)}
-                          >
-                            <Clock className="mr-2 size-3.5 text-emerald-600" />
-                            {product.isNewArrival ? "Remove New" : "Mark as New Arrival"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            disabled={togglingFlagId === product._id}
-                            onClick={() => toggleProductFlag(product._id, "isBestSelling", product.isBestSelling)}
-                          >
-                            <Flame className="mr-2 size-3.5 text-rose-500" />
-                            {product.isBestSelling ? "Remove Best Seller" : "Mark as Best Seller"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer" onClick={() => setReviewsModal({ open: true, product })}>
-                            <MessageSquare className="mr-2 size-3.5" />
-                            Reviews
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer flex-col items-start" onClick={() => setVendorsModal({ open: true, product })}>
-                            <div className="flex items-center">
-                              <Store className="mr-2 size-3.5" />
-                              View Vendors
-                            </div>
-                            <span className="text-[10px] text-muted-foreground ml-5 mt-0.5">
-                              {Array.isArray(product.vendors) && product.vendors.length > 0
-                                ? `${product.vendors.length} vendor${product.vendors.length === 1 ? "" : "s"} assigned`
-                                : "No vendor"}
-                            </span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10" onClick={() => setDeleteModal({ open: true, product })}>
-                            <Trash2 className="mr-2 size-3.5" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between">
-                    <Badge variant={product.StockStatus === "In Stock" ? "secondary" : "destructive"} className="px-1.5 py-0 text-[9px] uppercase tracking-wider">
-                      {product.StockStatus === "In Stock" ? "In Stock" : "Out"}
-                    </Badge>
-                    
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2 text-[10px] font-medium gap-1 shadow-sm"
+                      className="relative size-12 overflow-hidden rounded-md border border-border bg-muted shrink-0 cursor-pointer"
                       onClick={() => setQuickViewModal({ open: true, product })}
                     >
-                      <Eye className="size-3" />
-                      View
-                    </Button>
+                      {getPrimaryProductImage(product)?.url ? (
+                        <Image
+                          src={getPrimaryProductImage(product).url}
+                          alt={product.Name}
+                          fill
+                          className="object-cover"
+                          {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
+                        />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <ImageIcon className="size-4" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setQuickViewModal({ open: true, product })}
+                      className="text-left line-clamp-2 text-xs font-semibold text-foreground leading-tight"
+                    >
+                      {product.Name}
+                    </button>
+                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[12px] font-bold text-foreground tabular-nums">{formatPrice(product.Price)}</span>
+                      <span className="text-muted-foreground/30">•</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground">Qty: {qty}</span>
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground outline-none">
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[160px]">
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                          <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
+                            <Pencil className="mr-2 size-3.5" />
+                            Edit Product
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-xs"
+                          onClick={() => setVendorsModal({ open: true, product })}
+                        >
+                          <Store className="mr-2 size-3.5" />
+                          View Vendor
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-xs"
+                          onClick={() => openStockDialog(product)}
+                        >
+                          <Package className="mr-2 size-3.5" />
+                          Adjust Quantity
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground text-xs font-semibold"
+                          onClick={() => setDeleteModal({ open: true, product, isBulk: false })}
+                        >
+                          <Trash2 className="mr-2 size-3.5" />
+                          Delete Product
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-border/60 pt-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <ProductStockButton
+                      isInStock={isInStock}
+                      onToggle={() => handleToggleStock(product)}
+                      isPending={togglingStockId === product._id}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <ProductVisibilityButton
+                      isLive={isLive}
+                      onToggle={() => handleToggleLive(product)}
+                      disabled={togglingId === product._id}
+                      isPending={togglingId === product._id}
+                    />
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-6 flex flex-col gap-3 px-1 sm:px-2">
-          <p className="text-sm text-muted-foreground text-center sm:text-left">
-            Showing <span className="font-medium text-foreground">{((currentPage - 1) * pageSize) + 1}</span> to{" "}
-            <span className="font-medium text-foreground">{Math.min(currentPage * pageSize, total)}</span> of{" "}
-            <span className="font-medium text-foreground">{total}</span> products
-          </p>
-          <AppPagination
-            page={currentPage}
-            totalPages={totalPages}
-            getHref={(page) => buildHref(pathname, searchParams, { page })}
-          />
-        </div>
-      )}
-
-      <AlertDialog open={deleteModal.open} onOpenChange={(open) => setDeleteModal((previous) => ({ ...previous, open }))}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this product?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove <span className="font-semibold text-foreground">{deleteModal.product?.Name}</span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} onClick={() => setDeleteModal({ open: false, product: null })}>
-              Cancel
-            </AlertDialogCancel>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete Product"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <DiscountDialog
-        open={discountModal.open}
-        product={discountModal.product}
-        onOpenChange={(open) => setDiscountModal((previous) => ({ ...previous, open }))}
-        onSuccess={handleDiscountSuccess}
+      {/* Pagination */}
+      <AppPagination
+        page={currentPage}
+        totalPages={totalPages}
+        getHref={(page) => buildHref(pathname, searchParams, { page })}
       />
-
-      <StockDialog
-        open={stockModal.open}
-        product={stockModal.product}
-        quantity={stockQuantityInput}
-        onQuantityChange={setStockQuantityInput}
-        saving={isSavingStock}
-        onOpenChange={(open) => {
-          setStockModal((previous) => ({ ...previous, open, product: open ? previous.product : null }));
-          if (!open) {
-            setStockQuantityInput("0");
-          }
-        }}
-        onSave={handleSaveStock}
-      />
-
-      <AdminReviewsDialog
-        open={reviewsModal.open}
-        product={reviewsModal.product}
-        onOpenChange={(open) => setReviewsModal((previous) => ({ ...previous, open }))}
-      />
-
-      <Dialog
-        open={vendorsModal.open}
-        onOpenChange={(open) => setVendorsModal((previous) => ({ ...previous, open }))}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Assigned Vendors</DialogTitle>
-            <DialogDescription>
-              {vendorsModal.product?.Name || 'This product'} is linked to the following vendors.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Product Name
-              </p>
-              <p className="mt-2 text-sm font-semibold text-foreground sm:text-base">
-                {vendorsModal.product?.Name || "Product name not available"}
-              </p>
-            </div>
-
-            {Array.isArray(vendorsModal.product?.vendors) && vendorsModal.product.vendors.length > 0 ? (
-              vendorsModal.product.vendors.map((vendor, index) => (
-                <div
-                  key={`${vendor.vendorId || vendor.name}-${vendor.shopNumber || ''}`}
-                  className="rounded-2xl border border-border bg-background p-4 shadow-sm"
-                >
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Vendor {index + 1}
-                        </p>
-                        <p className="mt-1 text-base font-semibold text-foreground">
-                          {vendor.name || "Vendor not added"}
-                        </p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {vendor.shopNumber ? `Shop ${vendor.shopNumber}` : "Shop number not added"}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2 sm:w-auto">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:min-w-[170px]"
-                          onClick={() => handleCopy(vendor.vendorProductName, "Vendor product name")}
-                        >
-                          <Copy className="mr-2 size-3.5" />
-                          Copy Vendor Name
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)]">
-                      <div className="rounded-xl bg-muted/20 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Vendor Product Name
-                        </p>
-                        <p className="mt-2 text-sm font-medium leading-6 text-foreground">
-                          {vendor.vendorProductName || "Not added"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-muted/20 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Price
-                        </p>
-                        <p className="mt-2 text-sm font-semibold text-foreground tabular-nums">
-                          {typeof vendor.vendorPrice === "number" && Number.isFinite(vendor.vendorPrice)
-                            ? formatPrice(vendor.vendorPrice)
-                            : "Not added"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                No vendors assigned yet.
-              </div>
-            )}
-          </div>
-
-          <DialogFooter showCloseButton />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

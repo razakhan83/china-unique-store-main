@@ -41,7 +41,7 @@ export default function AdminOrdersSkeleton() {
           <table className="w-full text-left text-xs">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
-                {['Order ID', 'Customer', 'City', 'Date', 'Payment', 'Tracking', 'Weight', 'Total', 'Status', ''].map((_, idx) => (
+                {['Order ID', 'Customer', 'City', 'Date', 'Payment', 'Tracking', 'Account', 'COD', 'Total', 'Status', ''].map((_, idx) => (
                   <th key={idx} className="p-3">
                     <Skeleton className="h-3 w-16 rounded" />
                   </th>

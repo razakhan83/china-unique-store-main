@@ -169,85 +169,74 @@ function buildHref(pathname, searchParams, updates) {
 }
 
 function OrdersTablePendingSkeleton({ showNocColumns = false }) {
-  const gridClass = showNocColumns
-    ? 'grid-cols-[40px_105px_1.2fr_80px_95px_75px_110px_95px_95px_110px_70px_85px_100px_55px]'
-    : 'grid-cols-[40px_120px_1.4fr_90px_110px_90px_90px_100px_120px_70px]';
-  const columnCount = showNocColumns ? 14 : 10;
-
   return (
-    <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
-      <div className="overflow-x-auto">
-        <div className="min-w-[960px]">
-          <div className={cn('grid gap-0 border-b border-border bg-muted/40 px-3 py-2', gridClass)}>
-            {Array.from({ length: columnCount }).map((_, index) => (
-              <div key={index} className="px-2 py-1">
-                <Skeleton className="h-3 w-full max-w-[65px] rounded-md" />
-              </div>
-            ))}
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 7 }).map((_, rowIndex) => (
-              <div
-                key={rowIndex}
-                className={cn('grid items-center px-3 py-2.5', gridClass)}
-              >
-                <div className="px-2">
-                  <Skeleton className="size-4 rounded-sm" />
+    <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block shadow-xs">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-border bg-muted/40">
+            <th className="w-9 px-3 py-3 text-center">
+              <Skeleton className="size-4 rounded-sm mx-auto" />
+            </th>
+            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
+            <th className="px-3 py-3"><Skeleton className="h-3.5 w-24 rounded" /></th>
+            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
+            <th className="px-3 py-3"><Skeleton className="h-3.5 w-18 rounded" /></th>
+            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
+            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-20 rounded" /></th>}
+            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>}
+            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-20 rounded" /></th>}
+            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-18 rounded" /></th>}
+            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>}
+            <th className="px-3 py-3 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></th>
+            <th className="px-3 py-3 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></th>
+            <th className="px-3 py-3 text-center"><Skeleton className="h-3.5 w-16 rounded mx-auto" /></th>
+            <th className="w-20 px-3 py-3" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {Array.from({ length: 7 }).map((_, rowIndex) => (
+            <tr key={rowIndex} className="hover:bg-muted/15">
+              <td className="w-9 px-3 py-3 text-center">
+                <Skeleton className="size-4 rounded-sm mx-auto" />
+              </td>
+              <td className="px-3 py-3">
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-4 w-16 rounded" />
+                  <Skeleton className="h-3.5 w-8 rounded" />
                 </div>
-                <div className="px-2">
-                  <Skeleton className="h-4 w-18 rounded-md" />
+              </td>
+              <td className="px-3 py-3">
+                <div className="flex flex-col gap-1">
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
                 </div>
-                <div className="space-y-1.5 px-2">
-                  <Skeleton className="h-4 w-28 rounded-md" />
-                  <Skeleton className="h-3 w-20 rounded-md" />
+              </td>
+              <td className="px-3 py-3"><Skeleton className="h-4 w-16 rounded" /></td>
+              <td className="px-3 py-3">
+                <div className="flex flex-col gap-1">
+                  <Skeleton className="h-4 w-18 rounded" />
+                  <Skeleton className="h-3 w-12 rounded" />
                 </div>
-                <div className="px-2">
-                  <Skeleton className="h-5 w-14 rounded-full" />
+              </td>
+              <td className="px-3 py-3"><Skeleton className="h-4 w-12 rounded" /></td>
+              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-24 rounded font-mono" /></td>}
+              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-16 rounded" /></td>}
+              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-20 rounded" /></td>}
+              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-3.5 w-24 rounded" /></td>}
+              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-20 rounded" /></td>}
+              <td className="px-3 py-3 text-right"><Skeleton className="h-4 w-16 rounded ml-auto" /></td>
+              <td className="px-3 py-3 text-right"><Skeleton className="h-4 w-16 rounded ml-auto" /></td>
+              <td className="px-3 py-3 text-center"><Skeleton className="h-5 w-20 rounded-full mx-auto" /></td>
+              <td className="px-3 py-3">
+                <div className="flex items-center justify-end gap-1.5">
+                  <Skeleton className="h-7 w-12 rounded-md" />
+                  <Skeleton className="size-7 rounded-md" />
                 </div>
-                <div className="space-y-1.5 px-2">
-                  <Skeleton className="h-4 w-18 rounded-md" />
-                  <Skeleton className="h-3 w-14 rounded-md" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="h-4 w-10 rounded-md" />
-                </div>
-                {showNocColumns && (
-                  <div className="px-2">
-                    <Skeleton className="h-4 w-24 rounded-md" />
-                  </div>
-                )}
-                {showNocColumns && (
-                  <div className="px-2">
-                    <Skeleton className="h-4 w-20 rounded-md" />
-                  </div>
-                )}
-                {showNocColumns && (
-                  <div className="px-2">
-                    <Skeleton className="h-4 w-18 rounded-md" />
-                  </div>
-                )}
-                {showNocColumns && (
-                  <div className="px-2">
-                    <Skeleton className="h-4 w-20 rounded-md" />
-                  </div>
-                )}
-                <div className="px-2">
-                  <Skeleton className="h-4 w-12 rounded-md" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="ml-auto h-4 w-18 rounded-md" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                </div>
-                <div className="px-2">
-                  <Skeleton className="ml-auto h-6 w-8 rounded-md" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -335,7 +324,9 @@ export default function AdminOrdersClient({
   
   // Modals & Popovers State
   const [editingOrder, setEditingOrder] = useState(null);
+  const [editItems, setEditItems] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editProductSearch, setEditProductSearch] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Quick Action State (Status/Tracking)
@@ -575,7 +566,7 @@ export default function AdminOrdersClient({
   const catalogSearchTimerRef = useRef(null);
 
   useEffect(() => {
-    if (!isCreateModalOpen) return;
+    if (!isCreateModalOpen && !isEditModalOpen) return;
 
     let cancelled = false;
     const q = catalogQueryRef.current;
@@ -597,7 +588,7 @@ export default function AdminOrdersClient({
     return () => {
       cancelled = true;
     };
-  }, [isCreateModalOpen]);
+  }, [isCreateModalOpen, isEditModalOpen]);
 
   const draftTotalAmount = draftItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
   const filteredDraftCities = useMemo(() => {
@@ -635,6 +626,24 @@ export default function AdminOrdersClient({
       .slice(0, 3);
   }, [draftItems, catalog]);
 
+  const availableEditProducts = useMemo(() => {
+    const selectedProductIds = new Set(editItems.map((item) => String(item.productId || item._id || item.name)));
+
+    return (Array.isArray(catalog) ? catalog : [])
+      .map((product) => {
+        const categoryNames = getProductCategoryNames(product);
+        const primaryImage = getPrimaryProductImage(product);
+
+        return {
+          product,
+          categoryNames,
+          categorySummary: categoryNames.slice(0, 2),
+          primaryImage,
+          searchValue: [product.Name, product.slug || '', ...categoryNames].filter(Boolean).join(' '),
+        };
+      });
+  }, [editItems, catalog]);
+
   const displayOrders = orders;
 
   function navigate(updates) {
@@ -657,25 +666,43 @@ export default function AdminOrdersClient({
     let newEnd = '';
     
     const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     
     if (value === 'today') {
-      newStart = today.toISOString().split('T')[0];
-      newEnd = newStart;
+      newStart = todayStr;
+      newEnd = todayStr;
     } else if (value === 'yesterday') {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       newStart = yesterday.toISOString().split('T')[0];
       newEnd = newStart;
+    } else if (value === 'thisWeek') {
+      const day = today.getDay(); // 0 is Sunday
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(today);
+      monday.setDate(diff);
+      newStart = monday.toISOString().split('T')[0];
+      newEnd = todayStr;
     } else if (value === 'lastWeek') {
       const lastWeek = new Date(today);
       lastWeek.setDate(lastWeek.getDate() - 7);
       newStart = lastWeek.toISOString().split('T')[0];
-      newEnd = today.toISOString().split('T')[0];
+      newEnd = todayStr;
+    } else if (value === 'thisMonth') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      newStart = firstDay.toISOString().split('T')[0];
+      newEnd = todayStr;
     } else if (value === 'lastMonth') {
-      const lastMonth = new Date(today);
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      newStart = lastMonth.toISOString().split('T')[0];
-      newEnd = today.toISOString().split('T')[0];
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      newStart = firstDayLastMonth.toISOString().split('T')[0];
+      newEnd = lastDayLastMonth.toISOString().split('T')[0];
+    } else if (value === 'year2026') {
+      newStart = '2026-01-01';
+      newEnd = '2026-12-31';
+    } else if (value === 'year2025') {
+      newStart = '2025-01-01';
+      newEnd = '2025-12-31';
     }
 
     setStartDate(newStart);
@@ -699,14 +726,25 @@ export default function AdminOrdersClient({
     
     if (startDate === todayStr && endDate === todayStr) return 'today';
     if (startDate === yesterdayStr && endDate === yesterdayStr) return 'yesterday';
+    if (startDate === '2026-01-01' && endDate === '2026-12-31') return 'year2026';
+    if (startDate === '2025-01-01' && endDate === '2025-12-31') return 'year2025';
     
+    const day = new Date().getDay();
+    const diff = new Date().getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date();
+    monday.setDate(diff);
+    if (startDate === monday.toISOString().split('T')[0] && endDate === todayStr) return 'thisWeek';
+
     const lastWeekDate = new Date();
     lastWeekDate.setDate(lastWeekDate.getDate() - 7);
     if (startDate === lastWeekDate.toISOString().split('T')[0] && endDate === todayStr) return 'lastWeek';
     
-    const lastMonthDate = new Date();
-    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-    if (startDate === lastMonthDate.toISOString().split('T')[0] && endDate === todayStr) return 'lastMonth';
+    const firstDayThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    if (startDate === firstDayThisMonth && endDate === todayStr) return 'thisMonth';
+
+    const firstDayLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().split('T')[0];
+    const lastDayLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().split('T')[0];
+    if (startDate === firstDayLastMonth && endDate === lastDayLastMonth) return 'lastMonth';
     
     return 'custom';
   };
@@ -790,6 +828,46 @@ export default function AdminOrdersClient({
       ];
     });
     setProductPickerOpen(false);
+  };
+
+  const addEditProduct = (product) => {
+    const productId = String(product?._id || product?.slug || '').trim();
+    if (!productId) return;
+
+    setEditItems((current) => {
+      const existingIndex = current.findIndex((item) => String(item.productId || item._id) === productId);
+      if (existingIndex >= 0) {
+        return current.map((item, index) =>
+          index === existingIndex
+            ? { ...item, quantity: (Number(item.quantity) || 1) + 1 }
+            : item
+        );
+      }
+
+      return [
+        ...current,
+        {
+          productId,
+          name: product.Name,
+          price: Number(product.discountedPrice ?? product.Price ?? 0),
+          image: getPrimaryProductImage(product)?.url || '',
+          quantity: 1,
+        },
+      ];
+    });
+  };
+
+  const handleOpenEditModal = (order) => {
+    setEditingOrder(order);
+    setEditItems(Array.isArray(order?.items) ? JSON.parse(JSON.stringify(order.items)) : []);
+    setEditProductSearch('');
+    setIsEditModalOpen(true);
+    fetch('/api/admin/products/catalog?limit=40')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.products) setCatalog(data.products);
+      })
+      .catch(console.error);
   };
 
   const updateDraftItemQuantity = (productId, nextQuantity) => {
@@ -1480,29 +1558,29 @@ export default function AdminOrdersClient({
     const form = e.target;
     const updates = {
       customerName: form.customerName.value,
-      customerEmail: form.customerEmail.value,
       customerPhone: form.customerPhone.value,
       customerAddress: form.customerAddress.value,
-      landmark: form.landmark.value,
       customerCity: editingOrder.customerCity,
-      sourceTag: form.sourceTag.value,
-      itemType: form.itemType.value,
-      orderQuantity: form.orderQuantity.value,
+      notes: form.notes?.value || '',
+      items: editItems,
       weight: form.weight.value,
       manualCodAmount: form.manualCodAmount.value,
-      courierName: form.courierName ? form.courierName.value : (editingOrder.courierName || ''),
-      nocThirdPartyNo: form.nocThirdPartyNo ? form.nocThirdPartyNo.value : (editingOrder.nocThirdPartyNo || ''),
-      nocParcelNo: form.trackingNumber ? form.trackingNumber.value : (editingOrder.nocParcelNo || editingOrder.trackingNumber || ''),
-      trackingNumber: form.trackingNumber ? form.trackingNumber.value : (editingOrder.trackingNumber || ''),
     };
     const res = await updateOrderAction(editingOrder._id, updates);
     if (res.success) {
       toast.success('Order details updated');
       setIsEditModalOpen(false);
       setEditingOrder(null);
+      setEditItems([]);
       setOrders((prev) => prev.map((order) => (
         order._id === editingOrder._id
-          ? { ...order, ...updates, customerCity: editingOrder.customerCity }
+          ? { 
+              ...order, 
+              ...updates, 
+              items: editItems,
+              totalAmount: editItems.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0),
+              customerCity: editingOrder.customerCity 
+            }
           : order
       )));
       router.refresh();
@@ -1615,7 +1693,7 @@ export default function AdminOrdersClient({
       : null,
   ].filter(Boolean);
   const isTrashView = statusFilter === TRASH_TAB_ID;
-  const showNocColumns = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned'].includes(statusFilter);
+  const showNocColumns = ['all', 'Shipped', 'Out For Delivery', 'Delivered', 'Returned'].includes(statusFilter);
 
   return (
     <div className="flex flex-col gap-4">
@@ -1962,11 +2040,15 @@ export default function AdminOrdersClient({
               <SelectValue placeholder="Date Filter" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="thisWeek">This Week</SelectItem>
               <SelectItem value="lastWeek">Last Week</SelectItem>
+              <SelectItem value="thisMonth">This Month</SelectItem>
               <SelectItem value="lastMonth">Last Month</SelectItem>
+              <SelectItem value="year2026">Year 2026</SelectItem>
+              <SelectItem value="year2025">Year 2025</SelectItem>
               <SelectItem value="custom" className="hidden">Custom Range</SelectItem>
             </SelectContent>
           </Select>
@@ -2108,17 +2190,28 @@ export default function AdminOrdersClient({
           </Button>
         ) : null}
 
-        {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery') ? (
+        {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery' || statusFilter === 'Out For Delivery' || statusFilter === 'Returned') ? (
           <>
             <Button
               type="button"
               size="sm"
-              onClick={() => handleSyncNocStatus(selectedOrders)}
-              disabled={selectedOrders.length === 0 || isBulkSyncingNoc}
+              onClick={() => {
+                const targetOrders = selectedOrders.length > 0
+                  ? selectedOrders
+                  : displayOrders
+                      .filter((o) => o.nocParcelNo || o.trackingNumber || o.nocThirdPartyNo)
+                      .map((o) => o._id);
+                if (targetOrders.length === 0) {
+                  toast.error('No orders with tracking numbers found to sync.');
+                  return;
+                }
+                handleSyncNocStatus(targetOrders);
+              }}
+              disabled={isBulkSyncingNoc}
               className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
               {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
-              Sync NOC Status{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
+              {isBulkSyncingNoc ? 'Syncing...' : `Sync NOC Status${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
             </Button>
 
             <Button
@@ -2217,49 +2310,41 @@ export default function AdminOrdersClient({
       </div>
       </div>
 
-      {appliedFilters.length > 0 && (
-        <div className="hidden md:flex flex-wrap items-center gap-1.5">
-          {appliedFilters.map((filter) => (
-            <Badge key={filter} variant="outline" className="rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              {filter}
-            </Badge>
-          ))}
-        </div>
-      )}
 
       {/* ── Desktop Table ── */}
       {isPending ? <OrdersTablePendingSkeleton showNocColumns={showNocColumns} /> : (
-      <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px]">
+          <table className="w-full min-w-[1240px] text-left">
                 <thead>
-                  <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-                    <th className="w-10 px-3 py-2">
+                  <tr className="border-b border-border bg-muted/40 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="w-9 px-3 py-3 text-center">
                       <Checkbox 
                         checked={isAllPaginatedSelected} 
                         onCheckedChange={handleSelectAll} 
                         aria-label="Select all on page"
                       />
                     </th>
-                    <th className="px-3 py-2">Order</th>
-                    <th className="px-3 py-2">Customer</th>
-                    <th className="px-3 py-2">City</th>
-                    <th className="px-3 py-2">Date</th>
-                    <th className="px-3 py-2">Payment</th>
-                    {showNocColumns && <th className="px-3 py-2">Tracking</th>}
-                    {showNocColumns && <th className="px-3 py-2">Courier</th>}
-                    {showNocColumns && <th className="px-3 py-2">NOC Status</th>}
-                    {showNocColumns && <th className="px-3 py-2">Status Time</th>}
-                    <th className="px-3 py-2">Weight</th>
-                    <th className="px-3 py-2 text-right">Total</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="w-10 px-3 py-2" />
+                    <th className="px-3 py-3 whitespace-nowrap">Order</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Customer</th>
+                    <th className="px-3 py-3 whitespace-nowrap">City</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Date</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Payment</th>
+                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Tracking</th>}
+                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Courier</th>}
+                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">NOC Status</th>}
+                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Status Time</th>}
+                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Account</th>}
+                    <th className="px-3 py-3 text-right whitespace-nowrap">COD</th>
+                    <th className="px-3 py-3 text-right whitespace-nowrap">Total</th>
+                    <th className="px-3 py-3 text-center whitespace-nowrap">Status</th>
+                    <th className="w-20 px-3 py-3 text-right whitespace-nowrap" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {displayOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={showNocColumns ? 14 : 10} className="px-3 py-12 text-center">
+                      <td colSpan={showNocColumns ? 14 : 9} className="px-3 py-12 text-center">
                         <div className="flex flex-col items-center justify-center">
                           <Image
                             src="/undraw_relaxing-outdoors_s653.svg"
@@ -2300,66 +2385,51 @@ export default function AdminOrdersClient({
 
                       return (
                         <tr key={order._id} className="transition-colors hover:bg-muted/25">
-                          <td className="px-3 py-2">
+                          <td className="w-9 px-3 py-2.5 text-center">
                             <Checkbox 
                               checked={selectedOrders.includes(order._id)} 
                               onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
                               aria-label={`Select order ${order.orderId}`}
                             />
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-semibold tabular-nums text-foreground hover:underline">
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
+                              <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
                                 {order.orderId}
                               </Link>
                               {isNewOrder(order.createdAt) && (
-                                <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
-                                  New
+                                <span className="inline-flex items-center rounded bg-emerald-50 text-emerald-950 border border-emerald-300 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
+                                  NEW
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="flex flex-col">
-                              <span className="text-[13px] font-medium text-foreground">{order.customerName}</span>
-                              <span className="text-[11px] text-muted-foreground">{order.customerPhone}</span>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="flex flex-col whitespace-nowrap">
+                              <span className="text-[13px] font-semibold text-foreground max-w-[150px] truncate">{order.customerName}</span>
+                              <span className="text-[12px] text-muted-foreground">{order.customerPhone}</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2">
-                            <Badge variant="outline" className={cn('text-[10px] font-medium', getCityColorClass(order.customerCity))}>
-                              {order.customerCity || 'N/A'}
-                            </Badge>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <span className="text-[13px] font-medium text-foreground whitespace-nowrap">
+                              {order.customerCity || '—'}
+                            </span>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="flex flex-col">
-                              <span className="text-[12px] text-foreground">{formatDate(order.createdAt)}</span>
-                              <span className="text-[11px] text-muted-foreground">{formatTime(order.createdAt)}</span>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="flex flex-col whitespace-nowrap">
+                              <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{formatDate(order.createdAt)}</span>
+                              <span className="text-[11px] text-muted-foreground whitespace-nowrap">{formatTime(order.createdAt)}</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2 text-[12px] text-foreground">{order.paymentStatus || 'COD'}</td>
+                          <td className="px-3 py-2.5 text-[12px] font-medium text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
 
                           {/* 1. Tracking Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5 whitespace-nowrap">
                               {displayTracking ? (
-                                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                  <span className="font-mono text-[12px] font-medium text-foreground" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
-                                    {displayTracking}
-                                  </span>
-                                  {order.trackingNumber && (
-                                    <span
-                                      className={cn(
-                                        'inline-flex items-center px-1.5 py-0.5 text-[9px] font-black rounded border uppercase tracking-wider shrink-0 shadow-2xs',
-                                        order.nocAccountId === 'portal_2'
-                                          ? 'bg-purple-100 text-purple-950 border-purple-400 dark:bg-purple-900/90 dark:text-purple-100 dark:border-purple-500'
-                                          : 'bg-sky-100 text-sky-950 border-sky-400 dark:bg-sky-900/90 dark:text-sky-100 dark:border-sky-500'
-                                      )}
-                                      title={order.nocAccountId === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)'}
-                                    >
-                                      {order.nocAccountId === 'portal_2' ? 'AS' : 'UI'}
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="font-mono text-[12px] font-semibold text-foreground whitespace-nowrap" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                                  {displayTracking}
+                                </span>
                               ) : (
                                 <span className="text-[12px] text-muted-foreground">—</span>
                               )}
@@ -2368,7 +2438,7 @@ export default function AdminOrdersClient({
 
                           {/* 2. Courier Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5 whitespace-nowrap">
                               <span className="text-[12px] font-medium text-foreground whitespace-nowrap">
                                 {courierToDisplay}
                               </span>
@@ -2377,35 +2447,16 @@ export default function AdminOrdersClient({
 
                           {/* 3. NOC Status Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5 whitespace-nowrap">
                               {(order.trackingNumber || has3rdParty) ? (
-                                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => setNocTrackingOrder(order)}
-                                    title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
-                                    className="text-[12px] font-medium text-foreground hover:text-primary hover:underline cursor-pointer text-left"
-                                  >
-                                    {order.nocStatus || 'Booked'}
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSyncNocStatus(order._id || order.orderId);
-                                    }}
-                                    disabled={syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId)}
-                                    title="Refresh live status from NOC"
-                                    className="size-5 rounded inline-flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 cursor-pointer"
-                                  >
-                                    {syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId) ? (
-                                      <Spinner className="size-3" />
-                                    ) : (
-                                      <RotateCcw className="size-3" />
-                                    )}
-                                  </button>
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setNocTrackingOrder(order)}
+                                  title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
+                                  className="text-[12px] font-medium text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
+                                >
+                                  {order.nocStatus || 'Booked'}
+                                </button>
                               ) : (
                                 <span className="text-[12px] text-muted-foreground">—</span>
                               )}
@@ -2414,66 +2465,87 @@ export default function AdminOrdersClient({
 
                           {/* 4. Status Time Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2 text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
+                            <td className="px-3 py-2.5 text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
                               {statusTimeDisplay}
                             </td>
                           )}
 
-                          <td className="px-3 py-2 text-[12px] tabular-nums text-foreground">{formatWeight(order.weight)}</td>
-                          <td className="px-3 py-2 text-right text-[13px] font-semibold tabular-nums text-foreground">{formatPrice(getCodAmount(order))}</td>
-                          <td className="px-3 py-2">
+                          {/* 5. Account Name Column (Clean text, no tag) */}
+                          {showNocColumns && (
+                            <td className="px-3 py-2.5 text-[12px] text-foreground font-medium whitespace-nowrap">
+                              {order.nocAccountId === 'portal_2' ? 'Aam Samaan' : (order.trackingNumber || order.nocParcelNo ? 'Unique Items' : '—')}
+                            </td>
+                          )}
+
+                          {/* 6. COD Amount Column (Booked / Portal COD) */}
+                          <td className="px-3 py-2.5 text-right text-[13px] font-bold tabular-nums text-foreground whitespace-nowrap">
+                            {formatPrice(getCodAmount(order))}
+                          </td>
+
+                          {/* 7. Total Bill Column (Original Order Invoice Total) */}
+                          <td className="px-3 py-2.5 text-right text-[13px] tabular-nums text-muted-foreground whitespace-nowrap">
+                            {formatPrice(order.totalAmount)}
+                          </td>
+                          <td className="px-3 py-2.5 text-center whitespace-nowrap">
                             <Badge
                               variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                              className={cn('text-[10px]', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                              className={cn('text-[11px] px-2 py-0.5 whitespace-nowrap font-semibold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                             >
                               {getOrderDisplayStatus(order)}
                             </Badge>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center justify-end gap-1.5">
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                               <OrderQuickViewDialog
                                 order={order}
                                 triggerLabel="View"
                                 triggerSize="sm"
-                                triggerClassName="admin-cta-button"
+                                triggerClassName="h-7 px-2.5 text-[12px] rounded-md border border-border shadow-xs font-medium"
                               />
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                                    <MoreHorizontal />
-                                    <span className="sr-only">Order actions</span>
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuGroup>
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/admin/orders/${order._id}`}>
-                                        <Eye />
-                                        View details
-                                      </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setQuickActionOrder(order._id);
-                                        setQuickStatus(order.status);
-                                        setQuickTracking(order.trackingNumber || '');
-                                        setEditingOrder(order);
-                                      }}
-                                    >
-                                      <Edit />
-                                      Quick update
-                                    </DropdownMenuItem>
-                                  </DropdownMenuGroup>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => handleDeleteOrder(order)}
-                                  >
-                                    <Trash2 />
-                                    Move to Trash
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {(() => {
+                                const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned', 'Cancelled'].includes(normalizeOrderStatus(order.status));
+                                return (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground cursor-pointer">
+                                        <MoreHorizontal className="size-4" />
+                                        <span className="sr-only">Order actions</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-38">
+                                      <DropdownMenuGroup>
+                                        {!isShippedPhase && (
+                                          <DropdownMenuItem
+                                            onClick={() => handleOpenEditModal(order)}
+                                            className="cursor-pointer text-[12px]"
+                                          >
+                                            <Edit className="size-3.5 mr-2" />
+                                            Edit Order
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(order.trackingNumber || order.nocParcelNo || order.nocThirdPartyNo) && (
+                                          <DropdownMenuItem
+                                            onClick={() => setNocTrackingOrder(order)}
+                                            className="cursor-pointer text-[12px]"
+                                          >
+                                            <Truck className="size-3.5 mr-2 text-primary" />
+                                            Track NOC
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuGroup>
+                                      {(!isShippedPhase || order.trackingNumber || order.nocParcelNo || order.nocThirdPartyNo) && <DropdownMenuSeparator />}
+                                      <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() => handleDeleteOrder(order)}
+                                        className="cursor-pointer text-destructive focus:text-destructive text-[12px]"
+                                      >
+                                        <Trash2 className="size-3.5 mr-2" />
+                                        Move to Trash
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                );
+                              })()}
                             </div>
                           </td>
                         </tr>
@@ -2553,81 +2625,66 @@ export default function AdminOrdersClient({
                   <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0 mt-[1px]">
-                        <p className="text-[12px] font-semibold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
+                        <p className="text-[13px] font-bold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
                         {isNewOrder(order.createdAt) && (
-                          <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm shrink-0 leading-none">
+                          <span className="inline-flex items-center rounded bg-emerald-50 text-emerald-950 border border-emerald-300 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 leading-none shadow-2xs">
                             NEW
                           </span>
                         )}
                       </div>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-5 w-5 rounded text-muted-foreground -mr-1 -mt-1 shrink-0">
-                            <MoreHorizontal className="size-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/orders/${order._id}`}>
-                                <Receipt data-icon="inline-start" />
-                                Order details
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setQuickActionOrder(order._id);
-                                setQuickStatus(order.status);
-                                setQuickTracking(order.trackingNumber || '');
-                                setEditingOrder(order);
-                              }}
-                            >
-                              <Zap data-icon="inline-start" />
-                              Quick Update
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditingOrder(order);
-                                setIsEditModalOpen(true);
-                              }}
-                            >
-                              <Edit data-icon="inline-start" />
-                              Edit Order
-                            </DropdownMenuItem>
-                            {order.trackingNumber && (
-                              <DropdownMenuItem onClick={() => handleSyncNocStatus(order._id || order.orderId)}>
-                                <RotateCcw className="size-4 mr-2" />
-                                Sync NOC Status
+                      {(() => {
+                        const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned', 'Cancelled'].includes(normalizeOrderStatus(order.status));
+                        return (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 rounded text-muted-foreground -mr-1 -mt-1 shrink-0 cursor-pointer">
+                                <MoreHorizontal className="size-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-38">
+                              <DropdownMenuGroup>
+                                {!isShippedPhase && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenEditModal(order)}
+                                    className="cursor-pointer text-[12px]"
+                                  >
+                                    <Edit className="size-3.5 mr-2" />
+                                    Edit Order
+                                  </DropdownMenuItem>
+                                )}
+                                {(order.trackingNumber || order.nocParcelNo || order.nocThirdPartyNo) && (
+                                  <DropdownMenuItem
+                                    onClick={() => setNocTrackingOrder(order)}
+                                    className="cursor-pointer text-[12px]"
+                                  >
+                                    <Truck className="size-3.5 mr-2 text-primary" />
+                                    Track NOC
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuGroup>
+                              {(!isShippedPhase || order.trackingNumber || order.nocParcelNo || order.nocThirdPartyNo) && <DropdownMenuSeparator />}
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive cursor-pointer text-[12px]"
+                                onClick={() => handleDeleteOrder(order)}
+                              >
+                                <Trash2 className="size-3.5 mr-2" />
+                                Move to Trash
                               </DropdownMenuItem>
-                            )}
-                            {order.trackingNumber && (
-                              <DropdownMenuItem onClick={() => setNocTrackingOrder(order)}>
-                                <Truck className="size-4 text-sky-600 mr-2" />
-                                Track Order
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuGroup>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteOrder(order)}
-                          >
-                            <Trash2 data-icon="inline-start" />
-                            Move to Trash
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        );
+                      })()}
                     </div>
                     
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[13px] text-muted-foreground truncate leading-tight">
                         <span className="font-semibold text-foreground">{order.customerName}</span>
-                        {order.customerCity ? <span className="text-[12px]"> • {order.customerCity}</span> : ''}
+                        {order.customerCity ? <span className="text-[12px] font-medium text-foreground/80"> • {order.customerCity}</span> : ''}
                       </p>
                       <Badge
                         variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                        className={cn('text-[10px] px-2 py-0.5 font-semibold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                        className={cn('text-[11px] px-2 py-0.5 font-semibold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                       >
                         {getOrderDisplayStatus(order)}
                       </Badge>
@@ -2641,78 +2698,47 @@ export default function AdminOrdersClient({
 
                       if (!isShippedPhase || !displayTracking) return null;
 
-                      const statusTimeDisplay = (() => {
-                        if (order.nocStatusTime && String(order.nocStatusTime).trim() !== '') {
-                          return String(order.nocStatusTime).trim();
-                        }
-                        if (order.courierBookingDate) {
-                          return `${formatDate(order.courierBookingDate)} ${formatTime(order.courierBookingDate)}`;
-                        }
-                        if (order.createdAt && (order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Out For Delivery' || order.status === 'Returned')) {
-                          return `${formatDate(order.createdAt)} ${formatTime(order.createdAt)}`;
-                        }
-                        return '—';
-                      })();
-
                       return (
-                        <div className="flex flex-col gap-1.5 py-1.5 border-t border-border/40 text-[12px]">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="font-mono text-[12px] font-bold text-foreground truncate" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
-                                {displayTracking}
-                              </span>
-                              <span className="text-[11px] font-semibold text-muted-foreground truncate">({courierToDisplay})</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => setNocTrackingOrder(order)}
-                                className="text-[12px] font-semibold text-foreground hover:underline cursor-pointer"
-                              >
-                                {order.nocStatus || 'Booked'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSyncNocStatus(order._id || order.orderId);
-                                }}
-                                disabled={syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId)}
-                                title="Refresh status from NOC"
-                                className="size-6 inline-flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-                              >
-                                {syncingOrderId === String(order._id) || syncingOrderId === String(order.orderId) ? (
-                                  <Spinner className="size-3.5" />
-                                ) : (
-                                  <RotateCcw className="size-3.5" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                          {statusTimeDisplay !== '—' ? (
-                            <span className="text-[11px] text-muted-foreground leading-none">
-                              🕒 {statusTimeDisplay}
+                        <div className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 text-[12px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-mono text-[12px] font-bold text-foreground truncate" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                              {displayTracking}
                             </span>
-                          ) : null}
+                            <span className="text-[11px] font-semibold text-muted-foreground truncate">({courierToDisplay})</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setNocTrackingOrder(order)}
+                            className="text-[12px] font-semibold text-foreground hover:underline cursor-pointer shrink-0"
+                          >
+                            {order.nocStatus || 'Booked'}
+                          </button>
                         </div>
                       );
                     })()}
 
-                    <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {order.sourceTag ? (
-                          <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 inline-flex items-center justify-center leading-none font-medium rounded-sm">
-                            {order.sourceTag}
-                          </Badge>
-                        ) : null}
-                        <span className="text-[9px] font-medium text-muted-foreground leading-none">{formatDate(order.createdAt)}</span>
+                    {/* Mobile Amounts Row: COD & Total */}
+                    <div className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 text-[12.5px]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">
+                          COD: <strong className="text-foreground font-bold">{formatPrice(getCodAmount(order))}</strong>
+                        </span>
+                        <span className="text-muted-foreground/40">•</span>
+                        <span className="text-muted-foreground">
+                          Total: <span className="font-medium text-foreground">{formatPrice(order.totalAmount)}</span>
+                        </span>
                       </div>
+                    </div>
+
+                    {/* Mobile Date & View Action */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <span className="text-[12px] font-medium text-muted-foreground">{formatDate(order.createdAt)}</span>
                       
                       <OrderQuickViewDialog
                         order={order}
                         triggerLabel="View"
                         triggerSize="sm"
-                        triggerClassName="h-6 px-3 text-[10px] rounded border border-border shadow-sm font-medium shrink-0"
+                        triggerClassName="h-6.5 px-3 text-[11px] rounded-md border border-border shadow-xs font-medium shrink-0"
                       />
                     </div>
                   </div>
@@ -3208,166 +3234,275 @@ export default function AdminOrdersClient({
 
       {/* Edit Order Dialog */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-h-[88vh] max-w-xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-sm">Edit Order {editingOrder?.orderId}</DialogTitle>
+        <DialogContent className="max-h-[90vh] sm:max-w-[700px] w-[calc(100vw-32px)] overflow-y-auto p-5 sm:p-7 rounded-2xl shadow-2xl border border-border">
+          <DialogHeader className="pb-2 border-b border-border/60">
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+              Edit Order <span className="font-mono text-primary font-semibold">{editingOrder?.orderId}</span>
+            </DialogTitle>
+            <DialogDescription className="text-[12px] text-muted-foreground">
+              Update consignee details, delivery address, ordered items, or COD amount.
+            </DialogDescription>
           </DialogHeader>
           
           {editingOrder && (
-            <form onSubmit={handleFullUpdate} className="flex flex-col gap-5 py-2">
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                {/* Consignee Info */}
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Consignee Details</p>
-                  <Separator />
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor="customerName" className="text-[12px]">Full Name</FieldLabel>
-                      <Input id="customerName" name="customerName" className="h-8 text-[13px]" defaultValue={editingOrder.customerName} required />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="customerEmail" className="text-[12px]">Email</FieldLabel>
-                      <Input id="customerEmail" name="customerEmail" type="email" className="h-8 text-[13px]" defaultValue={editingOrder.customerEmail} />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="customerPhone" className="text-[12px]">Phone</FieldLabel>
-                      <Input id="customerPhone" name="customerPhone" className="h-8 text-[13px]" defaultValue={editingOrder.customerPhone} required />
-                    </Field>
-                  </FieldGroup>
+            <form onSubmit={handleFullUpdate} className="flex flex-col gap-4 pt-3">
+              {/* Section 1: Consignee Details */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field className="space-y-1">
+                  <FieldLabel htmlFor="customerName" className="text-[12px] font-semibold text-foreground">Customer Name</FieldLabel>
+                  <Input id="customerName" name="customerName" className="h-9 text-[13px] rounded-lg" defaultValue={editingOrder.customerName} required />
+                </Field>
+                <Field className="space-y-1">
+                  <FieldLabel htmlFor="customerPhone" className="text-[12px] font-semibold text-foreground">Phone Number</FieldLabel>
+                  <Input id="customerPhone" name="customerPhone" className="h-9 text-[13px] rounded-lg" defaultValue={editingOrder.customerPhone} required />
+                </Field>
+              </div>
+
+              {/* Section 2: City & Shipping Address */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Field className="space-y-1">
+                  <FieldLabel className="text-[12px] font-semibold text-foreground">City</FieldLabel>
+                  <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={cityOpen}
+                        className="h-9 w-full justify-between text-[13px] font-normal rounded-lg"
+                      >
+                        <span className="truncate">{editingOrder.customerCity || editingOrder.city || "Select city..."}</span>
+                        <ChevronsUpDown className="size-3.5 opacity-50 ml-1 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search city..." />
+                        <CommandList>
+                          <CommandEmpty>No city found.</CommandEmpty>
+                          <CommandGroup className="max-h-52 overflow-y-auto">
+                            {PAKISTAN_CITIES.map((city) => (
+                              <CommandItem
+                                key={city}
+                                value={city}
+                                onSelect={(currentValue) => {
+                                  if (editingOrder) {
+                                    setEditingOrder({ ...editingOrder, customerCity: currentValue });
+                                  }
+                                  setCityOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    (editingOrder.customerCity || editingOrder.city) === city ? "opacity-100" : "opacity-0",
+                                    "size-3.5 mr-2"
+                                  )}
+                                />
+                                {city}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </Field>
+                <Field className="sm:col-span-2 space-y-1">
+                  <FieldLabel htmlFor="customerAddress" className="text-[12px] font-semibold text-foreground">Complete Shipping Address</FieldLabel>
+                  <Input id="customerAddress" name="customerAddress" className="h-9 text-[13px] rounded-lg" defaultValue={editingOrder.customerAddress} required />
+                </Field>
+              </div>
+
+              {/* Section 3: Special Instructions / Courier Note */}
+              <Field className="space-y-1">
+                <FieldLabel htmlFor="notes" className="text-[12px] font-semibold text-foreground">Special Instructions / Courier Note</FieldLabel>
+                <Input id="notes" name="notes" className="h-9 text-[13px] rounded-lg" defaultValue={editingOrder.notes || ''} placeholder="e.g. Call customer before delivery, urgent parcel..." />
+              </Field>
+
+              {/* Section 4: Ordered Items */}
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-3.5 sm:p-4">
+                <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ordered Items ({editItems.length})</p>
+                  <span className="text-[12px] font-bold text-foreground">
+                    Items Total: <span className="text-primary">{formatPrice(editItems.reduce((acc, it) => acc + (Number(it.price || 0) * Number(it.quantity || 1)), 0))}</span>
+                  </span>
                 </div>
 
-                {/* Address Info */}
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Shipping Address</p>
-                  <Separator />
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel className="text-[12px]">City</FieldLabel>
-                      <Popover open={cityOpen} onOpenChange={setCityOpen}>
-                        <PopoverTrigger asChild>
+                {/* Inline Product Search & Add Bar */}
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search product by name, category, or tag to add..."
+                      className="h-9 pl-9 pr-9 text-[13px] rounded-lg border border-border bg-background focus:border-primary"
+                      value={editProductSearch}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditProductSearch(val);
+                        catalogQueryRef.current = val;
+                        window.clearTimeout(catalogSearchTimerRef.current);
+                        catalogSearchTimerRef.current = window.setTimeout(() => {
+                          const q = String(val || '').trim();
+                          const url = q
+                            ? `/api/admin/products/catalog?q=${encodeURIComponent(q)}&limit=40`
+                            : '/api/admin/products/catalog?limit=40';
+                          fetch(url)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              if (data.products) setCatalog(data.products);
+                            })
+                            .catch(console.error);
+                        }, 250);
+                      }}
+                      onFocus={() => {
+                        if (!catalog || catalog.length === 0) {
+                          fetch('/api/admin/products/catalog?limit=40')
+                            .then((res) => res.json())
+                            .then((data) => {
+                              if (data?.products) setCatalog(data.products);
+                            })
+                            .catch(console.error);
+                        }
+                      }}
+                    />
+                    {editProductSearch ? (
+                      <button
+                        type="button"
+                        onClick={() => setEditProductSearch('')}
+                        className="absolute right-3 top-2.5 size-4 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {/* Live Search Results Dropdown */}
+                  {editProductSearch.trim() !== '' && (
+                    <div className="max-h-56 overflow-y-auto rounded-lg border border-border bg-background shadow-lg divide-y divide-border/60">
+                      {availableEditProducts.length === 0 ? (
+                        <p className="p-3 text-center text-[12px] text-muted-foreground">No matching products found.</p>
+                      ) : (
+                        availableEditProducts.map(({ product, primaryImage, categorySummary }) => {
+                          const price = Number(product.discountedPrice ?? product.Price ?? 0);
+                          return (
+                            <div
+                              key={product._id}
+                              className="flex items-center justify-between gap-3 p-2.5 hover:bg-muted/40 transition-colors"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                {primaryImage?.url ? (
+                                  <img src={primaryImage.url} alt={product.Name} className="size-9 rounded-md object-cover border shrink-0 bg-background" />
+                                ) : (
+                                  <div className="size-9 rounded-md bg-muted flex items-center justify-center shrink-0 text-xs">📦</div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[12px] font-semibold text-foreground truncate">{product.Name}</p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-bold text-primary">{formatPrice(price)}</span>
+                                    {categorySummary.length > 0 && (
+                                      <span className="text-[10px] text-muted-foreground truncate">• {categorySummary[0]}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  addEditProduct(product);
+                                  toast.success(`Added ${product.Name}`);
+                                }}
+                                className="h-7 px-3 text-[11px] font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-md shrink-0 cursor-pointer"
+                              >
+                                <Plus className="size-3.5 mr-1" /> Add
+                              </Button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {editItems.length === 0 ? (
+                  <p className="py-4 text-center text-[12px] text-muted-foreground">No items in this order. Search and add products above.</p>
+                ) : (
+                  <div className="flex flex-col divide-y divide-border/50">
+                    {editItems.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name || 'Product'} className="size-10 rounded-lg object-cover border shrink-0 bg-background" />
+                          ) : (
+                            <div className="size-10 rounded-lg bg-muted flex items-center justify-center shrink-0 text-sm">📦</div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <p className="text-[13px] font-semibold text-foreground truncate">{item.name || item.title || 'Item'}</p>
+                            <span className="text-[11px] text-muted-foreground">{formatPrice(item.price || 0)} each</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-[13px] rounded cursor-pointer"
+                              onClick={() => {
+                                setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, (Number(it.quantity) || 1) - 1) } : it));
+                              }}
+                            >
+                              -
+                            </Button>
+                            <span className="w-8 text-center text-[13px] font-bold tabular-nums text-foreground">{item.quantity || 1}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-[13px] rounded cursor-pointer"
+                              onClick={() => {
+                                setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: (Number(it.quantity) || 1) + 1 } : it));
+                              }}
+                            >
+                              +
+                            </Button>
+                          </div>
                           <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={cityOpen}
-                            className="h-8 w-full justify-between text-[13px] font-normal"
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-muted-foreground hover:text-destructive cursor-pointer"
+                            onClick={() => {
+                              setEditItems(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                            title="Remove item"
                           >
-                            {editingOrder.customerCity || editingOrder.city || "Select city..."}
-                            <ChevronsUpDown data-icon="inline-end" />
+                            <Trash2 className="size-4" />
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search city..." />
-                            <CommandList>
-                              <CommandEmpty>No city found.</CommandEmpty>
-                              <CommandGroup className="max-h-52 overflow-y-auto">
-                                {PAKISTAN_CITIES.map((city) => (
-                                  <CommandItem
-                                    key={city}
-                                    value={city}
-                                    onSelect={(currentValue) => {
-                                      if (editingOrder) {
-                                        setEditingOrder({ ...editingOrder, customerCity: currentValue });
-                                      }
-                                      setCityOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        (editingOrder.customerCity || editingOrder.city) === city ? "opacity-100" : "opacity-0"
-                                      )}
-                                      data-icon="inline-start"
-                                    />
-                                    {city}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="customerAddress" className="text-[12px]">Full Address</FieldLabel>
-                      <Input id="customerAddress" name="customerAddress" className="h-8 text-[13px]" defaultValue={editingOrder.customerAddress} required />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="landmark" className="text-[12px]">Landmark</FieldLabel>
-                      <Input id="landmark" name="landmark" className="h-8 text-[13px]" defaultValue={editingOrder.landmark} />
-                    </Field>
-                  </FieldGroup>
-                </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <Separator />
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="itemType" className="text-[12px]">Item Type</FieldLabel>
-                    <Input id="itemType" name="itemType" className="h-8 text-[13px]" defaultValue={editingOrder.itemType || 'Mix'} />
-                  </Field>
-                </FieldGroup>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="orderQuantity" className="text-[12px]">Quantity</FieldLabel>
-                    <Input id="orderQuantity" name="orderQuantity" type="number" className="h-8 text-[13px]" defaultValue={editingOrder.orderQuantity || 1} />
-                  </Field>
-                </FieldGroup>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="weight" className="text-[12px]">Weight (kg)</FieldLabel>
-                    <Input id="weight" name="weight" type="number" step="0.5" className="h-8 text-[13px]" defaultValue={editingOrder.weight ?? 2} />
-                  </Field>
-                </FieldGroup>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="sourceTag" className="text-[12px]">Source Tag</FieldLabel>
-                    <Input id="sourceTag" name="sourceTag" className="h-8 text-[13px]" defaultValue={editingOrder.sourceTag || ''} placeholder="WhatsApp, Instagram, Call..." />
-                  </Field>
-                </FieldGroup>
-                <FieldGroup className="md:col-span-2">
-                  <Field>
-                    <FieldLabel htmlFor="manualCodAmount" className="text-[12px]">COD Amount (Override)</FieldLabel>
-                    <Input id="manualCodAmount" name="manualCodAmount" type="number" className="h-8 text-[13px]" placeholder="Blank = auto" defaultValue={editingOrder.manualCodAmount ?? ''} />
-                    <FieldDescription className="text-[10px]">
-                      If blank, COD = {formatPrice(getCodAmount(editingOrder) || 0)}
-                    </FieldDescription>
-                  </Field>
-                </FieldGroup>
+              {/* Section 5: COD Amount & Weight */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field className="space-y-1">
+                  <FieldLabel htmlFor="manualCodAmount" className="text-[12px] font-semibold text-foreground">COD Amount (Override)</FieldLabel>
+                  <Input id="manualCodAmount" name="manualCodAmount" type="number" className="h-9 text-[13px] rounded-lg" placeholder="Blank = auto bill total" defaultValue={editingOrder.manualCodAmount ?? ''} />
+                </Field>
+                <Field className="space-y-1">
+                  <FieldLabel htmlFor="weight" className="text-[12px] font-semibold text-foreground">Parcel Weight (kg)</FieldLabel>
+                  <Input id="weight" name="weight" type="number" step="0.5" className="h-9 text-[13px] rounded-lg" defaultValue={editingOrder.weight ?? 2} required />
+                </Field>
               </div>
 
-              <Separator />
-
-              <div className="flex flex-col gap-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fulfillment & Tracking</p>
-                <Separator />
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mt-2">
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor="courierName" className="text-[12px]">Courier Partner</FieldLabel>
-                      <Input id="courierName" name="courierName" className="h-8 text-[13px]" defaultValue={editingOrder.courierName || 'NOC'} placeholder="e.g. Leopard, TCS, NOC" />
-                    </Field>
-                  </FieldGroup>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor="nocThirdPartyNo" className="text-[12px]">3rd Party Tracking #</FieldLabel>
-                      <Input id="nocThirdPartyNo" name="nocThirdPartyNo" className="h-8 text-[13px] font-mono" defaultValue={editingOrder.nocThirdPartyNo || ''} placeholder="e.g. KI7541520478" />
-                    </Field>
-                  </FieldGroup>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor="trackingNumber" className="text-[12px]">Parcel #</FieldLabel>
-                      <Input id="trackingNumber" name="trackingNumber" className="h-8 text-[13px] font-mono" defaultValue={editingOrder.nocParcelNo || editingOrder.trackingNumber || ''} placeholder="e.g. 16226706434798" />
-                    </Field>
-                  </FieldGroup>
-                </div>
-              </div>
-
-              <DialogFooter className="gap-1.5 sm:gap-0">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)} className="admin-cta-button">Cancel</Button>
-                <Button type="submit" size="sm" disabled={isUpdating} className="admin-cta-button min-w-[100px]">
-                  {isUpdating ? <Spinner data-icon="inline-start" /> : null}
+              <DialogFooter className="gap-2 pt-3 border-t border-border/60">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)} className="h-9 px-4 text-xs font-medium cursor-pointer">
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" disabled={isUpdating} className="h-9 px-6 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white min-w-[120px] cursor-pointer">
+                  {isUpdating ? <Spinner className="size-3.5 mr-2" /> : null}
                   {isUpdating ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>
@@ -3376,8 +3511,8 @@ export default function AdminOrdersClient({
         </DialogContent>
       </Dialog>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Pagination (Only for All Orders Tab) */}
+      {statusFilter === 'all' && totalPages > 1 && (
         <div className="flex flex-col gap-2 px-1 py-2">
           <p className="text-[12px] text-muted-foreground">
             Showing <span className="font-medium text-foreground">{((currentPage - 1) * pageSize) + 1}</span> to{' '}

@@ -378,3 +378,5 @@ export function ProductQuickViewDialog({ open, onOpenChange, product: rowProduct
     </Dialog>
   );
 }
+
+export default ProductQuickViewDialog;
