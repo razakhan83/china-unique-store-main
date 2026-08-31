@@ -81,6 +81,7 @@ function serializeSettings(settings) {
         announcementBarText: settings.announcementBarText || '',
         bankDepositEnabled: settings.bankDepositEnabled === true,
         bankDepositAccountDetails: settings.bankDepositAccountDetails || '',
+        enableSecondaryNoc: settings.enableSecondaryNoc === true,
         announcementBarMessages: normalizeAnnouncementMessages(
             settings.announcementBarMessages,
             settings.announcementBarText
@@ -164,6 +165,7 @@ export async function PUT(req) {
             'bankDepositAccountDetails',
             'homepageSectionOrder',
             'customPages',
+            'enableSecondaryNoc',
         ];
 
         const normalizedFaviconSize = body.faviconSizePx !== undefined

@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { trackNocParcel, fetchNocPortalDashboard } from '@/lib/nocCourier';
+import { mapNocStatusToStoreLifecycle } from '@/lib/order-status';
 import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function POST(request) {
@@ -69,7 +70,7 @@ export async function POST(request) {
     // Process all orders concurrently in parallel
     const results = await Promise.all(
       orders.map(async (order) => {
-        const trackingNumber = (order.trackingNumber || '').trim();
+        const trackingNumber = (order.nocParcelNo || order.trackingNumber || order.nocThirdPartyNo || '').trim();
         const portalKey = order.nocAccountId || 'portal_1';
 
         if (!trackingNumber) {
@@ -82,7 +83,7 @@ export async function POST(request) {
         }
 
         // Auto-update from live portal dashboard if 3rd party CN or specific courier was assigned
-        const portalInfo = portalRowsMap.get(trackingNumber) || portalRowsMap.get(order.nocParcelNo);
+        const portalInfo = portalRowsMap.get(trackingNumber) || portalRowsMap.get(order.nocParcelNo) || portalRowsMap.get(order.trackingNumber);
         if (portalInfo) {
           if (portalInfo.courier) order.courierName = portalInfo.courier;
           if (portalInfo.thirdPartyNo) order.nocThirdPartyNo = portalInfo.thirdPartyNo;
@@ -122,7 +123,7 @@ export async function POST(request) {
               trackingData.ThirdPartyNo || 
               '';
 
-            const rawParcelNo = latest.ParcelNo || trackingData.ParcelNo || trackingNumber;
+            const rawParcelNo = latest.ParcelNo || trackingData.ParcelNo || order.nocParcelNo || trackingNumber;
             
             const is3rdPartyValid = 
               raw3rdParty && 
@@ -132,16 +133,33 @@ export async function POST(request) {
               String(raw3rdParty).trim().toLowerCase() !== 'null' && 
               String(raw3rdParty).trim().toLowerCase() !== 'undefined';
 
-            const finalThirdPartyNo = is3rdPartyValid ? String(raw3rdParty).trim() : '';
+            const finalThirdPartyNo = is3rdPartyValid ? String(raw3rdParty).trim() : (order.nocThirdPartyNo || '');
             const finalParcelNo = String(rawParcelNo || trackingNumber).trim();
             const effectiveTrackingNumber = is3rdPartyValid ? finalThirdPartyNo : finalParcelNo;
 
-            const lowerRawStatus = rawStatus.toLowerCase();
-            const isPaymentDone =
-              lowerRawStatus.includes('payment') ||
-              lowerRawStatus.includes('paid') ||
-              lowerRawStatus.includes('remit') ||
-              lowerRawStatus.includes('cr done');
+            // Automatically resolve store lifecycle & payment status from live NOC tracking
+            const lifecycleUpdate = mapNocStatusToStoreLifecycle(rawStatus);
+
+            let newStoreStatus = order.status;
+            let newPaymentStatus = order.paymentStatus;
+
+            if (lifecycleUpdate) {
+              if (lifecycleUpdate.status && order.status !== 'Completed') {
+                newStoreStatus = lifecycleUpdate.status;
+              }
+              if (lifecycleUpdate.paymentStatus) {
+                newPaymentStatus = lifecycleUpdate.paymentStatus;
+              }
+            }
+
+            const hasChanged =
+              order.nocStatus !== rawStatus ||
+              order.nocStatusTime !== rawTime ||
+              order.courierName !== rawCourier ||
+              order.nocParcelNo !== finalParcelNo ||
+              order.nocThirdPartyNo !== finalThirdPartyNo ||
+              order.status !== newStoreStatus ||
+              order.paymentStatus !== newPaymentStatus;
 
             order.nocStatus = rawStatus;
             order.nocStatusTime = rawTime;
@@ -150,13 +168,8 @@ export async function POST(request) {
             order.nocThirdPartyNo = finalThirdPartyNo;
             order.nocRemarks = remarks;
             order.nocLastTrackedAt = now;
-
-            if (isPaymentDone) {
-              order.paymentStatus = 'Paid';
-              if (order.status !== 'Completed' && order.status !== 'Returned') {
-                order.status = 'Delivered';
-              }
-            }
+            order.status = newStoreStatus;
+            order.paymentStatus = newPaymentStatus;
 
             await order.save();
 
@@ -164,6 +177,7 @@ export async function POST(request) {
               orderId: order.orderId,
               _id: String(order._id),
               success: true,
+              changed: hasChanged,
               nocStatus: rawStatus,
               nocStatusTime: rawTime,
               courierName: rawCourier,
@@ -181,6 +195,7 @@ export async function POST(request) {
             orderId: order.orderId,
             _id: String(order._id),
             success: true,
+            changed: false,
             nocStatus: order.nocStatus || 'Booked',
             courierName: order.courierName || 'NOC',
             nocParcelNo: order.nocParcelNo || trackingNumber,
@@ -193,6 +208,7 @@ export async function POST(request) {
             orderId: order.orderId,
             _id: String(order._id),
             success: false,
+            changed: false,
             error: itemErr.message || 'Failed to track parcel',
           };
         }
@@ -200,8 +216,9 @@ export async function POST(request) {
     );
 
     const successfulCount = results.filter((r) => r.success).length;
+    const changedCount = results.filter((r) => r.changed).length;
 
-    if (successfulCount > 0) {
+    if (changedCount > 0) {
       try {
         revalidateTag('orders');
         revalidateTag('admin-dashboard');
@@ -214,6 +231,8 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       message: `Synced ${successfulCount} of ${orders.length} order(s) with NOC Courier.`,
+      successfulCount,
+      changedCount,
       results,
     });
   } catch (error) {

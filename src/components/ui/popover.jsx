@@ -8,9 +8,35 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 import { cn } from "@/lib/utils"
 
 function Popover({
+  open,
+  defaultOpen,
+  onOpenChange,
+  children,
   ...props
 }) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+  if (typeof open === "boolean") {
+    return (
+      <PopoverPrimitive.Root
+        data-slot="popover"
+        open={open}
+        onOpenChange={onOpenChange}
+        {...props}
+      >
+        {children}
+      </PopoverPrimitive.Root>
+    );
+  }
+
+  return (
+    <PopoverPrimitive.Root
+      data-slot="popover"
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
+      {...props}
+    >
+      {children}
+    </PopoverPrimitive.Root>
+  );
 }
 
 function PopoverTrigger({

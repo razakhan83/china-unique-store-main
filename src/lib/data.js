@@ -537,6 +537,7 @@ async function getSettingsRaw() {
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
         customPages: mergeCustomPages(settings.customPages),
         guestModeEnabled: settings.guestModeEnabled !== false,
+        enableSecondaryNoc: settings.enableSecondaryNoc === true,
       };
     });
   } catch (error) {
@@ -1921,6 +1922,7 @@ export async function getAdminProductsPage({
 export async function getAdminOrdersPage({
   search = '',
   status = DEFAULT_ORDER_STATUS,
+  paymentFilter = 'all',
   startDate = '',
   endDate = '',
   page = 1,
@@ -1933,6 +1935,7 @@ export async function getAdminOrdersPage({
 
   const safeSearch = String(search || '').trim();
   const safeStatus = normalizeOrderStatus(status || DEFAULT_ORDER_STATUS);
+  const safePaymentFilter = String(paymentFilter || 'all').trim().toLowerCase();
   const safeStartDate = String(startDate || '').trim();
   const safeEndDate = String(endDate || '').trim();
   const safePage = Math.max(1, Number(page) || 1);
@@ -1945,6 +1948,14 @@ export async function getAdminOrdersPage({
   } else if (safeStatus !== 'all') {
     query.isDraft = { $ne: true };
     query.status = getOrderStatusQueryValue(safeStatus);
+  }
+
+  if (safeStatus === 'Delivered') {
+    if (safePaymentFilter === 'paid') {
+      query.paymentStatus = 'Paid';
+    } else if (safePaymentFilter === 'pending') {
+      query.paymentStatus = { $ne: 'Paid' };
+    }
   }
 
   if (safeSearch) {
@@ -1972,7 +1983,7 @@ export async function getAdminOrdersPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, statusCounts, draftCount, trashCount] = await Promise.all([
+  const [items, total, statusCounts, draftCount, trashCount, deliveredPaidCount] = await Promise.all([
     Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
     Order.aggregate([
@@ -1991,12 +2002,15 @@ export async function getAdminOrdersPage({
     ]),
     Order.countDocuments({ isDraft: true, isDeleted: { $ne: true } }),
     Order.countDocuments({ isDeleted: true }),
+    Order.countDocuments({ isDraft: { $ne: true }, isDeleted: { $ne: true }, status: 'Delivered', paymentStatus: 'Paid' }),
   ]);
 
   const statusCountMap = new Map(
     (Array.isArray(statusCounts) ? statusCounts : []).map((entry) => [String(entry?._id || ''), Number(entry?.count || 0)])
   );
   const summaryCounts = getOrderStatusSummaryCounts(statusCountMap);
+  const deliveredTotal = summaryCounts.deliveredCount || 0;
+  const deliveredPendingCount = Math.max(0, deliveredTotal - deliveredPaidCount);
 
   return {
     items,
@@ -2007,12 +2021,15 @@ export async function getAdminOrdersPage({
     hasMore: skip + safeLimit < total,
     searchTerm: safeSearch,
     status: safeStatus,
+    paymentFilter: safePaymentFilter,
     startDate: safeStartDate,
     endDate: safeEndDate,
     summary: {
       ...summaryCounts,
       draftCount,
       trashCount,
+      deliveredPaidCount,
+      deliveredPendingCount,
       allCount: summaryCounts.allCount + draftCount,
     },
   };
@@ -2311,6 +2328,27 @@ export async function getOrderLogs(orderId) {
     orderId: log.orderId.toString(),
     createdAt: log.createdAt.toISOString(),
   }));
+}
+
+export async function getCustomerOtherOrders(phone, currentOrderId) {
+  if (!phone || String(phone).trim().length < 6) return [];
+  await mongooseConnect();
+
+  const rawPhone = String(phone).trim();
+  const digits = rawPhone.replace(/\D/g, '').slice(-9);
+  if (!digits) return [];
+
+  const query = {
+    isDeleted: { $ne: true },
+    customerPhone: { $regex: digits, $options: 'i' },
+  };
+
+  if (currentOrderId && mongoose.Types.ObjectId.isValid(String(currentOrderId))) {
+    query._id = { $ne: new mongoose.Types.ObjectId(String(currentOrderId)) };
+  }
+
+  const orders = await Order.find(query).sort({ createdAt: -1 }).limit(10).lean();
+  return orders.map(toOrderSummaryRow);
 }
 
 export async function getAdminDashboardData() {
@@ -2624,6 +2662,7 @@ export async function getAdminSettings() {
     announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
     homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
     customPages: mergeCustomPages(settings.customPages),
+    enableSecondaryNoc: settings.enableSecondaryNoc === true,
   };
 }
 

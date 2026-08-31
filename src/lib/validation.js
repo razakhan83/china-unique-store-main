@@ -88,6 +88,7 @@ export const storeSettingsSchema = z.object({
   freeShippingThreshold: z.coerce.number().nonnegative().optional(),
   announcementBarEnabled: z.boolean().optional(),
   announcementBarText: z.string().trim().max(200).optional().or(z.literal('')),
+  enableSecondaryNoc: z.boolean().optional(),
   // allow flexible arbitrary fields for customPages and coverImages since they have custom normalizers
   coverImages: z.any().optional(),
   customPages: z.any().optional(),

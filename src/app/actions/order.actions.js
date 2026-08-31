@@ -1078,6 +1078,92 @@ export async function deleteOrderAction(id) {
   }
 }
 
+export async function bulkDeleteOrdersAction(orderIds) {
+  await assertAdmin();
+  await mongooseConnect();
+  const Order = (await import('@/models/Order')).default;
+  const OrderLog = (await import('@/models/OrderLog')).default;
+  const Invoice = (await import('@/models/Invoice')).default;
+
+  try {
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return { success: false, error: 'No orders specified for deletion.' };
+    }
+
+    const mongoose = (await import('mongoose')).default;
+    const validObjectIds = orderIds
+      .filter((id) => mongoose.Types.ObjectId.isValid(id) && String(id).length === 24)
+      .map((id) => new mongoose.Types.ObjectId(id));
+    const stringIds = orderIds.map(String);
+
+    const query = {
+      $or: [
+        { _id: { $in: validObjectIds } },
+        { orderId: { $in: stringIds } },
+      ],
+      isDeleted: { $ne: true },
+    };
+
+    const targetOrders = await Order.find(query).select('_id orderId invoiceId invoiceNumber').lean();
+    if (targetOrders.length === 0) {
+      return { success: true, count: 0, message: 'No matching active orders to delete.' };
+    }
+
+    const matchedIds = targetOrders.map((o) => o._id);
+    const now = new Date();
+
+    await Order.updateMany(
+      { _id: { $in: matchedIds } },
+      { $set: { isDeleted: true, deletedAt: now } }
+    );
+
+    // Sync invoices
+    try {
+      const invoiceOrs = [];
+      targetOrders.forEach((o) => {
+        if (o.invoiceId) invoiceOrs.push({ _id: o.invoiceId });
+        if (o.invoiceNumber) invoiceOrs.push({ invoiceNumber: o.invoiceNumber });
+        if (o.orderId) invoiceOrs.push({ orderId: o.orderId });
+        invoiceOrs.push({ orderRef: o._id });
+      });
+
+      if (invoiceOrs.length > 0) {
+        await Invoice.updateMany(
+          { $or: invoiceOrs, isDeleted: false },
+          { $set: { isDeleted: true, deletedAt: now } }
+        );
+        revalidatePath('/admin/invoices');
+      }
+    } catch (invBulkDelErr) {
+      console.error('Failed to sync invoices on bulk order deletion:', invBulkDelErr);
+    }
+
+    const session = await getServerSession(authOptions);
+    const logDocs = targetOrders.map((o) => ({
+      orderId: o._id,
+      action: 'DELETE',
+      details: `Bulk moved to trash (${targetOrders.length} orders total)`,
+      adminName: session?.user?.name,
+      adminEmail: session?.user?.email,
+    }));
+    await OrderLog.insertMany(logDocs, { ordered: false }).catch(() => {});
+
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+
+    return {
+      success: true,
+      count: targetOrders.length,
+      deletedIds: matchedIds.map(String),
+      message: `Moved ${targetOrders.length} order(s) to Trash.`,
+    };
+  } catch (error) {
+    console.error('Failed to bulk delete orders:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function restoreOrderAction(id) {
   await assertAdmin();
   await mongooseConnect();

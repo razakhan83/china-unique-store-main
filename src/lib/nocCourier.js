@@ -4,7 +4,7 @@
  * Supports 2 NOC Accounts / Portals (portal_1, portal_2)
  */
 
-const BASE_URL = 'https://api.shipnoc.com/api';
+const BASE_URL = 'http://api.shipnoc.com/api';
 
 export const NOC_PORTALS = [
   { id: 'portal_1', name: 'Main Account (unique items)' },
@@ -62,8 +62,8 @@ export async function bookNocParcels(parcels, portalKey = 'portal_1') {
   };
 
   const urls = [
-    'https://api.shipnoc.com/api/BookParcel',
     'http://api.shipnoc.com/api/BookParcel',
+    'https://api.shipnoc.com/api/BookParcel',
   ];
 
   let lastError = null;
@@ -74,7 +74,7 @@ export async function bookNocParcels(parcels, portalKey = 'portal_1') {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         cache: 'no-store',
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (!response.ok) {
@@ -99,8 +99,8 @@ export async function fetchNocCities(portalKey = 'portal_1') {
   const { userName, password, signature } = getNocCredentials(portalKey);
   const query = `UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}`;
   const urls = [
-    `https://api.shipnoc.com/api/GetCity?${query}`,
     `http://api.shipnoc.com/api/GetCity?${query}`,
+    `https://api.shipnoc.com/api/GetCity?${query}`,
   ];
 
   let lastError = null;
@@ -110,7 +110,7 @@ export async function fetchNocCities(portalKey = 'portal_1') {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (response.ok) {
@@ -134,8 +134,8 @@ export async function trackNocParcel(parcelNo, portalKey = 'portal_1') {
   const query = `UserName=${encodeURIComponent(userName)}&Password=${encodeURIComponent(password)}&Signature=${encodeURIComponent(signature)}&ParcelNo=${encodeURIComponent(parcelNo)}`;
 
   const urls = [
-    `https://api.shipnoc.com/api/GetParcelTracking?${query}`,
     `http://api.shipnoc.com/api/GetParcelTracking?${query}`,
+    `https://api.shipnoc.com/api/GetParcelTracking?${query}`,
   ];
 
   let lastError = null;

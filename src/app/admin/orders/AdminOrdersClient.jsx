@@ -41,6 +41,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -55,7 +56,7 @@ import { getPrimaryProductImage } from '@/lib/productImages';
 import { getProductCategoryNames } from '@/lib/productCategories';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
-import { bulkUpdateOrderStatusAction, createDraftOrderAction, deleteOrderAction, emptyTrashAction, hardDeleteOrderAction, restoreOrderAction, updateOrderAction } from '@/app/actions';
+import { bulkDeleteOrdersAction, bulkUpdateOrderStatusAction, createDraftOrderAction, deleteOrderAction, emptyTrashAction, hardDeleteOrderAction, restoreOrderAction, updateOrderAction } from '@/app/actions';
 import { DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
 import { toast } from 'sonner';
 
@@ -157,7 +158,7 @@ function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
 
   Object.entries(updates).forEach(([key, value]) => {
-    if (value === null || value === undefined || value === '' || (key === 'status' && value === DEFAULT_ORDER_STATUS)) {
+    if (value === null || value === undefined || value === '' || (key === 'status' && value === DEFAULT_ORDER_STATUS) || (key === 'paymentFilter' && value === 'all')) {
       params.delete(key);
     } else {
       params.set(key, String(value));
@@ -168,69 +169,69 @@ function buildHref(pathname, searchParams, updates) {
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function OrdersTablePendingSkeleton({ showNocColumns = false }) {
+function OrdersTablePendingSkeleton({ showNocColumns = false, enableSecondaryNoc = false }) {
   return (
     <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block shadow-xs">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-border bg-muted/40">
-            <th className="w-9 px-3 py-3 text-center">
-              <Skeleton className="size-4 rounded-sm mx-auto" />
+            <th className="w-8 px-2 py-2 text-center">
+              <Skeleton className="size-3.5 rounded-sm mx-auto" />
             </th>
-            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
-            <th className="px-3 py-3"><Skeleton className="h-3.5 w-24 rounded" /></th>
-            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
-            <th className="px-3 py-3"><Skeleton className="h-3.5 w-18 rounded" /></th>
-            <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>
-            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-20 rounded" /></th>}
-            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>}
-            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-20 rounded" /></th>}
-            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-18 rounded" /></th>}
-            {showNocColumns && <th className="px-3 py-3"><Skeleton className="h-3.5 w-16 rounded" /></th>}
-            <th className="px-3 py-3 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></th>
-            <th className="px-3 py-3 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></th>
-            <th className="px-3 py-3 text-center"><Skeleton className="h-3.5 w-16 rounded mx-auto" /></th>
-            <th className="w-20 px-3 py-3" />
+            <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
+            <th className="px-2 py-2"><Skeleton className="h-3 w-20 rounded" /></th>
+            <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
+            <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
+            <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
+            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-18 rounded" /></th>}
+            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
+            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>}
+            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
+            {showNocColumns && enableSecondaryNoc && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
+            <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></th>
+            <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></th>
+            <th className="px-2 py-2 text-center"><Skeleton className="h-3 w-14 rounded mx-auto" /></th>
+            <th className="w-16 px-2 py-2" />
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {Array.from({ length: 7 }).map((_, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-muted/15">
-              <td className="w-9 px-3 py-3 text-center">
-                <Skeleton className="size-4 rounded-sm mx-auto" />
+              <td className="w-8 px-2 py-2 text-center">
+                <Skeleton className="size-3.5 rounded-sm mx-auto" />
               </td>
-              <td className="px-3 py-3">
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-4 w-16 rounded" />
-                  <Skeleton className="h-3.5 w-8 rounded" />
+              <td className="px-2 py-2">
+                <div className="flex items-center gap-1">
+                  <Skeleton className="h-3.5 w-14 rounded" />
+                  <Skeleton className="h-3 w-6 rounded" />
                 </div>
               </td>
-              <td className="px-3 py-3">
+              <td className="px-2 py-2">
                 <div className="flex flex-col gap-1">
-                  <Skeleton className="h-4 w-28 rounded" />
-                  <Skeleton className="h-3 w-20 rounded" />
+                  <Skeleton className="h-3.5 w-24 rounded" />
+                  <Skeleton className="h-2.5 w-16 rounded" />
                 </div>
               </td>
-              <td className="px-3 py-3"><Skeleton className="h-4 w-16 rounded" /></td>
-              <td className="px-3 py-3">
+              <td className="px-2 py-2"><Skeleton className="h-3.5 w-12 rounded" /></td>
+              <td className="px-2 py-2">
                 <div className="flex flex-col gap-1">
-                  <Skeleton className="h-4 w-18 rounded" />
-                  <Skeleton className="h-3 w-12 rounded" />
+                  <Skeleton className="h-3.5 w-16 rounded" />
+                  <Skeleton className="h-2.5 w-10 rounded" />
                 </div>
               </td>
-              <td className="px-3 py-3"><Skeleton className="h-4 w-12 rounded" /></td>
-              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-24 rounded font-mono" /></td>}
-              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-16 rounded" /></td>}
-              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-20 rounded" /></td>}
-              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-3.5 w-24 rounded" /></td>}
-              {showNocColumns && <td className="px-3 py-3"><Skeleton className="h-4 w-20 rounded" /></td>}
-              <td className="px-3 py-3 text-right"><Skeleton className="h-4 w-16 rounded ml-auto" /></td>
-              <td className="px-3 py-3 text-right"><Skeleton className="h-4 w-16 rounded ml-auto" /></td>
-              <td className="px-3 py-3 text-center"><Skeleton className="h-5 w-20 rounded-full mx-auto" /></td>
-              <td className="px-3 py-3">
-                <div className="flex items-center justify-end gap-1.5">
-                  <Skeleton className="h-7 w-12 rounded-md" />
-                  <Skeleton className="size-7 rounded-md" />
+              <td className="px-2 py-2"><Skeleton className="h-3 w-10 rounded" /></td>
+              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3.5 w-20 rounded font-mono" /></td>}
+              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></td>}
+              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3.5 w-16 rounded" /></td>}
+              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-2.5 w-16 rounded" /></td>}
+              {showNocColumns && enableSecondaryNoc && <td className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></td>}
+              <td className="px-2 py-2 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
+              <td className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></td>
+              <td className="px-2 py-2 text-center"><Skeleton className="h-4 w-16 rounded-full mx-auto" /></td>
+              <td className="px-2 py-2">
+                <div className="flex items-center justify-end gap-1">
+                  <Skeleton className="h-6 w-10 rounded-md" />
+                  <Skeleton className="size-6 rounded-md" />
                 </div>
               </td>
             </tr>
@@ -276,11 +277,13 @@ export default function AdminOrdersClient({
   pageSize,
   initialSearchQuery,
   initialStatusFilter,
+  initialPaymentFilter = 'all',
   initialStartDate,
   initialEndDate,
   summary,
   initialTrashOrders = [],
   initialCreateOrder = false,
+  enableSecondaryNoc = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -289,11 +292,15 @@ export default function AdminOrdersClient({
   const [orders, setOrders] = useState(initialOrders);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
+  const [paymentFilter, setPaymentFilter] = useState(initialPaymentFilter || 'all');
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
+  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [pendingWorkflowAction, setPendingWorkflowAction] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
@@ -304,6 +311,7 @@ export default function AdminOrdersClient({
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
   const searchTimeoutRef = useRef(null);
+  const hasAutoSyncedRef = useRef(false);
   const defaultUnknownItem = { productId: 'unknown-default', isCustom: true, name: 'Unknown item', price: 100, quantity: 1 };
   const [draftForm, setDraftForm] = useState({
     customerName: '',
@@ -485,7 +493,12 @@ export default function AdminOrdersClient({
           })
         );
 
-        toast.success(data.message || `Synced NOC status for ${ids.length} order(s)`);
+        if (data.changedCount > 0) {
+          toast.success(`Updated ${data.changedCount} order status${data.changedCount === 1 ? '' : 'es'} successfully.`);
+          router.refresh();
+        } else {
+          toast.info('Already up to date - No new status changes found.');
+        }
       } else {
         toast.error(data.error || 'Failed to sync NOC status');
       }
@@ -523,6 +536,12 @@ export default function AdminOrdersClient({
     const p2OrderIds = p2Orders.map((o) => o.orderId || o._id).filter(Boolean);
     const allOrderIds = bookedOrders.map((o) => o.orderId || o._id).filter(Boolean);
 
+    if (!enableSecondaryNoc || p2Orders.length === 0) {
+      const targetIds = p1OrderIds.length > 0 ? p1OrderIds : allOrderIds;
+      window.open(`/api/admin/courier/print-slips?orderIds=${targetIds.join(',')}&portalKey=portal_1`, '_blank');
+      return;
+    }
+
     setNocPrintAccountModal({
       p1Count: p1Orders.length,
       p1OrderIds,
@@ -541,6 +560,113 @@ export default function AdminOrdersClient({
   const [hardDeletingId, setHardDeletingId] = useState(null);
   const [confirmHardDeleteOrder, setConfirmHardDeleteOrder] = useState(null);
 
+  // Auto-Sync NOC / Courier Status on Page Load (guarded with ref to run once per session/mount)
+  useEffect(() => {
+    if (hasAutoSyncedRef.current) return;
+    hasAutoSyncedRef.current = true;
+
+    const activeOrders = (initialOrders || []).filter(
+      (o) => o.nocParcelNo || o.trackingNumber || o.nocThirdPartyNo || ['Shipped', 'Out For Delivery', 'In Process', 'Packed', 'Delivered'].includes(normalizeOrderStatus(o.status))
+    );
+    if (activeOrders.length === 0) {
+      toast.info('Already up to date - No new status changes found.');
+      return;
+    }
+
+    const ids = activeOrders.map((o) => o._id || o.orderId).filter(Boolean);
+    if (ids.length === 0) {
+      toast.info('Already up to date - No new status changes found.');
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/courier/sync-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderIds: ids }),
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.results)) {
+          const resultMap = new Map();
+          data.results.forEach((r) => {
+            if (r.nocStatus) {
+              resultMap.set(String(r._id), r);
+              if (r.orderId) resultMap.set(String(r.orderId), r);
+            }
+          });
+
+          setOrders((prev) =>
+            prev.map((o) => {
+              const found = resultMap.get(String(o._id)) || (o.orderId ? resultMap.get(String(o.orderId)) : null);
+              if (found) {
+                return {
+                  ...o,
+                  courierName: found.courierName || o.courierName,
+                  nocParcelNo: found.nocParcelNo || o.nocParcelNo,
+                  nocThirdPartyNo: found.nocThirdPartyNo !== undefined ? found.nocThirdPartyNo : o.nocThirdPartyNo,
+                  nocStatus: found.nocStatus,
+                  nocStatusTime: found.nocStatusTime,
+                  nocRemarks: found.nocRemarks,
+                  nocLastTrackedAt: found.nocLastTrackedAt,
+                };
+              }
+              return o;
+            })
+          );
+
+          if (data.changedCount > 0) {
+            toast.success(`Updated ${data.changedCount} order status${data.changedCount === 1 ? '' : 'es'} successfully.`);
+            router.refresh();
+          } else {
+            toast.info('Already up to date - No new status changes found.');
+          }
+        }
+      } catch (err) {
+        console.warn('Auto-sync NOC status on load:', err);
+      }
+    })();
+  }, [initialOrders, router]);
+
+  // Bulk Move to Trash Handler
+  const handleConfirmBulkDelete = async () => {
+    if (selectedOrders.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const res = await bulkDeleteOrdersAction(selectedOrders);
+      if (res.success) {
+        const deletedSet = new Set(res.deletedIds || selectedOrders.map(String));
+        const deletedObjs = orders.filter((o) => deletedSet.has(String(o._id)) || deletedSet.has(String(o.orderId)));
+        
+        setOrders((prev) => prev.filter((o) => !deletedSet.has(String(o._id)) && !deletedSet.has(String(o.orderId))));
+        setTrashOrders((prev) => [
+          ...deletedObjs.map((o) => ({
+            _id: o._id,
+            orderId: o.orderId,
+            customerName: o.customerName,
+            customerPhone: o.customerPhone || '',
+            totalAmount: o.totalAmount || 0,
+            isDraft: o.isDraft === true,
+            deletedAt: new Date().toISOString(),
+            createdAt: o.createdAt || new Date().toISOString(),
+          })),
+          ...prev,
+        ]);
+        setSelectedOrders([]);
+        setBulkDeleteConfirmOpen(false);
+        toast.success(res.message || `Moved ${deletedObjs.length || selectedOrders.length} order(s) to Trash.`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Failed to move selected orders to Trash.');
+      }
+    } catch (err) {
+      console.error('Bulk trash error:', err);
+      toast.error('Failed to move selected orders to Trash.');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   // Auto-open create modal if navigated from admin home with ?createOrder=1
   useEffect(() => {
     if (initialCreateOrder) {
@@ -556,9 +682,10 @@ export default function AdminOrdersClient({
   useEffect(() => {
     setSearchQuery(initialSearchQuery);
     setStatusFilter(initialStatusFilter);
+    setPaymentFilter(initialPaymentFilter);
     setStartDate(initialStartDate);
     setEndDate(initialEndDate);
-  }, [initialSearchQuery, initialStatusFilter, initialStartDate, initialEndDate]);
+  }, [initialSearchQuery, initialStatusFilter, initialPaymentFilter, initialStartDate, initialEndDate]);
 
   const [catalog, setCatalog] = useState(productCatalog || []);
   const catalogFetchedRef = useRef(false);
@@ -647,7 +774,20 @@ export default function AdminOrdersClient({
   const displayOrders = orders;
 
   function navigate(updates) {
-    const href = buildHref(pathname, searchParams, updates);
+    const isExplicitAllDates = updates.allDates === '1' || updates.startDate === 'all';
+    const cleanUpdates = { ...updates };
+    if (updates.startDate || updates.endDate) {
+      cleanUpdates.allDates = null;
+    }
+    if (isExplicitAllDates) {
+      cleanUpdates.startDate = null;
+      cleanUpdates.endDate = null;
+      cleanUpdates.allDates = '1';
+    }
+    const href = buildHref(pathname, searchParams, {
+      ...cleanUpdates,
+      paymentFilter: cleanUpdates.status && cleanUpdates.status !== 'Delivered' ? null : (cleanUpdates.paymentFilter !== undefined ? cleanUpdates.paymentFilter : (statusFilter === 'Delivered' ? paymentFilter : null)),
+    });
     startNavTransition(() => {
       router.push(href);
     });
@@ -658,7 +798,7 @@ export default function AdminOrdersClient({
     setStatusFilter(DEFAULT_ORDER_STATUS);
     setStartDate('');
     setEndDate('');
-    navigate({ search: null, status: null, startDate: null, endDate: null, page: null });
+    navigate({ search: null, status: null, startDate: null, endDate: null, allDates: '1', page: null });
   };
 
   const handleQuickDateFilter = (value) => {
@@ -668,6 +808,19 @@ export default function AdminOrdersClient({
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     
+    if (value === 'all') {
+      setStartDate('');
+      setEndDate('');
+      navigate({
+        search: searchQuery.trim() || null,
+        startDate: null,
+        endDate: null,
+        allDates: '1',
+        page: null,
+      });
+      return;
+    }
+
     if (value === 'today') {
       newStart = todayStr;
       newEnd = todayStr;
@@ -712,6 +865,7 @@ export default function AdminOrdersClient({
       search: searchQuery.trim() || null,
       startDate: newStart || null,
       endDate: newEnd || null,
+      allDates: null,
       page: null,
     });
   };
@@ -1697,147 +1851,190 @@ export default function AdminOrdersClient({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground md:text-xl">Orders</h2>
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between gap-2.5">
+        <h2 className="text-xl font-bold tracking-tight text-foreground md:text-xl">Orders</h2>
         <div className="flex items-center gap-2">
           <Link href="/admin/invoices">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs text-foreground hover:bg-muted"
+              className="h-8 gap-1.5 px-2.5 text-xs text-foreground hover:bg-muted"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              Invoices Management
+              <FileSpreadsheet className="size-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Invoices Management</span>
+              <span className="sm:hidden">Invoices</span>
             </Button>
           </Link>
           <Button
             type="button"
             size="sm"
             onClick={() => setIsCreateModalOpen(true)}
-            className="admin-cta-button rounded-md"
+            className="admin-cta-button rounded-md h-8 px-3 text-xs gap-1.5 font-semibold"
           >
-            <Plus data-icon="inline-start" />
-            Create Order
+            <Plus className="size-3.5" />
+            <span>Create Order</span>
           </Button>
         </div>
       </div>
 
       {/* Status Filter Tabs / Select (Responsive) */}
-      <div className="hidden md:flex flex-wrap items-center gap-1.5 border-b border-border pb-3">
-        {[
-          { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
-          { id: DEFAULT_ORDER_STATUS, label: `Order Confirmed (${summary.orderConfirmedCount})` },
-          { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
-          { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
-          { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
-          { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
-          { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
-          { id: 'Returned', label: `Returned (${summary.returnedCount})` },
-          { id: 'all', label: `All (${summary.allCount})` },
-        ].map((tab) => (
+      <div className="hidden md:flex flex-col gap-2 border-b border-border pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: 'all', label: 'All' },
+            { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
+            { id: 'Order Confirmed', label: `Order Confirmed (${summary.orderConfirmedCount})` },
+            { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
+            { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
+            { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
+            { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
+            { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
+            { id: 'Returned', label: `Returned (${summary.returnedCount})` },
+          ].map((tab) => (
+            <Button
+              key={tab.id}
+              variant={statusFilter === tab.id ? "default" : "ghost"}
+              size="sm"
+              disabled={isPending}
+              onClick={() => {
+                setStatusFilter(tab.id);
+                navigate({ status: tab.id, page: null });
+              }}
+              className={cn(
+                "h-8.5 rounded-lg px-3.5 text-xs font-semibold transition-all md:h-8.5 md:text-[12.5px] cursor-pointer",
+                statusFilter === tab.id
+                  ? "shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+              )}
+            >
+              {isPending && statusFilter === tab.id ? <Spinner data-icon="inline-start" className="size-3.5" /> : null}
+              {tab.label}
+            </Button>
+          ))}
+          {/* Trash tab — separated with a divider */}
+          <div className="mx-1 h-5 w-px bg-border" />
           <Button
-            key={tab.id}
-            variant={statusFilter === tab.id ? "default" : "ghost"}
+            variant={statusFilter === TRASH_TAB_ID ? 'destructive' : 'ghost'}
             size="sm"
             disabled={isPending}
             onClick={() => {
-              setStatusFilter(tab.id);
-              navigate({ status: tab.id, page: null });
+              setStatusFilter(TRASH_TAB_ID);
+              navigate({ status: TRASH_TAB_ID, page: null });
             }}
             className={cn(
-              "h-7 rounded-md px-2.5 text-[11px] font-medium transition-colors md:h-7",
-              statusFilter === tab.id
-                ? "shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              'h-8.5 rounded-lg px-3.5 text-xs font-semibold transition-all md:h-8.5 md:text-[12.5px] cursor-pointer',
+              statusFilter !== TRASH_TAB_ID && 'text-destructive/70 hover:text-destructive hover:bg-destructive/10'
             )}
           >
-            {isPending && statusFilter === tab.id ? <Spinner data-icon="inline-start" className="size-3" /> : null}
-            {tab.label}
+            <Trash2 className="mr-1.5 size-3.5" />
+            Trash ({summary.trashCount || trashOrders.length})
           </Button>
-        ))}
-        {/* Trash tab — separated with a divider */}
-        <div className="mx-1 h-4 w-px bg-border/60" />
-        <Button
-          variant={statusFilter === TRASH_TAB_ID ? 'destructive' : 'ghost'}
-          size="sm"
-          disabled={isPending}
-          onClick={() => {
-            setStatusFilter(TRASH_TAB_ID);
-            navigate({ status: TRASH_TAB_ID, page: null });
-          }}
-          className={cn(
-            'h-7 rounded-md px-2.5 text-[11px] font-medium transition-colors md:h-7',
-            statusFilter !== TRASH_TAB_ID && 'text-destructive/70 hover:text-destructive'
-          )}
-        >
-          <Trash2 className="mr-1 size-3" />
-          Trash ({summary.trashCount || trashOrders.length})
-        </Button>
+        </div>
+
+        {/* Delivered Lifecycle Sub-Tabs: Pending Remittance vs Paid vs All */}
+        {statusFilter === 'Delivered' && (
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="text-[11px] font-semibold text-muted-foreground mr-1">Payment Status:</span>
+            {[
+              { id: 'pending', label: `Pending Remittance (${summary.deliveredPendingCount ?? Math.max(0, summary.deliveredCount - (summary.deliveredPaidCount || 0))})` },
+              { id: 'paid', label: `Paid Orders (${summary.deliveredPaidCount || 0})` },
+              { id: 'all', label: `All Delivered (${summary.deliveredCount || 0})` },
+            ].map((subTab) => {
+              const isActive = (paymentFilter || 'all') === subTab.id;
+              return (
+                <Button
+                  key={subTab.id}
+                  type="button"
+                  size="sm"
+                  variant={isActive ? 'secondary' : 'ghost'}
+                  disabled={isPending}
+                  onClick={() => {
+                    setPaymentFilter(subTab.id);
+                    navigate({ status: 'Delivered', paymentFilter: subTab.id, page: null });
+                  }}
+                  className={cn(
+                    'h-6.5 text-[11px] px-2.5 rounded-full font-medium transition-all',
+                    isActive
+                      ? 'bg-muted font-bold text-foreground border border-border/80 shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {subTab.label}
+                </Button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Mobile Status + Move Row */}
-      <div className="md:hidden flex flex-row items-center gap-2">
-        <Select
-          value={statusFilter}
-          disabled={isPending}
-          onValueChange={(val) => {
-            setStatusFilter(val);
-            navigate({ status: val, page: null });
-          }}
-        >
-          <SelectTrigger className="flex-1 h-8 rounded-lg bg-background border-border/70 text-[12px] shadow-none">
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            {[
-              { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
-              { id: DEFAULT_ORDER_STATUS, label: `Order Confirmed (${summary.orderConfirmedCount})` },
-              { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
-              { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
-              { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
-              { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
-              { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
-              { id: 'Returned', label: `Returned (${summary.returnedCount})` },
-              { id: 'all', label: `All (${summary.allCount})` },
-              { id: TRASH_TAB_ID, label: `Trash (${summary.trashCount || trashOrders.length})` },
-            ].map((tab) => (
-              <SelectItem key={tab.id} value={tab.id} className="text-[13px]">
-                {tab.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={bulkStatus} onValueChange={setBulkStatus}>
-          <SelectTrigger
-            disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
-            className="h-8 w-[120px] shrink-0 rounded-lg text-[11px]"
+      {/* Mobile Status Row */}
+      <div className="md:hidden flex flex-col gap-2">
+        <div className="flex flex-row items-center gap-2">
+          <Select
+            value={statusFilter}
+            disabled={isPending}
+            onValueChange={(val) => {
+              setStatusFilter(val);
+              navigate({ status: val, page: null });
+            }}
           >
-            <SelectValue placeholder="Move to..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {BULK_STATUS_OPTIONS.map((status) => (
-                <SelectItem key={status} value={status} className="text-[12px]">
-                  {status}
+            <SelectTrigger className="w-full h-9 rounded-xl bg-background border-border text-xs font-semibold shadow-none">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                { id: 'all', label: 'All' },
+                { id: DRAFT_TAB_ID, label: `Draft (${summary.draftCount || 0})` },
+                { id: 'Order Confirmed', label: `Order Confirmed (${summary.orderConfirmedCount})` },
+                { id: 'In Process', label: `In Process (${summary.inProcessCount})` },
+                { id: 'Packed', label: `Packed (${summary.packedCount || 0})` },
+                { id: 'Shipped', label: `Shipped (${summary.shippedCount || 0})` },
+                { id: 'Out For Delivery', label: `Out For Delivery (${summary.outForDeliveryCount || 0})` },
+                { id: 'Delivered', label: `Delivered (${summary.deliveredCount})` },
+                { id: 'Returned', label: `Returned (${summary.returnedCount})` },
+                { id: TRASH_TAB_ID, label: `Trash (${summary.trashCount || trashOrders.length})` },
+              ].map((tab) => (
+                <SelectItem key={tab.id} value={tab.id} className="text-xs">
+                  {tab.label}
                 </SelectItem>
               ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
-          disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
-          className="admin-cta-button h-8 text-[11px] shrink-0 px-2"
-        >
-          {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
-          Move
-        </Button>
+        {/* Mobile Delivered Sub-Tabs */}
+        {statusFilter === 'Delivered' && (
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            {[
+              { id: 'pending', label: `Pending Remittance (${summary.deliveredPendingCount ?? Math.max(0, summary.deliveredCount - (summary.deliveredPaidCount || 0))})` },
+              { id: 'paid', label: `Paid (${summary.deliveredPaidCount || 0})` },
+              { id: 'all', label: `All (${summary.deliveredCount || 0})` },
+            ].map((subTab) => {
+              const isActive = (paymentFilter || 'all') === subTab.id;
+              return (
+                <Button
+                  key={subTab.id}
+                  type="button"
+                  size="sm"
+                  variant={isActive ? 'secondary' : 'ghost'}
+                  disabled={isPending}
+                  onClick={() => {
+                    setPaymentFilter(subTab.id);
+                    navigate({ status: 'Delivered', paymentFilter: subTab.id, page: null });
+                  }}
+                  className={cn(
+                    'h-6.5 text-[11px] px-2.5 rounded-full font-medium shrink-0',
+                    isActive ? 'bg-muted font-bold text-foreground border border-border' : 'text-muted-foreground'
+                  )}
+                >
+                  {subTab.label}
+                </Button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Trash Panel ── */}
@@ -1961,368 +2158,443 @@ export default function AdminOrdersClient({
               Empty Trash?
             </DialogTitle>
             <DialogDescription className="text-[13px]">
-              This will permanently delete all {trashOrders.length} order{trashOrders.length === 1 ? '' : 's'} in the trash. This action cannot be undone.
+              Are you sure you want to permanently delete all <strong>{trashOrders.length}</strong> orders in the trash? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-1.5 sm:gap-0">
             <Button variant="ghost" size="sm" onClick={() => setEmptyTrashConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" size="sm" disabled={isEmptyingTrash} onClick={handleEmptyTrash} className="min-w-[100px]">
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={isEmptyingTrash}
+              onClick={handleEmptyTrash}
+              className="min-w-[120px]"
+            >
               {isEmptyingTrash ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
-              {isEmptyingTrash ? 'Emptying...' : 'Empty Trash'}
+              {isEmptyingTrash ? 'Deleting...' : 'Empty Trash'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Filters & Actions Bar */}
-      <div className="admin-filter-shell flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
-        <form
-          className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2 flex-1 min-w-0"
-          onSubmit={(event) => {
-          event.preventDefault();
-          navigate({
-            search: searchQuery.trim() || null,
-            startDate: startDate || null,
-            endDate: endDate || null,
-            page: null,
-          });
-        }}
-      >
-        <div className="flex flex-row gap-2 items-center flex-1 min-w-0">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" type="button" className="h-8 w-8 shrink-0 rounded-lg border-border/70 bg-background shadow-none relative">
-                <Calendar className="size-3.5 text-muted-foreground" />
-                {(startDate || endDate) && <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-auto p-4 rounded-xl shadow-lg border-border/70">
-              <div className="flex flex-col gap-3">
-                <p className="text-[13px] font-medium text-foreground">Filter by Date</p>
-                <div className="flex items-center gap-2">
-                  <Field>
-                    <FieldLabel htmlFor="orders-start-date" className="sr-only">From date</FieldLabel>
-                    <Input
-                      id="orders-start-date"
-                      type="date"
-                      className="h-8 min-w-[120px] text-[12px]"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                  </Field>
-                  <span className="text-[11px] text-muted-foreground">to</span>
-                  <Field>
-                    <FieldLabel htmlFor="orders-end-date" className="sr-only">To date</FieldLabel>
-                    <Input
-                      id="orders-end-date"
-                      type="date"
-                      className="h-8 min-w-[120px] text-[12px]"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </Field>
-                </div>
-                <div className="flex justify-end pt-1">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-7 px-4 text-[11px] bg-black text-white hover:bg-black/90 rounded-md"
-                  >
-                    Search
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Select value={getQuickDateValue()} onValueChange={handleQuickDateFilter}>
-            <SelectTrigger className="h-8 w-[130px] rounded-lg border-border/70 bg-background text-[12px] shadow-none shrink-0">
-              <SelectValue placeholder="Date Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="thisWeek">This Week</SelectItem>
-              <SelectItem value="lastWeek">Last Week</SelectItem>
-              <SelectItem value="thisMonth">This Month</SelectItem>
-              <SelectItem value="lastMonth">Last Month</SelectItem>
-              <SelectItem value="year2026">Year 2026</SelectItem>
-              <SelectItem value="year2025">Year 2025</SelectItem>
-              <SelectItem value="custom" className="hidden">Custom Range</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Field className="flex-1 min-w-0 md:max-w-sm">
-            <FieldLabel className="sr-only">Search orders</FieldLabel>
-            <div className="relative flex items-center">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" data-icon />
-              <Input
-                placeholder="Search orders"
-                className="h-8 rounded-lg border-border/70 bg-background pl-9 pr-[64px] text-[12px] shadow-none w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                {!isFilterModified && hasAppliedFilters ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={!canApplyFilters}
-                    className="h-6 px-2 text-[10px] bg-black text-white hover:bg-black/90 rounded-md"
-                  >
-                    Search
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Field>
-        </div>
-      </form>
-
-      <div className="flex flex-row flex-wrap items-center gap-2 border-t border-border/50 pt-2 md:border-0 md:pt-0 shrink-0">
-        {statusFilter === DEFAULT_ORDER_STATUS ? (
-          <div className="flex flex-row flex-wrap items-center gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="h-7 px-3 text-[11px] bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-md font-medium shadow-sm"
-            >
-              {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-              {pendingWorkflowAction === 'sourcing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
+      {/* Bulk Move to Trash Confirm Dialog */}
+      <Dialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive text-sm font-bold">
+              <AlertTriangle className="size-4" />
+              Move {selectedOrders.length} Order(s) to Trash?
+            </DialogTitle>
+            <DialogDescription className="text-[13px] pt-1 text-muted-foreground">
+              Are you sure you want to move the <strong className="text-foreground">{selectedOrders.length}</strong> selected order(s) to Trash? You can restore them anytime within 50 days from the Trash tab.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-1.5 sm:gap-0 pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setBulkDeleteConfirmOpen(false)}>
+              Cancel
             </Button>
             <Button
-              type="button"
+              variant="destructive"
               size="sm"
-              variant="outline"
-              onClick={() => handlePrintSourcingSlip({ moveToNextStep: false })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px]"
+              disabled={isBulkDeleting}
+              onClick={handleConfirmBulkDelete}
+              className="min-w-[120px]"
             >
-              {pendingWorkflowAction === 'sourcing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-              {pendingWorkflowAction === 'sourcing-print' ? 'Opening...' : 'Print'}
+              {isBulkDeleting ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+              {isBulkDeleting ? 'Moving...' : `Move ${selectedOrders.length} to Trash`}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Filter Bar & Actions ── */}
+      {selectedOrders.length > 0 ? (
+        /* Floating / Selected Mode Action Bar */
+        <div className="admin-filter-shell flex flex-wrap items-center justify-between gap-2.5 w-full bg-primary/5 border border-primary/20 rounded-xl px-3 py-2 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="font-semibold text-xs px-2.5 py-0.5">
+              {selectedOrders.length} selected
+            </Badge>
             <Button
               type="button"
+              variant="ghost"
               size="sm"
-              variant="outline"
-              onClick={() => handleGenerateSourcingSlip({ moveToNextStep: false })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px] hidden sm:flex"
+              onClick={() => setSelectedOrders([])}
+              className="h-7 text-xs text-muted-foreground hover:text-foreground px-2"
             >
-              {pendingWorkflowAction === 'sourcing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-              {pendingWorkflowAction === 'sourcing-download' ? 'Generating...' : 'Download'}
+              Clear
             </Button>
           </div>
-        ) : null}
-        {statusFilter === 'In Process' ? (
-          <div className="flex flex-row flex-wrap items-center gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="h-7 px-3 text-[11px] bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-md font-medium shadow-sm"
-            >
-              {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-              {pendingWorkflowAction === 'packing-print-move' ? 'Opening...' : `Print & Move${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => handlePrintPackingSlip({ moveToNextStep: false })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px]"
-            >
-              {pendingWorkflowAction === 'packing-print' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
-              {pendingWorkflowAction === 'packing-print' ? 'Opening...' : 'Print'}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => handleGeneratePackingSlip({ moveToNextStep: false })}
-              disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-              className="admin-cta-button h-7 text-[11px] hidden sm:flex"
-            >
-              {pendingWorkflowAction === 'packing-download' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-              {pendingWorkflowAction === 'packing-download' ? 'Generating...' : 'Download'}
-            </Button>
-          </div>
-        ) : null}
 
-        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setNocBookingOpen(true)}
-            disabled={selectedOrders.length === 0 || isBookingNoc}
-            className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5"
-          >
-            <Truck className="size-3.5" />
-            Send to NOC Express{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
-          </Button>
-        ) : null}
-
-        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || statusFilter === 'Shipped') ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={handlePrintSelectedNocSlips}
-            disabled={selectedOrders.length === 0}
-            className="h-7 px-3 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5"
-          >
-            <Printer className="size-3.5" />
-            Print Slips{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
-          </Button>
-        ) : null}
-
-        {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery' || statusFilter === 'Out For Delivery' || statusFilter === 'Returned') ? (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                const targetOrders = selectedOrders.length > 0
-                  ? selectedOrders
-                  : displayOrders
-                      .filter((o) => o.nocParcelNo || o.trackingNumber || o.nocThirdPartyNo)
-                      .map((o) => o._id);
-                if (targetOrders.length === 0) {
-                  toast.error('No orders with tracking numbers found to sync.');
-                  return;
-                }
-                handleSyncNocStatus(targetOrders);
-              }}
-              disabled={isBulkSyncingNoc}
-              className="h-7 px-3 text-[11px] bg-sky-600 hover:bg-sky-700 text-white rounded-md font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
-            >
-              {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
-              {isBulkSyncingNoc ? 'Syncing...' : `Sync NOC Status${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-            </Button>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsSyncSheetModalOpen(true)}
-              className="h-7 px-2.5 text-[11px] font-medium flex items-center gap-1.5 cursor-pointer rounded-md border border-border bg-card hover:bg-muted text-foreground shadow-2xs transition-colors"
-              title="Upload NOC Excel file to auto-sync 3rd Party CNs and Courier Partners"
-            >
-              <Upload className="size-3.5 text-muted-foreground" />
-              Sync NOC Sheet
-            </Button>
-          </>
-        ) : null}
-
-        {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleGenerateCourierSheet}
-            disabled={selectedOrders.length === 0 || pendingWorkflowAction !== '' || isBulkUpdating}
-            className="h-7 px-3 text-[11px] bg-green-200 text-green-900 hover:bg-green-300 rounded-md font-medium shadow-sm hidden md:flex"
-          >
-            {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
-            {pendingWorkflowAction === 'courier' ? 'Generating...' : `Courier Sheet${selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}`}
-          </Button>
-        ) : null}
-
-        {statusFilter === 'all' ? (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="admin-cta-button h-7 text-[11px]">
-                <Zap data-icon="inline-start" />
-                Reports
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2" align="end">
-              <div className="flex flex-col gap-1.5">
-                <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Sales</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium"
-                  onClick={() => handleExportMonthlySales('excel')}
-                >
-                  <Download data-icon="inline-start" />
-                  Excel (.xlsx)
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 justify-start gap-1.5 text-[12px] font-medium text-destructive hover:text-destructive"
-                  onClick={() => handleExportMonthlySales('pdf')}
-                >
-                  <Download data-icon="inline-start" />
-                  PDF (.pdf)
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        ) : null}
-
-        <div className="ml-auto hidden md:flex flex-row items-center gap-1.5">
-          <Select value={bulkStatus} onValueChange={setBulkStatus}>
-            <SelectTrigger
-              disabled={selectedOrders.length === 0 || isBulkUpdating || pendingWorkflowAction !== ''}
-              className="h-7 w-[180px] rounded-lg text-[11px]"
-            >
-              <SelectValue placeholder="Move to..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status Selector Dropdown */}
+            <Select value={bulkStatus} onValueChange={setBulkStatus}>
+              <SelectTrigger className="h-7.5 w-[140px] text-xs bg-background rounded-lg border-border/80">
+                <SelectValue placeholder="Move to status" />
+              </SelectTrigger>
+              <SelectContent>
                 {BULK_STATUS_OPTIONS.map((status) => (
-                  <SelectItem key={status} value={status} className="text-[12px]">
+                  <SelectItem key={status} value={status} className="text-xs">
                     {status}
                   </SelectItem>
                 ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              </SelectContent>
+            </Select>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
-            disabled={selectedOrders.length === 0 || !bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
-            className="admin-cta-button h-7 text-[11px] shrink-0"
-          >
-            {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
-            <span className="hidden sm:inline">Move{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}</span>
-            <span className="sm:hidden">Move</span>
-          </Button>
+            {/* Apply Status Button */}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => moveSelectedOrdersToStatus(bulkStatus)}
+              disabled={!bulkStatus || isBulkUpdating || pendingWorkflowAction !== ''}
+              className="h-7.5 px-2.5 text-xs font-medium"
+            >
+              {isBulkUpdating ? <Spinner data-icon="inline-start" /> : <PackageCheck data-icon="inline-start" />}
+              Move
+            </Button>
+
+            {/* Contextual Workflow Action Buttons for Selected Orders */}
+            {statusFilter === 'Order Confirmed' && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => handlePrintSourcingSlip({ moveToNextStep: true })}
+                disabled={pendingWorkflowAction !== '' || isBulkUpdating}
+                className="h-7.5 px-2.5 text-xs bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-lg font-medium shadow-xs"
+              >
+                {pendingWorkflowAction === 'sourcing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+                Print & Move
+              </Button>
+            )}
+
+            {statusFilter === 'In Process' && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => handlePrintPackingSlip({ moveToNextStep: true })}
+                disabled={pendingWorkflowAction !== '' || isBulkUpdating}
+                className="h-7.5 px-2.5 text-xs bg-yellow-200 text-yellow-900 hover:bg-yellow-300 rounded-lg font-medium shadow-xs"
+              >
+                {pendingWorkflowAction === 'packing-print-move' ? <Spinner data-icon="inline-start" /> : <Printer data-icon="inline-start" />}
+                Print & Move
+              </Button>
+            )}
+
+            {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || statusFilter === 'all') && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateCourierSheet}
+                disabled={pendingWorkflowAction !== '' || isBulkUpdating}
+                className="h-7.5 px-2.5 text-xs font-medium gap-1.5 rounded-lg shadow-xs cursor-pointer"
+              >
+                {pendingWorkflowAction === 'courier' ? <Spinner data-icon="inline-start" className="size-3" /> : <Download className="size-3.5" />}
+                Courier Sheet
+              </Button>
+            )}
+
+            {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID) && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setNocBookingOpen(true)}
+                disabled={isBookingNoc}
+                className="h-7.5 px-2.5 text-xs bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold shadow-xs"
+              >
+                <Truck className="size-3.5 mr-1" />
+                Send to NOC
+              </Button>
+            )}
+
+            {(statusFilter === 'Packed' || statusFilter === DRAFT_TAB_ID || statusFilter === 'Shipped') && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handlePrintSelectedNocSlips}
+                className="h-7.5 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-xs"
+              >
+                <Printer className="size-3.5 mr-1" />
+                Print Slips
+              </Button>
+            )}
+
+            {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery' || statusFilter === 'Out For Delivery' || statusFilter === 'Returned') && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => handleSyncNocStatus(selectedOrders)}
+                disabled={isBulkSyncingNoc}
+                className="h-7.5 px-2.5 text-xs bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold shadow-xs flex items-center gap-1 cursor-pointer"
+              >
+                {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
+                Sync NOC Status
+              </Button>
+            )}
+
+            {/* Delete / Move to Trash Button */}
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteConfirmOpen(true)}
+              disabled={isBulkDeleting || isBulkUpdating || pendingWorkflowAction !== ''}
+              className="h-7.5 px-2.5 text-xs gap-1.5 rounded-lg shadow-xs cursor-pointer"
+            >
+              {isBulkDeleting ? <Spinner data-icon="inline-start" className="size-3" /> : <Trash2 className="size-3.5" />}
+              Move to Trash
+            </Button>
+          </div>
         </div>
-      </div>
-      </div>
+      ) : (
+        /* Standard Filters & Actions Bar (Clean, Responsive Grid) */
+        <div className="admin-filter-shell flex flex-col gap-2.5 w-full md:flex-row md:items-center md:justify-between">
+          <form
+            className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2 flex-1 min-w-0"
+            onSubmit={(event) => {
+              event.preventDefault();
+              navigate({
+                search: searchQuery.trim() || null,
+                startDate: startDate || null,
+                endDate: endDate || null,
+                page: null,
+              });
+            }}
+          >
+            {/* Date Filters Row (Left side) */}
+            <div className="flex items-center gap-2">
+              <Select value={getQuickDateValue()} onValueChange={handleQuickDateFilter}>
+                <SelectTrigger className="h-8.5 flex-1 md:w-[130px] rounded-lg border-border bg-background text-xs shadow-none">
+                  <SelectValue placeholder="Date Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="thisWeek">This Week</SelectItem>
+                  <SelectItem value="lastWeek">Last Week</SelectItem>
+                  <SelectItem value="thisMonth">This Month</SelectItem>
+                  <SelectItem value="lastMonth">Last Month</SelectItem>
+                  <SelectItem value="year2026">Year 2026</SelectItem>
+                  <SelectItem value="year2025">Year 2025</SelectItem>
+                  <SelectItem value="custom" className="hidden">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Popover open={Boolean(isDatePopoverOpen)} onOpenChange={setIsDatePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" type="button" className="size-8.5 shrink-0 rounded-lg border-border bg-background shadow-none relative cursor-pointer" title="Custom Date Range">
+                    <Calendar className="size-3.5 text-muted-foreground" />
+                    {(startDate || endDate) && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" />}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto p-4 rounded-xl shadow-lg border-border">
+                  <div className="flex flex-col gap-3">
+                    <p className="text-xs font-semibold text-foreground">Filter by Custom Date Range</p>
+                    <div className="flex items-center gap-2">
+                      <Field>
+                        <FieldLabel htmlFor="orders-start-date" className="sr-only">From date</FieldLabel>
+                        <Input
+                          id="orders-start-date"
+                          type="date"
+                          className="h-8 min-w-[120px] text-xs"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                        />
+                      </Field>
+                      <span className="text-xs text-muted-foreground">to</span>
+                      <Field>
+                        <FieldLabel htmlFor="orders-end-date" className="sr-only">To date</FieldLabel>
+                        <Input
+                          id="orders-end-date"
+                          type="date"
+                          className="h-8 min-w-[120px] text-xs"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      {(startDate || endDate) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setStartDate('');
+                            setEndDate('');
+                            setIsDatePopoverOpen(false);
+                            navigate({
+                              search: searchQuery.trim() || null,
+                              startDate: null,
+                              endDate: null,
+                              allDates: '1',
+                              page: null,
+                            });
+                          }}
+                          className="h-7 px-2.5 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          setIsDatePopoverOpen(false);
+                          navigate({
+                            search: searchQuery.trim() || null,
+                            startDate: startDate || null,
+                            endDate: endDate || null,
+                            page: null,
+                          });
+                        }}
+                        className="h-7 px-4 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 rounded-md cursor-pointer"
+                      >
+                        Apply Date
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Search Input (Right side) */}
+            <Field className="w-full md:max-w-xs lg:max-w-sm">
+              <FieldLabel className="sr-only">Search orders</FieldLabel>
+              <div className="relative flex items-center w-full">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" data-icon />
+                <Input
+                  placeholder="Search order ID, customer, phone..."
+                  className="h-8.5 rounded-lg border-border bg-background pl-9 pr-[68px] text-xs shadow-none w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                  {initialSearchQuery && searchQuery === initialSearchQuery ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        setSearchQuery('');
+                        navigate({ search: null, page: null });
+                      }}
+                      className="h-6.5 px-2.5 text-[11px] font-bold bg-red-600 text-white hover:bg-red-700 rounded-md gap-1 shadow-xs cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="size-3" />
+                      Clear
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={!canApplyFilters}
+                      className="h-6.5 px-2.5 text-[10px] font-semibold bg-foreground text-background hover:bg-foreground/90 rounded-md cursor-pointer"
+                    >
+                      Search
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Field>
+          </form>
+
+          {/* Action Buttons Row (Sync NOC, Reports, etc.) */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/50 md:border-0 md:pt-0 shrink-0">
+            {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery' || statusFilter === 'Out For Delivery' || statusFilter === 'Returned') ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const targetOrders = displayOrders
+                      .filter((o) => o.nocParcelNo || o.trackingNumber || o.nocThirdPartyNo)
+                      .map((o) => o._id);
+                    if (targetOrders.length === 0) {
+                      toast.error('No orders with tracking numbers found to sync.');
+                      return;
+                    }
+                    handleSyncNocStatus(targetOrders);
+                  }}
+                  disabled={isBulkSyncingNoc}
+                  className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 cursor-pointer text-foreground hover:bg-muted"
+                >
+                  {isBulkSyncingNoc ? <Spinner data-icon="inline-start" className="size-3" /> : <RotateCcw className="size-3.5 text-muted-foreground" />}
+                  <span>{isBulkSyncingNoc ? 'Syncing...' : 'Sync NOC Status'}</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSyncSheetModalOpen(true)}
+                  className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 cursor-pointer text-foreground hover:bg-muted"
+                  title="Upload NOC Excel file to auto-sync 3rd Party CNs and Courier Partners"
+                >
+                  <Upload className="size-3.5 text-muted-foreground" />
+                  <span>Sync NOC Sheet</span>
+                </Button>
+              </>
+            ) : null}
+
+            {statusFilter === 'all' ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-medium rounded-lg flex items-center gap-1.5 text-foreground hover:bg-muted cursor-pointer">
+                    <Zap className="size-3.5 text-muted-foreground" />
+                    <span>Reports</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-52 p-1.5 rounded-xl shadow-lg border-border" align="end">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Courier Exports</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      className="gap-2 text-xs font-medium cursor-pointer"
+                      onClick={() => handleGenerateCourierSheet()}
+                    >
+                      <Download className="size-3.5" />
+                      Courier Sheet (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1" />
+                    <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Monthly Sales</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      className="gap-2 text-xs font-medium cursor-pointer"
+                      onClick={() => handleExportMonthlySales('excel')}
+                    >
+                      <Download className="size-3.5" />
+                      Excel (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2 text-xs font-medium text-destructive focus:text-destructive cursor-pointer"
+                      onClick={() => handleExportMonthlySales('pdf')}
+                    >
+                      <Download className="size-3.5" />
+                      PDF (.pdf)
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
+        </div>
+      )}
 
 
       {/* ── Desktop Table ── */}
-      {isPending ? <OrdersTablePendingSkeleton showNocColumns={showNocColumns} /> : (
+      {isPending ? <OrdersTablePendingSkeleton showNocColumns={showNocColumns} enableSecondaryNoc={enableSecondaryNoc} /> : (
       <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1240px] text-left">
+          <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-border bg-muted/40 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-border bg-muted/50 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
                     <th className="w-9 px-3 py-3 text-center">
                       <Checkbox 
                         checked={isAllPaginatedSelected} 
                         onCheckedChange={handleSelectAll} 
                         aria-label="Select all on page"
+                        className="size-4"
                       />
                     </th>
                     <th className="px-3 py-3 whitespace-nowrap">Order</th>
@@ -2334,17 +2606,17 @@ export default function AdminOrdersClient({
                     {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Courier</th>}
                     {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">NOC Status</th>}
                     {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Status Time</th>}
-                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Account</th>}
+                    {showNocColumns && enableSecondaryNoc && <th className="px-3 py-3 whitespace-nowrap">Account</th>}
                     <th className="px-3 py-3 text-right whitespace-nowrap">COD</th>
                     <th className="px-3 py-3 text-right whitespace-nowrap">Total</th>
                     <th className="px-3 py-3 text-center whitespace-nowrap">Status</th>
                     <th className="w-20 px-3 py-3 text-right whitespace-nowrap" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border text-[13px]">
                   {displayOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={showNocColumns ? 14 : 9} className="px-3 py-12 text-center">
+                      <td colSpan={showNocColumns ? (enableSecondaryNoc ? 14 : 13) : 9} className="px-4 py-14 text-center">
                         <div className="flex flex-col items-center justify-center">
                           <Image
                             src="/undraw_relaxing-outdoors_s653.svg"
@@ -2353,10 +2625,10 @@ export default function AdminOrdersClient({
                             height={120}
                             className="mb-3 h-auto w-36 object-contain opacity-90"
                           />
-                          <p className="text-sm font-medium text-foreground">No orders found</p>
-                          <p className="mt-0.5 text-[12px] text-muted-foreground">Try adjusting your search or filters.</p>
+                          <p className="text-base font-semibold text-foreground">No orders found</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">Try adjusting your search or filters.</p>
                           {hasActiveFilters && (
-                            <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3">
+                            <Button variant="outline" size="sm" onClick={clearFilters} className="admin-cta-button mt-3 rounded-md">
                               Clear all filters
                             </Button>
                           )}
@@ -2384,21 +2656,22 @@ export default function AdminOrdersClient({
                       })();
 
                       return (
-                        <tr key={order._id} className="transition-colors hover:bg-muted/25">
+                        <tr key={order._id} className="transition-colors hover:bg-muted/30">
                           <td className="w-9 px-3 py-2.5 text-center">
                             <Checkbox 
                               checked={selectedOrders.includes(order._id)} 
                               onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
                               aria-label={`Select order ${order.orderId}`}
+                              className="size-4"
                             />
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
-                              <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
+                              <Link href={`/admin/orders/${order._id}`} className="text-[13.5px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
                                 {order.orderId}
                               </Link>
                               {isNewOrder(order.createdAt) && (
-                                <span className="inline-flex items-center rounded bg-emerald-50 text-emerald-950 border border-emerald-300 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
+                                <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0">
                                   NEW
                                 </span>
                               )}
@@ -2406,28 +2679,28 @@ export default function AdminOrdersClient({
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
                             <div className="flex flex-col whitespace-nowrap">
-                              <span className="text-[13px] font-semibold text-foreground max-w-[150px] truncate">{order.customerName}</span>
-                              <span className="text-[12px] text-muted-foreground">{order.customerPhone}</span>
+                              <span className="text-[13.5px] font-semibold text-foreground max-w-[140px] truncate" title={order.customerName}>{order.customerName}</span>
+                              <span className="text-[12px] font-medium text-muted-foreground">{order.customerPhone}</span>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
-                            <span className="text-[13px] font-medium text-foreground whitespace-nowrap">
+                            <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
                               {order.customerCity || '—'}
                             </span>
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
                             <div className="flex flex-col whitespace-nowrap">
                               <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{formatDate(order.createdAt)}</span>
-                              <span className="text-[11px] text-muted-foreground whitespace-nowrap">{formatTime(order.createdAt)}</span>
+                              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">{formatTime(order.createdAt)}</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-[12px] font-medium text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
+                          <td className="px-3 py-2.5 text-[12.5px] font-semibold text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
 
                           {/* 1. Tracking Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
                             <td className="px-3 py-2.5 whitespace-nowrap">
                               {displayTracking ? (
-                                <span className="font-mono text-[12px] font-semibold text-foreground whitespace-nowrap" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                                <span className="font-mono text-[13px] font-bold text-foreground whitespace-nowrap" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
                                   {displayTracking}
                                 </span>
                               ) : (
@@ -2439,7 +2712,7 @@ export default function AdminOrdersClient({
                           {/* 2. Courier Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
                             <td className="px-3 py-2.5 whitespace-nowrap">
-                              <span className="text-[12px] font-medium text-foreground whitespace-nowrap">
+                              <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
                                 {courierToDisplay}
                               </span>
                             </td>
@@ -2453,7 +2726,7 @@ export default function AdminOrdersClient({
                                   type="button"
                                   onClick={() => setNocTrackingOrder(order)}
                                   title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
-                                  className="text-[12px] font-medium text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
+                                  className="text-[12.5px] font-semibold text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
                                 >
                                   {order.nocStatus || 'Booked'}
                                 </button>
@@ -2465,31 +2738,31 @@ export default function AdminOrdersClient({
 
                           {/* 4. Status Time Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2.5 text-[11px] tabular-nums text-muted-foreground whitespace-nowrap">
+                            <td className="px-3 py-2.5 text-[11.5px] tabular-nums font-mono text-muted-foreground whitespace-nowrap">
                               {statusTimeDisplay}
                             </td>
                           )}
 
-                          {/* 5. Account Name Column (Clean text, no tag) */}
-                          {showNocColumns && (
-                            <td className="px-3 py-2.5 text-[12px] text-foreground font-medium whitespace-nowrap">
+                          {/* 5. Account Name Column (Clean text, conditional on enableSecondaryNoc) */}
+                          {showNocColumns && enableSecondaryNoc && (
+                            <td className="px-3 py-2.5 text-[12.5px] text-foreground font-medium whitespace-nowrap">
                               {order.nocAccountId === 'portal_2' ? 'Aam Samaan' : (order.trackingNumber || order.nocParcelNo ? 'Unique Items' : '—')}
                             </td>
                           )}
 
                           {/* 6. COD Amount Column (Booked / Portal COD) */}
-                          <td className="px-3 py-2.5 text-right text-[13px] font-bold tabular-nums text-foreground whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-right text-[13.5px] font-bold tabular-nums text-foreground whitespace-nowrap">
                             {formatPrice(getCodAmount(order))}
                           </td>
 
                           {/* 7. Total Bill Column (Original Order Invoice Total) */}
-                          <td className="px-3 py-2.5 text-right text-[13px] tabular-nums text-muted-foreground whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-right text-[13px] font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
                             {formatPrice(order.totalAmount)}
                           </td>
                           <td className="px-3 py-2.5 text-center whitespace-nowrap">
                             <Badge
                               variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                              className={cn('text-[11px] px-2 py-0.5 whitespace-nowrap font-semibold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                              className={cn('text-[11.5px] px-2.5 py-0.5 whitespace-nowrap font-bold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                             >
                               {getOrderDisplayStatus(order)}
                             </Badge>
@@ -2500,15 +2773,15 @@ export default function AdminOrdersClient({
                                 order={order}
                                 triggerLabel="View"
                                 triggerSize="sm"
-                                triggerClassName="h-7 px-2.5 text-[12px] rounded-md border border-border shadow-xs font-medium"
+                                triggerClassName="h-7 px-2.5 text-xs rounded-md border border-border shadow-xs font-semibold"
                               />
                               {(() => {
                                 const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned', 'Cancelled'].includes(normalizeOrderStatus(order.status));
                                 return (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground cursor-pointer">
-                                        <MoreHorizontal className="size-4" />
+                                      <Button variant="ghost" size="icon" className="size-6.5 text-muted-foreground cursor-pointer">
+                                        <MoreHorizontal className="size-3.5" />
                                         <span className="sr-only">Order actions</span>
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -2627,7 +2900,7 @@ export default function AdminOrdersClient({
                       <div className="flex items-center gap-1.5 min-w-0 mt-[1px]">
                         <p className="text-[13px] font-bold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
                         {isNewOrder(order.createdAt) && (
-                          <span className="inline-flex items-center rounded bg-emerald-50 text-emerald-950 border border-emerald-300 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0 leading-none shadow-2xs">
+                          <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0 leading-none">
                             NEW
                           </span>
                         )}
@@ -3538,47 +3811,56 @@ export default function AdminOrdersClient({
               Book Selected with NOC Express
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500">
-              Select NOC account to send {selectedOrders.length} selected order(s):
+              {enableSecondaryNoc ? `Select NOC account to send ${selectedOrders.length} selected order(s):` : `Book ${selectedOrders.length} selected order(s) via Main NOC Account:`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">
-                Select NOC Account
-              </span>
-              <div className="grid grid-cols-1 gap-2">
-                {NOC_PORTALS.map((portal) => {
-                  const isSelected = selectedNocPortal === portal.id;
-                  return (
-                    <button
-                      key={portal.id}
-                      type="button"
-                      onClick={() => setSelectedNocPortal(portal.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-sky-600 bg-sky-50 text-sky-900 ring-2 ring-sky-500/20 font-semibold'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-gray-300 bg-white'
-                        }`}>
-                          {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+            {enableSecondaryNoc ? (
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">
+                  Select NOC Account
+                </span>
+                <div className="grid grid-cols-1 gap-2">
+                  {NOC_PORTALS.map((portal) => {
+                    const isSelected = selectedNocPortal === portal.id;
+                    return (
+                      <button
+                        key={portal.id}
+                        type="button"
+                        onClick={() => setSelectedNocPortal(portal.id)}
+                        className={`flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-sky-600 bg-sky-50 text-sky-900 ring-2 ring-sky-500/20 font-semibold'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                            isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-gray-300 bg-white'
+                          }`}>
+                            {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+                          </div>
+                          <span className="text-sm font-medium">{portal.name}</span>
                         </div>
-                        <span className="text-sm font-medium">{portal.name}</span>
-                      </div>
-                      {isSelected && (
-                        <span className="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
-                          Selected
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        {isSelected && (
+                          <span className="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                            Selected
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-xs flex items-center justify-between">
+                <span className="font-semibold text-sky-900">Courier Account:</span>
+                <span className="font-bold text-sky-800 bg-white px-2.5 py-1 rounded-md border border-sky-300 text-[11px]">
+                  Unique Items (Main)
+                </span>
+              </div>
+            )}
 
             {/* Simple White Light Summary Box */}
             <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs flex items-center justify-between">

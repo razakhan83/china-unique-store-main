@@ -553,7 +553,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             </div>
           </header>
 
-          <main className="flex-1 px-2 py-2 pb-22 sm:px-3 md:px-4 md:py-4 md:pb-4 xl:px-6">
+          <main className="flex-1 px-2 py-2 pb-6 sm:px-3 sm:pb-6 md:px-4 md:py-4 md:pb-4 xl:px-6">
             <div className="w-full">{children}</div>
           </main>
         </div>
@@ -568,32 +568,6 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           {sidebar}
         </SheetContent>
       </Sheet>
-
-      <nav className="admin-mobile-nav fixed inset-x-0 bottom-0 z-40 md:hidden">
-        <div className="admin-mobile-nav__shell mx-auto grid max-w-xl grid-cols-4 items-center gap-1 border-t border-border/70 px-1 pb-2 pt-2">
-          {mobileBottomNavItems.map(({ href, label, icon: Icon, match }) => {
-            const active = match(pathname);
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'admin-touch-target flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 text-[0.65rem] font-semibold tracking-[0.01em] transition-[color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96]',
-                  active
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground active:text-primary'
-                )}
-              >
-                <span className={cn('flex items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]', active && 'scale-[1.06]')}>
-                  <Icon className="size-4" strokeWidth={2.6} />
-                </span>
-                <span className="truncate">{label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }

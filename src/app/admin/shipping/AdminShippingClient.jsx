@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Save, Truck, Info } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Loader2, Save, Truck, Info, PackageCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -9,8 +10,10 @@ import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 export default function AdminShippingClient({ initialSettings }) {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState(initialSettings);
@@ -37,7 +40,8 @@ export default function AdminShippingClient({ initialSettings }) {
       }
 
       setSaved(true);
-      toast.success('Shipping rates updated successfully.');
+      toast.success('Shipping and courier settings updated successfully.');
+      router.refresh();
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error('Failed to save shipping settings', error);
@@ -52,9 +56,44 @@ export default function AdminShippingClient({ initialSettings }) {
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-foreground">Shipping & Delivery</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure delivery charges for different regions and set free shipping rules.
+          Configure delivery charges, courier account integrations, and free shipping rules.
         </p>
       </div>
+
+      {/* Courier Accounts Configuration */}
+      <Card className="rounded-2xl shadow-sm border-border">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-sky-50 text-sky-700">
+              <PackageCheck className="size-5" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Courier & NOC Accounts</CardTitle>
+              <CardDescription>Manage courier portal accounts and multi-account booking options.</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 bg-card/60 hover:bg-muted/10 transition-colors">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">Enable Secondary NOC Account</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                  portal_2: Aam Samaan
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-xl">
+                When enabled, allows choosing between Primary (Unique Items) and Secondary (Aam Samaan) courier accounts when booking parcels and printing slips in Order Management. When disabled, defaults exclusively to the primary account.
+              </p>
+            </div>
+            <Switch
+              id="enableSecondaryNoc"
+              checked={!!form.enableSecondaryNoc}
+              onCheckedChange={(val) => handleChange('enableSecondaryNoc', val)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="rounded-2xl shadow-sm border-border">
         <CardHeader className="pb-4">
@@ -139,7 +178,7 @@ export default function AdminShippingClient({ initialSettings }) {
               ) : (
                 <Save data-icon="inline-start" />
               )}
-              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Shipping Rates'}
+              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Shipping Settings'}
             </Button>
           </div>
         </CardContent>

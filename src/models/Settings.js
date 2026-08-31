@@ -231,6 +231,10 @@ const SettingsSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        enableSecondaryNoc: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
@@ -253,7 +257,8 @@ if (
         !cachedSettings.schema.path('customPages') ||
         !cachedSettings.schema.path('guestModeEnabled') ||
         !cachedSettings.schema.path('bankDepositEnabled') ||
-        !cachedSettings.schema.path('bankDepositAccountDetails')
+        !cachedSettings.schema.path('bankDepositAccountDetails') ||
+        !cachedSettings.schema.path('enableSecondaryNoc')
     )
 ) {
     delete mongoose.models.Settings;
