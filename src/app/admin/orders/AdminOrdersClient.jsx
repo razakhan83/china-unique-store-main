@@ -57,7 +57,7 @@ import { getProductCategoryNames } from '@/lib/productCategories';
 import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { bulkDeleteOrdersAction, bulkUpdateOrderStatusAction, createDraftOrderAction, deleteOrderAction, emptyTrashAction, hardDeleteOrderAction, restoreOrderAction, updateOrderAction } from '@/app/actions';
-import { DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
+import { DEFAULT_ADMIN_FILTER_STATUS, DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
 import { toast } from 'sonner';
 
 const statusVariant = {
@@ -158,7 +158,7 @@ function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
 
   Object.entries(updates).forEach(([key, value]) => {
-    if (value === null || value === undefined || value === '' || (key === 'status' && value === DEFAULT_ORDER_STATUS) || (key === 'paymentFilter' && value === 'all')) {
+    if (value === null || value === undefined || value === '' || (key === 'status' && value === DEFAULT_ADMIN_FILTER_STATUS) || (key === 'paymentFilter' && value === 'all')) {
       params.delete(key);
     } else {
       params.set(key, String(value));
@@ -795,7 +795,7 @@ export default function AdminOrdersClient({
 
   const clearFilters = () => {
     setSearchQuery('');
-    setStatusFilter(DEFAULT_ORDER_STATUS);
+    setStatusFilter(DEFAULT_ADMIN_FILTER_STATUS);
     setStartDate('');
     setEndDate('');
     navigate({ search: null, status: null, startDate: null, endDate: null, allDates: '1', page: null });
@@ -1835,12 +1835,12 @@ export default function AdminOrdersClient({
     }
   };
 
-  const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ORDER_STATUS || startDate || endDate;
+  const hasActiveFilters = searchQuery || statusFilter !== DEFAULT_ADMIN_FILTER_STATUS || startDate || endDate;
   const canApplyFilters = Boolean(searchQuery.trim() || startDate || endDate);
   const isFilterModified = searchQuery !== (initialSearchQuery || '') || startDate !== (initialStartDate || '') || endDate !== (initialEndDate || '');
   const hasAppliedFilters = Boolean(initialSearchQuery || initialStartDate || initialEndDate);
   const appliedFilters = [
-    statusFilter !== DEFAULT_ORDER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter === TRASH_TAB_ID ? 'Trash' : statusFilter}` : null,
+    statusFilter !== DEFAULT_ADMIN_FILTER_STATUS ? `Status: ${statusFilter === 'all' ? 'All' : statusFilter === DRAFT_TAB_ID ? 'Draft' : statusFilter === TRASH_TAB_ID ? 'Trash' : statusFilter}` : null,
     initialSearchQuery ? `Search: ${initialSearchQuery}` : null,
     initialStartDate || initialEndDate
       ? `Date: ${initialStartDate || 'Any'} - ${initialEndDate || 'Any'}`

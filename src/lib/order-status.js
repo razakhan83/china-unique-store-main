@@ -8,7 +8,8 @@ export const ORDER_STATUSES = [
   'Returned',
 ];
 
-export const DEFAULT_ORDER_STATUS = 'all';
+export const DEFAULT_ORDER_STATUS = 'Order Confirmed';
+export const DEFAULT_ADMIN_FILTER_STATUS = 'all';
 
 export const LEGACY_ORDER_STATUS_MAP = {
   Pending: 'Order Confirmed',
@@ -106,6 +107,7 @@ export function mapNocStatusToStoreLifecycle(rawNocStatus) {
 export function normalizeOrderStatus(status) {
   const rawStatus = String(status || '').trim();
   if (!rawStatus) return DEFAULT_ORDER_STATUS;
+  if (rawStatus === 'all' || rawStatus === 'draft' || rawStatus === 'trash') return rawStatus;
   if (ORDER_STATUSES.includes(rawStatus)) return rawStatus;
   return LEGACY_ORDER_STATUS_MAP[rawStatus] || rawStatus;
 }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getAdminOrdersPage, getAdminTrashOrders, getStoreSettings } from '@/lib/data';
-import { DEFAULT_ORDER_STATUS } from '@/lib/order-status';
+import { DEFAULT_ADMIN_FILTER_STATUS, DEFAULT_ORDER_STATUS } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
 import AdminOrdersClient from './AdminOrdersClient';
 import AdminOrdersSkeleton from './AdminOrdersSkeleton';
@@ -10,7 +10,7 @@ export default async function AdminOrdersPage({ searchParams }) {
 
   const params = await searchParams;
   const search = String(params?.search || '').trim();
-  const status = String(params?.status || DEFAULT_ORDER_STATUS).trim() || DEFAULT_ORDER_STATUS;
+  const status = String(params?.status || DEFAULT_ADMIN_FILTER_STATUS).trim() || DEFAULT_ADMIN_FILTER_STATUS;
   const paymentFilter = String(params?.paymentFilter || 'all').trim();
   
   const isExplicitAllDates = params?.allDates === '1' || params?.startDate === 'all';
