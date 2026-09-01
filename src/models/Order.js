@@ -96,6 +96,12 @@ const OrderSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        orderType: {
+            type: String,
+            enum: ['Online', 'Admin'],
+            default: 'Online',
+            index: true,
+        },
         sourceTag: {
             type: String,
             default: '',
@@ -179,6 +185,14 @@ const OrderSchema = new mongoose.Schema(
             required: false,
             default: '',
         },
+        nocTrackingEvents: [
+            {
+                status: { type: String, required: true },
+                remarks: { type: String, default: '' },
+                dateTime: { type: String, default: '' },
+                timestamp: { type: Number, default: 0 },
+            }
+        ],
         nocLastTrackedAt: {
             type: Date,
             default: null,
@@ -230,6 +244,8 @@ OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ customerEmail: 1, createdAt: -1 });
 OrderSchema.index({ secureToken: 1 });
 OrderSchema.index({ trackingNumber: 1 });
+OrderSchema.index({ nocParcelNo: 1 });
+OrderSchema.index({ nocThirdPartyNo: 1 });
 OrderSchema.index({ status: 1, customerEmail: 1, 'items.productId': 1, createdAt: -1 });
 // TTL index: auto-purge trashed orders 50 days after deletion
 OrderSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 50 * 24 * 60 * 60, partialFilterExpression: { isDeleted: true } });
@@ -245,8 +261,9 @@ if (cachedOrder) {
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
     const hasNocFields = !!cachedOrder.schema.paths.nocLabelUrl;
     const hasNocAccountId = !!cachedOrder.schema.paths.nocAccountId;
+    const hasOrderType = !!cachedOrder.schema.paths.orderType;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasNocFields || !hasNocAccountId) {
+    if (!hasExpectedStatuses || !hasTracking || !hasNocFields || !hasNocAccountId || !hasOrderType) {
         delete mongoose.models.Order;
     }
 }

@@ -584,10 +584,10 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
                             <Button render={<Link href={`/orders/${order._id}`} />} nativeButton={false} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 px-6 shadow-sm font-semibold transition-all active:scale-[0.98] w-full sm:w-auto">
                               View your items
                             </Button>
-                            {order.trackingNumber ? (
+                            {(order.nocThirdPartyNo || order.nocParcelNo || order.trackingNumber) ? (
                               <Button 
                                 variant="outline" 
-                                className="h-11 px-6 rounded-xl border-sky-300 bg-sky-50/60 hover:bg-sky-100 text-sky-700 font-semibold shadow-sm transition-all active:scale-[0.98] w-full sm:w-auto flex items-center gap-2"
+                                className="h-11 px-6 rounded-xl border-sky-300 bg-sky-50/60 hover:bg-sky-100 text-sky-700 font-semibold shadow-sm transition-all active:scale-[0.98] w-full sm:w-auto flex items-center gap-2 cursor-pointer"
                                 onClick={() => setTrackingOrder(order)}
                               >
                                 <Truck className="size-4 text-sky-600" />
@@ -661,7 +661,7 @@ export default function OrdersClient({ initialOrders, invoiceBranding }) {
       <NocTrackingModal
         open={!!trackingOrder}
         onOpenChange={(open) => !open && setTrackingOrder(null)}
-        trackingNumber={trackingOrder?.trackingNumber}
+        trackingNumber={trackingOrder?.nocThirdPartyNo || trackingOrder?.nocParcelNo || trackingOrder?.trackingNumber}
         orderId={trackingOrder?.orderId}
         courierName={trackingOrder?.courierName || 'NOC Express'}
         nocLabelUrl={trackingOrder?.nocLabelUrl}

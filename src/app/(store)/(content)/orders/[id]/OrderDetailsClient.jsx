@@ -9,6 +9,7 @@ import NocTrackingModal from '@/components/NocTrackingModal';
 import ReviewModal from '@/components/ReviewModal';
 import { Button } from '@/components/ui/button';
 import { normalizeOrderStatus } from '@/lib/order-status';
+import { formatSmartTimeAgo, formatFullDateTime } from '@/lib/timeAgo';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -163,8 +164,11 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
                   <CardTitle className="text-lg md:text-xl break-all">Order #{currentOrder.orderId}</CardTitle>
                   <CopyButton text={currentOrder.orderId} className="size-6 text-muted-foreground shrink-0" />
                 </div>
-                <CardDescription className="text-xs sm:text-sm">
-                  Placed on {new Date(currentOrder.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                <CardDescription className="text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
+                  <span>Placed on {formatFullDateTime(currentOrder.createdAt)}</span>
+                  <span className="font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border text-xs">
+                    {formatSmartTimeAgo(currentOrder.createdAt)}
+                  </span>
                 </CardDescription>
               </div>
               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
@@ -269,39 +273,59 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {currentOrder.trackingNumber ? (
-                <>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Courier:</span>
-                    <span className="font-semibold text-foreground">{currentOrder.courierName || 'NOC Express'}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Tracking #:</span>
-                    <span className="font-mono font-bold text-sky-700">{currentOrder.trackingNumber}</span>
-                  </div>
-                  <Button
-                    onClick={() => setShowTrackingModal(true)}
-                    className="w-full bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-xl h-10 shadow-sm"
-                  >
-                    <Truck className="size-4 mr-2" />
-                    Track Package
-                  </Button>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Order is currently being prepared. Live tracking activates as soon as your parcel is dispatched.
-                  </p>
-                  <Button
-                    disabled
-                    variant="outline"
-                    className="w-full text-xs h-10 rounded-xl bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed font-medium"
-                  >
-                    <Truck className="size-4 mr-2" />
-                    Track Package (Preparing)
-                  </Button>
-                </div>
-              )}
+              {(() => {
+                const effectiveTracking = currentOrder.nocThirdPartyNo || currentOrder.nocParcelNo || currentOrder.trackingNumber;
+                if (!effectiveTracking) {
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Order is currently being prepared. Live tracking activates as soon as your parcel is dispatched.
+                      </p>
+                      <Button
+                        disabled
+                        variant="outline"
+                        className="w-full text-xs h-10 rounded-xl bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed font-medium"
+                      >
+                        <Truck className="size-4 mr-2" />
+                        Track Package (Preparing)
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Courier:</span>
+                      <span className="font-semibold text-foreground">{currentOrder.courierName || 'NOC Express'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Tracking #:</span>
+                      <span className="font-mono font-bold text-sky-700">{effectiveTracking}</span>
+                    </div>
+                    {currentOrder.nocStatus ? (
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-border/50">
+                        <span className="text-muted-foreground">Latest Update:</span>
+                        <span className="font-semibold text-foreground">
+                          {currentOrder.nocStatus}
+                          {currentOrder.nocStatusTime && (
+                            <span className="font-normal text-muted-foreground ml-1">
+                              ({formatSmartTimeAgo(currentOrder.nocStatusTime)})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ) : null}
+                    <Button
+                      onClick={() => setShowTrackingModal(true)}
+                      className="w-full bg-sky-600 hover:bg-sky-700 text-white font-medium rounded-xl h-10 shadow-sm cursor-pointer"
+                    >
+                      <Truck className="size-4 mr-2" />
+                      Track Package
+                    </Button>
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
 
@@ -366,7 +390,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
       <NocTrackingModal
         open={showTrackingModal}
         onOpenChange={setShowTrackingModal}
-        trackingNumber={currentOrder.trackingNumber}
+        trackingNumber={currentOrder.nocThirdPartyNo || currentOrder.nocParcelNo || currentOrder.trackingNumber}
         orderId={currentOrder.orderId}
         courierName={currentOrder.courierName || 'NOC Express'}
         nocLabelUrl={currentOrder.nocLabelUrl}

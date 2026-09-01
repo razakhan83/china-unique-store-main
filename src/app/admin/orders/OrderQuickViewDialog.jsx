@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
-import { Camera, Eye, MapPin, Package, Phone, User, ExternalLink, Check, Copy, Truck } from 'lucide-react';
+import { Camera, Eye, MapPin, Package, Phone, User, ExternalLink, Check, Copy, Truck, Globe, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { normalizeOrderStatus } from '@/lib/order-status';
+import { normalizeOrderStatus, getOrderOriginInfo } from '@/lib/order-status';
+import { formatSmartTimeAgo, formatFullDateTime } from '@/lib/timeAgo';
 
 export function getStatusBadgeClass(status, isDraft = false) {
   if (isDraft) {
@@ -182,8 +183,23 @@ export default function OrderQuickViewDialog({
             {/* Header: Order ID, Date, Status */}
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-border">
               <div className="space-y-1">
-                <h2 className="text-xl font-bold tracking-tight text-foreground font-mono">{order?.orderId}</h2>
-                <p className="text-xs text-muted-foreground">{formatDate(order?.createdAt)}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(() => {
+                    const origin = getOrderOriginInfo(order);
+                    return origin.isAdmin ? (
+                      <UserCog className="size-4 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                    ) : (
+                      <Globe className="size-4 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                    );
+                  })()}
+                  <h2 className="text-xl font-bold tracking-tight text-foreground font-mono">{order?.orderId}</h2>
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5" title={formatFullDateTime(order?.createdAt)}>
+                  <span>{formatFullDateTime(order?.createdAt)}</span>
+                  <span className="font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
+                    {formatSmartTimeAgo(order?.createdAt)}
+                  </span>
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className={cn('rounded-full border px-3 py-0.5 text-xs font-bold', statusClass)}>

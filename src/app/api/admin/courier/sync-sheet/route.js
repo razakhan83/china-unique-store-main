@@ -34,6 +34,9 @@ export async function POST(request) {
       let courierCol = -1;
       let parcelCol = -1;
       let thirdPartyCol = -1;
+      let phoneCol = -1;
+      let orderIdCol = -1;
+      let nameCol = -1;
 
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1 || (courierCol === -1 && parcelCol === -1)) {
@@ -42,6 +45,9 @@ export async function POST(request) {
             if (val.includes('courier')) courierCol = colNumber;
             if (val.includes('parcel') || val.includes('tracking') || val.includes('cn')) parcelCol = colNumber;
             if (val.includes('3rd') || val.includes('third') || val.includes('party')) thirdPartyCol = colNumber;
+            if (val.includes('phone') || val.includes('cell') || val.includes('mobile') || val.includes('contact')) phoneCol = colNumber;
+            if (val.includes('order') || val.includes('ref') || val.includes('instruction') || val.includes('note')) orderIdCol = colNumber;
+            if (val.includes('consignee') || val.includes('customer') || val.includes('name')) nameCol = colNumber;
           });
           return;
         }
@@ -49,12 +55,18 @@ export async function POST(request) {
         const rawCourier = courierCol !== -1 ? String(row.getCell(courierCol).value || '').trim() : '';
         const rawParcelNo = parcelCol !== -1 ? String(row.getCell(parcelCol).value || '').trim() : '';
         const raw3rdParty = thirdPartyCol !== -1 ? String(row.getCell(thirdPartyCol).value || '').trim() : '';
+        const rawPhone = phoneCol !== -1 ? String(row.getCell(phoneCol).value || '').trim() : '';
+        const rawOrderId = orderIdCol !== -1 ? String(row.getCell(orderIdCol).value || '').trim() : '';
+        const rawName = nameCol !== -1 ? String(row.getCell(nameCol).value || '').trim() : '';
 
         if (rawParcelNo || raw3rdParty) {
           parsedRows.push({
             courier: rawCourier,
             parcelNo: rawParcelNo,
             thirdPartyNo: raw3rdParty,
+            phone: rawPhone,
+            orderId: rawOrderId,
+            name: rawName,
           });
         }
       });
@@ -80,6 +92,9 @@ export async function POST(request) {
       const pNo = String(row.parcelNo || row.ParcelNo || '').trim();
       const tpNo = String(row.thirdPartyNo || row['3RD Party NO'] || row['3rdPartyNo'] || '').trim();
       const courier = String(row.courier || row.Courier || '').trim();
+      const phone = String(row.phone || row.Phone || row.CellNo || row['ConsigneeCellNo'] || '').trim();
+      const rawOrderRef = String(row.orderId || row.OrderId || row.Reference || '').trim();
+      const name = String(row.name || row.ConsigneeName || row.Customer || '').trim();
 
       if (!pNo && !tpNo) continue;
 
@@ -102,6 +117,20 @@ export async function POST(request) {
         orQuery.push({ nocThirdPartyNo: finalTp });
       }
 
+      // If extracted phone or order reference exists in sheet row, match by that as well!
+      if (rawOrderRef) {
+        const cleanRefMatch = rawOrderRef.match(/ORD-[A-Z0-9]+/i);
+        if (cleanRefMatch) {
+          orQuery.push({ orderId: cleanRefMatch[0].toUpperCase() });
+        }
+      }
+      if (phone && phone.length >= 10) {
+        orQuery.push({ customerPhone: phone });
+      }
+      if (name && name.length >= 3) {
+        orQuery.push({ customerName: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      }
+
       if (orQuery.length === 0) continue;
 
       const order = await Order.findOne({ $or: orQuery, isDeleted: { $ne: true } });
@@ -118,6 +147,14 @@ export async function POST(request) {
         }
         if (order.nocThirdPartyNo !== finalTp) {
           order.nocThirdPartyNo = finalTp;
+          changed = true;
+        }
+        if (order.isDraft) {
+          order.isDraft = false;
+          changed = true;
+        }
+        if (['Draft', 'Pending', 'Order Confirmed', 'In Process', 'Packed'].includes(order.status)) {
+          order.status = 'Shipped';
           changed = true;
         }
 

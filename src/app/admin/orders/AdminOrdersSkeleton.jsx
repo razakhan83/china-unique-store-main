@@ -75,19 +75,25 @@ export default function AdminOrdersSkeleton() {
                   <Skeleton className="size-3.5 rounded-sm mx-auto" />
                 </td>
                 <td className="px-2 py-2.5"><Skeleton className="h-4 w-28 rounded-md" /></td>
-                <td className="px-2 py-2.5 space-y-1">
-                  <Skeleton className="h-3.5 w-24 rounded" />
-                  <Skeleton className="h-3 w-20 rounded" />
+                <td className="px-2 py-2.5">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3.5 w-24 rounded" />
+                    <Skeleton className="h-3 w-20 rounded" />
+                  </div>
                 </td>
                 <td className="px-2 py-2.5"><Skeleton className="h-5 w-16 rounded-full" /></td>
-                <td className="px-2 py-2.5 space-y-1">
-                  <Skeleton className="h-3 w-16 rounded" />
-                  <Skeleton className="h-2.5 w-12 rounded" />
+                <td className="px-2 py-2.5">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-16 rounded" />
+                    <Skeleton className="h-2.5 w-12 rounded" />
+                  </div>
                 </td>
                 <td className="px-2 py-2.5"><Skeleton className="h-5 w-12 rounded-full" /></td>
-                <td className="px-2 py-2.5 space-y-1">
-                  <Skeleton className="h-3.5 w-24 rounded font-mono" />
-                  <Skeleton className="h-2.5 w-14 rounded" />
+                <td className="px-2 py-2.5">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3.5 w-24 rounded font-mono" />
+                    <Skeleton className="h-2.5 w-14 rounded" />
+                  </div>
                 </td>
                 <td className="px-2 py-2.5"><Skeleton className="h-4 w-20 rounded" /></td>
                 <td className="px-2 py-2.5 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>

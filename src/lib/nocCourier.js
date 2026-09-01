@@ -282,16 +282,79 @@ export async function fetchNocPortalDashboard(portalKey = 'portal_1', fromDate, 
     const resultHtml = await searchRes.text();
     const trMatches = resultHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
 
+    // Extract table header indices if present
+    const headerMap = {};
+    const thMatches = resultHtml.match(/<th[^>]*>([\s\S]*?)<\/th>/gi) || [];
+    if (thMatches.length > 0) {
+      thMatches.forEach((th, idx) => {
+        const text = th.replace(/<[^>]+>/g, '').trim().toLowerCase();
+        if (text.includes('courier')) headerMap.courier = idx;
+        if (text.includes('parcel') || text.includes('cn') || text.includes('tracking')) headerMap.parcelNo = idx;
+        if (text.includes('third') || text.includes('3rd') || text.includes('reference')) headerMap.thirdPartyNo = idx;
+        if (text.includes('current status') || (text.includes('status') && !text.includes('date') && !text.includes('time'))) headerMap.status = idx;
+        if (text.includes('consignee') || text.includes('customer') || text.includes('name')) headerMap.consignee = idx;
+        if (text.includes('city') || text.includes('destination')) headerMap.city = idx;
+        if (text.includes('date') || text.includes('time')) headerMap.date = idx;
+      });
+    }
+
     const parsedRows = [];
     for (const tr of trMatches) {
       const tdMatches = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
-      if (tdMatches.length >= 6) {
+      if (tdMatches.length >= 5) {
         const cleanTds = tdMatches.map((td) => td.replace(/<[^>]+>/g, '').trim());
-        const courier = cleanTds[2];
-        const parcelNo = cleanTds[3];
-        const thirdPartyNo = cleanTds[4];
-        const consignee = cleanTds[6];
-        const city = cleanTds[8];
+        const courier = headerMap.courier !== undefined ? cleanTds[headerMap.courier] : cleanTds[2];
+        const parcelNo = headerMap.parcelNo !== undefined ? cleanTds[headerMap.parcelNo] : cleanTds[3];
+        const thirdPartyNo = headerMap.thirdPartyNo !== undefined ? cleanTds[headerMap.thirdPartyNo] : cleanTds[4];
+        const consignee = headerMap.consignee !== undefined ? cleanTds[headerMap.consignee] : cleanTds[6];
+        const city = headerMap.city !== undefined ? cleanTds[headerMap.city] : cleanTds[8];
+
+        let currentStatus = headerMap.status !== undefined ? cleanTds[headerMap.status] : '';
+        let statusDate = headerMap.date !== undefined ? cleanTds[headerMap.date] : '';
+
+        // If currentStatus was mistakenly populated with a date string, discard it
+        if (currentStatus && currentStatus.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+          if (!statusDate) statusDate = currentStatus;
+          currentStatus = '';
+        }
+
+        // Search specifically for status keywords across all td cells
+        if (!currentStatus) {
+          for (const td of cleanTds) {
+            const upper = td.toUpperCase();
+            if (td.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) continue; // skip date cells
+            if (
+              upper === 'INTRANSIT' ||
+              upper === 'IN TRANSIT' ||
+              upper === 'DELIVERED' ||
+              upper === 'RECEIVED AT OFFICE' ||
+              upper === 'OUT FOR DELIVERY' ||
+              upper === 'RUNSHEET' ||
+              upper === 'RUNSHEET DISPATCHED' ||
+              upper === 'RETURN TO ORIGIN' ||
+              upper === 'RETURN' ||
+              upper === 'PAYMENT DONE' ||
+              upper === 'UNDELIVERED' ||
+              upper === 'BOOKED' ||
+              upper.includes('TRANSIT') ||
+              upper.includes('DELIVER') ||
+              upper.includes('OFFICE') ||
+              upper.includes('RETURN')
+            ) {
+              currentStatus = td;
+              break;
+            }
+          }
+        }
+
+        if (!statusDate) {
+          for (const td of cleanTds) {
+            if (td.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+              statusDate = td;
+              break;
+            }
+          }
+        }
 
         if (parcelNo && (parcelNo.match(/^\d+$/) || parcelNo.length > 5)) {
           const is3rdPartyValid =
@@ -305,6 +368,8 @@ export async function fetchNocPortalDashboard(portalKey = 'portal_1', fromDate, 
             courier: courier || 'NOC',
             parcelNo: parcelNo.trim(),
             thirdPartyNo: is3rdPartyValid ? thirdPartyNo.trim() : '',
+            status: currentStatus && !currentStatus.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/) ? currentStatus.trim() : '',
+            statusDate: statusDate ? statusDate.trim() : '',
             consignee: consignee || '',
             city: city || '',
             portalKey,

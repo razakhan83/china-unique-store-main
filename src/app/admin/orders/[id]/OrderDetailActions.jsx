@@ -428,6 +428,7 @@ export default function OrderDetailActions({ order }) {
         orderId={order.orderId}
         courierName={order.courierName || 'NOC Express'}
         nocLabelUrl={order.nocLabelUrl}
+        isAdmin={true}
       />
     </>
   );

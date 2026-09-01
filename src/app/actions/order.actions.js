@@ -221,6 +221,7 @@ export async function submitOrderAction(input) {
     try {
       order = await Order.create({
         orderId: makeOrderId(),
+        orderType: 'Online',
         idempotencyKey: idempotencyKey || undefined,
         secureToken: crypto.randomUUID(),
         customerEmail: userEmail || null,
@@ -626,6 +627,7 @@ export async function createDraftOrderAction(input = {}) {
 
     const order = await Order.create({
       orderId: makeOrderId(),
+      orderType: 'Admin',
       secureToken: crypto.randomUUID(),
       customerEmail: customerEmail || null,
       customerName,
@@ -758,6 +760,7 @@ export async function updateOrderAction(id, updates) {
     if (validatedData.landmark !== undefined) order.landmark = validatedData.landmark;
     if (validatedData.customerEmail !== undefined) order.customerEmail = validatedData.customerEmail;
     if (validatedData.sourceTag !== undefined) order.sourceTag = validatedData.sourceTag;
+    if (validatedData.orderType !== undefined) order.orderType = validatedData.orderType;
 
     const nextStatus = validatedData.status !== undefined ? normalizeOrderStatus(validatedData.status) : undefined;
     const hasStatusChanged = nextStatus !== undefined && nextStatus !== order.status;
@@ -955,6 +958,9 @@ export async function bulkUpdateOrderStatusAction({
 
       const previousStatus = currentStatus;
       order.status = normalizedNextStatus;
+      if (wasDraft) {
+        order.isDraft = false;
+      }
       if (!Array.isArray(order.statusHistory)) {
         order.statusHistory = [];
       }

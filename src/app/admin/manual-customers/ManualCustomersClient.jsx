@@ -183,33 +183,39 @@ export default function ManualCustomersClient() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="h-24 text-center">
-                      <Spinner className="mx-auto" />
-                    </td>
-                  </tr>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className="p-4"><div className="h-4 w-32 bg-muted rounded animate-pulse" /></td>
+                      <td className="p-4"><div className="h-4 w-28 bg-muted rounded animate-pulse" /></td>
+                      <td className="p-4"><div className="h-4 w-20 bg-muted rounded animate-pulse" /></td>
+                      <td className="p-4"><div className="h-4 w-24 bg-muted rounded animate-pulse" /></td>
+                      <td className="p-4 text-right"><div className="h-7 w-16 bg-muted rounded ml-auto animate-pulse" /></td>
+                    </tr>
+                  ))
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <td colSpan={5} className="h-32 text-center text-muted-foreground text-xs">
                       No manual customers found.
                     </td>
                   </tr>
                 ) : (
                   customers.map((customer) => (
-                    <tr key={customer._id} className="border-b transition-colors hover:bg-muted/50">
-                      <td className="p-4 align-middle font-medium">{customer.name}</td>
-                      <td className="p-4 align-middle">{customer.phone}</td>
-                      <td className="p-4 align-middle">{customer.city || '-'}</td>
-                      <td className="p-4 align-middle text-muted-foreground">
+                    <tr key={customer._id} className="border-b border-border/50 transition-colors hover:bg-muted/30">
+                      <td className="p-4 align-middle font-medium text-foreground">{customer.name}</td>
+                      <td className="p-4 align-middle font-mono text-xs">{customer.phone}</td>
+                      <td className="p-4 align-middle text-muted-foreground">{customer.city || '—'}</td>
+                      <td className="p-4 align-middle text-muted-foreground text-xs">
                         {new Date(customer.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-4 align-middle text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openModal(customer)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteId(customer._id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="size-8 rounded-lg cursor-pointer" onClick={() => openModal(customer)}>
+                            <Edit className="size-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="size-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer" onClick={() => setDeleteId(customer._id)}>
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))

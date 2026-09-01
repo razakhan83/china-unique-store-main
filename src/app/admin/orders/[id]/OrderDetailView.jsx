@@ -27,6 +27,12 @@ import {
   ExternalLink,
   ShoppingBag,
   Pencil,
+  Globe,
+  UserCog,
+  Eye,
+  RotateCcw,
+  Search,
+  Link2,
 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -41,9 +47,10 @@ import {
 } from '@/components/ui/dialog';
 import NocTrackingModal from '@/components/NocTrackingModal';
 import { NOC_PORTALS } from '@/lib/nocCourier';
-import { normalizeOrderStatus } from '@/lib/order-status';
+import { normalizeOrderStatus, getOrderOriginInfo } from '@/lib/order-status';
 import { updateOrderAction } from '@/app/actions/order.actions';
 import { PAKISTAN_CITIES } from '@/lib/cities';
+import { formatSmartTimeAgo, formatFullDateTime, formatSmartTimeAgoWithExact } from '@/lib/timeAgo';
 import { openPrintWindow, writePrintWindow, formatPrintCurrency, escapeHtml } from '../orderPrintUtils';
 
 export function getStatusBadgeClass(status, isDraft = false) {
@@ -105,6 +112,7 @@ export default function OrderDetailView({
   const [selectedPortal, setSelectedPortal] = useState(order.nocAccountId || 'portal_1');
   const [isBooking, setIsBooking] = useState(false);
   const [trackingModalOpen, setTrackingModalOpen] = useState(false);
+  const [trackingInitialMode, setTrackingInitialMode] = useState('admin');
   const [trashModalOpen, setTrashModalOpen] = useState(false);
   const [isTrashing, setIsTrashing] = useState(false);
 
@@ -118,6 +126,7 @@ export default function OrderDetailView({
     customerAddress: order.customerAddress || '',
     landmark: order.landmark || '',
     status: order.isDraft ? 'Draft' : normalizeOrderStatus(order.status),
+    orderType: order.orderType || (order.isDraft || order.sourceTag || order.invoiceId ? 'Admin' : 'Online'),
     manualCodAmount: order.manualCodAmount != null ? String(order.manualCodAmount) : '',
     notes: order.notes || '',
     sourceTag: order.sourceTag || '',
@@ -212,6 +221,155 @@ export default function OrderDetailView({
     }
   };
 
+  // Sync NOC Status & Auto-Discover Parcel
+  const [isSyncingNoc, setIsSyncingNoc] = useState(false);
+  const handleSyncNocStatus = async () => {
+    setIsSyncingNoc(true);
+    try {
+      const res = await fetch('/api/admin/courier/sync-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: [order._id || order.orderId] }),
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.results) && data.results.length > 0) {
+        const item = data.results[0];
+        if (item.nocParcelNo) {
+          toast.success(`NOC Parcel synced: ${item.nocParcelNo} (${item.nocStatus || 'Booked'})`);
+        } else if (item.nocStatus) {
+          toast.success(`NOC Status updated: ${item.nocStatus}`);
+        } else {
+          toast.info('NOC status is already up to date.');
+        }
+        router.refresh();
+      } else {
+        toast.error(data.error || 'No matching booking found on NOC portal.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Connection error syncing status with NOC.');
+    } finally {
+      setIsSyncingNoc(false);
+    }
+  };
+
+  // ── "Check Order in NOC" Modal State & Handlers ──
+  const [checkNocModalOpen, setCheckNocModalOpen] = useState(false);
+  const [isSearchingNoc, setIsSearchingNoc] = useState(false);
+  const [nocCandidateMatches, setNocCandidateMatches] = useState([]);
+  const [linkingParcelNo, setLinkingParcelNo] = useState(null);
+  const [manualParcelInput, setManualParcelInput] = useState('');
+  const [manualCourierPartner, setManualCourierPartner] = useState('NOC Express');
+  const [selectedSearchPortal, setSelectedSearchPortal] = useState('all');
+
+  const handleOpenCheckNocModal = async () => {
+    setCheckNocModalOpen(true);
+    setIsSearchingNoc(true);
+    setNocCandidateMatches([]);
+    setManualParcelInput('');
+    try {
+      const res = await fetch(`/api/admin/courier/search-portal?orderId=${encodeURIComponent(order.orderId || order._id)}&portalKey=${selectedSearchPortal}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.matches)) {
+        setNocCandidateMatches(data.matches);
+      } else {
+        toast.error(data.error || 'No matching bookings found on NOC.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to search NOC portal dashboard.');
+    } finally {
+      setIsSearchingNoc(false);
+    }
+  };
+
+  const handleRefreshNocSearch = async (overridePortal) => {
+    const pKey = overridePortal || selectedSearchPortal;
+    setIsSearchingNoc(true);
+    try {
+      const res = await fetch(`/api/admin/courier/search-portal?orderId=${encodeURIComponent(order.orderId || order._id)}&portalKey=${pKey}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.matches)) {
+        setNocCandidateMatches(data.matches);
+        if (data.matches.length === 0) {
+          toast.info('No active matching bookings found for this customer on NOC.');
+        }
+      } else {
+        toast.error(data.error || 'Search error.');
+      }
+    } catch (err) {
+      toast.error('Error connecting to NOC portal.');
+    } finally {
+      setIsSearchingNoc(false);
+    }
+  };
+
+  const handleLinkNocCandidate = async (candidate) => {
+    setLinkingParcelNo(candidate.parcelNo);
+    try {
+      const res = await fetch('/api/admin/courier/link-parcel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.orderId || order._id,
+          parcelNo: candidate.parcelNo,
+          courierName: candidate.courier || 'NOC Express',
+          thirdPartyNo: candidate.thirdPartyNo || '',
+          portalKey: candidate.portalKey || 'portal_1',
+          nocStatus: candidate.status || 'Booked',
+          nocStatusTime: candidate.statusDate || '',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || `Linked NOC Parcel #${candidate.parcelNo} successfully!`);
+        setCheckNocModalOpen(false);
+        router.refresh();
+      } else {
+        toast.error(data.error || 'Failed to link parcel to order.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error linking parcel.');
+    } finally {
+      setLinkingParcelNo(null);
+    }
+  };
+
+  const handleManualLinkSubmit = async (e) => {
+    e?.preventDefault();
+    const clean = manualParcelInput.trim();
+    if (!clean) {
+      toast.error('Please enter a parcel number / tracking number.');
+      return;
+    }
+    setLinkingParcelNo(clean);
+    try {
+      const res = await fetch('/api/admin/courier/link-parcel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.orderId || order._id,
+          parcelNo: clean,
+          courierName: manualCourierPartner || 'NOC Express',
+          portalKey: selectedSearchPortal === 'portal_2' ? 'portal_2' : 'portal_1',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || `Linked NOC Parcel #${clean} successfully!`);
+        setCheckNocModalOpen(false);
+        router.refresh();
+      } else {
+        toast.error(data.error || 'Failed to link manual parcel.');
+      }
+    } catch (err) {
+      toast.error('Error linking manual parcel.');
+    } finally {
+      setLinkingParcelNo(null);
+    }
+  };
+
   // Handle Edit Form Submission
   const handleSaveOrderEdit = async (e) => {
     e?.preventDefault();
@@ -225,6 +383,7 @@ export default function OrderDetailView({
         customerAddress: editFormData.customerAddress.trim(),
         landmark: editFormData.landmark.trim(),
         status: editFormData.status,
+        orderType: editFormData.orderType,
         manualCodAmount: editFormData.manualCodAmount !== '' ? Number(editFormData.manualCodAmount) : undefined,
         notes: editFormData.notes.trim(),
         sourceTag: editFormData.sourceTag.trim(),
@@ -428,7 +587,15 @@ export default function OrderDetailView({
             <span>Back to Orders</span>
           </Link>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            {(() => {
+              const origin = getOrderOriginInfo(order);
+              return origin.isAdmin ? (
+                <UserCog className="size-5 text-foreground shrink-0 select-none" title={origin.tooltip} />
+              ) : (
+                <Globe className="size-5 text-foreground shrink-0 select-none" title={origin.tooltip} />
+              );
+            })()}
             <h1 className="text-2xl font-bold tracking-tight text-foreground font-mono">
               {order.orderId}
             </h1>
@@ -453,12 +620,22 @@ export default function OrderDetailView({
               {order.paymentStatus === 'Paid' ? 'Paid' : 'COD'}
             </span>
 
-            {/* Source Tag */}
+            {/* Source Tag if specified */}
             {order.sourceTag && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
                 <Store className="size-3.5" />
                 {order.sourceTag}
               </span>
+            )}
+
+            {/* Order Placed Timestamp */}
+            {order.createdAt && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-1">
+                <span>Placed {formatFullDateTime(order.createdAt)}</span>
+                <span className="px-2 py-0.5 rounded-full bg-muted font-bold text-[11px] text-foreground border border-border">
+                  {formatSmartTimeAgo(order.createdAt)}
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -509,12 +686,18 @@ export default function OrderDetailView({
           )}
 
           {/* Print Airway Slip */}
-          {order.nocLabelUrl && (
+          {Boolean(order.nocLabelUrl || order.nocParcelNo || order.trackingNumber) && (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open(order.nocLabelUrl, '_blank')}
+              onClick={() => {
+                if (order.nocLabelUrl) {
+                  window.open(order.nocLabelUrl, '_blank');
+                } else {
+                  window.open(`https://shipnoc.com/UserDashboard.aspx`, '_blank');
+                }
+              }}
               className="h-9 px-3.5 rounded-lg gap-2 text-xs font-medium text-foreground hover:bg-muted cursor-pointer"
             >
               <Printer className="size-3.5 text-muted-foreground" />
@@ -898,7 +1081,13 @@ export default function OrderDetailView({
                     Courier: {order.courierName || 'NOC Express'}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full font-bold text-xs bg-muted text-foreground border border-border">
-                    {order.nocStatus || 'Booked'}
+                    {(() => {
+                      const raw = order.nocStatus || '';
+                      if (raw && !raw.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+                        return raw;
+                      }
+                      return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
+                    })()}
                   </span>
                 </div>
 
@@ -927,20 +1116,90 @@ export default function OrderDetailView({
                     </button>
                   )}
                 </div>
+
+                {order.nocStatusTime && (
+                  <div className="flex items-center justify-between pt-2 border-t border-border text-xs text-muted-foreground">
+                    <span>Status Updated:</span>
+                    <span className="font-semibold text-foreground">
+                      {order.nocStatusTime} <span className="font-normal text-muted-foreground">({formatSmartTimeAgo(order.nocStatusTime)})</span>
+                    </span>
+                  </div>
+                )}
+
+                {/* Tracking Action Buttons */}
+                <div className="pt-2.5 border-t border-border flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setTrackingInitialMode('admin');
+                      setTrackingModalOpen(true);
+                    }}
+                    className="flex-1 h-8.5 text-xs font-medium rounded-lg border-border hover:bg-muted text-foreground cursor-pointer"
+                  >
+                    <Truck className="size-3.5 mr-1.5 text-muted-foreground" />
+                    Live Tracking
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setTrackingInitialMode('customer');
+                      setTrackingModalOpen(true);
+                    }}
+                    className="flex-1 h-8.5 text-xs font-medium rounded-lg border-border hover:bg-muted text-foreground cursor-pointer"
+                  >
+                    <Eye className="size-3.5 mr-1.5 text-muted-foreground" />
+                    Customer View
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSyncNocStatus}
+                    disabled={isSyncingNoc}
+                    title="Refresh status from NOC portal"
+                    className="h-8.5 px-2.5 text-xs font-medium rounded-lg border-border hover:bg-muted text-foreground cursor-pointer shrink-0"
+                  >
+                    <RotateCcw className={cn("size-3.5", isSyncingNoc && "animate-spin")} />
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground space-y-3">
                 <Package className="size-8 mx-auto text-muted-foreground opacity-60" />
-                <p>Not yet booked with courier partner.</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setBookingModalOpen(true)}
-                  className="h-9 text-xs font-semibold rounded-lg"
-                >
-                  <Send className="size-3.5 mr-1.5" />
-                  Book Courier
-                </Button>
+                <p className="text-xs text-muted-foreground">Not yet booked with courier partner.</p>
+                <div className="flex items-center justify-center gap-2 flex-wrap pt-1">
+                  <Button
+                    size="sm"
+                    onClick={() => setBookingModalOpen(true)}
+                    className="h-8.5 text-xs font-semibold rounded-lg"
+                  >
+                    <Send className="size-3.5 mr-1.5" />
+                    Book Courier
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOpenCheckNocModal}
+                    className="h-8.5 text-xs font-semibold rounded-lg border-sky-300 text-sky-700 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800 cursor-pointer"
+                  >
+                    <Search className="size-3.5 mr-1.5" />
+                    Check Order in NOC
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSyncNocStatus}
+                    disabled={isSyncingNoc}
+                    className="h-8.5 text-xs font-semibold rounded-lg cursor-pointer"
+                  >
+                    <RotateCcw className={cn("size-3.5 mr-1.5", isSyncingNoc && "animate-spin")} />
+                    Quick Sync
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -948,6 +1207,7 @@ export default function OrderDetailView({
             <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
               {combinedTimeline.map((step, idx) => {
                 const isDelivered = step.title.toLowerCase().includes('deliver') || step.title.toLowerCase().includes('payment');
+                const stepRelative = step.timestamp ? formatSmartTimeAgo(step.timestamp) : (step.time ? formatSmartTimeAgo(step.time) : '');
 
                 return (
                   <div key={step.id || idx} className="relative group">
@@ -967,9 +1227,16 @@ export default function OrderDetailView({
                           {step.title}
                         </span>
                         {step.time && (
-                          <span className="text-xs text-muted-foreground font-mono shrink-0">
-                            {step.time}
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {step.time}
+                            </span>
+                            {stepRelative && (
+                              <span className="text-[10px] font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
+                                {stepRelative}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
 
@@ -1092,6 +1359,29 @@ export default function OrderDetailView({
                   onChange={(e) => setEditFormData({ ...editFormData, manualCodAmount: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm font-mono text-foreground focus:outline-hidden focus:border-foreground"
                   placeholder={String(order.totalAmount)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Order Origin / Type</label>
+                <select
+                  value={editFormData.orderType}
+                  onChange={(e) => setEditFormData({ ...editFormData, orderType: e.target.value })}
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-hidden focus:border-foreground"
+                >
+                  <option value="Online">Online (Website)</option>
+                  <option value="Admin">Admin (Manual / Custom)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Source / Channel Tag</label>
+                <input
+                  type="text"
+                  value={editFormData.sourceTag}
+                  onChange={(e) => setEditFormData({ ...editFormData, sourceTag: e.target.value })}
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-hidden focus:border-foreground"
+                  placeholder="e.g. WhatsApp, Phone, Walk-in"
                 />
               </div>
 
@@ -1225,6 +1515,8 @@ export default function OrderDetailView({
         orderId={order.orderId}
         courierName={order.courierName || 'NOC'}
         nocLabelUrl={order.nocLabelUrl}
+        isAdmin={true}
+        initialMode={trackingInitialMode}
       />
 
       {/* ── Dialog 4: Move to Trash Confirmation ── */}
@@ -1263,6 +1555,233 @@ export default function OrderDetailView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Dialog 5: Smart Check & Link NOC Booking Modal ── */}
+      <Dialog open={checkNocModalOpen} onOpenChange={setCheckNocModalOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[88vh] flex flex-col p-0 rounded-2xl overflow-hidden border border-border shadow-2xl">
+          <DialogHeader className="p-5 pb-3 border-b border-border bg-muted/30">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="size-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 flex items-center justify-center">
+                  <Search className="size-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-foreground">
+                    Check Order in NOC Portal
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                    Search bookings on shipnoc.com for <span className="font-semibold text-foreground">{order.customerName}</span> ({order.customerCity || 'N/A'})
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+
+            {/* Portal Switcher & Refresh Bar */}
+            <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-border/60">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-medium text-muted-foreground mr-1">Account:</span>
+                {[
+                  { id: 'all', label: 'All Accounts' },
+                  { id: 'portal_1', label: 'Main (unique items)' },
+                  { id: 'portal_2', label: 'Secondary (aamsaman)' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSearchPortal(p.id);
+                      handleRefreshNocSearch(p.id);
+                    }}
+                    className={cn(
+                      'px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-all cursor-pointer',
+                      selectedSearchPortal === p.id
+                        ? 'bg-foreground text-background border-foreground font-semibold shadow-xs'
+                        : 'bg-background text-muted-foreground border-border hover:bg-muted'
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => handleRefreshNocSearch()}
+                disabled={isSearchingNoc}
+                className="h-7 text-xs px-2.5 gap-1 font-medium cursor-pointer"
+              >
+                <RotateCcw className={cn("size-3", isSearchingNoc && "animate-spin")} />
+                <span>{isSearchingNoc ? 'Searching...' : 'Refresh'}</span>
+              </Button>
+            </div>
+          </DialogHeader>
+
+          {/* Matches List Content (Scrollable) */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {isSearchingNoc ? (
+              <div className="py-12 text-center space-y-3">
+                <RotateCcw className="size-7 mx-auto text-sky-600 animate-spin opacity-80" />
+                <p className="text-sm font-medium text-foreground">Searching NOC Portal Dashboard...</p>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  Connecting to shipnoc.com and checking recent active bookings for this customer...
+                </p>
+              </div>
+            ) : nocCandidateMatches.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    Found {nocCandidateMatches.length} Candidate Booking{nocCandidateMatches.length === 1 ? '' : 's'}:
+                  </span>
+                  <span>Active & Recent bookings highlighted</span>
+                </div>
+
+                {nocCandidateMatches.map((cand, idx) => {
+                  const isLinkingThis = linkingParcelNo === cand.parcelNo;
+                  return (
+                    <div
+                      key={cand.parcelNo || idx}
+                      className={cn(
+                        'p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5',
+                        cand.isAlreadyLinked
+                          ? 'border-emerald-500/40 bg-emerald-500/5'
+                          : cand.isRecent
+                          ? 'border-sky-500/30 bg-sky-500/5 hover:border-sky-500/50'
+                          : 'border-border bg-card hover:border-border/80'
+                      )}
+                    >
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-sm font-bold text-foreground">
+                            CN: {cand.parcelNo}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-foreground border border-border">
+                            {cand.courier || 'NOC'}
+                          </span>
+                          {cand.thirdPartyNo && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                              3rd Party: {cand.thirdPartyNo}
+                            </span>
+                          )}
+                          <span
+                            className={cn(
+                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
+                              cand.isRecent
+                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+                                : 'bg-muted text-muted-foreground border-border'
+                            )}
+                          >
+                            {cand.status || 'Booked'}
+                          </span>
+                        </div>
+
+                        <div className="text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+                          <span>Consignee: <strong className="text-foreground">{cand.consignee || order.customerName}</strong></span>
+                          <span>City: <strong className="text-foreground">{cand.city || order.customerCity || 'N/A'}</strong></span>
+                          {cand.statusDate && <span>Date: <strong>{cand.statusDate}</strong></span>}
+                        </div>
+
+                        {cand.matchReasons?.length > 0 && (
+                          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                            ✓ {cand.matchReasons.join(' • ')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <a
+                          href={`https://shipnoc.com/PrintAirWayBill.aspx?ParcelNo=${cand.parcelNo}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 text-xs rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted font-medium inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="size-3" />
+                          <span>Slip</span>
+                        </a>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={Boolean(linkingParcelNo) || cand.isAlreadyLinked}
+                          onClick={() => handleLinkNocCandidate(cand)}
+                          className={cn(
+                            'h-8 px-3 text-xs font-semibold rounded-lg gap-1.5 cursor-pointer',
+                            cand.isAlreadyLinked ? 'bg-emerald-600 text-white' : 'bg-sky-600 hover:bg-sky-700 text-white'
+                          )}
+                        >
+                          <Link2 className={cn("size-3.5", isLinkingThis && "animate-spin")} />
+                          <span>{cand.isAlreadyLinked ? 'Already Linked' : isLinkingThis ? 'Linking...' : 'Link & Sync'}</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center space-y-2 rounded-xl border border-dashed border-border p-6 bg-muted/10">
+                <Package className="size-8 mx-auto text-muted-foreground opacity-50" />
+                <p className="text-sm font-semibold text-foreground">No automatic booking matches found</p>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                  No active booking for &quot;{order.customerName}&quot; was found in the recent NOC portal dashboard. If you have the parcel number / CN directly, you can link it below:
+                </p>
+              </div>
+            )}
+
+            {/* Manual CN Input Fallback Section */}
+            <div className="mt-4 pt-4 border-t border-border space-y-2.5">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Link2 className="size-3.5 text-sky-600" />
+                <span>Or Link Directly with Parcel Number / Tracking No:</span>
+              </p>
+              <form onSubmit={handleManualLinkSubmit} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <input
+                  type="text"
+                  value={manualParcelInput}
+                  onChange={(e) => setManualParcelInput(e.target.value)}
+                  placeholder="e.g. 16216206417422 or TCS/Leopard CN"
+                  className="flex-1 h-9 px-3 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <select
+                  value={manualCourierPartner}
+                  onChange={(e) => setManualCourierPartner(e.target.value)}
+                  className="h-9 px-2.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none"
+                >
+                  <option value="NOC Express">NOC Express</option>
+                  <option value="Leopard">Leopard</option>
+                  <option value="TCS">TCS</option>
+                  <option value="Trax">Trax</option>
+                  <option value="Call Courier">Call Courier</option>
+                </select>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!manualParcelInput.trim() || Boolean(linkingParcelNo)}
+                  className="h-9 px-4 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 shrink-0 cursor-pointer"
+                >
+                  {linkingParcelNo ? 'Linking...' : 'Link Parcel'}
+                </Button>
+              </form>
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">
+              Linking will set status to <strong>Shipped</strong> and pull live tracking.
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCheckNocModalOpen(false)}
+              className="rounded-lg h-8 px-4 text-xs font-semibold"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

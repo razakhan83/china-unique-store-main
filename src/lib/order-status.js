@@ -71,7 +71,7 @@ export function mapNocStatusToStoreLifecycle(rawNocStatus) {
     };
   }
 
-  // 4. In Transit / Out For Delivery / Movement on route -> Out For Delivery
+  // 4. In Transit / Out For Delivery / Movement on route / Hub / Runsheet -> Out For Delivery
   if (
     s.includes('transit') ||
     s.includes('out for') ||
@@ -102,6 +102,81 @@ export function mapNocStatusToStoreLifecycle(rawNocStatus) {
   }
 
   return null;
+}
+
+/**
+ * Maps raw courier checkpoint to clean, customer-friendly status and description.
+ * Customer sees understandable descriptions rather than courier internal codes.
+ */
+export function mapCourierEventForCustomer(rawStatus, rawRemarks = '') {
+  const s = String(rawStatus || '').trim().toLowerCase();
+  const rem = String(rawRemarks || '').trim();
+
+  // 1. Delivered
+  if (
+    s.includes('payment') ||
+    s.includes('paid') ||
+    s.includes('remit') ||
+    s.includes('cr done') ||
+    (s.includes('deliver') && !s.includes('out for') && !s.includes('attempt') && !s.includes('fail') && !s.includes('under deliver'))
+  ) {
+    return {
+      title: 'Delivered',
+      description: 'Package successfully delivered. Thank you for shopping!',
+    };
+  }
+
+  // 2. Return
+  if (
+    s.includes('return') ||
+    s.includes('refus') ||
+    s.includes('rto') ||
+    s.includes('rts') ||
+    s.includes('damage') ||
+    s.includes('reject')
+  ) {
+    return {
+      title: 'Returned',
+      description: 'Shipment returning to store.',
+    };
+  }
+
+  // 3. Delivery Attempt Failed / Consignee unavailable
+  if (s.includes('attempt') || s.includes('fail') || s.includes('undelivered') || s.includes('reschedule') || s.includes('unavailable')) {
+    return {
+      title: 'Delivery Rescheduled',
+      description: 'Courier could not reach you; next attempt scheduled.',
+    };
+  }
+
+  // 4. In Transit / Out for delivery / Destination city / Runsheet
+  if (s.includes('transit') || s.includes('out for') || s.includes('rider') || s.includes('runsheet') || s.includes('under deliver') || s.includes('dispatch') || s.includes('route') || s.includes('hub') || s.includes('destination')) {
+    return {
+      title: 'In Transit',
+      description: 'Package is on the way to your city.',
+    };
+  }
+
+  // 5. Received at office / Sorting facility
+  if (s.includes('received at') || s.includes('pickup') || s.includes('office') || s.includes('facility')) {
+    return {
+      title: 'In Transit',
+      description: 'Package received at courier facility.',
+    };
+  }
+
+  // 6. Booking / Shipped
+  if (s.includes('book') || s.includes('manifest') || s.includes('shipped')) {
+    return {
+      title: 'Order Shipped',
+      description: 'Parcel has been booked with courier partner.',
+    };
+  }
+
+  return {
+    title: rawStatus || 'Order Update',
+    description: rem || 'Package is being processed by courier.',
+  };
 }
 
 export function normalizeOrderStatus(status) {
@@ -193,5 +268,32 @@ export function getStatusBadgeClass(status, isDraft = false) {
   }
 
   return 'border-slate-200 bg-slate-100 text-slate-800';
+}
+
+export function getOrderOriginInfo(order) {
+  const isAdmin = 
+    order?.orderType === 'Admin' ||
+    Boolean(order?.isDraft) ||
+    Boolean(order?.sourceTag && String(order.sourceTag).trim() !== '') ||
+    Boolean(order?.invoiceId || order?.invoiceNumber) ||
+    (order?.manualCodAmount !== undefined && order?.manualCodAmount !== null && order?.manualCodAmount !== '') ||
+    Boolean(order?.itemType && order?.itemType !== 'Mix');
+
+  const isOnline = !isAdmin && (order?.orderType === 'Online' || !order?.orderType);
+  const tag = order?.sourceTag || '';
+
+  return {
+    isOnline,
+    isAdmin,
+    label: isOnline ? 'Online (Website)' : (tag ? `Admin (${tag})` : 'Created by Admin'),
+    shortLabel: isOnline ? 'Online' : (tag || 'Admin'),
+    tooltip: isOnline 
+      ? 'Online Order (Placed by customer on website)' 
+      : `Created by Admin${tag ? ` • Channel: ${tag}` : ' (Manual / Draft)'}`,
+    badgeClass: isOnline 
+      ? 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300' 
+      : 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300',
+    iconClass: 'text-foreground shrink-0 select-none',
+  };
 }
 

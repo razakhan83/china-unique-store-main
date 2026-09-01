@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import mongoose from 'mongoose';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { bookNocParcels } from '@/lib/nocCourier';
 import { requireApiAdmin } from '@/lib/requireAdmin';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function POST(request) {
-  const auth = await requireApiAdmin({ mutation: true });
+  const auth = await requireApiAdmin();
   if (auth.error) return auth.error;
 
   try {
@@ -16,37 +15,30 @@ export async function POST(request) {
 
     if (!Array.isArray(orderIds) || orderIds.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Please select at least one order to book with NOC Courier.' },
+        { success: false, error: 'Please provide a list of order IDs to book.' },
         { status: 400 }
       );
     }
 
     await mongooseConnect();
 
-    // Fetch target orders safely without throwing CastError on string orderIds
-    const validObjectIds = orderIds
-      .filter((id) => mongoose.Types.ObjectId.isValid(id) && id.length === 24)
-      .map((id) => new mongoose.Types.ObjectId(id));
-    const orderIdStrings = orderIds.map(String);
-
-    const orConditions = [{ orderId: { $in: orderIdStrings } }];
-    if (validObjectIds.length > 0) {
-      orConditions.push({ _id: { $in: validObjectIds } });
-    }
-
+    // Fetch target orders
     const orders = await Order.find({
-      $or: orConditions,
+      $or: [
+        { _id: { $in: orderIds.filter((id) => /^[0-9a-fA-F]{24}$/.test(id)) } },
+        { orderId: { $in: orderIds } },
+      ],
       isDeleted: { $ne: true },
     });
 
-    if (orders.length === 0) {
+    if (!orders || orders.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'No matching orders found.' },
+        { success: false, error: 'No matching orders found to book.' },
         { status: 404 }
       );
     }
 
-    // Preserve requested order sequence
+    // Preserve selection order
     const orderMap = new Map();
     orders.forEach((o) => {
       orderMap.set(String(o._id), o);
@@ -63,100 +55,130 @@ export async function POST(request) {
 
     const targetOrders = orderedList.length > 0 ? orderedList : orders;
 
-    // Build NOC API Parcels payload for bulk booking
-    const parcelsPayload = targetOrders.map((order) => {
+    // Book each order with its own dedicated NOC API call so NOC creates distinct CNs
+    const now = new Date();
+    const formattedNow =
+      now.toLocaleDateString('en-GB') +
+      ' ' +
+      now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const updatedOrders = [];
+    const failedOrders = [];
+    const parcelNumbers = [];
+
+    const bookingPromises = targetOrders.map(async (order) => {
       const codVal =
         order.manualCodAmount != null && order.manualCodAmount !== ''
           ? Number(order.manualCodAmount)
           : Number(order.totalAmount || 0);
 
       const emailRaw = (order.customerEmail || '').trim();
-      const emailVal = emailRaw && emailRaw.includes('@') && emailRaw.includes('.') ? emailRaw : 'customer@chinaunique.pk';
+      const emailVal =
+        emailRaw && emailRaw.includes('@') && emailRaw.includes('.')
+          ? emailRaw
+          : 'customer@chinaunique.pk';
 
-      return {
-        consigneeName: order.customerName || 'Customer',
-        consigneeAddress: order.customerAddress || 'Address',
-        consigneeEmail: emailVal,
-        consigneeCellNo: order.customerPhone || '',
-        itemType: order.itemType || 'Mix',
-        city: order.customerCity || 'Karachi',
-        quantity: order.orderQuantity || 1,
-        codAmount: codVal,
-        weight: order.weight || 2,
-        specialInstruction: order.landmark || order.notes || '',
-      };
+      const singleParcelPayload = [
+        {
+          consigneeName: order.customerName || 'Customer',
+          consigneeAddress: order.customerAddress || 'Address',
+          consigneeEmail: emailVal,
+          consigneeCellNo: order.customerPhone || '',
+          itemType: order.itemType || 'Mix',
+          city: order.customerCity || 'Karachi',
+          quantity: order.orderQuantity || 1,
+          codAmount: codVal,
+          weight: order.weight || 2,
+          specialInstruction: order.landmark || order.notes || '',
+        },
+      ];
+
+      try {
+        const apiResult = await bookNocParcels(singleParcelPayload, portalKey);
+
+        if (apiResult.Response !== 'success') {
+          throw new Error(
+            apiResult.ErrorDescription || 'NOC Courier booking failed for this order.'
+          );
+        }
+
+        // Parse unique parcel number from "Parcel Booked Successfully :16216206417422"
+        const desc = apiResult.ErrorDescription || '';
+        const colonIdx = desc.indexOf(':');
+        let trackingNo = '';
+        if (colonIdx !== -1) {
+          trackingNo = desc.substring(colonIdx + 1).split(',')[0].trim();
+        }
+
+        if (!trackingNo) {
+          throw new Error('NOC API did not return a valid parcel number.');
+        }
+
+        const slipUrl = apiResult.LabelURL || '';
+
+        order.courierName = 'NOC Express';
+        order.trackingNumber = trackingNo;
+        order.nocParcelNo = trackingNo;
+        order.nocThirdPartyNo = '';
+        order.nocRemarks = '';
+        order.nocLabelUrl = slipUrl;
+        order.nocAccountId = portalKey;
+        order.courierBookingStatus = 'booked';
+        order.nocStatus = 'Booked';
+        order.nocStatusTime = formattedNow;
+        order.courierBookingDate = now;
+        order.courierResponseDetails = apiResult;
+        order.nocLastTrackedAt = null;
+
+        // Update status to Shipped & convert draft if needed
+        order.status = 'Shipped';
+        order.isDraft = false;
+        if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
+        order.statusHistory.push({ status: 'Shipped', timestamp: now });
+
+        await order.save();
+
+        return {
+          success: true,
+          orderId: order.orderId,
+          trackingNumber: trackingNo,
+          labelUrl: slipUrl,
+          status: 'Shipped',
+        };
+      } catch (err) {
+        console.error(`NOC booking error for order ${order.orderId}:`, err.message);
+        return {
+          success: false,
+          orderId: order.orderId,
+          error: err.message || 'Booking failed',
+        };
+      }
     });
 
-    // Call NOC BookParcel API with all parcels so NOC returns the official combined LabelURL
-    const apiResult = await bookNocParcels(parcelsPayload, portalKey);
+    const results = await Promise.all(bookingPromises);
 
-    if (apiResult.Response !== 'success') {
+    results.forEach((r) => {
+      if (r.success) {
+        updatedOrders.push(r);
+        if (r.trackingNumber) parcelNumbers.push(r.trackingNumber);
+      } else {
+        failedOrders.push(r);
+      }
+    });
+
+    if (updatedOrders.length === 0) {
+      const firstErr = failedOrders[0]?.error || 'Failed to book parcels with NOC Express.';
       return NextResponse.json(
         {
           success: false,
-          error: apiResult.ErrorDescription || 'NOC Courier booking failed. Please verify credentials and order details.',
+          error: `NOC Booking Failed: ${firstErr}`,
+          failedOrders,
         },
         { status: 400 }
       );
     }
 
-    // Parse returned Parcel Numbers from ErrorDescription
-    // Example string: "Parcel Booked Successfully :16216206417422, 16216206417423"
-    const desc = apiResult.ErrorDescription || '';
-    const colonIdx = desc.indexOf(':');
-    let parcelNumbers = [];
-
-    if (colonIdx !== -1) {
-      const rawNumbers = desc.substring(colonIdx + 1);
-      parcelNumbers = rawNumbers
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-
-    // Official NOC Express combined Label URL (contains all slips in 1 official link from NOC!)
-    const labelUrl = apiResult.LabelURL || '';
-    const now = new Date();
-    const updatedOrders = [];
-
-    // Update all target orders in DB
-    for (let i = 0; i < targetOrders.length; i++) {
-      const order = targetOrders[i];
-      const trackingNo = parcelNumbers[i] || (parcelNumbers.length === 1 ? parcelNumbers[0] : '');
-
-      const formattedNow = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      order.courierName = 'NOC Express';
-      if (trackingNo) {
-        order.trackingNumber = trackingNo;
-        order.nocParcelNo = trackingNo;
-      }
-      // Wipe old 3rd party CN & tracking state from previous bookings
-      order.nocThirdPartyNo = '';
-      order.nocRemarks = '';
-      order.nocLabelUrl = labelUrl;
-      order.nocAccountId = portalKey;
-      order.courierBookingStatus = 'booked';
-      order.nocStatus = 'Booked';
-      order.nocStatusTime = formattedNow;
-      order.courierBookingDate = now;
-      order.courierResponseDetails = apiResult;
-      order.nocLastTrackedAt = null;
-
-      // Update status to Shipped & convert draft if needed
-      order.status = 'Shipped';
-      order.isDraft = false;
-      if (!Array.isArray(order.statusHistory)) order.statusHistory = [];
-      order.statusHistory.push({ status: 'Shipped', timestamp: now });
-
-      await order.save();
-      updatedOrders.push({
-        orderId: order.orderId,
-        trackingNumber: trackingNo,
-        labelUrl: labelUrl,
-        status: 'Shipped',
-      });
-    }
-
+    // Revalidate caches
     try {
       revalidateTag('orders');
       revalidateTag('admin-dashboard');
@@ -165,21 +187,35 @@ export async function POST(request) {
       console.error('Error revalidating orders cache after NOC booking:', revErr);
     }
 
+    const multiCnQuery = parcelNumbers.filter(Boolean).join(',');
+    const multiLabelUrl = multiCnQuery
+      ? `https://shipnoc.com/PrintAirWayBill.aspx?ParcelNo=${multiCnQuery}`
+      : (updatedOrders[0]?.labelUrl || '');
+
+    const accountLabel =
+      portalKey === 'portal_2' ? 'Secondary Account (aamsaman)' : 'Main Account (unique items)';
+
+    let message = `Successfully booked ${updatedOrders.length} order(s) individually with NOC Express (${accountLabel}).`;
+    if (failedOrders.length > 0) {
+      message += ` (${failedOrders.length} order(s) failed: ${failedOrders.map((f) => `${f.orderId} - ${f.error}`).join(', ')})`;
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Successfully booked ${targetOrders.length} parcel(s) with NOC Express (${portalKey === 'portal_2' ? 'Secondary Account' : 'Main Account'}).`,
-      labelUrl,
+      message,
+      labelUrl: multiLabelUrl,
       parcelNumbers,
       portalKey,
       updatedOrders,
+      failedOrders,
     });
   } catch (error) {
-    if (error?.digest?.startsWith('NEXT_') || error?.digest === 'HANGING_PROMISE_REJECTION') {
-      throw error;
-    }
-    console.error('Error booking NOC parcel:', error);
+    console.error('Courier bulk book API error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Server error while booking NOC parcel' },
+      {
+        success: false,
+        error: error.message || 'Internal server error while booking courier.',
+      },
       { status: 500 }
     );
   }

@@ -10,36 +10,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import CopyButton from '@/components/CopyButton';
-import { RotateCw, Package, MapPin } from 'lucide-react';
+import { RotateCw, Package, MapPin, CheckCircle2, Clock } from 'lucide-react';
+import { formatSmartTimeAgo, formatFullDateTime } from '@/lib/timeAgo';
+import { mapCourierEventForCustomer } from '@/lib/order-status';
 
 function formatEventTitle(status) {
   if (!status) return 'Status Update';
-  const str = String(status).trim();
-  if (str === str.toUpperCase() && str.length > 3) {
-    return str
-      .toLowerCase()
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-      .replace(/Intransit/gi, 'In Transit');
-  }
-  return str.replace(/Intransit/gi, 'In Transit');
+  return String(status).trim();
 }
 
 function formatEventDateTime(rawDate) {
   if (!rawDate) return '';
-  const parsed = new Date(rawDate);
-  if (isNaN(parsed.getTime())) {
-    return String(rawDate).trim();
-  }
-  return parsed.toLocaleString('en-PK', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  return formatFullDateTime(rawDate);
 }
 
 function cleanRemarks(remarks) {
@@ -67,10 +49,19 @@ export default function NocTrackingModal({
   orderId,
   courierName,
   nocLabelUrl,
+  isAdmin = false,
+  initialMode = 'admin',
 }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState(initialMode);
+
+  useEffect(() => {
+    if (open) {
+      setViewMode(isAdmin ? initialMode : 'customer');
+    }
+  }, [open, isAdmin, initialMode]);
 
   const fetchTracking = useCallback(async () => {
     if (!trackingNumber && !orderId) return;
@@ -119,20 +110,50 @@ export default function NocTrackingModal({
         {/* Header - Spacious and Grand on PC, adaptive on Mobile */}
         <div className="px-5 py-5 sm:px-8 sm:pt-7 sm:pb-5 border-b border-border/70 bg-card pr-12 sm:pr-14">
           <DialogHeader className="p-0 text-left space-y-2.5 sm:space-y-3">
-            <div className="flex items-center gap-2.5">
-              <DialogTitle className="text-base sm:text-xl font-bold tracking-tight text-foreground">
-                Shipment Tracking
-              </DialogTitle>
-              <button
-                type="button"
-                onClick={fetchTracking}
-                disabled={loading}
-                title="Refresh tracking status"
-                className="size-7 sm:size-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <RotateCw className={`size-3.5 sm:size-4.5 ${loading ? 'animate-spin' : ''}`} />
-                <span className="sr-only">Refresh</span>
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <DialogTitle className="text-base sm:text-xl font-bold tracking-tight text-foreground">
+                  Shipment Tracking
+                </DialogTitle>
+                <button
+                  type="button"
+                  onClick={fetchTracking}
+                  disabled={loading}
+                  title="Refresh tracking status"
+                  className="size-7 sm:size-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  <RotateCw className={`size-3.5 sm:size-4.5 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="sr-only">Refresh</span>
+                </button>
+              </div>
+
+              {/* Admin vs Customer View Toggle (Only for Admin) */}
+              {isAdmin && (
+                <div className="inline-flex items-center rounded-lg bg-muted p-1 text-xs border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('admin')}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                      viewMode === 'admin'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Raw NOC (Admin)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('customer')}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                      viewMode === 'customer'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Customer View
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Clean, Spacious Metadata Row on PC */}
@@ -147,9 +168,9 @@ export default function NocTrackingModal({
               {orderId ? <span className="text-muted-foreground/30">•</span> : null}
 
               {/* Courier Partner Badge */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground font-medium">Courier:</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md font-bold text-[11px] sm:text-xs bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-950 border border-zinc-950 dark:border-zinc-200 tracking-wide shadow-2xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-muted text-foreground border border-border/70">
                   {effectiveCourier}
                 </span>
               </div>
@@ -217,9 +238,21 @@ export default function NocTrackingModal({
             <div className="relative pl-7 sm:pl-8 py-2 flex flex-col gap-6 sm:gap-7 before:absolute before:left-[8px] sm:before:left-[10px] before:top-3 before:bottom-3 before:w-px before:bg-border/80">
               {events.map((event, idx) => {
                 const isLatest = idx === 0;
-                const title = formatEventTitle(event.status);
+                
+                // Admin gets exact raw NOC status & remarks; Customer gets clear friendly title & description
+                let title = '';
+                let subtitle = '';
+
+                if (viewMode === 'admin') {
+                  title = event.status || 'Status Update';
+                  subtitle = cleanRemarks(event.remarks);
+                } else {
+                  const friendly = mapCourierEventForCustomer(event.status, event.remarks);
+                  title = friendly.title;
+                  subtitle = friendly.description;
+                }
+
                 const displayDate = formatEventDateTime(event.dateTime);
-                const remarks = cleanRemarks(event.remarks);
                 const isDeliveredStep = title.toLowerCase().includes('delivered');
 
                 return (
@@ -252,16 +285,23 @@ export default function NocTrackingModal({
                           {title}
                         </span>
                         {displayDate ? (
-                          <time className="text-[11px] sm:text-[13px] tabular-nums text-muted-foreground shrink-0 font-medium whitespace-nowrap">
-                            {displayDate}
-                          </time>
+                          <div className="flex items-center gap-1.5 shrink-0 flex-wrap sm:flex-nowrap">
+                            <time className="text-[11px] sm:text-[13px] tabular-nums text-muted-foreground font-medium whitespace-nowrap">
+                              {displayDate}
+                            </time>
+                            {event.dateTime && (
+                              <span className="text-[10px] sm:text-[11px] font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
+                                {formatSmartTimeAgo(event.dateTime)}
+                              </span>
+                            )}
+                          </div>
                         ) : null}
                       </div>
 
-                      {remarks ? (
+                      {subtitle ? (
                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-0.5 flex items-center gap-1.5">
-                          <MapPin className="size-3.5 text-muted-foreground/60 shrink-0" />
-                          <span>{remarks}</span>
+                          <MapPin className="size-3 text-muted-foreground/70 shrink-0" />
+                          <span>{subtitle}</span>
                         </p>
                       ) : null}
                     </div>

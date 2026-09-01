@@ -184,31 +184,31 @@ export default function AdminInvoicesClient({ initialData }) {
     switch (status) {
       case 'DRAFT':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground border border-border">
             DRAFT
           </span>
         );
       case 'SENT':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20">
             SENT
           </span>
         );
       case 'PARTIALLY_PAID':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
             PARTIALLY PAID
           </span>
         );
       case 'PAID':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
             PAID
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground border border-border">
             {status}
           </span>
         );
@@ -236,19 +236,19 @@ export default function AdminInvoicesClient({ initialData }) {
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto admin-page-stack">
+    <div className="flex flex-col gap-6 max-w-[1600px] mx-auto admin-page-stack">
       {/* ── Top Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-800 border border-zinc-200">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+            <div className="p-2 rounded-xl bg-muted text-foreground border border-border">
+              <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                 All Invoices
               </h1>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Manage store invoices, payments, and 2-way synced customer orders.
               </p>
             </div>
@@ -261,92 +261,93 @@ export default function AdminInvoicesClient({ initialData }) {
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 text-xs text-zinc-700 hover:bg-zinc-100 border-zinc-200 shadow-none"
+              className="h-9 gap-1.5 text-xs border-border"
             >
-              <ShoppingCart className="w-4 h-4 text-zinc-500" />
+              <ShoppingCart className="w-4 h-4 text-muted-foreground" />
               Orders Management
             </Button>
           </Link>
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={() => setShowNewPanel(true)}
-            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors h-9"
+            className="h-9 gap-1.5 text-xs font-semibold"
           >
             <Plus className="w-4 h-4" />
             Create Invoice
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* ── Stats Overview Cards (Flat & Clean) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Unpaid Balance */}
-        <div className="p-4 rounded-xl bg-white border border-zinc-200 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Unpaid Balance
             </span>
-            <div className="text-2xl font-bold text-zinc-900 tabular-nums">
+            <div className="text-2xl font-bold text-foreground tabular-nums">
               PKR {Number(stats.totalUnpaid || 0).toLocaleString('en-PK')}
             </div>
-            <p className="text-[10px] text-zinc-400">Pending receivables</p>
+            <p className="text-[10px] text-muted-foreground">Pending receivables</p>
           </div>
-          <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 2: Draft Invoices */}
-        <div className="p-4 rounded-xl bg-white border border-zinc-200 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Draft Invoices
             </span>
-            <div className="text-2xl font-bold text-zinc-900 tabular-nums">
+            <div className="text-2xl font-bold text-foreground tabular-nums">
               {stats.draftCount || 0}
             </div>
-            <p className="text-[10px] text-zinc-400">Unfinalized drafts</p>
+            <p className="text-[10px] text-muted-foreground">Unfinalized drafts</p>
           </div>
-          <div className="p-2.5 rounded-lg bg-zinc-50 text-zinc-600 border border-zinc-200 shrink-0">
+          <div className="p-2.5 rounded-lg bg-muted text-muted-foreground border border-border shrink-0">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 3: Sent Invoices */}
-        <div className="p-4 rounded-xl bg-white border border-zinc-200 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Sent Invoices
             </span>
-            <div className="text-2xl font-bold text-blue-600 tabular-nums">
+            <div className="text-2xl font-bold text-sky-700 dark:text-sky-400 tabular-nums">
               {stats.sentCount || 0}
             </div>
-            <p className="text-[10px] text-zinc-400">Dispatched & active</p>
+            <p className="text-[10px] text-muted-foreground">Dispatched & active</p>
           </div>
-          <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
+          <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20 shrink-0">
             <Send className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 4: Total Invoices */}
-        <div className="p-4 rounded-xl bg-white border border-zinc-200 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Total Invoices
             </span>
-            <div className="text-2xl font-bold text-zinc-900 tabular-nums">
+            <div className="text-2xl font-bold text-foreground tabular-nums">
               {totalCount || 0}
             </div>
-            <p className="text-[10px] text-zinc-400">Registered records</p>
+            <p className="text-[10px] text-muted-foreground">Registered records</p>
           </div>
-          <div className="p-2.5 rounded-lg bg-zinc-50 text-zinc-600 border border-zinc-200 shrink-0">
+          <div className="p-2.5 rounded-lg bg-muted text-muted-foreground border border-border shrink-0">
             <Layers className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* ── Filters & Search Control Bar ── */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-xl border border-zinc-200">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3 sm:p-4 rounded-xl border border-border shadow-xs">
         {/* Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
           {filterTabs.map((tab) => (
@@ -356,17 +357,17 @@ export default function AdminInvoicesClient({ initialData }) {
                 setStatusFilter(tab.key);
                 setPage(1);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
                 statusFilter === tab.key
-                  ? 'bg-zinc-900 text-white'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                    statusFilter === tab.key ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700'
+                    statusFilter === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {tab.count}
@@ -379,7 +380,7 @@ export default function AdminInvoicesClient({ initialData }) {
         {/* Search & Refresh */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-72">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
             <Input
               type="text"
               value={search}
@@ -388,17 +389,17 @@ export default function AdminInvoicesClient({ initialData }) {
                 setPage(1);
               }}
               placeholder="Search Invoice#, Customer, Phone..."
-              className="pl-8 h-9 text-xs rounded-lg border-zinc-200 shadow-none focus-visible:ring-1 focus-visible:ring-emerald-500"
+              className="pl-8 h-9 text-xs rounded-lg border-border shadow-none"
             />
           </div>
           <Button
             variant="outline"
             size="icon"
             onClick={fetchInvoices}
-            className="h-9 w-9 rounded-lg border-zinc-200 hover:bg-zinc-50 shadow-none"
+            className="h-9 w-9 rounded-lg border-border hover:bg-muted shadow-none cursor-pointer"
             title="Refresh list"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-600 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -467,17 +468,17 @@ export default function AdminInvoicesClient({ initialData }) {
       )}
 
       {/* ── Main Invoices Table ── */}
-      <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-50 border-b border-zinc-200 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+            <thead className="bg-muted/40 border-b border-border text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-3 py-3 w-10 text-center">
                   <input
                     type="checkbox"
                     checked={invoices.length > 0 && selectedIds.length === invoices.length}
                     onChange={toggleSelectAll}
-                    className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4 cursor-pointer"
+                    className="rounded border-border text-primary focus:ring-ring h-4 w-4 cursor-pointer"
                   />
                 </th>
                 <th className="px-4 py-3">Invoice #</th>
@@ -490,51 +491,51 @@ export default function AdminInvoicesClient({ initialData }) {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 text-zinc-700">
+            <tbody className="divide-y divide-border text-foreground">
               {isLoading ? (
                 // ── Professional Skeleton Loading Rows ──
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={`skeleton-${i}`} className="animate-pulse">
                     <td className="px-3 py-3.5 text-center">
-                      <div className="h-4 w-4 bg-zinc-200 rounded mx-auto"></div>
+                      <div className="h-4 w-4 bg-muted rounded mx-auto"></div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="h-4 bg-zinc-200 rounded w-24"></div>
+                      <div className="h-4 bg-muted rounded w-24"></div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="h-4 bg-zinc-100 rounded w-20"></div>
+                      <div className="h-4 bg-muted/60 rounded w-20"></div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="h-4 bg-zinc-200 rounded w-32 mb-1"></div>
-                      <div className="h-3 bg-zinc-100 rounded w-20"></div>
+                      <div className="h-4 bg-muted rounded w-32 mb-1"></div>
+                      <div className="h-3 bg-muted/60 rounded w-20"></div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="h-4 bg-zinc-100 rounded w-24"></div>
+                      <div className="h-4 bg-muted/60 rounded w-24"></div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="h-5 bg-zinc-100 rounded-full w-16"></div>
+                      <div className="h-5 bg-muted/80 rounded-full w-16"></div>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <div className="h-4 bg-zinc-200 rounded w-16 ml-auto"></div>
+                      <div className="h-4 bg-muted rounded w-16 ml-auto"></div>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <div className="h-4 bg-zinc-200 rounded w-16 ml-auto"></div>
+                      <div className="h-4 bg-muted rounded w-16 ml-auto"></div>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <div className="h-7 bg-zinc-100 rounded-lg w-14 ml-auto"></div>
+                      <div className="h-7 bg-muted/60 rounded-lg w-14 ml-auto"></div>
                     </td>
                   </tr>
                 ))
               ) : invoices.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-4 py-16 text-center">
-                    <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto mb-3 border border-zinc-200">
+                    <div className="w-12 h-12 rounded-xl bg-muted text-muted-foreground flex items-center justify-center mx-auto mb-3 border border-border">
                       <FileText className="w-6 h-6" />
                     </div>
-                    <p className="font-semibold text-zinc-800 text-sm">
+                    <p className="font-semibold text-foreground text-sm">
                       {isTrashView ? 'Trash is empty' : 'No invoices found'}
                     </p>
-                    <p className="text-zinc-400 text-xs mt-1">
+                    <p className="text-muted-foreground text-xs mt-1">
                       {isTrashView
                         ? 'Deleted invoices will appear here.'
                         : 'Try changing your filters or create a new invoice.'}
@@ -548,7 +549,7 @@ export default function AdminInvoicesClient({ initialData }) {
                     <tr
                       key={inv._id}
                       className={`transition-colors ${
-                        isSelected ? 'bg-emerald-50/50' : 'hover:bg-zinc-50/60'
+                        isSelected ? 'bg-muted/60' : 'hover:bg-muted/30'
                       }`}
                     >
                       {/* Checkbox */}
@@ -557,7 +558,7 @@ export default function AdminInvoicesClient({ initialData }) {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectOne(inv._id)}
-                          className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4 cursor-pointer"
+                          className="rounded border-border text-primary focus:ring-ring h-4 w-4 cursor-pointer"
                         />
                       </td>
 
@@ -565,23 +566,23 @@ export default function AdminInvoicesClient({ initialData }) {
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         <Link
                           href={`/admin/invoices/${inv._id}`}
-                          className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1.5"
+                          className="font-bold text-foreground hover:underline inline-flex items-center gap-1.5"
                         >
-                          <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                           {inv.invoiceNumber}
                         </Link>
                       </td>
 
                       {/* Date */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-zinc-500 font-medium">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground font-medium">
                         {formatDate(inv.invoiceDate)}
                       </td>
 
                       {/* Customer */}
                       <td className="px-4 py-3.5">
-                        <div className="font-semibold text-zinc-900">{inv.customerName || 'Anonymous'}</div>
+                        <div className="font-semibold text-foreground">{inv.customerName || 'Anonymous'}</div>
                         {inv.customerPhone && (
-                          <div className="text-[11px] text-zinc-400 mt-0.5">{inv.customerPhone}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{inv.customerPhone}</div>
                         )}
                       </td>
 
@@ -590,14 +591,14 @@ export default function AdminInvoicesClient({ initialData }) {
                         {inv.orderId ? (
                           <Link
                             href={`/admin/orders?search=${inv.orderId}`}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-medium transition-colors border border-zinc-200/80"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground text-[11px] font-medium transition-colors border border-border"
                             title="View Order"
                           >
                             <span>{inv.orderId}</span>
-                            <ExternalLink className="w-3 h-3 text-zinc-400" />
+                            <ExternalLink className="w-3 h-3 text-muted-foreground" />
                           </Link>
                         ) : (
-                          <span className="text-zinc-300 font-medium">—</span>
+                          <span className="text-muted-foreground/40 font-medium">—</span>
                         )}
                       </td>
 
@@ -605,18 +606,18 @@ export default function AdminInvoicesClient({ initialData }) {
                       <td className="px-4 py-3.5 whitespace-nowrap">{getStatusBadge(inv.status)}</td>
 
                       {/* Amount */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-900 tabular-nums">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-right font-semibold text-foreground tabular-nums">
                         PKR {Number(inv.totalAmount || 0).toLocaleString('en-PK')}
                       </td>
 
                       {/* Balance Due */}
                       <td className="px-4 py-3.5 whitespace-nowrap text-right tabular-nums">
                         {Number(inv.balanceDue || 0) === 0 && Number(inv.totalAmount || 0) > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-700 font-bold text-xs">
+                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Paid
                           </span>
                         ) : (
-                          <span className="font-bold text-zinc-900">
+                          <span className="font-bold text-foreground">
                             PKR {Number(inv.balanceDue || 0).toLocaleString('en-PK')}
                           </span>
                         )}
@@ -631,7 +632,7 @@ export default function AdminInvoicesClient({ initialData }) {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 shadow-none"
+                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted shadow-none cursor-pointer"
                                   title="View Invoice"
                                 >
                                   <Eye className="w-4 h-4" />
@@ -641,22 +642,33 @@ export default function AdminInvoicesClient({ initialData }) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDelete(inv._id, inv.invoiceNumber)}
-                                className="h-8 w-8 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-none"
+                                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer"
                                 title="Move to Trash"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </>
                           ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRestore(inv._id, inv.invoiceNumber)}
-                              className="h-8 px-2.5 text-xs text-emerald-700 hover:bg-emerald-50"
-                              title="Restore Invoice"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5 mr-1" /> Restore
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRestore(inv._id)}
+                                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-none cursor-pointer"
+                                title="Restore Invoice"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(inv._id, inv.invoiceNumber)}
+                                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer"
+                                title="Delete Permanently"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -669,9 +681,8 @@ export default function AdminInvoicesClient({ initialData }) {
         </div>
 
         {/* ── Pagination Footer ── */}
-        <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 border-t border-zinc-200 text-xs text-zinc-500">
+        <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-t border-border text-xs text-muted-foreground">
           <div>
-            Showing <strong className="text-zinc-700">{invoices.length}</strong> of{' '}
             <strong className="text-zinc-700">{totalCount}</strong> invoices
           </div>
           <div className="flex items-center gap-2">

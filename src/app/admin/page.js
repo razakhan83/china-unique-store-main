@@ -6,6 +6,7 @@ import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutG
 import dynamic from 'next/dynamic';
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { getAdminDashboardData, getAdminChartData } from '@/lib/data';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -13,16 +14,6 @@ import { requireAdmin } from '@/lib/requireAdmin';
 const DashboardChart = dynamic(() => import('@/components/admin/DashboardChart'), {
   loading: () => <div className="h-[320px] w-full animate-pulse rounded-lg bg-muted/40" />,
 });
-
-const STATUS_VARIANT = {
-  'Order Confirmed': 'default',
-  'In Process': 'secondary',
-  Packed: 'secondary',
-  Shipped: 'default',
-  'Out For Delivery': 'default',
-  Delivered: 'default',
-  Returned: 'destructive',
-};
 
 const statsConfig = [
   { title: 'Total Orders', icon: ShoppingBag, key: 'totalOrders' },
@@ -34,15 +25,15 @@ const statsConfig = [
 function getDashboardStatusBadgeClass(status) {
   const s = normalizeOrderStatus(status);
   if (s === 'Order Confirmed' || s === 'Shipped' || s === 'Out For Delivery' || s === 'Delivered') {
-    return 'bg-emerald-50 text-black border-emerald-300';
+    return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20';
   }
   if (s === 'In Process' || s === 'Packed') {
-    return 'bg-amber-50 text-black border-amber-300';
+    return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20';
   }
   if (s === 'Returned' || s === 'Cancelled') {
-    return 'bg-rose-50 text-black border-rose-300';
+    return 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20';
   }
-  return 'bg-emerald-50 text-black border-emerald-300';
+  return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20';
 }
 
 function formatAdminTimestamp(value) {
@@ -137,19 +128,17 @@ async function DashboardContent({ session }) {
         </div>
 
         <div className="flex items-center gap-2 sm:shrink-0">
-          <Link
-            href="/admin/orders?createOrder=1"
-            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="size-3.5" />
-            <span>Create Order</span>
+          <Link href="/admin/orders?createOrder=1">
+            <Button size="sm" className="h-8 gap-1.5 px-3 text-xs font-semibold cursor-pointer">
+              <Plus className="size-3.5" />
+              <span>Create Order</span>
+            </Button>
           </Link>
-          <Link
-            href="/admin/products/add"
-            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-secondary px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-colors"
-          >
-            <Box className="size-3.5" />
-            <span>Add Product</span>
+          <Link href="/admin/products/add">
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 px-3 text-xs font-medium cursor-pointer border-border">
+              <Box className="size-3.5" />
+              <span>Add Product</span>
+            </Button>
           </Link>
         </div>
       </div>

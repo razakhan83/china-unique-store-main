@@ -23,16 +23,14 @@ if (!cached) {
 const connectionOptions = {
   bufferCommands: false,
   autoIndex: false,
-  // Vercel/serverless: one pool per isolate. Keep this tiny so N instances × (pool+2 monitors)
-  // cannot exhaust Atlas. Long-running `next start` can hold a few more warm sockets.
-  maxPoolSize: isServerlessLike ? 3 : 10,
+  maxPoolSize: isBuildPhase ? 30 : (isServerlessLike ? 10 : 25),
   minPoolSize: isDev ? 2 : 0,
-  maxConnecting: 2,
-  maxIdleTimeMS: isDev ? 300000 : 15000,
-  waitQueueTimeoutMS: 5000,
-  serverSelectionTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
-  connectTimeoutMS: useFastRuntimeTimeouts ? 5000 : 10000,
-  socketTimeoutMS: 30000,
+  maxConnecting: isBuildPhase ? 10 : 4,
+  maxIdleTimeMS: isDev ? 300000 : 30000,
+  waitQueueTimeoutMS: isBuildPhase ? 30000 : 10000,
+  serverSelectionTimeoutMS: 15000,
+  connectTimeoutMS: 15000,
+  socketTimeoutMS: 45000,
   // Pakistan → Atlas RTT is often >50ms; zlib is built into the driver (no extra native dep).
   compressors: ['zlib'],
 };

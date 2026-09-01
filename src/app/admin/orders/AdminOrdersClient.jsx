@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer, Send, FileText, Upload } from 'lucide-react';
+import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Download, Edit, Zap, Check, ChevronsUpDown, MoreHorizontal, FileSpreadsheet, PackageCheck, Truck, Plus, Printer, Send, FileText, Upload, Globe, UserCog } from 'lucide-react';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,35 @@ import { cn } from '@/lib/utils';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 import { bulkDeleteOrdersAction, bulkUpdateOrderStatusAction, createDraftOrderAction, deleteOrderAction, emptyTrashAction, hardDeleteOrderAction, restoreOrderAction, updateOrderAction } from '@/app/actions';
 import { DEFAULT_ADMIN_FILTER_STATUS, DEFAULT_ORDER_STATUS, ORDER_STATUSES, normalizeOrderStatus } from '@/lib/order-status';
+import { formatSmartTimeAgo, formatFullDateTime, formatFullDate, formatFullTime } from '@/lib/timeAgo';
 import { toast } from 'sonner';
+
+export function getOrderOriginInfo(order) {
+  const isAdmin = 
+    order?.orderType === 'Admin' ||
+    Boolean(order?.isDraft) ||
+    Boolean(order?.sourceTag && String(order.sourceTag).trim() !== '') ||
+    Boolean(order?.invoiceId || order?.invoiceNumber) ||
+    (order?.manualCodAmount !== undefined && order?.manualCodAmount !== null && order?.manualCodAmount !== '') ||
+    Boolean(order?.itemType && order?.itemType !== 'Mix');
+
+  const isOnline = !isAdmin && (order?.orderType === 'Online' || !order?.orderType);
+  const tag = order?.sourceTag || '';
+
+  return {
+    isOnline,
+    isAdmin,
+    label: isOnline ? 'Online (Website)' : (tag ? `Admin (${tag})` : 'Created by Admin'),
+    shortLabel: isOnline ? 'Online' : (tag || 'Admin'),
+    tooltip: isOnline 
+      ? 'Online Order (Placed by customer on website)' 
+      : `Created by Admin${tag ? ` • Channel: ${tag}` : ' (Manual / Draft)'}`,
+    badgeClass: isOnline 
+      ? 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300' 
+      : 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300',
+    iconClass: 'text-foreground shrink-0 select-none',
+  };
+}
 
 const statusVariant = {
   'Order Confirmed': 'primary',
@@ -511,44 +539,66 @@ export default function AdminOrdersClient({
     }
   };
 
+  // Auto-sync active orders in background on first visit (with 15 min debounce)
+  useEffect(() => {
+    try {
+      const lastAutoSync = sessionStorage.getItem('admin_orders_last_auto_sync');
+      const now = Date.now();
+      if (!lastAutoSync || now - Number(lastAutoSync) > 15 * 60 * 1000) {
+        sessionStorage.setItem('admin_orders_last_auto_sync', String(now));
+        const activeIds = orders
+          .filter(
+            (o) =>
+              (o.trackingNumber || o.nocParcelNo || o.nocThirdPartyNo) &&
+              !['Delivered', 'Completed', 'Returned', 'Cancelled'].includes(o.status)
+          )
+          .map((o) => o._id);
+
+        if (activeIds.length > 0) {
+          fetch('/api/admin/courier/sync-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderIds: activeIds }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data?.success && Array.isArray(data.results) && data.changedCount > 0) {
+                router.refresh();
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [orders, router]);
+
   const handlePrintSelectedNocSlips = () => {
     const selectedSet = new Set(selectedOrders.map((id) => String(id)));
     const selectedObjList = orders.filter(
       (o) => selectedSet.has(String(o._id)) || selectedSet.has(String(o.orderId))
     );
 
-    const getOrderLabelUrl = (o) => {
-      if (o.nocLabelUrl && o.nocLabelUrl.trim().length > 0) return o.nocLabelUrl.trim();
-      return null;
-    };
-
-    const bookedOrders = selectedObjList.filter((o) => getOrderLabelUrl(o));
+    const bookedOrders = selectedObjList.filter((o) => o.nocLabelUrl || o.nocParcelNo || o.trackingNumber);
 
     if (bookedOrders.length === 0) {
-      toast.error('No NOC shipping slip URL found for selected orders. Please book with NOC Express first.');
+      toast.error('No NOC parcel or tracking numbers found for selected orders. Please book with NOC Express first.');
       return;
     }
 
-    const p1Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_1' || (!o.nocAccountId && getOrderLabelUrl(o)));
-    const p2Orders = bookedOrders.filter((o) => o.nocAccountId === 'portal_2');
-
-    const p1OrderIds = p1Orders.map((o) => o.orderId || o._id).filter(Boolean);
-    const p2OrderIds = p2Orders.map((o) => o.orderId || o._id).filter(Boolean);
-    const allOrderIds = bookedOrders.map((o) => o.orderId || o._id).filter(Boolean);
-
-    if (!enableSecondaryNoc || p2Orders.length === 0) {
-      const targetIds = p1OrderIds.length > 0 ? p1OrderIds : allOrderIds;
-      window.open(`/api/admin/courier/print-slips?orderIds=${targetIds.join(',')}&portalKey=portal_1`, '_blank');
+    const slipsToOpen = bookedOrders.map((o) => o.nocLabelUrl).filter(Boolean);
+    if (slipsToOpen.length > 0) {
+      slipsToOpen.forEach((url, index) => {
+        setTimeout(() => {
+          window.open(url, '_blank');
+        }, index * 300);
+      });
+      toast.success(`Opening ${slipsToOpen.length} official NOC slip(s) in new tabs...`);
       return;
     }
 
-    setNocPrintAccountModal({
-      p1Count: p1Orders.length,
-      p1OrderIds,
-      p2Count: p2Orders.length,
-      p2OrderIds,
-      allOrderIds,
-    });
+    toast.error('No official NOC Slip URL available for selected order(s).');
   };
 
   // Trash & Delete State
@@ -2319,18 +2369,16 @@ export default function AdminOrdersClient({
               </Button>
             )}
 
-            {(statusFilter === 'Shipped' || statusFilter === 'all' || statusFilter === 'In Transit' || statusFilter === 'Out for Delivery' || statusFilter === 'Out For Delivery' || statusFilter === 'Returned') && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handleSyncNocStatus(selectedOrders)}
-                disabled={isBulkSyncingNoc}
-                className="h-7.5 px-2.5 text-xs bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold shadow-xs flex items-center gap-1 cursor-pointer"
-              >
-                {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
-                Sync NOC Status
-              </Button>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handleSyncNocStatus(selectedOrders)}
+              disabled={isBulkSyncingNoc}
+              className="h-7.5 px-2.5 text-xs bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold shadow-xs flex items-center gap-1 cursor-pointer"
+            >
+              {isBulkSyncingNoc ? <Spinner data-icon="inline-start" /> : <RotateCcw className="size-3.5" />}
+              Sync NOC Status
+            </Button>
 
             {/* Delete / Move to Trash Button */}
             <Button
@@ -2647,10 +2695,7 @@ export default function AdminOrdersClient({
                           return String(order.nocStatusTime).trim();
                         }
                         if (order.courierBookingDate) {
-                          return `${formatDate(order.courierBookingDate)} ${formatTime(order.courierBookingDate)}`;
-                        }
-                        if (order.createdAt && (order.status === 'Shipped' || order.status === 'Delivered' || order.status === 'Out For Delivery' || order.status === 'Returned')) {
-                          return `${formatDate(order.createdAt)} ${formatTime(order.createdAt)}`;
+                          return formatFullDateTime(order.courierBookingDate);
                         }
                         return '—';
                       })();
@@ -2667,11 +2712,19 @@ export default function AdminOrdersClient({
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
+                              {(() => {
+                                const origin = getOrderOriginInfo(order);
+                                return origin.isAdmin ? (
+                                  <UserCog className="size-3.5 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                                ) : (
+                                  <Globe className="size-3.5 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                                );
+                              })()}
                               <Link href={`/admin/orders/${order._id}`} className="text-[13.5px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
                                 {order.orderId}
                               </Link>
                               {isNewOrder(order.createdAt) && (
-                                <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0">
+                                <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0">
                                   NEW
                                 </span>
                               )}
@@ -2689,9 +2742,13 @@ export default function AdminOrdersClient({
                             </span>
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
-                            <div className="flex flex-col whitespace-nowrap">
-                              <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{formatDate(order.createdAt)}</span>
-                              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">{formatTime(order.createdAt)}</span>
+                            <div className="flex flex-col whitespace-nowrap" title={formatFullDateTime(order.createdAt)}>
+                              <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
+                                {formatSmartTimeAgo(order.createdAt)}
+                              </span>
+                              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                                {formatDate(order.createdAt)} {formatTime(order.createdAt)}
+                              </span>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-[12.5px] font-semibold text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
@@ -2728,7 +2785,13 @@ export default function AdminOrdersClient({
                                   title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
                                   className="text-[12.5px] font-semibold text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
                                 >
-                                  {order.nocStatus || 'Booked'}
+                                  {(() => {
+                                    const raw = order.nocStatus || '';
+                                    if (raw && !raw.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+                                      return raw;
+                                    }
+                                    return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
+                                  })()}
                                 </button>
                               ) : (
                                 <span className="text-[12px] text-muted-foreground">—</span>
@@ -2738,8 +2801,17 @@ export default function AdminOrdersClient({
 
                           {/* 4. Status Time Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2.5 text-[11.5px] tabular-nums font-mono text-muted-foreground whitespace-nowrap">
-                              {statusTimeDisplay}
+                            <td className="px-3 py-2.5 whitespace-nowrap" title={statusTimeDisplay}>
+                              <div className="flex flex-col whitespace-nowrap">
+                                <span className="text-[12px] font-semibold text-foreground whitespace-nowrap">
+                                  {order.nocStatusTime || order.courierBookingDate ? formatSmartTimeAgo(order.nocStatusTime || order.courierBookingDate) : '—'}
+                                </span>
+                                {statusTimeDisplay !== '—' && (
+                                  <span className="text-[10.5px] tabular-nums font-mono text-muted-foreground whitespace-nowrap">
+                                    {statusTimeDisplay}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           )}
 
@@ -2897,10 +2969,18 @@ export default function AdminOrdersClient({
                   />
                   <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0 mt-[1px]">
+                      <div className="flex items-center gap-1.5 min-w-0 mt-[1px] flex-wrap">
+                        {(() => {
+                          const origin = getOrderOriginInfo(order);
+                          return origin.isAdmin ? (
+                            <UserCog className="size-3 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                          ) : (
+                            <Globe className="size-3 text-foreground shrink-0 select-none" title={origin.tooltip} />
+                          );
+                        })()}
                         <p className="text-[13px] font-bold tracking-tight text-foreground truncate leading-none">{order.orderId}</p>
                         {isNewOrder(order.createdAt) && (
-                          <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0 leading-none">
+                          <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0 leading-none">
                             NEW
                           </span>
                         )}
@@ -2971,6 +3051,9 @@ export default function AdminOrdersClient({
 
                       if (!isShippedPhase || !displayTracking) return null;
 
+                      const statusTimeRaw = order.nocStatusTime || order.courierBookingDate;
+                      const statusTimeAgo = statusTimeRaw ? formatSmartTimeAgo(statusTimeRaw) : '';
+
                       return (
                         <div className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 text-[12px]">
                           <div className="flex items-center gap-1.5 min-w-0">
@@ -2979,13 +3062,26 @@ export default function AdminOrdersClient({
                             </span>
                             <span className="text-[11px] font-semibold text-muted-foreground truncate">({courierToDisplay})</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setNocTrackingOrder(order)}
-                            className="text-[12px] font-semibold text-foreground hover:underline cursor-pointer shrink-0"
-                          >
-                            {order.nocStatus || 'Booked'}
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setNocTrackingOrder(order)}
+                              className="text-[12px] font-semibold text-foreground hover:underline cursor-pointer"
+                            >
+                              {(() => {
+                                const raw = order.nocStatus || '';
+                                if (raw && !raw.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+                                  return raw;
+                                }
+                                return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
+                              })()}
+                            </button>
+                            {statusTimeAgo && (
+                              <span className="text-[10.5px] text-muted-foreground font-normal">
+                                • {statusTimeAgo}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       );
                     })()}
@@ -3005,7 +3101,14 @@ export default function AdminOrdersClient({
 
                     {/* Mobile Date & View Action */}
                     <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <span className="text-[12px] font-medium text-muted-foreground">{formatDate(order.createdAt)}</span>
+                      <div className="flex flex-col" title={formatFullDateTime(order.createdAt)}>
+                        <span className="text-[12px] font-semibold text-foreground">
+                          {formatSmartTimeAgo(order.createdAt)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatDate(order.createdAt)} {formatTime(order.createdAt)}
+                        </span>
+                      </div>
                       
                       <OrderQuickViewDialog
                         order={order}
@@ -3900,6 +4003,7 @@ export default function AdminOrdersClient({
         orderId={nocTrackingOrder?.orderId}
         courierName={nocTrackingOrder?.courierName || 'NOC'}
         nocLabelUrl={nocTrackingOrder?.nocLabelUrl}
+        isAdmin={true}
       />
 
       {/* Sync NOC Excel / Loadsheet Modal */}
@@ -3935,28 +4039,31 @@ export default function AdminOrdersClient({
               <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-2 max-h-48 overflow-y-auto">
                 <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">Booked Orders & Slips:</span>
                 <div className="space-y-1.5">
-                  {nocPrintResult.orders.map((o, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-gray-200 text-xs">
-                      <div className="min-w-0 flex-1">
-                        <span className="font-bold text-gray-900">{o.orderId}</span>
-                        {o.trackingNumber && (
-                          <span className="ml-2 font-mono text-[11px] text-sky-800 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
-                            {o.trackingNumber}
-                          </span>
+                  {nocPrintResult.orders.map((o, idx) => {
+                    const slipUrl = o.labelUrl;
+                    return (
+                      <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-gray-200 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-gray-900">{o.orderId}</span>
+                          {o.trackingNumber && (
+                            <span className="ml-2 font-mono text-[11px] text-sky-800 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
+                              {o.trackingNumber}
+                            </span>
+                          )}
+                        </div>
+                        {slipUrl && (
+                          <button
+                            type="button"
+                            onClick={() => window.open(slipUrl, '_blank')}
+                            className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                          >
+                            <Printer className="size-3" />
+                            Print Slip
+                          </button>
                         )}
                       </div>
-                      {o.labelUrl && (
-                        <button
-                          type="button"
-                          onClick={() => window.open(o.labelUrl, '_blank')}
-                          className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-md transition-colors"
-                        >
-                          <Printer className="size-3" />
-                          Print Slip
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -3971,14 +4078,34 @@ export default function AdminOrdersClient({
             >
               Close
             </Button>
-            {nocPrintResult?.labelUrl ? (
+            {nocPrintResult?.orders?.length > 0 ? (
+              <Button
+                size="sm"
+                onClick={() => {
+                  const slipUrls = nocPrintResult.orders.map((o) => o.labelUrl).filter(Boolean);
+                  if (slipUrls.length === 0 && nocPrintResult.labelUrl) {
+                    slipUrls.push(nocPrintResult.labelUrl);
+                  }
+                  slipUrls.forEach((url, i) => {
+                    setTimeout(() => {
+                      window.open(url, '_blank');
+                    }, i * 300);
+                  });
+                  setNocPrintResult(null);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="size-4" />
+                Print All Slips ({nocPrintResult.orders.length})
+              </Button>
+            ) : nocPrintResult?.labelUrl ? (
               <Button
                 size="sm"
                 onClick={() => {
                   window.open(nocPrintResult.labelUrl, '_blank');
                   setNocPrintResult(null);
                 }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm flex items-center gap-1.5"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl h-10 px-5 shadow-sm flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="size-4" />
                 Print Airway Slip
@@ -4010,14 +4137,12 @@ export default function AdminOrdersClient({
               </div>
               <Button
                 size="sm"
-                disabled={!nocPrintAccountModal?.p1Urls?.length}
+                disabled={!nocPrintAccountModal?.p1Url}
                 onClick={() => {
-                  nocPrintAccountModal.p1Urls.forEach((url) => {
-                    if (url) window.open(url, '_blank');
-                  });
+                  if (nocPrintAccountModal.p1Url) window.open(nocPrintAccountModal.p1Url, '_blank');
                   setNocPrintAccountModal(null);
                 }}
-                className="bg-sky-600 hover:bg-sky-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
+                className="bg-sky-600 hover:bg-sky-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold cursor-pointer"
               >
                 Print ({nocPrintAccountModal?.p1Count || 0})
               </Button>
@@ -4031,14 +4156,12 @@ export default function AdminOrdersClient({
               </div>
               <Button
                 size="sm"
-                disabled={!nocPrintAccountModal?.p2Urls?.length}
+                disabled={!nocPrintAccountModal?.p2Url}
                 onClick={() => {
-                  nocPrintAccountModal.p2Urls.forEach((url) => {
-                    if (url) window.open(url, '_blank');
-                  });
+                  if (nocPrintAccountModal.p2Url) window.open(nocPrintAccountModal.p2Url, '_blank');
                   setNocPrintAccountModal(null);
                 }}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold"
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg px-3 py-1.5 h-8 font-semibold cursor-pointer"
               >
                 Print ({nocPrintAccountModal?.p2Count || 0})
               </Button>

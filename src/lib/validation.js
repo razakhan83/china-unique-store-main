@@ -46,6 +46,7 @@ export const draftOrderSchema = z.object({
   notes: notesSchema,
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   sourceTag: z.string().trim().max(50).optional().or(z.literal('')),
+  orderType: z.enum(['Online', 'Admin']).optional(),
   itemType: z.string().trim().max(50).optional().or(z.literal('')),
   weight: z.coerce.number().nonnegative().optional(),
   manualCodAmount: z.union([z.coerce.number().nonnegative(), z.literal('')]).optional(),
