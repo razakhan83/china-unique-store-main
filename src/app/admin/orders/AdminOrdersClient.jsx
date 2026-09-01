@@ -197,7 +197,7 @@ function buildHref(pathname, searchParams, updates) {
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function OrdersTablePendingSkeleton({ showNocColumns = false, enableSecondaryNoc = false }) {
+function OrdersTablePendingSkeleton({ showNocColumns = false }) {
   return (
     <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block shadow-xs">
       <table className="w-full text-left">
@@ -206,19 +206,15 @@ function OrdersTablePendingSkeleton({ showNocColumns = false, enableSecondaryNoc
             <th className="w-8 px-2 py-2 text-center">
               <Skeleton className="size-3.5 rounded-sm mx-auto" />
             </th>
-            <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
-            <th className="px-2 py-2"><Skeleton className="h-3 w-20 rounded" /></th>
+            <th className="px-2.5 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
+            <th className="px-2.5 py-2"><Skeleton className="h-3 w-20 rounded" /></th>
             <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
-            <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
+            <th className="px-2.5 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
             <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
-            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-18 rounded" /></th>}
-            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
-            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>}
-            {showNocColumns && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
-            {showNocColumns && enableSecondaryNoc && <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>}
-            <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></th>
-            <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></th>
-            <th className="px-2 py-2 text-center"><Skeleton className="h-3 w-14 rounded mx-auto" /></th>
+            {showNocColumns && <th className="px-2.5 py-2"><Skeleton className="h-3 w-24 rounded" /></th>}
+            {showNocColumns && <th className="px-2.5 py-2"><Skeleton className="h-3 w-20 rounded" /></th>}
+            <th className="px-2.5 py-2 text-right"><Skeleton className="h-3 w-14 rounded ml-auto" /></th>
+            <th className="px-2.5 py-2 text-center"><Skeleton className="h-3 w-14 rounded mx-auto" /></th>
             <th className="w-16 px-2 py-2" />
           </tr>
         </thead>
@@ -228,34 +224,44 @@ function OrdersTablePendingSkeleton({ showNocColumns = false, enableSecondaryNoc
               <td className="w-8 px-2 py-2 text-center">
                 <Skeleton className="size-3.5 rounded-sm mx-auto" />
               </td>
-              <td className="px-2 py-2">
+              <td className="px-2.5 py-2">
                 <div className="flex items-center gap-1">
                   <Skeleton className="h-3.5 w-14 rounded" />
                   <Skeleton className="h-3 w-6 rounded" />
                 </div>
               </td>
-              <td className="px-2 py-2">
+              <td className="px-2.5 py-2">
                 <div className="flex flex-col gap-1">
                   <Skeleton className="h-3.5 w-24 rounded" />
                   <Skeleton className="h-2.5 w-16 rounded" />
                 </div>
               </td>
               <td className="px-2 py-2"><Skeleton className="h-3.5 w-12 rounded" /></td>
-              <td className="px-2 py-2">
+              <td className="px-2.5 py-2">
                 <div className="flex flex-col gap-1">
                   <Skeleton className="h-3.5 w-16 rounded" />
                   <Skeleton className="h-2.5 w-10 rounded" />
                 </div>
               </td>
               <td className="px-2 py-2"><Skeleton className="h-3 w-10 rounded" /></td>
-              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3.5 w-20 rounded font-mono" /></td>}
-              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></td>}
-              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-3.5 w-16 rounded" /></td>}
-              {showNocColumns && <td className="px-2 py-2"><Skeleton className="h-2.5 w-16 rounded" /></td>}
-              {showNocColumns && enableSecondaryNoc && <td className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></td>}
-              <td className="px-2 py-2 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
-              <td className="px-2 py-2 text-right"><Skeleton className="h-3 w-12 rounded ml-auto" /></td>
-              <td className="px-2 py-2 text-center"><Skeleton className="h-4 w-16 rounded-full mx-auto" /></td>
+              {showNocColumns && (
+                <td className="px-2.5 py-2">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3.5 w-22 rounded font-mono" />
+                    <Skeleton className="h-2.5 w-14 rounded" />
+                  </div>
+                </td>
+              )}
+              {showNocColumns && (
+                <td className="px-2.5 py-2">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3.5 w-18 rounded" />
+                    <Skeleton className="h-2.5 w-12 rounded" />
+                  </div>
+                </td>
+              )}
+              <td className="px-2.5 py-2 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
+              <td className="px-2.5 py-2 text-center"><Skeleton className="h-4 w-16 rounded-full mx-auto" /></td>
               <td className="px-2 py-2">
                 <div className="flex items-center justify-end gap-1">
                   <Skeleton className="h-6 w-10 rounded-md" />
@@ -2637,7 +2643,7 @@ export default function AdminOrdersClient({
           <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-border bg-muted/50 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <th className="w-9 px-3 py-3 text-center">
+                    <th className="w-8 px-2 py-2.5 text-center">
                       <Checkbox 
                         checked={isAllPaginatedSelected} 
                         onCheckedChange={handleSelectAll} 
@@ -2645,20 +2651,16 @@ export default function AdminOrdersClient({
                         className="size-4"
                       />
                     </th>
-                    <th className="px-3 py-3 whitespace-nowrap">Order</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Customer</th>
-                    <th className="px-3 py-3 whitespace-nowrap">City</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Date</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Payment</th>
-                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Tracking</th>}
-                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Courier</th>}
-                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">NOC Status</th>}
-                    {showNocColumns && <th className="px-3 py-3 whitespace-nowrap">Status Time</th>}
-                    {showNocColumns && enableSecondaryNoc && <th className="px-3 py-3 whitespace-nowrap">Account</th>}
-                    <th className="px-3 py-3 text-right whitespace-nowrap">COD</th>
-                    <th className="px-3 py-3 text-right whitespace-nowrap">Total</th>
-                    <th className="px-3 py-3 text-center whitespace-nowrap">Status</th>
-                    <th className="w-20 px-3 py-3 text-right whitespace-nowrap" />
+                    <th className="px-2.5 py-2.5 whitespace-nowrap">Order</th>
+                    <th className="px-2.5 py-2.5 whitespace-nowrap">Customer</th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">City</th>
+                    <th className="px-2.5 py-2.5 whitespace-nowrap">Date</th>
+                    <th className="px-2 py-2.5 whitespace-nowrap">Payment</th>
+                    {showNocColumns && <th className="px-2.5 py-2.5 whitespace-nowrap">Tracking / Courier</th>}
+                    {showNocColumns && <th className="px-2.5 py-2.5 whitespace-nowrap">NOC Status</th>}
+                    <th className="px-2.5 py-2.5 text-right whitespace-nowrap">Amount</th>
+                    <th className="px-2.5 py-2.5 text-center whitespace-nowrap">Status</th>
+                    <th className="w-16 px-2 py-2.5 text-right whitespace-nowrap" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-[13px]">
@@ -2702,7 +2704,7 @@ export default function AdminOrdersClient({
 
                       return (
                         <tr key={order._id} className="transition-colors hover:bg-muted/30">
-                          <td className="w-9 px-3 py-2.5 text-center">
+                          <td className="w-8 px-2 py-2 text-center">
                             <Checkbox 
                               checked={selectedOrders.includes(order._id)} 
                               onCheckedChange={(checked) => handleSelectOne(checked, order._id)} 
@@ -2710,7 +2712,7 @@ export default function AdminOrdersClient({
                               className="size-4"
                             />
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
+                          <td className="px-2.5 py-2 whitespace-nowrap">
                             <div className="flex items-center gap-1.5 whitespace-nowrap">
                               {(() => {
                                 const origin = getOrderOriginInfo(order);
@@ -2720,132 +2722,118 @@ export default function AdminOrdersClient({
                                   <Globe className="size-3.5 text-foreground shrink-0 select-none" title={origin.tooltip} />
                                 );
                               })()}
-                              <Link href={`/admin/orders/${order._id}`} className="text-[13.5px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
+                              <Link href={`/admin/orders/${order._id}`} className="text-[13px] font-bold tabular-nums text-foreground hover:underline whitespace-nowrap">
                                 {order.orderId}
                               </Link>
                               {isNewOrder(order.createdAt) && (
-                                <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0">
+                                <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[8.5px] font-bold uppercase tracking-wider shrink-0">
                                   NEW
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
+                          <td className="px-2.5 py-2 whitespace-nowrap">
                             <div className="flex flex-col whitespace-nowrap">
-                              <span className="text-[13.5px] font-semibold text-foreground max-w-[140px] truncate" title={order.customerName}>{order.customerName}</span>
-                              <span className="text-[12px] font-medium text-muted-foreground">{order.customerPhone}</span>
+                              <span className="text-[13px] font-semibold text-foreground max-w-[130px] truncate" title={order.customerName}>{order.customerName}</span>
+                              <span className="text-[11.5px] font-medium text-muted-foreground">{order.customerPhone}</span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
-                            <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
+                          <td className="px-2 py-2 whitespace-nowrap">
+                            <span className="text-[12.5px] font-semibold text-foreground whitespace-nowrap">
                               {order.customerCity || '—'}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
+                          <td className="px-2.5 py-2 whitespace-nowrap">
                             <div className="flex flex-col whitespace-nowrap" title={formatFullDateTime(order.createdAt)}>
-                              <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
+                              <span className="text-[12.5px] font-semibold text-foreground whitespace-nowrap">
                                 {formatSmartTimeAgo(order.createdAt)}
                               </span>
-                              <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                              <span className="text-[10.5px] font-medium text-muted-foreground whitespace-nowrap">
                                 {formatDate(order.createdAt)} {formatTime(order.createdAt)}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-[12.5px] font-semibold text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
+                          <td className="px-2 py-2 text-[12px] font-semibold text-foreground whitespace-nowrap">{order.paymentStatus || 'COD'}</td>
 
-                          {/* 1. Tracking Column (Only on Post-Pack tabs) */}
+                          {/* 1. Combined Tracking & Courier Column (Only on Post-Pack tabs) */}
                           {showNocColumns && (
-                            <td className="px-3 py-2.5 whitespace-nowrap">
+                            <td className="px-2.5 py-2 whitespace-nowrap">
                               {displayTracking ? (
-                                <span className="font-mono text-[13px] font-bold text-foreground whitespace-nowrap" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
-                                  {displayTracking}
-                                </span>
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground">—</span>
-                              )}
-                            </td>
-                          )}
-
-                          {/* 2. Courier Column (Only on Post-Pack tabs) */}
-                          {showNocColumns && (
-                            <td className="px-3 py-2.5 whitespace-nowrap">
-                              <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">
-                                {courierToDisplay}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* 3. NOC Status Column (Only on Post-Pack tabs) */}
-                          {showNocColumns && (
-                            <td className="px-3 py-2.5 whitespace-nowrap">
-                              {(order.trackingNumber || has3rdParty) ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setNocTrackingOrder(order)}
-                                  title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
-                                  className="text-[12.5px] font-semibold text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
-                                >
-                                  {(() => {
-                                    const raw = order.nocStatus || '';
-                                    if (raw && !raw.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
-                                      return raw;
-                                    }
-                                    return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
-                                  })()}
-                                </button>
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground">—</span>
-                              )}
-                            </td>
-                          )}
-
-                          {/* 4. Status Time Column (Only on Post-Pack tabs) */}
-                          {showNocColumns && (
-                            <td className="px-3 py-2.5 whitespace-nowrap" title={statusTimeDisplay}>
-                              <div className="flex flex-col whitespace-nowrap">
-                                <span className="text-[12px] font-semibold text-foreground whitespace-nowrap">
-                                  {order.nocStatusTime || order.courierBookingDate ? formatSmartTimeAgo(order.nocStatusTime || order.courierBookingDate) : '—'}
-                                </span>
-                                {statusTimeDisplay !== '—' && (
-                                  <span className="text-[10.5px] tabular-nums font-mono text-muted-foreground whitespace-nowrap">
-                                    {statusTimeDisplay}
+                                <div className="flex flex-col whitespace-nowrap">
+                                  <span className="font-mono text-[12.5px] font-bold text-foreground whitespace-nowrap" title={has3rdParty ? `3rd Party No: ${displayTracking}` : `Parcel No: ${displayTracking}`}>
+                                    {displayTracking}
                                   </span>
-                                )}
-                              </div>
+                                  <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                                    {courierToDisplay}{enableSecondaryNoc && order.nocAccountId === 'portal_2' ? ' • Aam Samaan' : ''}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground">—</span>
+                              )}
                             </td>
                           )}
 
-                          {/* 5. Account Name Column (Clean text, conditional on enableSecondaryNoc) */}
-                          {showNocColumns && enableSecondaryNoc && (
-                            <td className="px-3 py-2.5 text-[12.5px] text-foreground font-medium whitespace-nowrap">
-                              {order.nocAccountId === 'portal_2' ? 'Aam Samaan' : (order.trackingNumber || order.nocParcelNo ? 'Unique Items' : '—')}
+                          {/* 2. Combined NOC Status & Time Column (Only on Post-Pack tabs) */}
+                          {showNocColumns && (
+                            <td className="px-2.5 py-2 whitespace-nowrap">
+                              {(order.trackingNumber || has3rdParty) ? (
+                                <div className="flex flex-col whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setNocTrackingOrder(order)}
+                                    title={`Click to view tracking timeline${order.nocRemarks ? ` (${order.nocRemarks})` : ''}`}
+                                    className="text-[12px] font-semibold text-foreground hover:text-primary hover:underline cursor-pointer text-left whitespace-nowrap"
+                                  >
+                                    {(() => {
+                                      const raw = order.nocStatus || '';
+                                      if (raw && !raw.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
+                                        return raw;
+                                      }
+                                      return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
+                                    })()}
+                                  </button>
+                                  {(order.nocStatusTime || order.courierBookingDate) && (
+                                    <span className="text-[10.5px] font-medium text-muted-foreground whitespace-nowrap">
+                                      {formatSmartTimeAgo(order.nocStatusTime || order.courierBookingDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground">—</span>
+                              )}
                             </td>
                           )}
 
-                          {/* 6. COD Amount Column (Booked / Portal COD) */}
-                          <td className="px-3 py-2.5 text-right text-[13.5px] font-bold tabular-nums text-foreground whitespace-nowrap">
-                            {formatPrice(getCodAmount(order))}
+                          {/* 3. Combined Amount Column */}
+                          <td className="px-2.5 py-2 text-right whitespace-nowrap">
+                            <div className="flex flex-col items-end whitespace-nowrap">
+                              <span className="text-[13px] font-bold tabular-nums text-foreground whitespace-nowrap">
+                                {formatPrice(getCodAmount(order))}
+                              </span>
+                              {order.manualCodAmount ? (
+                                <span className="text-[10px] tabular-nums font-medium text-muted-foreground whitespace-nowrap">
+                                  Tot: {formatPrice(order.totalAmount)}
+                                </span>
+                              ) : null}
+                            </div>
                           </td>
 
-                          {/* 7. Total Bill Column (Original Order Invoice Total) */}
-                          <td className="px-3 py-2.5 text-right text-[13px] font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
-                            {formatPrice(order.totalAmount)}
-                          </td>
-                          <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                          {/* 4. Store Status Badge */}
+                          <td className="px-2.5 py-2 text-center whitespace-nowrap">
                             <Badge
                               variant={order.isDraft ? 'outline' : (statusVariant[order.status] || 'secondary')}
-                              className={cn('text-[11.5px] px-2.5 py-0.5 whitespace-nowrap font-bold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
+                              className={cn('text-[11px] px-2 py-0.5 whitespace-nowrap font-bold', order.isDraft ? 'border-slate-300 bg-slate-50 text-slate-700' : getStatusBadgeClass(order.status))}
                             >
                               {getOrderDisplayStatus(order)}
                             </Badge>
                           </td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                          <td className="w-16 px-2 py-2 whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                               <OrderQuickViewDialog
                                 order={order}
                                 triggerLabel="View"
                                 triggerSize="sm"
-                                triggerClassName="h-7 px-2.5 text-xs rounded-md border border-border shadow-xs font-semibold"
+                                triggerClassName="h-6.5 px-2 text-[11.5px] rounded-md border border-border shadow-xs font-semibold"
                               />
                               {(() => {
                                 const isShippedPhase = ['Shipped', 'Out For Delivery', 'Delivered', 'Returned', 'Cancelled'].includes(normalizeOrderStatus(order.status));

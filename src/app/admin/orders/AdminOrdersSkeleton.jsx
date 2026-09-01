@@ -55,53 +55,61 @@ export default function AdminOrdersSkeleton() {
               <th className="w-8 px-2 py-2 text-center">
                 <Skeleton className="size-3.5 rounded-sm mx-auto" />
               </th>
-              <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
-              <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
+              <th className="px-2.5 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
+              <th className="px-2.5 py-2"><Skeleton className="h-3 w-20 rounded" /></th>
               <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
+              <th className="px-2.5 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
               <th className="px-2 py-2"><Skeleton className="h-3 w-12 rounded" /></th>
-              <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
-              <th className="px-2 py-2"><Skeleton className="h-3 w-16 rounded" /></th>
-              <th className="px-2 py-2"><Skeleton className="h-3 w-14 rounded" /></th>
-              <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-10 rounded ml-auto" /></th>
-              <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-10 rounded ml-auto" /></th>
-              <th className="px-2 py-2 text-center"><Skeleton className="h-3 w-12 rounded mx-auto" /></th>
-              <th className="px-2 py-2 text-right"><Skeleton className="h-3 w-10 rounded ml-auto" /></th>
+              <th className="px-2.5 py-2"><Skeleton className="h-3 w-24 rounded" /></th>
+              <th className="px-2.5 py-2"><Skeleton className="h-3 w-20 rounded" /></th>
+              <th className="px-2.5 py-2 text-right"><Skeleton className="h-3 w-14 rounded ml-auto" /></th>
+              <th className="px-2.5 py-2 text-center"><Skeleton className="h-3 w-14 rounded mx-auto" /></th>
+              <th className="w-16 px-2 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
             {Array.from({ length: 8 }).map((_, index) => (
               <tr key={index} className="hover:bg-muted/30">
-                <td className="px-2 py-2.5 text-center">
+                <td className="w-8 px-2 py-2 text-center">
                   <Skeleton className="size-3.5 rounded-sm mx-auto" />
                 </td>
-                <td className="px-2 py-2.5"><Skeleton className="h-4 w-28 rounded-md" /></td>
-                <td className="px-2 py-2.5">
+                <td className="px-2.5 py-2">
+                  <div className="flex items-center gap-1">
+                    <Skeleton className="h-3.5 w-14 rounded" />
+                    <Skeleton className="h-3 w-6 rounded" />
+                  </div>
+                </td>
+                <td className="px-2.5 py-2">
                   <div className="flex flex-col gap-1">
                     <Skeleton className="h-3.5 w-24 rounded" />
-                    <Skeleton className="h-3 w-20 rounded" />
+                    <Skeleton className="h-2.5 w-16 rounded" />
                   </div>
                 </td>
-                <td className="px-2 py-2.5"><Skeleton className="h-5 w-16 rounded-full" /></td>
-                <td className="px-2 py-2.5">
+                <td className="px-2 py-2"><Skeleton className="h-3.5 w-12 rounded" /></td>
+                <td className="px-2.5 py-2">
                   <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3 w-16 rounded" />
-                    <Skeleton className="h-2.5 w-12 rounded" />
+                    <Skeleton className="h-3.5 w-16 rounded" />
+                    <Skeleton className="h-2.5 w-10 rounded" />
                   </div>
                 </td>
-                <td className="px-2 py-2.5"><Skeleton className="h-5 w-12 rounded-full" /></td>
-                <td className="px-2 py-2.5">
+                <td className="px-2 py-2"><Skeleton className="h-3 w-10 rounded" /></td>
+                <td className="px-2.5 py-2">
                   <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3.5 w-24 rounded font-mono" />
+                    <Skeleton className="h-3.5 w-22 rounded font-mono" />
                     <Skeleton className="h-2.5 w-14 rounded" />
                   </div>
                 </td>
-                <td className="px-2 py-2.5"><Skeleton className="h-4 w-20 rounded" /></td>
-                <td className="px-2 py-2.5 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
-                <td className="px-2 py-2.5 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
-                <td className="px-2 py-2.5 text-center"><Skeleton className="h-5 w-20 rounded-full mx-auto" /></td>
-                <td className="px-2 py-2.5 text-right">
+                <td className="px-2.5 py-2">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3.5 w-18 rounded" />
+                    <Skeleton className="h-2.5 w-12 rounded" />
+                  </div>
+                </td>
+                <td className="px-2.5 py-2 text-right"><Skeleton className="h-3.5 w-14 rounded ml-auto" /></td>
+                <td className="px-2.5 py-2 text-center"><Skeleton className="h-4 w-16 rounded-full mx-auto" /></td>
+                <td className="px-2 py-2">
                   <div className="flex items-center justify-end gap-1">
-                    <Skeleton className="h-6 w-12 rounded-md" />
+                    <Skeleton className="h-6 w-10 rounded-md" />
                     <Skeleton className="size-6 rounded-md" />
                   </div>
                 </td>
