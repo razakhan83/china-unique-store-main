@@ -55,24 +55,24 @@ export default function AdminPaymentsClient({ initialPayments = [] }) {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto space-y-6 admin-page-stack">
+    <div className="w-full max-w-[1400px] mx-auto space-y-4 sm:space-y-6 admin-page-stack">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 flex items-center gap-2">
-            <CreditCard className="w-7 h-7 text-emerald-600" />
-            Payments Received
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 flex items-center gap-2">
+            <CreditCard className="size-6 sm:size-7 text-emerald-600 shrink-0" />
+            <span>Payments Received</span>
           </h1>
           <p className="text-xs text-zinc-500 mt-1">
             Audit history of all customer payments recorded against invoices.
           </p>
         </div>
 
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-right">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-left sm:text-right shrink-0">
           <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
             Filtered Total Received
           </div>
-          <div className="text-lg font-bold text-emerald-950">
+          <div className="text-base sm:text-lg font-bold text-emerald-950">
             PKR {totalReceived.toLocaleString('en-PK')}
           </div>
         </div>

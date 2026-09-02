@@ -275,8 +275,20 @@ export async function POST(request) {
               }
             }
 
+            // Determine genuine status time: Never overwrite an existing status milestone with a newer dashboard time
+            let effectiveStatusTime = rawTime;
+            const matchingExistingEvent = Array.isArray(order.nocTrackingEvents)
+              ? order.nocTrackingEvents.find((e) => (e.status || '').trim().toUpperCase() === (rawStatus || '').trim().toUpperCase())
+              : null;
+
+            if (matchingExistingEvent?.dateTime) {
+              effectiveStatusTime = matchingExistingEvent.dateTime;
+            } else if (order.nocStatus && order.nocStatus.toUpperCase() === (rawStatus || '').toUpperCase() && order.nocStatusTime) {
+              effectiveStatusTime = order.nocStatusTime;
+            }
+
             order.nocStatus = rawStatus;
-            order.nocStatusTime = rawTime;
+            order.nocStatusTime = effectiveStatusTime;
             order.courierName = rawCourier;
             order.nocParcelNo = finalParcelNo;
             order.nocThirdPartyNo = finalThirdPartyNo;
@@ -293,18 +305,19 @@ export async function POST(request) {
               success: true,
               changed: hasChanged,
               nocStatus: rawStatus,
-              nocStatusTime: rawTime,
+              nocStatusTime: effectiveStatusTime,
               courierName: rawCourier,
               nocParcelNo: finalParcelNo,
               nocThirdPartyNo: finalThirdPartyNo,
               effectiveTrackingNumber,
               nocRemarks: remarks,
               nocLastTrackedAt: now,
+              nocTrackingEvents: order.nocTrackingEvents || [],
             };
           } else if (portalInfo?.status && !portalInfo.status.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
             // Dashboard row fallback when GetParcelTracking returned no detail array
             const rawStatus = portalInfo.status;
-            const rawTime = portalInfo.statusDate || order.nocStatusTime || '';
+            let rawTime = portalInfo.statusDate || order.nocStatusTime || '';
             const rawCourier = portalInfo.courier || order.courierName || 'NOC';
             const finalThirdPartyNo = portalInfo.thirdPartyNo || order.nocThirdPartyNo || '';
             const finalParcelNo = portalInfo.parcelNo || order.nocParcelNo || trackingNumber;
@@ -323,9 +336,32 @@ export async function POST(request) {
               }
             }
 
+            // Determine genuine status time: Never overwrite an existing status milestone with a newer dashboard time
+            let effectiveStatusTime = rawTime;
+            const matchingExistingEvent = Array.isArray(order.nocTrackingEvents)
+              ? order.nocTrackingEvents.find((e) => (e.status || '').trim().toUpperCase() === (rawStatus || '').trim().toUpperCase())
+              : null;
+
+            if (matchingExistingEvent?.dateTime) {
+              effectiveStatusTime = matchingExistingEvent.dateTime;
+            } else if (order.nocStatus && order.nocStatus.toUpperCase() === (rawStatus || '').toUpperCase() && order.nocStatusTime) {
+              effectiveStatusTime = order.nocStatusTime;
+            }
+
+            if (!Array.isArray(order.nocTrackingEvents)) order.nocTrackingEvents = [];
+            const exists = order.nocTrackingEvents.some((e) => (e.status || '').toUpperCase() === rawStatus.toUpperCase());
+            if (!exists) {
+              order.nocTrackingEvents.push({
+                status: rawStatus,
+                remarks: 'Status updated from NOC Courier Portal',
+                dateTime: effectiveStatusTime || rawTime,
+                timestamp: parseDateSafe(effectiveStatusTime || rawTime)?.getTime() || Date.now(),
+              });
+            }
+
             const hasChanged =
               order.nocStatus !== rawStatus ||
-              order.nocStatusTime !== rawTime ||
+              order.nocStatusTime !== effectiveStatusTime ||
               order.courierName !== rawCourier ||
               order.nocParcelNo !== finalParcelNo ||
               order.nocThirdPartyNo !== finalThirdPartyNo ||
@@ -338,7 +374,7 @@ export async function POST(request) {
             }
 
             order.nocStatus = rawStatus;
-            order.nocStatusTime = rawTime;
+            order.nocStatusTime = effectiveStatusTime;
             order.courierName = rawCourier;
             order.nocParcelNo = finalParcelNo;
             order.nocThirdPartyNo = finalThirdPartyNo;
@@ -354,12 +390,13 @@ export async function POST(request) {
               success: true,
               changed: hasChanged,
               nocStatus: rawStatus,
-              nocStatusTime: rawTime,
+              nocStatusTime: effectiveStatusTime,
               courierName: rawCourier,
               nocParcelNo: finalParcelNo,
               nocThirdPartyNo: finalThirdPartyNo,
               effectiveTrackingNumber,
               nocLastTrackedAt: now,
+              nocTrackingEvents: order.nocTrackingEvents || [],
             };
           }
 

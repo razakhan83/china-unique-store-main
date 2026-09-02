@@ -5,6 +5,8 @@ import { requireAdmin } from '@/lib/requireAdmin';
 import AdminOrdersClient from './AdminOrdersClient';
 import AdminOrdersSkeleton from './AdminOrdersSkeleton';
 
+export const instant = false;
+
 export default async function AdminOrdersPage({ searchParams }) {
   await requireAdmin();
 

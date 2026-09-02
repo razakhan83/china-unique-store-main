@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare } from 'lucide-react';
+import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare, FileText, CheckCircle2, Package, Truck } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { getAdminDashboardData, getAdminChartData } from '@/lib/data';
 import { normalizeOrderStatus } from '@/lib/order-status';
 import { requireAdmin } from '@/lib/requireAdmin';
+import { cn } from '@/lib/utils';
 
 const DashboardChart = dynamic(() => import('@/components/admin/DashboardChart'), {
   loading: () => <div className="h-[320px] w-full animate-pulse rounded-lg bg-muted/40" />,
@@ -20,6 +21,13 @@ const statsConfig = [
   { title: 'Total Revenue', icon: CircleDollarSign, key: 'totalRevenue' },
   { title: 'Total Products', icon: Box, key: 'totalProducts' },
   { title: 'Customers', icon: Users, key: 'totalCustomers' },
+];
+
+const orderStatusCards = [
+  { title: 'Draft Orders', key: 'draftOrders', href: '/admin/orders?status=draft', icon: FileText },
+  { title: 'Confirmed Orders', key: 'confirmedOrders', href: '/admin/orders?status=Order%20Confirmed', icon: CheckCircle2 },
+  { title: 'Shipped', key: 'shippedOrders', href: '/admin/orders?status=Shipped', icon: Package },
+  { title: 'Out For Delivery', key: 'outForDeliveryOrders', href: '/admin/orders?status=Out%20For%20Delivery', icon: Truck },
 ];
 
 function getDashboardStatusBadgeClass(status) {
@@ -58,6 +66,10 @@ const emptySummary = {
   totalRevenue: 0,
   totalCustomers: 0,
   dailyConfirmedOrders: 0,
+  draftOrders: 0,
+  confirmedOrders: 0,
+  shippedOrders: 0,
+  outForDeliveryOrders: 0,
 };
 
 async function loadDashboardDataSafely() {
@@ -84,6 +96,8 @@ async function loadDashboardDataSafely() {
     };
   }
 }
+
+export const instant = false;
 
 export default async function AdminDashboardPage() {
   const session = await requireAdmin();
@@ -167,6 +181,39 @@ async function DashboardContent({ session }) {
                 </div>
               </div>
             </div>
+          );
+        })}
+      </section>
+
+      {/* Order Status Quick Access Cards */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {orderStatusCards.map((card) => {
+          const Icon = card.icon;
+          const count = Number(summary[card.key] || 0);
+
+          return (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="admin-surface group rounded-[0.5rem] border-transparent p-3 sm:p-4 transition-colors hover:border-border cursor-pointer block"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">
+                      {card.title}
+                    </p>
+                    <ArrowRight className="size-3 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                  <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums">
+                    {count}
+                  </h3>
+                </div>
+                <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2 group-hover:bg-muted transition-colors">
+                  <Icon className="size-3.5 sm:size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+              </div>
+            </Link>
           );
         })}
       </section>

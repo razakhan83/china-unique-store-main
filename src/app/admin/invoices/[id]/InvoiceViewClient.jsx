@@ -19,6 +19,8 @@ import {
   Image as ImageIcon,
   Download,
   X,
+  MoreVertical,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import RecordPaymentModal from '@/components/admin/RecordPaymentModal';
@@ -113,18 +116,38 @@ export default function InvoiceViewClient({ invoice }) {
 
   const renderStatusTag = (inv) => {
     if (inv.isDeleted) {
-      return <span className="text-[10px] font-bold text-rose-600 uppercase">TRASH</span>;
+      return (
+        <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-400">
+          TRASH
+        </span>
+      );
     }
     if (inv.status === 'PAID') {
-      return <span className="text-[10px] font-bold text-emerald-600 uppercase">PAID</span>;
+      return (
+        <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+          PAID
+        </span>
+      );
     }
     if (inv.status === 'SENT') {
-      return <span className="text-[10px] font-bold text-blue-600 uppercase">SENT</span>;
+      return (
+        <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          SENT
+        </span>
+      );
     }
     if (inv.status === 'PARTIALLY_PAID') {
-      return <span className="text-[10px] font-bold text-amber-600 uppercase">PARTIALLY PAID</span>;
+      return (
+        <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+          PARTIALLY PAID
+        </span>
+      );
     }
-    return <span className="text-[10px] font-semibold text-gray-400 uppercase">DRAFT</span>;
+    return (
+      <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
+        DRAFT
+      </span>
+    );
   };
 
   const filteredSidebarList = invoicesList.filter((inv) => {
@@ -534,17 +557,20 @@ export default function InvoiceViewClient({ invoice }) {
       {/* 3 & 4. RIGHT MAIN AREA */}
       <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-zinc-100">
         {/* Sticky Action Bar */}
-        <div className="bg-white border-b border-gray-200 px-5 py-2.5 flex items-center justify-between sticky top-0 z-20 print:hidden shrink-0">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => router.back()} className="h-8 w-8 lg:hidden">
-              <ArrowLeft />
+        <div className="bg-white border-b border-gray-200 px-3 sm:px-5 py-2 flex items-center justify-between sticky top-0 z-20 print:hidden shrink-0 min-h-[44px]">
+          {/* Back button & Invoice title */}
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="outline" size="icon" onClick={() => router.back()} className="h-8 w-8 shrink-0 lg:hidden">
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="text-xs text-gray-500">
-              <h2 className="text-sm font-bold text-gray-900">{currentInvoice.invoiceNumber}</h2>
+            <div className="min-w-0 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-gray-900 truncate">{currentInvoice.invoiceNumber}</h2>
+              <div className="shrink-0">{renderStatusTag(currentInvoice)}</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Desktop Actions (sm and up) */}
+          <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
             <Link href={`/admin/invoices/${currentInvoice._id}/edit`}>
               <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs text-gray-700 hover:bg-gray-100">
                 <Edit data-icon="inline-start" className="text-gray-500 w-3.5 h-3.5" />
@@ -645,10 +671,103 @@ export default function InvoiceViewClient({ invoice }) {
               </Button>
             </Link>
           </div>
+
+          {/* Mobile Actions (sm:hidden) - Clean Single Line with Quick Actions + Overflow Menu */}
+          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+            {currentInvoice.balanceDue > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRecordPaymentOpen(true)}
+                className="h-8 px-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+              >
+                <DollarSign className="w-3.5 h-3.5 mr-0.5 text-emerald-600" />
+                Pay
+              </Button>
+            )}
+
+            {/* Quick Download PDF Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs text-gray-700 border-gray-300"
+                  disabled={isGeneratingPdf}
+                >
+                  {isGeneratingPdf ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-gray-600" />
+                  )}
+                  <ChevronDown className="w-3 h-3 ml-0.5 text-gray-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 text-xs">
+                <DropdownMenuItem onClick={handleDownloadStandardPdf} className="flex items-center gap-2 cursor-pointer py-2">
+                  <FileText className="w-4 h-4 text-zinc-500" />
+                  <div>
+                    <p className="font-semibold">Standard PDF</p>
+                    <p className="text-[10px] text-gray-400">Compact text-only</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadVisualPdf} className="flex items-center gap-2 cursor-pointer py-2 text-emerald-700 font-semibold bg-emerald-50/50">
+                  <ImageIcon className="w-4 h-4 text-emerald-600" />
+                  <div>
+                    <p className="font-bold text-emerald-800">PDF With Images</p>
+                    <p className="text-[10px] text-emerald-600 font-normal">Exact visual replica</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Overflow Dropdown for other actions */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 text-gray-600 border-gray-300">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 text-xs">
+                <DropdownMenuItem asChild>
+                  <Link href={`/admin/invoices/${currentInvoice._id}/edit`} className="flex items-center gap-2 cursor-pointer">
+                    <Edit className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Edit Invoice</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast.info('Share link copied')} className="flex items-center gap-2 cursor-pointer">
+                  <Share2 className="w-3.5 h-3.5 text-gray-500" />
+                  <span>Share</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePrint} className="flex items-center gap-2 cursor-pointer">
+                  <Printer className="w-3.5 h-3.5 text-gray-500" />
+                  <span>PDF / Print</span>
+                </DropdownMenuItem>
+                {currentInvoice.status === 'DRAFT' ? (
+                  <DropdownMenuItem onClick={() => handleStatusChange('SENT')} disabled={isUpdatingStatus} className="flex items-center gap-2 cursor-pointer text-blue-700 font-medium">
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Mark As Sent</span>
+                  </DropdownMenuItem>
+                ) : currentInvoice.status === 'SENT' ? (
+                  <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')} disabled={isUpdatingStatus} className="flex items-center gap-2 cursor-pointer text-zinc-600">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Set to Draft</span>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/invoices" className="flex items-center gap-2 cursor-pointer text-gray-500">
+                    <X className="w-3.5 h-3.5" />
+                    <span>Close</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Main Canvas with A4 Single Page Sheets */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 flex flex-col items-center gap-6 bg-zinc-100">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-6 md:p-8 flex flex-col items-center gap-4 sm:gap-6 bg-zinc-100">
           {/* WHAT'S NEXT Banner (Draft mode) */}
           {currentInvoice.status === 'DRAFT' && (
             <div className="w-full max-w-[210mm] p-3 rounded-lg bg-white border border-gray-200 shadow-sm text-xs text-gray-800 flex items-center justify-between print:hidden">
@@ -688,7 +807,7 @@ export default function InvoiceViewClient({ invoice }) {
               return (
                 <div
                   key={pageIndex}
-                  className="printable-invoice-page printable-invoice-container-page relative bg-white text-gray-900 w-full max-w-[210mm] shadow-lg border border-gray-400 px-5 py-5 font-sans print:shadow-none print:border-none print:p-0 flex flex-col justify-between"
+                  className="printable-invoice-page printable-invoice-container-page relative bg-white text-gray-900 w-full max-w-[210mm] shadow-lg border border-gray-400 p-3.5 sm:p-6 font-sans print:shadow-none print:border-none print:p-0 flex flex-col justify-between overflow-x-auto"
                   style={{ minHeight: '297mm' }}
                 >
                   <div className="w-full flex-1">
@@ -771,8 +890,8 @@ export default function InvoiceViewClient({ invoice }) {
                     )}
 
                     {/* Items Table: Directly attached to meta box (border-t-0) */}
-                    <div className="border-x border-b border-gray-400">
-                      <table className="w-full text-left border-collapse">
+                    <div className="border-x border-b border-gray-400 overflow-x-auto">
+                      <table className="w-full min-w-[340px] sm:min-w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gray-50/70 border-b border-gray-400 text-gray-800 font-bold uppercase text-[10px]">
                             <th className="py-2 px-2.5 border-r border-gray-400 w-8 text-center">#</th>

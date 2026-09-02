@@ -4,6 +4,8 @@ import Product from '@/models/Product';
 import { normalizeProductImages } from '@/lib/productImages';
 import FeaturedProductsClient from './FeaturedProductsClient';
 
+export const instant = false;
+
 export const metadata = {
   title: 'Featured Products | Admin',
 };

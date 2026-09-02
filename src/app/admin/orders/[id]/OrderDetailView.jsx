@@ -1171,33 +1171,36 @@ export default function OrderDetailView({
               <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground space-y-3">
                 <Package className="size-8 mx-auto text-muted-foreground opacity-60" />
                 <p className="text-xs text-muted-foreground">Not yet booked with courier partner.</p>
-                <div className="flex items-center justify-center gap-2 flex-wrap pt-1">
+                <div className="flex items-center justify-center gap-2.5 flex-wrap pt-1">
                   <Button
+                    type="button"
                     size="sm"
                     onClick={() => setBookingModalOpen(true)}
-                    className="h-8.5 text-xs font-semibold rounded-lg"
+                    className="h-8.5 px-3.5 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Send className="size-3.5 mr-1.5" />
-                    Book Courier
+                    <Send className="size-3.5" />
+                    <span>Book Courier</span>
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     variant="outline"
                     onClick={handleOpenCheckNocModal}
-                    className="h-8.5 text-xs font-semibold rounded-lg border-sky-300 text-sky-700 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800 cursor-pointer"
+                    className="h-8.5 px-3.5 text-xs font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <Search className="size-3.5 mr-1.5" />
-                    Check Order in NOC
+                    <Search className="size-3.5 text-muted-foreground" />
+                    <span>Check Order in NOC</span>
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     variant="outline"
                     onClick={handleSyncNocStatus}
                     disabled={isSyncingNoc}
-                    className="h-8.5 text-xs font-semibold rounded-lg cursor-pointer"
+                    className="h-8.5 px-3.5 text-xs font-medium rounded-lg border border-border bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <RotateCcw className={cn("size-3.5 mr-1.5", isSyncingNoc && "animate-spin")} />
-                    Quick Sync
+                    <RotateCcw className={cn("size-3.5 text-muted-foreground", isSyncingNoc && "animate-spin")} />
+                    <span>{isSyncingNoc ? 'Syncing...' : 'Quick Sync'}</span>
                   </Button>
                 </div>
               </div>

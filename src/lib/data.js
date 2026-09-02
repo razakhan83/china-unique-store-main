@@ -420,6 +420,14 @@ function toOrderSummaryRow(order) {
     nocThirdPartyNo: order.nocThirdPartyNo || '',
     nocRemarks: order.nocRemarks || '',
     nocLastTrackedAt: order.nocLastTrackedAt ? new Date(order.nocLastTrackedAt).toISOString() : null,
+    nocTrackingEvents: Array.isArray(order.nocTrackingEvents)
+      ? order.nocTrackingEvents.map((e) => ({
+          status: e.status || '',
+          remarks: e.remarks || '',
+          dateTime: e.dateTime || '',
+          timestamp: e.timestamp || 0,
+        }))
+      : [],
     courierBookingDate: order.courierBookingDate ? new Date(order.courierBookingDate).toISOString() : null,
     courierResponseDetails: order.courierResponseDetails || null,
     items: Array.isArray(order.items)
@@ -2365,13 +2373,29 @@ export async function getAdminDashboardData() {
   const [orderDashboardAgg, productDashboardAgg, recentReviewsAgg] = await Promise.all([
     Order.aggregate([
       {
-        $match: {
-          isDraft: { $ne: true },
-        },
-      },
-      {
         $facet: {
+          draftCount: [
+            { $match: { isDraft: true, isDeleted: { $ne: true } } },
+            { $count: 'count' },
+          ],
+          confirmedCount: [
+            { $match: { isDraft: { $ne: true }, isDeleted: { $ne: true }, status: { $in: ['Order Confirmed', 'Confirmed', 'Pending'] } } },
+            { $count: 'count' },
+          ],
+          shippedCount: [
+            { $match: { isDraft: { $ne: true }, isDeleted: { $ne: true }, status: 'Shipped' } },
+            { $count: 'count' },
+          ],
+          outForDeliveryCount: [
+            { $match: { isDraft: { $ne: true }, isDeleted: { $ne: true }, status: { $in: ['Out For Delivery', 'Out for Delivery'] } } },
+            { $count: 'count' },
+          ],
           totals: [
+            {
+              $match: {
+                isDraft: { $ne: true },
+              },
+            },
             {
               $group: {
                 _id: null,
@@ -2386,6 +2410,11 @@ export async function getAdminDashboardData() {
             },
           ],
           customers: [
+            {
+              $match: {
+                isDraft: { $ne: true },
+              },
+            },
             {
               $group: {
                 _id: {
@@ -2405,10 +2434,19 @@ export async function getAdminDashboardData() {
             },
             { $count: 'count' },
           ],
-          recentOrders: [{ $sort: { createdAt: -1 } }, { $limit: 5 }],
+          recentOrders: [
+            {
+              $match: {
+                isDraft: { $ne: true },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 5 },
+          ],
           dailyConfirmedOrders: [
             {
               $match: {
+                isDraft: { $ne: true },
                 status: { $in: ['Order Confirmed', 'Confirmed', 'Pending'] },
                 createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
               },
@@ -2416,7 +2454,18 @@ export async function getAdminDashboardData() {
             { $count: 'count' },
           ],
           topProducts: [
+            {
+              $match: {
+                isDraft: { $ne: true },
+              },
+            },
             { $unwind: '$items' },
+            {
+              $match: {
+                'items.productId': { $ne: 'unknown-default' },
+                'items.name': { $ne: 'Unknown item' },
+              },
+            },
             {
               $group: {
                 _id: '$items.productId',
@@ -2429,6 +2478,11 @@ export async function getAdminDashboardData() {
             { $limit: 5 },
           ],
           topCustomers: [
+            {
+              $match: {
+                isDraft: { $ne: true },
+              },
+            },
             {
               $group: {
                 _id: {
@@ -2511,6 +2565,10 @@ export async function getAdminDashboardData() {
       totalRevenue: Number(totals.totalRevenue || 0),
       totalCustomers: Number(orderDashboard.customers?.[0]?.count || 0),
       dailyConfirmedOrders: Number(orderDashboard.dailyConfirmedOrders?.[0]?.count || 0),
+      draftOrders: Number(orderDashboard.draftCount?.[0]?.count || 0),
+      confirmedOrders: Number(orderDashboard.confirmedCount?.[0]?.count || 0),
+      shippedOrders: Number(orderDashboard.shippedCount?.[0]?.count || 0),
+      outForDeliveryOrders: Number(orderDashboard.outForDeliveryCount?.[0]?.count || 0),
     },
     recentOrders: recentOrders.map(toOrderSummaryRow),
     topProducts: Array.isArray(orderDashboard.topProducts) ? orderDashboard.topProducts : [],
@@ -2677,6 +2735,12 @@ export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
 
   const [aggregationResult] = await Order.aggregate([
     { $unwind: '$items' },
+    {
+      $match: {
+        'items.productId': { $ne: 'unknown-default' },
+        'items.name': { $ne: 'Unknown item' },
+      },
+    },
     {
       $group: {
         _id: '$items.productId',

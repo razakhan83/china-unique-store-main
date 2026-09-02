@@ -388,6 +388,24 @@ export function AdminDashboardSkeleton() {
         ))}
       </section>
 
+      {/* Order Status Quick Access Skeleton */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-3 w-16 sm:w-20 rounded-md" />
+                  <Skeleton className="size-3 rounded" />
+                </div>
+                <Skeleton className="h-6 sm:h-8 w-14 rounded-md mt-0.5" />
+              </div>
+              <Skeleton className="size-6 sm:size-8 rounded-md shrink-0 ml-2" />
+            </div>
+          </div>
+        ))}
+      </section>
+
       {/* Row 2: Recent Orders & Top Products */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1.4fr] mb-4">
         <div className="flex flex-col gap-4">

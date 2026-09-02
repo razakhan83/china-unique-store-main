@@ -11,6 +11,8 @@ export const metadata = {
   title: 'Top Performing Products | Admin',
 };
 
+export const instant = false;
+
 export default async function TopPerformingProductsPage({ searchParams }) {
   await requireAdmin();
   const params = await searchParams;

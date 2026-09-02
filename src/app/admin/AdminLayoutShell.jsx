@@ -265,15 +265,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'flex min-h-8 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
+          'flex min-h-8 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
           active
-            ? 'border border-border bg-white text-foreground shadow-sm'
-            : 'border border-transparent text-foreground/66 hover:border-border hover:bg-muted/70 hover:text-foreground',
+            ? 'bg-[#D0FAE5] text-emerald-950 font-semibold'
+            : 'text-foreground/70 hover:bg-muted/70 hover:text-foreground',
           collapsed && 'justify-center px-0'
         )}
         title={collapsed ? label : undefined}
       >
-        <Icon className="size-3.5 shrink-0" />
+        <Icon className={cn('size-3.5 shrink-0', active ? 'text-emerald-900' : '')} />
         <span className={cn('truncate', collapsed && 'hidden')}>{label}</span>
       </Link>
     );
@@ -288,14 +288,14 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'group flex min-h-7 items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-[11px] transition-[background-color,color,transform,border-color] duration-200 active:scale-[0.98]',
+          'group flex min-h-7 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
           active
-            ? 'border-border bg-white text-foreground'
-            : 'text-foreground/82 hover:border-border/80 hover:bg-muted/60 hover:text-foreground'
+            ? 'bg-[#ECFDF5] text-emerald-950 font-semibold'
+            : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
         )}
       >
-        <Icon className="size-3 shrink-0 opacity-60 transition-opacity group-hover:opacity-85" />
-        <span className="truncate font-normal">{label}</span>
+        <Icon className={cn('size-3 shrink-0 transition-opacity', active ? 'text-emerald-800 opacity-100' : 'opacity-60 group-hover:opacity-85')} />
+        <span className={cn('truncate', active ? 'font-semibold text-emerald-950' : 'font-normal')}>{label}</span>
       </Link>
     );
   }
@@ -313,15 +313,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     return (
       <AccordionTrigger
         className={cn(
-          'min-h-8 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium hover:no-underline',
+          'min-h-8 rounded-lg border-0 px-2.5 py-1.5 text-[12px] font-medium hover:no-underline transition-colors',
           active
-            ? 'border border-border bg-white text-foreground shadow-sm'
-            : 'border border-transparent text-foreground/66 hover:border-border hover:bg-muted/70 hover:text-foreground'
+            ? 'bg-[#D0FAE5] text-emerald-950 font-semibold'
+            : 'bg-transparent text-foreground/70 hover:bg-muted/60 hover:text-foreground'
         )}
       >
         <div className="flex items-center gap-2">
-          <Icon className="size-3.5 shrink-0" />
-          <span className="text-[12px] font-medium">{label}</span>
+          <Icon className={cn('size-3.5 shrink-0', active ? 'text-emerald-900' : 'text-foreground/85')} />
+          <span className={cn('text-[12px]', active ? 'font-semibold text-emerald-950' : 'font-medium text-foreground/85')}>{label}</span>
         </div>
       </AccordionTrigger>
     );
@@ -553,8 +553,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
             </div>
           </header>
 
-          <main className="flex-1 px-2 py-2 pb-6 sm:px-3 sm:pb-6 md:px-4 md:py-4 md:pb-4 xl:px-6">
-            <div className="w-full">{children}</div>
+          <main className="flex-1 min-w-0 px-2 py-2 pb-6 sm:px-3 sm:pb-6 md:px-4 md:py-4 md:pb-4 xl:px-6">
+            <div className="w-full min-w-0">{children}</div>
           </main>
         </div>
       </div>

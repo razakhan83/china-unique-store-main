@@ -182,6 +182,20 @@ function getStatusBadgeClass(status) {
   return 'border-slate-200 bg-slate-100 text-slate-800';
 }
 
+function getEffectiveNocStatusTime(order) {
+  if (!order) return null;
+  const currentStatus = (order.nocStatus || '').trim().toUpperCase();
+  if (currentStatus && Array.isArray(order.nocTrackingEvents) && order.nocTrackingEvents.length > 0) {
+    const matchingEvent = order.nocTrackingEvents.find(
+      (e) => (e.status || '').trim().toUpperCase() === currentStatus
+    );
+    if (matchingEvent && (matchingEvent.dateTime || matchingEvent.timestamp)) {
+      return matchingEvent.dateTime || matchingEvent.timestamp;
+    }
+  }
+  return order.nocStatusTime || order.courierBookingDate || null;
+}
+
 function buildHref(pathname, searchParams, updates) {
   const params = new URLSearchParams(searchParams?.toString());
 
@@ -521,6 +535,7 @@ export default function AdminOrdersClient({
                 nocStatusTime: found.nocStatusTime,
                 nocRemarks: found.nocRemarks,
                 nocLastTrackedAt: found.nocLastTrackedAt,
+                nocTrackingEvents: found.nocTrackingEvents || o.nocTrackingEvents,
               };
             }
             return o;
@@ -636,6 +651,7 @@ export default function AdminOrdersClient({
     }
 
     (async () => {
+      setIsBulkSyncingNoc(true);
       try {
         const res = await fetch('/api/admin/courier/sync-status', {
           method: 'POST',
@@ -665,6 +681,7 @@ export default function AdminOrdersClient({
                   nocStatusTime: found.nocStatusTime,
                   nocRemarks: found.nocRemarks,
                   nocLastTrackedAt: found.nocLastTrackedAt,
+                  nocTrackingEvents: found.nocTrackingEvents || o.nocTrackingEvents,
                 };
               }
               return o;
@@ -680,6 +697,8 @@ export default function AdminOrdersClient({
         }
       } catch (err) {
         console.warn('Auto-sync NOC status on load:', err);
+      } finally {
+        setIsBulkSyncingNoc(false);
       }
     })();
   }, [initialOrders, router]);
@@ -2657,7 +2676,16 @@ export default function AdminOrdersClient({
                     <th className="px-2.5 py-2.5 whitespace-nowrap">Date</th>
                     <th className="px-2 py-2.5 whitespace-nowrap">Payment</th>
                     {showNocColumns && <th className="px-2.5 py-2.5 whitespace-nowrap">Tracking / Courier</th>}
-                    {showNocColumns && <th className="px-2.5 py-2.5 whitespace-nowrap">NOC Status</th>}
+                    {showNocColumns && (
+                      <th className="px-2.5 py-2.5 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          <span>NOC Status</span>
+                          {isBulkSyncingNoc && (
+                            <Spinner className="size-3 text-primary animate-spin" title="Updating statuses in background..." />
+                          )}
+                        </div>
+                      </th>
+                    )}
                     <th className="px-2.5 py-2.5 text-right whitespace-nowrap">Amount</th>
                     <th className="px-2.5 py-2.5 text-center whitespace-nowrap">Status</th>
                     <th className="w-16 px-2 py-2.5 text-right whitespace-nowrap" />
@@ -2792,11 +2820,15 @@ export default function AdminOrdersClient({
                                       return order.status === 'Delivered' ? 'Delivered' : (order.status === 'Out For Delivery' ? 'INTRANSIT' : 'Booked');
                                     })()}
                                   </button>
-                                  {(order.nocStatusTime || order.courierBookingDate) && (
-                                    <span className="text-[10.5px] font-medium text-muted-foreground whitespace-nowrap">
-                                      {formatSmartTimeAgo(order.nocStatusTime || order.courierBookingDate)}
-                                    </span>
-                                  )}
+                                  {(() => {
+                                    const effectiveTime = getEffectiveNocStatusTime(order);
+                                    if (!effectiveTime) return null;
+                                    return (
+                                      <span className="text-[10.5px] font-medium text-muted-foreground whitespace-nowrap">
+                                        {formatSmartTimeAgo(effectiveTime)}
+                                      </span>
+                                    );
+                                  })()}
                                 </div>
                               ) : (
                                 <span className="text-[12px] text-muted-foreground">—</span>
@@ -3039,8 +3071,8 @@ export default function AdminOrdersClient({
 
                       if (!isShippedPhase || !displayTracking) return null;
 
-                      const statusTimeRaw = order.nocStatusTime || order.courierBookingDate;
-                      const statusTimeAgo = statusTimeRaw ? formatSmartTimeAgo(statusTimeRaw) : '';
+                      const effectiveTime = getEffectiveNocStatusTime(order);
+                      const statusTimeAgo = effectiveTime ? formatSmartTimeAgo(effectiveTime) : '';
 
                       return (
                         <div className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 text-[12px]">

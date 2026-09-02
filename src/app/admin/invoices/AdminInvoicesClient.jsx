@@ -184,31 +184,31 @@ export default function AdminInvoicesClient({ initialData }) {
     switch (status) {
       case 'DRAFT':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground border border-border">
+          <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
             DRAFT
           </span>
         );
       case 'SENT':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20">
+          <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             SENT
           </span>
         );
       case 'PARTIALLY_PAID':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+          <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400">
             PARTIALLY PAID
           </span>
         );
       case 'PAID':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
             PAID
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground border border-border">
+          <span className="inline-flex items-center rounded text-[10px] font-bold px-2 py-0.5 border shadow-2xs border-border bg-muted text-muted-foreground">
             {status}
           </span>
         );
@@ -241,8 +241,8 @@ export default function AdminInvoicesClient({ initialData }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-muted text-foreground border border-border">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex size-9 items-center justify-center rounded-lg bg-muted/50 text-foreground border border-border">
+              <FileSpreadsheet className="size-4 text-muted-foreground" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
@@ -261,7 +261,7 @@ export default function AdminInvoicesClient({ initialData }) {
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 text-xs border-border"
+              className="h-9 gap-1.5 text-xs border-border cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4 text-muted-foreground" />
               Orders Management
@@ -271,7 +271,7 @@ export default function AdminInvoicesClient({ initialData }) {
             type="button"
             size="sm"
             onClick={() => setShowNewPanel(true)}
-            className="h-9 gap-1.5 text-xs font-semibold"
+            className="h-9 gap-1.5 text-xs font-semibold cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Create Invoice
@@ -279,69 +279,73 @@ export default function AdminInvoicesClient({ initialData }) {
         </div>
       </div>
 
-      {/* ── Stats Overview Cards (Flat & Clean) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── Stats Overview Cards (Exact Dashboard Theme) ── */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {/* Card 1: Total Unpaid Balance */}
-        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Unpaid Balance
-            </span>
-            <div className="text-2xl font-bold text-foreground tabular-nums">
-              PKR {Number(stats.totalUnpaid || 0).toLocaleString('en-PK')}
+        <div className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4 transition-colors hover:border-border">
+          <div className="flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground line-clamp-1">
+                Unpaid Balance
+              </p>
+              <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums truncate">
+                PKR {Number(stats.totalUnpaid || 0).toLocaleString('en-PK')}
+              </h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">Pending receivables</p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-            <DollarSign className="w-5 h-5" />
+            <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2">
+              <DollarSign className="size-3.5 sm:size-4 text-muted-foreground" />
+            </div>
           </div>
         </div>
 
         {/* Card 2: Draft Invoices */}
-        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Draft Invoices
-            </span>
-            <div className="text-2xl font-bold text-foreground tabular-nums">
-              {stats.draftCount || 0}
+        <div className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4 transition-colors hover:border-border">
+          <div className="flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground line-clamp-1">
+                Draft Invoices
+              </p>
+              <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums truncate">
+                {stats.draftCount || 0}
+              </h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">Unfinalized drafts</p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-muted text-muted-foreground border border-border shrink-0">
-            <Clock className="w-5 h-5" />
+            <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2">
+              <Clock className="size-3.5 sm:size-4 text-muted-foreground" />
+            </div>
           </div>
         </div>
 
         {/* Card 3: Sent Invoices */}
-        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Sent Invoices
-            </span>
-            <div className="text-2xl font-bold text-sky-700 dark:text-sky-400 tabular-nums">
-              {stats.sentCount || 0}
+        <div className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4 transition-colors hover:border-border">
+          <div className="flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground line-clamp-1">
+                Sent Invoices
+              </p>
+              <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums truncate">
+                {stats.sentCount || 0}
+              </h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">Dispatched & active</p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20 shrink-0">
-            <Send className="w-5 h-5" />
+            <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2">
+              <Send className="size-3.5 sm:size-4 text-muted-foreground" />
+            </div>
           </div>
         </div>
 
         {/* Card 4: Total Invoices */}
-        <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between shadow-xs">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Total Invoices
-            </span>
-            <div className="text-2xl font-bold text-foreground tabular-nums">
-              {totalCount || 0}
+        <div className="admin-surface rounded-[0.5rem] border-transparent p-3 sm:p-4 transition-colors hover:border-border">
+          <div className="flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[12px] font-medium text-muted-foreground line-clamp-1">
+                Total Invoices
+              </p>
+              <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums truncate">
+                {totalCount || 0}
+              </h3>
             </div>
-            <p className="text-[10px] text-muted-foreground">Registered records</p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-muted text-muted-foreground border border-border shrink-0">
-            <Layers className="w-5 h-5" />
+            <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2">
+              <Layers className="size-3.5 sm:size-4 text-muted-foreground" />
+            </div>
           </div>
         </div>
       </div>
@@ -467,8 +471,8 @@ export default function AdminInvoicesClient({ initialData }) {
         </div>
       )}
 
-      {/* ── Main Invoices Table ── */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-xs">
+      {/* ── Main Invoices Desktop Table ── */}
+      <div className="hidden md:block bg-card rounded-xl border border-border overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-muted/40 border-b border-border text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
@@ -679,35 +683,188 @@ export default function AdminInvoicesClient({ initialData }) {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* ── Pagination Footer ── */}
-        <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-t border-border text-xs text-muted-foreground">
-          <div>
-            <strong className="text-zinc-700">{totalCount}</strong> invoices
+      {/* ── Mobile Invoices Card List (Slide se hata ke direct view me) ── */}
+      <div className="flex flex-col gap-2.5 md:hidden">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={`mob-skel-${i}`} className="p-3.5 rounded-xl border border-border bg-card shadow-xs animate-pulse flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <div className="h-4 w-28 bg-muted rounded" />
+                <div className="h-5 w-16 bg-muted rounded-full" />
+              </div>
+              <div className="h-4 w-40 bg-muted rounded" />
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <div className="h-4 w-20 bg-muted rounded" />
+                <div className="h-4 w-20 bg-muted rounded" />
+              </div>
+            </div>
+          ))
+        ) : invoices.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center">
+            <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+            <p className="text-xs font-semibold text-foreground">
+              {isTrashView ? 'Trash is empty' : 'No invoices found'}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {isTrashView ? 'Deleted invoices will appear here.' : 'Try changing your filters or search.'}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 px-2.5 rounded-lg border-zinc-200 text-xs shadow-none"
-            >
-              <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
-            </Button>
-            <span className="text-xs text-zinc-600 px-1 font-medium">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 px-2.5 rounded-lg border-zinc-200 text-xs shadow-none"
-            >
-              Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
-            </Button>
-          </div>
+        ) : (
+          invoices.map((inv) => {
+            const isSelected = selectedIds.includes(inv._id);
+            const isPaid = Number(inv.balanceDue || 0) === 0 && Number(inv.totalAmount || 0) > 0;
+            return (
+              <div
+                key={inv._id}
+                className={`p-3.5 rounded-xl border border-border bg-card shadow-xs transition-colors flex flex-col gap-2.5 ${
+                  isSelected ? 'bg-muted/40 border-primary/40' : ''
+                }`}
+              >
+                {/* Header: Checkbox + Invoice# + Status */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectOne(inv._id)}
+                      className="rounded border-border text-primary focus:ring-ring h-4 w-4 cursor-pointer shrink-0"
+                    />
+                    <Link
+                      href={`/admin/invoices/${inv._id}`}
+                      className="font-bold text-sm text-foreground hover:underline inline-flex items-center gap-1.5 truncate"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span>{inv.invoiceNumber}</span>
+                    </Link>
+                  </div>
+                  <div className="shrink-0">{getStatusBadge(inv.status)}</div>
+                </div>
+
+                {/* Customer Info & Date */}
+                <div className="flex items-start justify-between gap-2 text-xs">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground truncate">{inv.customerName || 'Anonymous'}</p>
+                    {inv.customerPhone && (
+                      <p className="text-[11px] text-muted-foreground">{inv.customerPhone}</p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0 text-muted-foreground text-[11px]">
+                    {formatDate(inv.invoiceDate)}
+                  </div>
+                </div>
+
+                {/* Linked Order & Amounts Bar */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/70 text-xs">
+                  <div>
+                    {inv.orderId ? (
+                      <Link
+                        href={`/admin/orders?search=${inv.orderId}`}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground text-[10px] font-medium border border-border"
+                        title="View Order"
+                      >
+                        <span>{inv.orderId}</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-muted-foreground" />
+                      </Link>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">Manual</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 tabular-nums">
+                    <span className="text-[11px] text-muted-foreground">
+                      PKR {Number(inv.totalAmount || 0).toLocaleString('en-PK')}
+                    </span>
+                    <span className="text-muted-foreground/40">•</span>
+                    {isPaid ? (
+                      <span className="inline-flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                        <CheckCircle2 className="w-3 h-3" /> Paid
+                      </span>
+                    ) : (
+                      <span className="font-bold text-foreground text-xs">
+                        Due: PKR {Number(inv.balanceDue || 0).toLocaleString('en-PK')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Actions Footer */}
+                <div className="flex items-center justify-end gap-2 pt-1.5 border-t border-border/50">
+                  {!isTrashView ? (
+                    <>
+                      <Link href={`/admin/invoices/${inv._id}`} className="flex-1">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full h-7 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80"
+                        >
+                          <Eye className="w-3 h-3 mr-1" /> View Invoice
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(inv._id, inv.invoiceNumber)}
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        title="Move to Trash"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleRestore(inv._id)}
+                        className="flex-1 h-7 text-xs font-medium"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" /> Restore
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(inv._id, inv.invoiceNumber)}
+                        className="h-7 px-2 text-xs"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" /> Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ── Pagination Footer (Visible on both Desktop and Mobile) ── */}
+      <div className="flex items-center justify-between px-4 py-3 bg-card border border-border rounded-xl text-xs text-muted-foreground shadow-xs">
+        <div>
+          <strong className="text-foreground">{totalCount}</strong> invoices
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="h-8 px-2.5 rounded-lg border-border text-xs shadow-none"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
+          </Button>
+          <span className="text-xs text-foreground px-1 font-medium">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="h-8 px-2.5 rounded-lg border-border text-xs shadow-none"
+          >
+            Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
         </div>
       </div>
 

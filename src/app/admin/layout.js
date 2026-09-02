@@ -1,7 +1,5 @@
 import { Geist_Mono } from 'next/font/google';
 import './admin.css';
-import { Suspense } from 'react';
-import { AdminShellSkeleton } from '@/components/AdminDashboardSkeleton';
 import AdminLayoutShell from './AdminLayoutShell';
 import { getAdminSession } from '@/lib/requireAdmin';
 
@@ -16,15 +14,9 @@ const geistMono = Geist_Mono({
 
 
 
-export default function AdminLayout({ children }) {
-  return (
-    <Suspense fallback={<AdminShellSkeleton>{children}</AdminShellSkeleton>}>
-      <AdminLayoutSessionWrapper>{children}</AdminLayoutSessionWrapper>
-    </Suspense>
-  );
-}
+export const instant = false;
 
-async function AdminLayoutSessionWrapper({ children }) {
+export default async function AdminLayout({ children }) {
   const session = await getAdminSession();
   const sessionUser = session?.user?.isAdmin ? session.user : null;
 
