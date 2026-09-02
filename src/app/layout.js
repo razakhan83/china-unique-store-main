@@ -5,6 +5,8 @@ import { getMetadataBase } from "@/lib/siteUrl";
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
+import VisitorTracker from "@/components/VisitorTracker";
+
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -65,6 +67,7 @@ export default function RootLayout({ children }) {
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
+          <VisitorTracker />
           <Toaster position="bottom-center" richColors />
           <ServiceWorkerRegister />
         </AuthProvider>

@@ -86,7 +86,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "img-src 'self' blob: data: https://res.cloudinary.com https://lh3.googleusercontent.com https://www.facebook.com https://*.facebook.com https://*.tiktok.com",
           "font-src 'self' https://fonts.gstatic.com data:",
-          "connect-src 'self' https://res.cloudinary.com https://*.facebook.com https://*.tiktok.com https://analytics.tiktok.com https://www.google-analytics.com https://api.resend.com https://*.vercel-insights.com",
+          "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://sockjs-*.pusher.com https://res.cloudinary.com https://*.facebook.com https://*.tiktok.com https://analytics.tiktok.com https://www.google-analytics.com https://api.resend.com https://*.vercel-insights.com",
           "frame-src 'self' https://www.facebook.com https://www.google.com https://maps.google.com",
           "object-src 'none'",
           "base-uri 'self'",

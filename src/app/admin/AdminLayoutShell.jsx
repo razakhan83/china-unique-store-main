@@ -37,6 +37,7 @@ import {
   Tags,
   Truck,
   Users,
+  Activity,
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -62,9 +63,10 @@ const AdminNotificationCenter = dynamic(() => import('@/components/AdminNotifica
   ssr: false,
 });
 
-// 1. Dashboard
+// 1. Dashboard & Live Traffic
 const primaryNavItems = [
   { href: '/admin', label: 'Dashboard', icon: ChartColumn, match: (pathname) => pathname === '/admin' },
+  { href: '/admin/live-traffic', label: 'Live Traffic', icon: Activity, match: (pathname) => pathname.startsWith('/admin/live-traffic') },
 ];
 
 // 2. Products Management
@@ -159,6 +161,7 @@ function getOpenSections(pathname) {
 }
 
 function getPageMeta(pathname) {
+  if (pathname.startsWith('/admin/live-traffic')) return { title: 'Live Visitor Radar' };
   if (pathname.startsWith('/admin/abandoned-carts')) return { title: 'Abandoned Carts' };
   if (pathname.startsWith('/admin/orders')) return { title: 'Orders' };
   if (pathname.startsWith('/admin/products')) return { title: 'Products' };
