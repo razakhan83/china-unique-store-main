@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -6,6 +7,7 @@ import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 import VisitorTracker from "@/components/VisitorTracker";
+
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -67,7 +69,9 @@ export default function RootLayout({ children }) {
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <AuthProvider>
           {children}
-          <VisitorTracker />
+          <Suspense fallback={null}>
+            <VisitorTracker />
+          </Suspense>
           <Toaster position="bottom-center" richColors />
           <ServiceWorkerRegister />
         </AuthProvider>
