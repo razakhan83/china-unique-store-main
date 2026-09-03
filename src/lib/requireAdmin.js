@@ -3,17 +3,14 @@ import 'server-only';
 
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
-import { NextResponse, connection } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
 
 export const DEMO_MODE_MESSAGE = 'Demo Mode: Actions are disabled. You have read-only access.';
 
-export const getAdminSession = cache(async () => {
-  await connection();
-  return getServerSession(authOptions);
-});
+export const getAdminSession = cache(async () => getServerSession(authOptions));
 
 export async function requireAdmin() {
   const session = await getAdminSession();
