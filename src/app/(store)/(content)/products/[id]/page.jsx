@@ -32,6 +32,7 @@ import { getProductCategories } from '@/lib/productCategories';
 import { getProductTagById } from '@/lib/productTags';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
 import { cn } from '@/lib/utils';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
@@ -94,7 +95,9 @@ function getShareDescription(product) {
 }
 
 function getPrimaryImage(product) {
-  return product.Images?.[0]?.url || `${siteUrl}/opengraph-image`;
+  const rawUrl = product.Images?.[0]?.url;
+  if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
+  return optimizeCloudinaryUrl(rawUrl, CLOUDINARY_IMAGE_PRESETS.socialShare);
 }
 
 function getProductJsonLd({ product, reviewSummary = null }) {
@@ -216,8 +219,10 @@ export async function generateMetadata({ params }) {
       images: [
         {
           url: productImage,
+          secureUrl: productImage,
           width: 1200,
           height: 630,
+          type: 'image/jpeg',
           alt: productTitle,
         },
       ],

@@ -36,6 +36,10 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   // Product quick-view modal
   productModal: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
+  // Social share preview card (WhatsApp / Facebook / Twitter):
+  // 1200x630 canvas, pads with pure white background so transparent PNGs never turn black on WhatsApp
+  socialShare: { width: 1200, height: 630, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 85 },
+
   // ── Admin-facing presets ─────────────────────────────────────────────────────
   // Admin thumbnails don't need AVIF since they're behind auth and not LCP-critical
   adminThumb: { width: 128, height: 128, crop: 'fill', gravity: 'auto', format: 'webp', quality: 80 },
@@ -44,6 +48,7 @@ export const CLOUDINARY_IMAGE_PRESETS = {
 function buildCloudinaryTransformSegment(options = {}) {
   const transforms = [];
 
+  if (options.background) transforms.push(`b_${options.background}`);
   if (options.crop) transforms.push(`c_${options.crop}`);
   if (options.gravity) transforms.push(`g_${options.gravity}`);
   if (options.width) transforms.push(`w_${Math.round(options.width)}`);
