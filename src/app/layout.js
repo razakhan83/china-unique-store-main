@@ -51,14 +51,16 @@ export const metadata = {
     title: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
     description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
     type: 'website',
-    url: '/',
+    url: 'https://www.chinauniquestore.com',
     siteName: 'China Unique Store',
     locale: 'en_PK',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: 'https://www.chinauniquestore.com/opengraph-image.png',
+        secureUrl: 'https://www.chinauniquestore.com/opengraph-image.png',
         width: 1200,
         height: 630,
+        type: 'image/png',
         alt: socialPreviewAlt,
       },
     ],
@@ -69,7 +71,9 @@ export const metadata = {
     description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: 'https://www.chinauniquestore.com/opengraph-image.png',
+        width: 1200,
+        height: 630,
         alt: socialPreviewAlt,
       },
     ],
