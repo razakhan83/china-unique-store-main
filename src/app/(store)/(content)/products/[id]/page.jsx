@@ -90,12 +90,15 @@ function getProductKeywords(product, categories) {
 }
 
 function getShareDescription(product) {
+  if (product.seoOgDescription?.trim()) {
+    return product.seoOgDescription.trim();
+  }
   const price = getSellingPrice(product);
   return `Price: ${formatPrice(price)}. ${getProductDescription(product)}`;
 }
 
 function getPrimaryImage(product) {
-  const rawUrl = product.Images?.[0]?.url;
+  const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
   if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
   return optimizeCloudinaryUrl(rawUrl, CLOUDINARY_IMAGE_PRESETS.socialShare);
 }
@@ -196,6 +199,7 @@ export async function generateMetadata({ params }) {
   const reviewSummary = await getProductReviewSummarySafe(product._id);
   const categories = getProductCategories(product);
   const productTitle = getProductTitle(product);
+  const socialTitle = product.seoOgTitle?.trim() || productTitle;
   const productUrl = getCanonicalUrl(product);
   const productImage = getPrimaryImage(product);
   const shareDescription = getShareDescription(product);
@@ -205,13 +209,13 @@ export async function generateMetadata({ params }) {
 
   return {
     title: productTitle,
-    description: shareDescription,
+    description: getProductDescription(product),
     keywords,
     alternates: {
       canonical: productUrl,
     },
     openGraph: {
-      title: productTitle,
+      title: socialTitle,
       description: shareDescription,
       type: 'website',
       url: productUrl,
@@ -223,13 +227,13 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           type: 'image/jpeg',
-          alt: productTitle,
+          alt: socialTitle,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: productTitle,
+      title: socialTitle,
       description: shareDescription,
       images: [productImage],
     },

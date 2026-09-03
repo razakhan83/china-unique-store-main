@@ -133,6 +133,23 @@ const ProductSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        seoOgTitle: {
+            type: String,
+            trim: true,
+            maxlength: [100, 'OG title cannot be more than 100 characters'],
+            default: '',
+        },
+        seoOgDescription: {
+            type: String,
+            trim: true,
+            maxlength: [350, 'OG description cannot be more than 350 characters'],
+            default: '',
+        },
+        seoOgImage: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         Price: {
             type: Number,
             required: [true, 'Please provide a price.'],

@@ -7,8 +7,10 @@ import {
   ArrowLeft,
   Check,
   CloudUpload,
+  Image as ImageIcon,
   Loader2,
   PlusCircle,
+  Share2,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +55,9 @@ export default function AddProduct() {
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
   const [seoCanonicalUrl, setSeoCanonicalUrl] = useState("");
+  const [seoOgTitle, setSeoOgTitle] = useState("");
+  const [seoOgDescription, setSeoOgDescription] = useState("");
+  const [seoOgImage, setSeoOgImage] = useState("");
   const [Price, setPrice] = useState("");
   const [compareAtPrice, setCompareAtPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
@@ -89,6 +94,9 @@ export default function AddProduct() {
     setSeoDescription("");
     setSeoKeywords("");
     setSeoCanonicalUrl("");
+    setSeoOgTitle("");
+    setSeoOgDescription("");
+    setSeoOgImage("");
     setPrice("");
     setCompareAtPrice("");
     setDiscountPercentage("");
@@ -288,6 +296,9 @@ export default function AddProduct() {
           seoDescription,
           seoKeywords,
           seoCanonicalUrl,
+          seoOgTitle,
+          seoOgDescription,
+          seoOgImage,
           Price: Number(Price),
           compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,
@@ -386,6 +397,15 @@ export default function AddProduct() {
   const seoPreviewUrl =
     trimmedSeoCanonicalUrl ||
     `${getSiteUrl()}/products/${fallbackSlug || "your-product"}`;
+  const socialPreviewTitle =
+    seoOgTitle.trim() || trimmedSeoTitle || Name || "Product Title";
+  const socialPreviewDescription =
+    seoOgDescription.trim() ||
+    (Price
+      ? `Price: Rs. ${Number(Price).toLocaleString("en-PK")}. ${trimmedSeoDescription || plainDescription || "Buy online from China Unique Store."}`
+      : trimmedSeoDescription || plainDescription || "Buy online from China Unique Store.");
+  const socialPreviewImage =
+    seoOgImage.trim() || images?.[0]?.url || "/opengraph-image.png";
   const seoChecks = [
     { label: "SEO title", complete: trimmedSeoTitle.length >= 10 },
     { label: "Meta description", complete: trimmedSeoDescription.length >= 50 },
@@ -1092,6 +1112,149 @@ export default function AddProduct() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Social Share & OpenGraph Controls */}
+            <div className="mt-8 pt-6 border-t border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <Share2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-sm font-semibold text-foreground">Social Share & OpenGraph (WhatsApp, Facebook & Twitter)</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Customize the headline, description, and preview image that appear when this product link is shared on WhatsApp, Facebook, Instagram, and Twitter.
+              </p>
+
+              <div className="grid gap-4 pt-2">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>OG / Social Title</Label>
+                    <span className="text-[11px] text-muted-foreground">Optional (Defaults to SEO Title)</span>
+                  </div>
+                  <Input
+                    type="text"
+                    value={seoOgTitle}
+                    onChange={(e) => setSeoOgTitle(e.target.value)}
+                    className="h-11 px-4"
+                    placeholder="e.g., 🔥 50% OFF - Multifunctional Yogurt Filter with Strainer"
+                    maxLength={100}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">{seoOgTitle.length}/100 characters</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>OG / Social Description</Label>
+                    <span className="text-[11px] text-muted-foreground">Optional (Defaults to Price & Meta Description)</span>
+                  </div>
+                  <Textarea
+                    value={seoOgDescription}
+                    onChange={(e) => setSeoOgDescription(e.target.value)}
+                    className="min-h-20 resize-none px-4 py-2.5"
+                    placeholder="e.g., Premium Greek yogurt strainer & whey separator box. Fast cash on delivery all across Pakistan. Click to order now!"
+                    rows="2"
+                    maxLength={350}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">{seoOgDescription.length}/350 characters</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>OG / Social Image</Label>
+                    <span className="text-[11px] text-muted-foreground">Select from product photos or enter URL</span>
+                  </div>
+
+                  {images.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Quick Select from uploaded product photos:</p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {images.map((img, idx) => {
+                          const isSelected = (seoOgImage ? seoOgImage === img.url : idx === 0);
+                          return (
+                            <button
+                              key={img.url || idx}
+                              type="button"
+                              onClick={() => setSeoOgImage(img.url)}
+                              className={cn(
+                                "relative size-14 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-background",
+                                isSelected
+                                  ? "border-emerald-600 ring-2 ring-emerald-600/30 scale-105"
+                                  : "border-border hover:border-muted-foreground/50 opacity-70 hover:opacity-100"
+                              )}
+                              title={isSelected ? "Active Social Image" : "Click to use as Social Share Image"}
+                            >
+                              <img src={img.url} alt={`Option ${idx + 1}`} className="size-full object-contain rounded-md" />
+                              {isSelected && (
+                                <span className="absolute bottom-0 right-0 bg-emerald-600 text-white rounded-tl-md p-0.5">
+                                  <Check className="size-3" />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {seoOgImage && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSeoOgImage("")}
+                            className="h-14 px-3 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Reset to Default (1st image)
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <Input
+                    type="url"
+                    value={seoOgImage}
+                    onChange={(e) => setSeoOgImage(e.target.value)}
+                    className="h-10 px-4 text-xs font-mono"
+                    placeholder="https://res.cloudinary.com/... (Custom Image URL)"
+                  />
+                </div>
+              </div>
+
+              {/* Live WhatsApp / Social Card Preview */}
+              <div className="mt-4 rounded-xl border border-border bg-muted/20 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5">
+                    <Share2 className="size-3.5 text-emerald-600" />
+                    Live Social Share Card Preview (WhatsApp / Facebook)
+                  </p>
+                  <span className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-md">Live Preview</span>
+                </div>
+
+                <div className="max-w-md mx-auto rounded-xl overflow-hidden border border-emerald-950/20 dark:border-emerald-900/50 shadow-md bg-[#0b2b24] text-white">
+                  <div className="relative aspect-[1.91/1] w-full bg-white flex items-center justify-center p-3 overflow-hidden border-b border-emerald-900/20">
+                    {socialPreviewImage ? (
+                      <img
+                        src={socialPreviewImage}
+                        alt={socialPreviewTitle}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <ImageIcon className="size-8 opacity-40" />
+                        <span className="text-xs mt-1">No Image Available</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 space-y-1 bg-[#0b2b24]">
+                    <p className="font-semibold text-sm line-clamp-2 text-white leading-snug">
+                      {socialPreviewTitle}
+                    </p>
+                    <p className="text-xs line-clamp-3 text-emerald-100/80 leading-relaxed">
+                      {socialPreviewDescription}
+                    </p>
+                    <div className="pt-2 mt-1 border-t border-emerald-800/40 flex items-center justify-between text-[11px] text-emerald-300/80">
+                      <span>chinauniquestore.com</span>
+                      <span className="font-medium text-emerald-400">China Unique Store</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

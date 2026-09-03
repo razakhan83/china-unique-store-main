@@ -46,7 +46,7 @@ export async function GET(req) {
         }
 
         let dbQuery = Product.find(filter)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .sort({ createdAt: -1 })
             .lean();
@@ -97,6 +97,9 @@ export async function POST(req) {
             seoDescription,
             seoKeywords,
             seoCanonicalUrl,
+            seoOgTitle,
+            seoOgDescription,
+            seoOgImage,
             Price,
             compareAtPrice,
             discountPercentage,
@@ -173,6 +176,9 @@ export async function POST(req) {
             seoDescription: typeof seoDescription === 'string' ? seoDescription.trim() : '',
             seoKeywords: formatSeoKeywords(seoKeywords),
             seoCanonicalUrl: typeof seoCanonicalUrl === 'string' ? seoCanonicalUrl.trim() : '',
+            seoOgTitle: typeof seoOgTitle === 'string' ? seoOgTitle.trim() : '',
+            seoOgDescription: typeof seoOgDescription === 'string' ? seoOgDescription.trim() : '',
+            seoOgImage: typeof seoOgImage === 'string' ? seoOgImage.trim() : '',
             Price: normalizedPrice,
             compareAtPrice: Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null,
             Images: normalizedImages,

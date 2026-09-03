@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
@@ -122,6 +122,9 @@ export async function PUT(request, { params }) {
         existingProduct.seoDescription = typeof body.seoDescription === 'string' ? body.seoDescription.trim() : '';
         existingProduct.seoKeywords = formatSeoKeywords(body.seoKeywords);
         existingProduct.seoCanonicalUrl = typeof body.seoCanonicalUrl === 'string' ? body.seoCanonicalUrl.trim() : '';
+        existingProduct.seoOgTitle = typeof body.seoOgTitle === 'string' ? body.seoOgTitle.trim() : '';
+        existingProduct.seoOgDescription = typeof body.seoOgDescription === 'string' ? body.seoOgDescription.trim() : '';
+        existingProduct.seoOgImage = typeof body.seoOgImage === 'string' ? body.seoOgImage.trim() : '';
         existingProduct.Price = Number(body.Price);
         existingProduct.compareAtPrice = Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null;
         existingProduct.Images = normalizedImages;

@@ -98,6 +98,9 @@ const PRODUCT_DETAIL_PROJECTION = [
   'seoDescription',
   'seoKeywords',
   'seoCanonicalUrl',
+  'seoOgTitle',
+  'seoOgDescription',
+  'seoOgImage',
   'vendors',
   'packOptions',
 ].join(' ');
