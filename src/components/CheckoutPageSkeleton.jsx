@@ -3,15 +3,15 @@ import { cn } from '@/lib/utils';
 import styles from '@/app/(store)/(checkout-shell)/checkout/CheckoutClient.module.css';
 
 /**
- * Pixel-perfect checkout skeleton mirroring the exact Shopify-style layout
+ * Clean, neutral, high-performance checkout skeleton mirroring the exact Shopify-style layout
  */
 export default function CheckoutPageSkeleton() {
   return (
     <>
       {/* ── TOP NAV BAR SKELETON ── */}
-      <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center shadow-xs">
+      <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center">
         <div className="w-full max-w-[1130px] mx-auto relative flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[0.95rem] font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5">
             <Skeleton className="size-5 rounded-md" />
             <Skeleton className="h-4 w-10 rounded hidden sm:inline-block" />
           </div>
@@ -20,8 +20,8 @@ export default function CheckoutPageSkeleton() {
             <Skeleton className="h-7 w-32 rounded-lg" />
           </div>
 
-          <div className="text-[1.1rem] sm:text-[1.35rem] font-medium text-foreground tracking-tight z-10 flex items-center gap-2">
-            Checkout
+          <div className="z-10 flex items-center">
+            <Skeleton className="h-6 w-20 rounded-md" />
           </div>
         </div>
       </div>
@@ -45,8 +45,8 @@ export default function CheckoutPageSkeleton() {
             {/* Contact Section */}
             <div className={styles.sectionBlock}>
               <div className={styles.sectionTitleRow}>
-                <h2 className={styles.sectionTitle}>Contact</h2>
-                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-5 w-20 rounded-md" />
+                <Skeleton className="h-3.5 w-12 rounded" />
               </div>
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full rounded-xl" />
@@ -59,7 +59,9 @@ export default function CheckoutPageSkeleton() {
 
             {/* Delivery Section */}
             <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}>Delivery</h2>
+              <div className="mb-2">
+                <Skeleton className="h-5 w-20 rounded-md" />
+              </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <Skeleton className="h-12 rounded-xl" />
@@ -76,8 +78,10 @@ export default function CheckoutPageSkeleton() {
 
             {/* Shipping Method */}
             <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}>Shipping method</h2>
-              <div className="rounded-xl border border-border/80 p-4 flex items-center justify-between bg-muted/20">
+              <div className="mb-2">
+                <Skeleton className="h-5 w-32 rounded-md" />
+              </div>
+              <div className="rounded-xl border border-border/60 p-4 flex items-center justify-between">
                 <div className="space-y-1.5">
                   <Skeleton className="h-4 w-32 rounded" />
                   <Skeleton className="h-3 w-48 rounded" />
@@ -88,23 +92,25 @@ export default function CheckoutPageSkeleton() {
 
             {/* Payment Section */}
             <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}>Payment</h2>
-              <p className="text-xs text-muted-foreground mb-3">All transactions are secure and encrypted.</p>
+              <div className="space-y-1 mb-3">
+                <Skeleton className="h-5 w-24 rounded-md" />
+                <Skeleton className="h-3 w-56 rounded" />
+              </div>
               
-              <div className="rounded-xl border border-border/80 overflow-hidden divide-y divide-border/60">
-                <div className="p-4 flex items-center justify-between bg-muted/10">
+              <div className="rounded-xl border border-border/60 overflow-hidden divide-y divide-border/60">
+                <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-4 rounded-full" />
                     <Skeleton className="h-4 w-36 rounded" />
                   </div>
                 </div>
-                <div className="p-4 flex items-center justify-between bg-muted/10">
+                <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-4 rounded-full" />
                     <Skeleton className="h-4 w-44 rounded" />
                   </div>
                 </div>
-                <div className="p-4 flex items-center justify-between bg-muted/10">
+                <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Skeleton className="size-4 rounded-full" />
                     <Skeleton className="h-4 w-32 rounded" />
@@ -113,14 +119,17 @@ export default function CheckoutPageSkeleton() {
               </div>
             </div>
 
-            {/* Special Notes */}
-            <div className={styles.sectionBlock}>
-              <h2 className={styles.sectionTitle}>Special instructions for seller</h2>
-              <Skeleton className="h-20 w-full rounded-xl" />
+            {/* Mobile Order Summary (Bottom) */}
+            <div className="md:hidden mt-6 mb-3 border-t border-border/60 pt-6 space-y-3">
+              <Skeleton className="h-5 w-28 rounded-md" />
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
             </div>
 
             {/* Desktop CTA */}
-            <Skeleton className="hidden md:flex h-13 w-full rounded-xl" />
+            <Skeleton className="hidden md:flex h-13 w-full rounded-xl mb-4" />
 
             {/* Trust links */}
             <div className={styles.trustLinks}>
