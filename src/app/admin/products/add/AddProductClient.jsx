@@ -87,6 +87,7 @@ export default function AddProduct() {
   const seoGenerationLockRef = useRef(false);
 
   const [isUploadingOgImage, setIsUploadingOgImage] = useState(false);
+  const [seoOgImageRatio, setSeoOgImageRatio] = useState('1.91:1');
   const [ogPreviewFit, setOgPreviewFit] = useState('cover'); // 'cover' | 'contain'
   const [ogPreviewRatio, setOgPreviewRatio] = useState('landscape'); // 'landscape' | 'square'
   const ogImageFileInputRef = useRef(null);
@@ -102,6 +103,8 @@ export default function AddProduct() {
     setSeoOgTitle("");
     setSeoOgDescription("");
     setSeoOgImage("");
+    setSeoOgImageRatio("1.91:1");
+    setOgPreviewRatio("landscape");
     setPrice("");
     setCompareAtPrice("");
     setDiscountPercentage("");
@@ -334,6 +337,7 @@ export default function AddProduct() {
           seoOgTitle,
           seoOgDescription,
           seoOgImage,
+          seoOgImageRatio,
           Price: Number(Price),
           compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,
@@ -1324,24 +1328,32 @@ export default function AddProduct() {
                       </button>
                     </div>
 
-                    <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
+                    <div className="inline-flex rounded-lg border border-border bg-background p-0.5 shadow-sm">
                       <button
                         type="button"
-                        onClick={() => setOgPreviewRatio('landscape')}
+                        onClick={() => {
+                          setSeoOgImageRatio('1.91:1');
+                          setOgPreviewRatio('landscape');
+                        }}
                         className={cn(
-                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
-                          ogPreviewRatio === 'landscape' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                          "px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
+                          seoOgImageRatio === '1.91:1' ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                         )}
+                        title="1.91:1 Landscape Banner (1200 × 630 px)"
                       >
                         1.91:1
                       </button>
                       <button
                         type="button"
-                        onClick={() => setOgPreviewRatio('square')}
+                        onClick={() => {
+                          setSeoOgImageRatio('1:1');
+                          setOgPreviewRatio('square');
+                        }}
                         className={cn(
-                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
-                          ogPreviewRatio === 'square' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                          "px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
+                          seoOgImageRatio === '1:1' ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                         )}
+                        title="1:1 Square Card (1080 × 1080 px)"
                       >
                         1:1
                       </button>

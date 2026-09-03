@@ -150,6 +150,11 @@ const ProductSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        seoOgImageRatio: {
+            type: String,
+            enum: ['1.91:1', '1:1'],
+            default: '1.91:1',
+        },
         Price: {
             type: Number,
             required: [true, 'Please provide a price.'],

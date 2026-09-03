@@ -18,7 +18,7 @@ export async function GET(_request, { params }) {
 
         const { id } = await params;
         const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
@@ -125,6 +125,7 @@ export async function PUT(request, { params }) {
         existingProduct.seoOgTitle = typeof body.seoOgTitle === 'string' ? body.seoOgTitle.trim() : '';
         existingProduct.seoOgDescription = typeof body.seoOgDescription === 'string' ? body.seoOgDescription.trim() : '';
         existingProduct.seoOgImage = typeof body.seoOgImage === 'string' ? body.seoOgImage.trim() : '';
+        existingProduct.seoOgImageRatio = body.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1';
         existingProduct.Price = Number(body.Price);
         existingProduct.compareAtPrice = Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null;
         existingProduct.Images = normalizedImages;

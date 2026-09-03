@@ -101,6 +101,7 @@ const PRODUCT_DETAIL_PROJECTION = [
   'seoOgTitle',
   'seoOgDescription',
   'seoOgImage',
+  'seoOgImageRatio',
   'vendors',
   'packOptions',
 ].join(' ');
@@ -275,6 +276,7 @@ function toProductDetailView(product) {
     seoOgTitle: product.seoOgTitle || '',
     seoOgDescription: product.seoOgDescription || '',
     seoOgImage: product.seoOgImage || '',
+    seoOgImageRatio: product.seoOgImageRatio || '1.91:1',
   };
 }
 

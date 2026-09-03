@@ -46,12 +46,12 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/Chaina-Store-fav-icon.png?v=3', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico?v=3' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: '/Chaina-Store-fav-icon.png?v=3',
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/Chaina-Store-fav-icon.png?v=3', sizes: '180x180', type: 'image/png' },
     ],
   },
   alternates: {

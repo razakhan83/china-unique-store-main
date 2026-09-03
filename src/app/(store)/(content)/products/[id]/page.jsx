@@ -101,7 +101,12 @@ function getPrimaryImage(product) {
   const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
   if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
   const isPng = rawUrl.toLowerCase().includes('.png') || rawUrl.toLowerCase().includes('/png');
-  const preset = isPng ? CLOUDINARY_IMAGE_PRESETS.socialSharePad : CLOUDINARY_IMAGE_PRESETS.socialShare;
+  const isSquare = product.seoOgImageRatio === '1:1';
+  
+  const preset = isSquare
+    ? (isPng ? CLOUDINARY_IMAGE_PRESETS.socialShareSquarePad : CLOUDINARY_IMAGE_PRESETS.socialShareSquare)
+    : (isPng ? CLOUDINARY_IMAGE_PRESETS.socialSharePad : CLOUDINARY_IMAGE_PRESETS.socialShare);
+
   return optimizeCloudinaryUrl(rawUrl, preset);
 }
 
@@ -209,6 +214,10 @@ export async function generateMetadata({ params }) {
   const price = Number(product.discountedPrice ?? product.Price ?? 0);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
 
+  const isSquare = product.seoOgImageRatio === '1:1';
+  const ogWidth = isSquare ? 1080 : 1200;
+  const ogHeight = isSquare ? 1080 : 630;
+
   return {
     title: productTitle,
     description: getProductDescription(product),
@@ -226,15 +235,15 @@ export async function generateMetadata({ params }) {
         {
           url: productImage,
           secureUrl: productImage,
-          width: 1200,
-          height: 630,
+          width: ogWidth,
+          height: ogHeight,
           type: 'image/jpeg',
           alt: socialTitle,
         },
       ],
     },
     twitter: {
-      card: 'summary_large_image',
+      card: isSquare ? 'summary' : 'summary_large_image',
       title: socialTitle,
       description: shareDescription,
       images: [productImage],
