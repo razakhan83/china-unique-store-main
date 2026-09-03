@@ -87,7 +87,7 @@ function normalizeCitySearchValue(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-function FloatingLabelInput({ label, id, value, className, wrapperClassName, ...props }) {
+function FloatingLabelInput({ label, id, value, className, wrapperClassName, isValid, ...props }) {
   const hasValue = Boolean(value);
   return (
     <div className={cn('relative w-full', wrapperClassName)}>
@@ -95,17 +95,65 @@ function FloatingLabelInput({ label, id, value, className, wrapperClassName, ...
         id={id}
         value={value}
         {...props}
-        className={cn('h-[3.35rem] md:h-12 text-[16px] md:text-sm', className, hasValue ? 'pt-[24px] pb-[8px] md:pt-[22px] md:pb-[6px]' : '')}
+        className={cn(
+          'h-12 text-[15px] md:text-sm rounded-xl transition-all duration-150',
+          className,
+          hasValue ? 'pt-5 pb-1' : '',
+          isValid ? 'border-emerald-500/80 pr-10 focus-visible:border-emerald-600 focus-visible:ring-emerald-500/15' : ''
+        )}
       />
       <label
         htmlFor={id}
         className={cn(
-          'absolute left-3.5 top-1.5 text-[11.5px] md:text-[11px] font-medium text-muted-foreground/80 transition-all duration-200 pointer-events-none',
-          hasValue ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
+          'absolute left-3.5 top-1.5 text-[10.5px] font-semibold transition-all duration-200 pointer-events-none select-none tracking-tight text-primary',
+          hasValue ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
         )}
       >
         {label}
       </label>
+      {isValid ? (
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none animate-in fade-in zoom-in-75 duration-200">
+          <div className="size-5 rounded-full bg-emerald-100 flex items-center justify-center">
+            <Check className="size-3 text-emerald-600 stroke-[2.5]" />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FloatingLabelTextarea({ label, id, value, className, wrapperClassName, rows = 2, isValid, ...props }) {
+  const hasValue = Boolean(value);
+  return (
+    <div className={cn('relative w-full', wrapperClassName)}>
+      <Textarea
+        id={id}
+        value={value}
+        rows={rows}
+        {...props}
+        className={cn(
+          'min-h-[4.5rem] text-[15px] md:text-sm resize-none rounded-xl shadow-none transition-all duration-150',
+          className,
+          hasValue ? 'pt-5 pb-1.5' : 'pt-3.5',
+          isValid ? 'border-emerald-500/80 pr-10 focus-visible:border-emerald-600 focus-visible:ring-emerald-500/15' : ''
+        )}
+      />
+      <label
+        htmlFor={id}
+        className={cn(
+          'absolute left-3.5 top-1.5 text-[10.5px] font-semibold transition-all duration-200 pointer-events-none select-none tracking-tight text-primary',
+          hasValue ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
+        )}
+      >
+        {label}
+      </label>
+      {isValid ? (
+        <div className="absolute right-3.5 top-4 flex items-center pointer-events-none animate-in fade-in zoom-in-75 duration-200">
+          <div className="size-5 rounded-full bg-emerald-100 flex items-center justify-center">
+            <Check className="size-3 text-emerald-600 stroke-[2.5]" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -776,29 +824,152 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     return () => clearTimeout(timer);
   }, [formData.phone, formData.fullName, formData.email, formData.city, formData.address, formData.landmark, cart, pricing.total]);
 
+  const debounceTimersRef = useRef({});
+
+  const isNameValid = useMemo(() => {
+    const clean = formData.fullName.trim();
+    return /^[a-zA-Z\s]{2,20}$/.test(clean);
+  }, [formData.fullName]);
+
+  const isPhoneValid = useMemo(() => {
+    const clean = formData.phone.replace(/\s+/g, '');
+    return /^03\d{9}$/.test(clean);
+  }, [formData.phone]);
+
+  const isAddressValid = useMemo(() => {
+    const len = formData.address.trim().length;
+    return len >= 5 && len <= 100;
+  }, [formData.address]);
+
+  const isCityValid = useMemo(() => Boolean(formData.city.trim()), [formData.city]);
+
+  const isFormComplete = isNameValid && isPhoneValid && isAddressValid && isCityValid;
+
+  function validateFieldOnBlurOrDebounce(fieldName, rawValue) {
+    const val = (rawValue ?? formData[fieldName] ?? '').trim();
+    if (!val) return; // Don't show premature errors on blank inputs until user leaves or submits
+
+    if (fieldName === 'fullName') {
+      if (/\d/.test(val)) {
+        setErrors((prev) => ({ ...prev, fullName: 'Name mein numbers use nahi ho sakte.' }));
+      } else if (!/^[A-Za-z\s]+$/.test(val)) {
+        setErrors((prev) => ({ ...prev, fullName: 'Sirf alphabets (A-Z) use karein.' }));
+      } else if (val.length < 2) {
+        setErrors((prev) => ({ ...prev, fullName: 'Name kam az kam 2 characters ka ho.' }));
+      } else if (val.length > 20) {
+        setErrors((prev) => ({ ...prev, fullName: 'Name 20 characters ke andar hona chahiye.' }));
+      } else {
+        setErrors((prev) => ({ ...prev, fullName: '' }));
+      }
+    }
+
+    if (fieldName === 'phone') {
+      const clean = val.replace(/\s+/g, '');
+      if (!clean.startsWith('03')) {
+        setErrors((prev) => ({ ...prev, phone: 'Number 03 se shuru hona chahiye (e.g. 03001234567).' }));
+      } else if (clean.length !== 11 || !/^\d+$/.test(clean)) {
+        setErrors((prev) => ({ ...prev, phone: 'Pura 11-digit number enter karein (0300xxxxxxx).' }));
+      } else {
+        setErrors((prev) => ({ ...prev, phone: '' }));
+      }
+    }
+
+    if (fieldName === 'address') {
+      if (val.length < 5) {
+        setErrors((prev) => ({ ...prev, address: 'Pura address likhein (kam az kam 5 characters).' }));
+      } else if (val.length > 100) {
+        setErrors((prev) => ({ ...prev, address: 'Address 100 characters ke andar hona chahiye.' }));
+      } else {
+        setErrors((prev) => ({ ...prev, address: '' }));
+      }
+    }
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
-    if (errors[name]) {
-      setErrors((previous) => ({ ...previous, [name]: '' }));
+
+    // Instant clear if input becomes valid
+    if (name === 'fullName' && /^[a-zA-Z\s]{2,20}$/.test(value.trim())) {
+      setErrors((prev) => ({ ...prev, fullName: '' }));
+    } else if (name === 'phone' && /^03\d{9}$/.test(value.replace(/\s+/g, ''))) {
+      setErrors((prev) => ({ ...prev, phone: '' }));
+    } else if (name === 'address' && value.trim().length >= 5 && value.trim().length <= 100) {
+      setErrors((prev) => ({ ...prev, address: '' }));
     }
+
+    // Debounced caution error check after user stops typing
+    if (debounceTimersRef.current[name]) {
+      clearTimeout(debounceTimersRef.current[name]);
+    }
+    debounceTimersRef.current[name] = setTimeout(() => {
+      validateFieldOnBlurOrDebounce(name, value);
+    }, 900);
+  }
+
+  function handleBlur(event) {
+    const { name, value } = event.target;
+    if (debounceTimersRef.current[name]) {
+      clearTimeout(debounceTimersRef.current[name]);
+    }
+    validateFieldOnBlurOrDebounce(name, value);
   }
 
   function validateForm() {
     const nextErrors = {};
-    if (!formData.fullName.trim()) nextErrors.fullName = 'Full Name is required.';
+    const missingFields = [];
+
+    const cleanName = formData.fullName.trim();
+    if (!cleanName) {
+      nextErrors.fullName = 'Full Name is required.';
+      missingFields.push('Full Name');
+    } else if (!/^[a-zA-Z\s]{2,20}$/.test(cleanName)) {
+      nextErrors.fullName = 'Name alphabets mein (max 20 chars) hona chahiye.';
+      missingFields.push('Valid Name (Alphabets only, max 20 chars)');
+    }
     
     const cleanPhone = formData.phone.replace(/\s+/g, '');
     if (!cleanPhone) {
       nextErrors.phone = 'Phone Number is required.';
+      missingFields.push('Phone Number');
     } else if (!/^03\d{9}$/.test(cleanPhone)) {
-      nextErrors.phone = 'Enter a valid 11-digit number (e.g. 03001234567).';
+      nextErrors.phone = '11-digit valid number likhein (e.g. 03001234567).';
+      missingFields.push('Valid Phone (0300xxxxxxx)');
     }
 
-    if (!formData.city.trim()) nextErrors.city = 'City is required.';
-    if (!formData.address.trim()) nextErrors.address = 'Complete Address is required.';
+    const cleanAddress = formData.address.trim();
+    if (!cleanAddress) {
+      nextErrors.address = 'Complete Address is required.';
+      missingFields.push('Complete Address');
+    } else if (cleanAddress.length < 5 || cleanAddress.length > 100) {
+      nextErrors.address = 'Address 5 se 100 characters ke darmiyan hona chahiye.';
+      missingFields.push('Complete Address (within 100 chars)');
+    }
+
+    if (!formData.city.trim()) {
+      nextErrors.city = 'City is required.';
+      missingFields.push('City');
+    }
+
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+
+    if (missingFields.length > 0) {
+      toast.error('Please complete the required details:', {
+        description: missingFields.join(' • '),
+        duration: 4500,
+      });
+
+      // Automatically scroll smoothly to the first missing field
+      const firstFieldId = nextErrors.fullName ? 'fullName' : nextErrors.phone ? 'phone' : nextErrors.address ? 'address' : 'city';
+      const element = document.getElementById(firstFieldId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus?.();
+      }
+      return false;
+    }
+
+    return true;
   }
 
   async function handleApplyCoupon(e) {
@@ -1080,10 +1251,10 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                 {!session?.user ? (
                   <button
                     type="button"
-                    className={styles.signInLink}
+                    className="text-[0.82rem] font-semibold text-primary hover:underline hover:opacity-80 transition-all cursor-pointer"
                     onClick={() => setShowAuthModal(true)}
                   >
-                    Sign in
+                    Log in
                   </button>
                 ) : null}
               </div>
@@ -1096,25 +1267,15 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     name="email"
                     autoComplete="email"
                     spellCheck={false}
-                    aria-label="Email or mobile phone number"
-                    label="Email or mobile phone number"
+                    aria-label="Email address"
+                    label="Email address (optional)"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Email or mobile phone number"
+                    placeholder="Email address (optional)"
                     readOnly={!!session?.user}
                     className={session?.user ? 'cursor-not-allowed bg-muted/30' : ''}
                   />
                 </Field>
-
-                <div className={styles.checkboxRow}>
-                  <input
-                    type="checkbox"
-                    id="email-offers"
-                    className="size-4 rounded accent-primary cursor-pointer"
-                    defaultChecked={false}
-                  />
-                  <label htmlFor="email-offers" className="cursor-pointer">Email me with news and offers</label>
-                </div>
 
                 {!session?.user && (
                   <div 
@@ -1122,28 +1283,18 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowAuthModal(true)}
-                    className="group flex items-start gap-3 p-3 mt-1 rounded-xl border border-primary/25 bg-primary/[0.04] hover:bg-primary/[0.08] hover:border-primary/50 transition-all duration-200 cursor-pointer shadow-2xs"
+                    className={styles.checkboxRow}
                   >
-                    <div className="flex items-center h-5 mt-0.5 pointer-events-none">
-                      <input
-                        type="checkbox"
-                        id="track-order-history-prompt"
-                        checked={false}
-                        readOnly
-                        className="size-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label htmlFor="track-order-history-prompt" className="font-semibold text-foreground cursor-pointer block text-[13px] leading-snug group-hover:text-primary transition-colors">
-                        Want live order tracking & full order history?
-                      </label>
-                      <p className="text-muted-foreground mt-0.5 text-[11.5px] leading-relaxed">
-                        Sign in with Google or Email to track parcels live, view past invoices, and auto-save delivery details.
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-xs font-semibold text-primary underline-offset-4 group-hover:underline self-center hidden sm:inline">
-                      Sign in →
-                    </span>
+                    <input
+                      type="checkbox"
+                      id="track-order-history-prompt"
+                      checked={false}
+                      readOnly
+                      className="size-4 rounded accent-primary cursor-pointer pointer-events-none"
+                    />
+                    <label htmlFor="track-order-history-prompt" className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors select-none text-[0.82rem]">
+                      Sign in for live order tracking & saved details
+                    </label>
                   </div>
                 )}
               </FieldGroup>
@@ -1167,6 +1318,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                       label="Full name"
                       value={formData.fullName}
                       onChange={handleChange}
+                      onBlur={handleBlur}
+                      isValid={isNameValid}
                       placeholder="Full name *"
                       aria-invalid={Boolean(errors.fullName)}
                     />
@@ -1182,6 +1335,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                       label="Phone number"
                       value={formData.phone}
                       onChange={handleChange}
+                      onBlur={handleBlur}
+                      isValid={isPhoneValid}
                       placeholder="Phone *"
                       aria-invalid={Boolean(errors.phone)}
                     />
@@ -1191,90 +1346,88 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
                 {/* Address */}
                 <Field data-invalid={errors.address ? 'true' : undefined}>
-                  <FloatingLabelInput
+                  <FloatingLabelTextarea
                     id="address"
                     name="address"
                     autoComplete="street-address"
                     aria-label="Complete address"
                     label="Complete address"
+                    rows={2}
                     value={formData.address}
                     onChange={handleChange}
-                    placeholder="Complete address *"
+                    onBlur={handleBlur}
+                    isValid={isAddressValid}
+                    placeholder="Complete address"
                     aria-invalid={Boolean(errors.address)}
                   />
                   <FieldError>{errors.address}</FieldError>
                 </Field>
 
-                {/* City / Postal row */}
-                <div className={styles.inputRow2}>
-                  <Field data-invalid={errors.city ? 'true' : undefined}>
-                    <Combobox
-                      id="city"
-                      items={CITY_OPTIONS}
-                      filteredItems={visibleCityOptions}
-                      value={selectedCity}
-                      autoHighlight="always"
-                      onInputValueChange={setCitySearch}
-                      onValueChange={(city) => {
-                        setFormData((previous) => ({ ...previous, city: city?.value || '' }));
-                        setCitySearch('');
-                        if (errors.city) {
-                          setErrors((previous) => ({ ...previous, city: '' }));
-                        }
-                      }}
+                {/* City */}
+                <Field data-invalid={errors.city ? 'true' : undefined}>
+                  <Combobox
+                    id="city"
+                    items={CITY_OPTIONS}
+                    filteredItems={visibleCityOptions}
+                    value={selectedCity}
+                    autoHighlight="always"
+                    onInputValueChange={setCitySearch}
+                    onValueChange={(city) => {
+                      setFormData((previous) => ({ ...previous, city: city?.value || '' }));
+                      setCitySearch('');
+                      if (errors.city) {
+                        setErrors((previous) => ({ ...previous, city: '' }));
+                      }
+                    }}
+                  >
+                    <ComboboxInput
+                      placeholder="City *"
+                      aria-invalid={Boolean(errors.city)}
+                      showClear={Boolean(formData.city)}
+                      inputClassName={cn(
+                        'transition-none shadow-none',
+                        'hover:border-transparent hover:bg-transparent',
+                        'focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:shadow-none',
+                        'data-[pressed]:scale-100 data-[pressed]:translate-y-0'
+                      )}
+                      triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
+                      className={cn(
+                        'h-12 text-[15px] md:text-sm rounded-xl border border-slate-300 dark:border-border/80 bg-card shadow-none transition-colors duration-150',
+                        'hover:border-slate-400 dark:hover:border-border',
+                        'focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15',
+                        '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
+                        errors.city && 'border-destructive bg-destructive/5 ring-3 ring-destructive/15'
+                      )}
+                    />
+                    <ComboboxContent
+                      className="rounded-xl border border-slate-300 dark:border-border/80 bg-card p-0 shadow-lg"
+                      sideOffset={8}
                     >
-                      <ComboboxInput
-                        placeholder="City *"
-                        aria-invalid={Boolean(errors.city)}
-                        showClear={Boolean(formData.city)}
-                        inputClassName={cn(
-                          'transition-none shadow-none',
-                          'hover:border-transparent hover:bg-transparent',
-                          'focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:shadow-none',
-                          'data-[pressed]:scale-100 data-[pressed]:translate-y-0'
-                        )}
-                        triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
-                        className={cn(
-                          'h-[3.35rem] md:h-12 text-[16px] md:text-sm rounded-xl border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)] shadow-none transition-colors duration-150',
-                          'hover:border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] hover:bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]',
-                          'focus-within:border-[color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-border))] focus-within:bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] focus-within:ring-3 focus-within:ring-[color:color-mix(in_oklab,var(--color-primary)_10%,transparent)]',
-                          '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
-                          errors.city && 'border-destructive bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] ring-4 ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)]'
-                        )}
-                      />
-                      <ComboboxContent
-                        className="rounded-xl border border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-popover)_96%,white)] p-0 shadow-lg"
-                        sideOffset={8}
-                      >
-                        <ComboboxList className="max-h-72 p-2">
-                          <ComboboxEmpty className="px-3 py-4 text-sm">No matching city found.</ComboboxEmpty>
-                          <ComboboxGroup>
-                            <ComboboxLabel>{normalizedCitySearch ? 'Search results' : 'Main cities'}</ComboboxLabel>
-                            <ComboboxCollection>
-                              {(city) => (
-                                <ComboboxItem
-                                  key={city.value}
-                                  value={city}
-                                  className={cn(
-                                    'rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-[background-color,color] duration-200 data-highlighted:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)] sm:px-3.5',
-                                    selectedCity?.value === city.value &&
-                                      'bg-[color:color-mix(in_oklab,var(--color-primary)_8%,white)] text-primary'
-                                  )}
-                                >
-                                  <span className="truncate leading-5">{city.label}</span>
-                                </ComboboxItem>
-                              )}
-                            </ComboboxCollection>
-                          </ComboboxGroup>
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    <FieldError>{errors.city}</FieldError>
-                  </Field>
-                  <Field>
-                    <Input id="postal" placeholder="Postal code (optional)" />
-                  </Field>
-                </div>
+                      <ComboboxList className="max-h-72 p-2">
+                        <ComboboxEmpty className="px-3 py-4 text-sm">No matching city found.</ComboboxEmpty>
+                        <ComboboxGroup>
+                          <ComboboxLabel>{normalizedCitySearch ? 'Search results' : 'Main cities'}</ComboboxLabel>
+                          <ComboboxCollection>
+                            {(city) => (
+                              <ComboboxItem
+                                key={city.value}
+                                value={city}
+                                className={cn(
+                                  'rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-[background-color,color] duration-200 data-highlighted:bg-[color:color-mix(in_oklab,var(--color-muted)_58%,white)] sm:px-3.5',
+                                  selectedCity?.value === city.value &&
+                                    'bg-[color:color-mix(in_oklab,var(--color-primary)_8%,white)] text-primary'
+                                )}
+                              >
+                                <span className="truncate leading-5">{city.label}</span>
+                              </ComboboxItem>
+                            )}
+                          </ComboboxCollection>
+                        </ComboboxGroup>
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                  <FieldError>{errors.city}</FieldError>
+                </Field>
 
                 {/* Save for next time */}
                 <div className={styles.checkboxRow}>
@@ -1415,7 +1568,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
             </div> */}
 
             {/* Mobile Order Summary (Bottom - Always Open) */}
-            <div className="md:hidden mt-8 mb-4 border-t border-border/60 pt-8">
+            <div className="md:hidden mt-6 mb-3 border-t border-border/60 pt-6">
               <h2 className={styles.sectionTitle}>Order Summary</h2>
               <OrderSummaryContent {...summaryProps} />
             </div>
@@ -1436,7 +1589,12 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
             {/* Desktop CTA */}
             <button
               id="place-order-desktop"
-              className={cn(styles.ctaButton, 'hidden md:flex items-center justify-center gap-2')}
+              className={cn(
+                'hidden md:flex w-full h-13 rounded-xl items-center justify-center gap-2 font-bold text-base transition-all duration-300 cursor-pointer',
+                isFormComplete
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/95 shadow-md active:scale-[0.98]'
+                  : 'bg-card text-foreground border border-slate-300 hover:bg-muted/40 shadow-none'
+              )}
               onClick={() => document.getElementById('checkout-submit')?.click()}
               disabled={submitting || !isInitialized}
             >
@@ -1474,7 +1632,12 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           </div>
           <button
             id="place-order-mobile"
-            className={styles.mobilePlaceOrderBtn}
+            className={cn(
+              'h-11 px-5 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2 transition-all duration-300 shrink-0 cursor-pointer',
+              isFormComplete
+                ? 'bg-primary text-primary-foreground hover:bg-primary/95 shadow-sm active:scale-[0.97]'
+                : 'bg-card text-foreground border border-slate-300 hover:bg-muted/40 shadow-none'
+            )}
             onClick={() => document.getElementById('checkout-submit')?.click()}
             disabled={submitting || !isInitialized}
           >

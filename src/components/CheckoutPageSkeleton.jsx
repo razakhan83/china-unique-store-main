@@ -51,15 +51,8 @@ export default function CheckoutPageSkeleton() {
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full rounded-xl" />
                 <div className={styles.checkboxRow}>
-                  <Skeleton className="size-4 rounded" />
-                  <Skeleton className="h-3.5 w-48 rounded" />
-                </div>
-                <div className="p-3 rounded-xl border border-primary/20 bg-primary/[0.03] flex items-start gap-3">
-                  <Skeleton className="size-4 rounded mt-0.5" />
-                  <div className="space-y-1.5 flex-1">
-                    <Skeleton className="h-3.5 w-3/4 rounded" />
-                    <Skeleton className="h-3 w-5/6 rounded" />
-                  </div>
+                  <Skeleton className="size-4 rounded shrink-0" />
+                  <Skeleton className="h-3.5 w-60 rounded" />
                 </div>
               </div>
             </div>
@@ -68,17 +61,11 @@ export default function CheckoutPageSkeleton() {
             <div className={styles.sectionBlock}>
               <h2 className={styles.sectionTitle}>Delivery</h2>
               <div className="space-y-3">
-                <Skeleton className="h-12 w-full rounded-xl" />
                 <div className="grid grid-cols-2 gap-3">
                   <Skeleton className="h-12 rounded-xl" />
                   <Skeleton className="h-12 rounded-xl" />
                 </div>
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <div className="grid grid-cols-2 gap-3">
-                  <Skeleton className="h-12 rounded-xl" />
-                  <Skeleton className="h-12 rounded-xl" />
-                </div>
+                <Skeleton className="h-16 w-full rounded-xl" />
                 <Skeleton className="h-12 w-full rounded-xl" />
                 <div className={styles.checkboxRow}>
                   <Skeleton className="size-4 rounded" />
@@ -133,7 +120,7 @@ export default function CheckoutPageSkeleton() {
             </div>
 
             {/* Desktop CTA */}
-            <Skeleton className={cn(styles.ctaButton, 'hidden md:flex h-13 rounded-xl')} />
+            <Skeleton className="hidden md:flex h-13 w-full rounded-xl" />
 
             {/* Trust links */}
             <div className={styles.trustLinks}>
@@ -203,7 +190,7 @@ export default function CheckoutPageSkeleton() {
             <Skeleton className="h-2.5 w-10 rounded" />
             <Skeleton className="h-5 w-28 rounded" />
           </div>
-          <Skeleton className={styles.mobilePlaceOrderBtn} />
+          <Skeleton className="h-11 w-36 rounded-xl shrink-0" />
         </div>
       </div>
     </>

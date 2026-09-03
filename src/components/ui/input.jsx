@@ -17,14 +17,14 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "h-11 w-full min-w-0 rounded-lg border px-3.5 py-2 text-sm text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] outline-none transition-[border-color,background-color,box-shadow,color] duration-200 ease-out",
-        "border-[color:color-mix(in_oklab,var(--color-border)_82%,white)] bg-[color:color-mix(in_oklab,var(--color-input)_88%,white)]",
-        "placeholder:text-[color:color-mix(in_oklab,var(--color-muted-foreground)_78%,white)]",
-        "hover:border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] hover:bg-[color:color-mix(in_oklab,var(--color-input)_94%,white)]",
-        "focus-visible:border-[color:color-mix(in_oklab,var(--color-primary)_34%,var(--color-border))] focus-visible:bg-[color:color-mix(in_oklab,var(--color-input)_96%,white)] focus-visible:ring-4 focus-visible:ring-[color:color-mix(in_oklab,var(--color-primary)_14%,transparent)] focus-visible:shadow-[0_0_0_1px_color-mix(in_oklab,var(--color-primary)_18%,transparent),0_10px_24px_-18px_color-mix(in_oklab,var(--color-primary)_45%,transparent)]",
+        "h-11 w-full min-w-0 rounded-lg border px-3.5 py-2 text-sm text-foreground shadow-none outline-none transition-[border-color,background-color,color] duration-200 ease-out",
+        "border-slate-300 dark:border-border/80 bg-card",
+        "placeholder:text-muted-foreground/70",
+        "hover:border-slate-400 dark:hover:border-border",
+        "focus-visible:border-primary focus-visible:bg-card focus-visible:ring-3 focus-visible:ring-primary/15",
         "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-[color:color-mix(in_oklab,var(--color-border)_88%,white)] disabled:bg-[color:color-mix(in_oklab,var(--color-muted)_78%,white)] disabled:text-[color:color-mix(in_oklab,var(--color-muted-foreground)_70%,white)] disabled:shadow-none",
-        "aria-invalid:border-destructive aria-invalid:bg-[color:color-mix(in_oklab,var(--color-destructive)_6%,white)] aria-invalid:ring-4 aria-invalid:ring-[color:color-mix(in_oklab,var(--color-destructive)_16%,transparent)] aria-invalid:shadow-none",
+        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/40 disabled:shadow-none",
+        "aria-invalid:border-destructive aria-invalid:bg-destructive/5 aria-invalid:ring-3 aria-invalid:ring-destructive/15 aria-invalid:shadow-none",
         className
       )}
       {...props} />

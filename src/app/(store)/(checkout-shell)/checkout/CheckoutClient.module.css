@@ -21,18 +21,18 @@
 /* ── Left Panel (form side) ── */
 .leftPanel {
   background: var(--color-background);
-  padding: 0.25rem 1.25rem 10rem;
+  padding: 1.25rem 1.25rem 4.5rem;
 }
 
 @media (min-width: 640px) {
   .leftPanel {
-    padding: 0.5rem 2rem 10rem;
+    padding: 1.5rem 2rem 4.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .leftPanel {
-    padding: 0.5rem 3.5rem 3rem 2rem;
+    padding: 1.75rem 3.5rem 3rem 2rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -79,36 +79,46 @@
    ───────────────────────────────────────── */
 
 .sectionBlock {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .sectionTitle {
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--color-foreground);
   letter-spacing: -0.01em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .sectionSubtitle {
   font-size: 0.8rem;
   color: var(--color-muted-foreground);
-  margin-bottom: 0.85rem;
-  margin-top: -0.55rem;
+  margin-bottom: 0.65rem;
+  margin-top: -0.4rem;
 }
 
 .sectionTitleRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.65rem;
+}
+
+.sectionTitleRow .sectionTitle {
+  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 .signInLink {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-primary);
   text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1.2;
   transition: opacity 0.15s ease;
 }
 
