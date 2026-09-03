@@ -20,17 +20,40 @@ const socialPreviewAlt = 'China Unique Store social preview image';
 
 export const metadata = {
   metadataBase: getMetadataBase(),
+  applicationName: 'China Unique Store',
   title: {
-    default: 'China Unique Store',
+    default: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
     template: '%s | China Unique Store',
   },
-  description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+  description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
+  keywords: [
+    'China Unique Store',
+    'China Unique Items',
+    'Kitchenware Pakistan',
+    'Home Decor Pakistan',
+    'Kitchen Gadgets',
+    'Online Shopping Pakistan',
+    'Cash on Delivery',
+    'Aam Samaan',
+  ],
+  authors: [{ name: 'China Unique Store', url: 'https://www.chinauniquestore.com' }],
+  creator: 'China Unique Store',
+  publisher: 'China Unique Store',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'China Unique Store',
-    description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+    title: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
+    description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
     type: 'website',
     url: '/',
     siteName: 'China Unique Store',
+    locale: 'en_PK',
     images: [
       {
         url: '/opengraph-image.png',
@@ -42,8 +65,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'China Unique Store',
-    description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+    title: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
+    description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
     images: [
       {
         url: '/opengraph-image.png',
@@ -54,6 +77,16 @@ export const metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
 };
 

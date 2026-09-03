@@ -997,7 +997,7 @@ export default function EditProduct({ id }) {
                   value={seoCanonicalUrl}
                   onChange={(e) => setSeoCanonicalUrl(e.target.value)}
                   className="h-11 px-4"
-                  placeholder="https://china-unique-items.vercel.app/products/your-product"
+                  placeholder="https://www.chinauniquestore.com/products/your-product"
                 />
               </div>
             </div>

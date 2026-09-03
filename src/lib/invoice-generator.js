@@ -255,7 +255,7 @@ export const generateInvoice = async (order, branding = {}) => {
   const notes = getText(order?.notes);
   const baseUrl = getText(
     branding?.baseUrl,
-    typeof window !== 'undefined' ? window.location.origin : 'https://chinaunique.pk',
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.chinauniquestore.com',
   );
   const logoUrl = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
   const invoiceLogoScalePercent = Math.min(200, Math.max(40, getNumber(branding?.invoiceLogoScalePercent, 100)));

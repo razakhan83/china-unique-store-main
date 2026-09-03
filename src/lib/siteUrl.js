@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = 'https://china-unique-items.vercel.app';
+const DEFAULT_SITE_URL = 'https://www.chinauniquestore.com';
 
 function normalizeUrl(value) {
   const raw = String(value || '').trim();
@@ -39,15 +39,14 @@ export function getSiteUrlFromHeaders(headersList) {
 }
 
 export function getSiteUrl() {
-  const candidates = [
+  const explicitCandidates = [
     process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
     process.env.SITE_URL,
-    process.env.VERCEL_PROJECT_PRODUCTION_URL,
-    process.env.VERCEL_URL,
     process.env.NEXTAUTH_URL,
   ];
 
-  for (const candidate of candidates) {
+  for (const candidate of explicitCandidates) {
     const normalized = normalizeUrl(candidate);
     if (!normalized) continue;
 
@@ -55,9 +54,15 @@ export function getSiteUrl() {
       continue;
     }
 
+    // Ignore vercel.app if someone inadvertently set it in NEXTAUTH_URL
+    if (process.env.NODE_ENV === 'production' && /\.vercel\.app/i.test(normalized)) {
+      continue;
+    }
+
     return normalized;
   }
 
+  // Official custom domain is the definitive primary origin
   return DEFAULT_SITE_URL;
 }
 

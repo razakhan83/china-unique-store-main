@@ -4,7 +4,8 @@ import Category from '@/models/Category';
 import { getSiteUrl } from '@/lib/siteUrl';
 
 export default async function sitemap() {
-  const baseUrl = getSiteUrl();
+  const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || getSiteUrl() || 'https://www.chinauniquestore.com';
+  const baseUrl = String(rawBaseUrl).trim().replace(/\/$/, '');
 
   // Static core routes
   const staticRoutes = [
@@ -12,10 +13,12 @@ export default async function sitemap() {
     '/products',
     '/categories',
     '/about-us',
+    '/contact-us',
     '/faq',
     '/shipping-policy',
     '/refund-policy',
     '/privacy-policy',
+    '/terms-of-service',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
