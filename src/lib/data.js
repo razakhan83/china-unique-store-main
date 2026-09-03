@@ -268,6 +268,13 @@ function toProductDetailView(product) {
     isBestSelling: product.isBestSelling === true,
     isFeatured: product.isFeatured === true,
     featuredPriority: Number(product.featuredPriority || 0),
+    seoTitle: product.seoTitle || '',
+    seoDescription: product.seoDescription || '',
+    seoKeywords: product.seoKeywords || '',
+    seoCanonicalUrl: product.seoCanonicalUrl || '',
+    seoOgTitle: product.seoOgTitle || '',
+    seoOgDescription: product.seoOgDescription || '',
+    seoOgImage: product.seoOgImage || '',
   };
 }
 
