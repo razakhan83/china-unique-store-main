@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { Geist_Mono } from 'next/font/google';
 import './admin.css';
 import AdminLayoutShell from './AdminLayoutShell';
@@ -12,11 +13,10 @@ const geistMono = Geist_Mono({
   preload: false, // Only load when admin pages are visited
 });
 
-
-
 export const instant = false;
 
 export default async function AdminLayout({ children }) {
+  await connection();
   const session = await getAdminSession();
   const sessionUser = session?.user?.isAdmin ? session.user : null;
 
