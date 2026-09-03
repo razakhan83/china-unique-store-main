@@ -100,7 +100,9 @@ function getShareDescription(product) {
 function getPrimaryImage(product) {
   const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
   if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
-  return optimizeCloudinaryUrl(rawUrl, CLOUDINARY_IMAGE_PRESETS.socialShare);
+  const isPng = rawUrl.toLowerCase().includes('.png') || rawUrl.toLowerCase().includes('/png');
+  const preset = isPng ? CLOUDINARY_IMAGE_PRESETS.socialSharePad : CLOUDINARY_IMAGE_PRESETS.socialShare;
+  return optimizeCloudinaryUrl(rawUrl, preset);
 }
 
 function getProductJsonLd({ product, reviewSummary = null }) {

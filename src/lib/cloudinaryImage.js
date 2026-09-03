@@ -37,8 +37,9 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   productModal: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
   // Social share preview card (WhatsApp / Facebook / Twitter):
-  // 1200x630 canvas, pads with pure white background so transparent PNGs never turn black on WhatsApp
-  socialShare: { width: 1200, height: 630, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 85 },
+  // 1200x630 full-bleed crisp social banner (no awkward white side bars)
+  socialShare: { width: 1200, height: 630, crop: 'fill', gravity: 'auto', format: 'jpg', quality: 85 },
+  socialSharePad: { width: 1200, height: 630, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 85 },
 
   // ── Admin-facing presets ─────────────────────────────────────────────────────
   // Admin thumbnails don't need AVIF since they're behind auth and not LCP-critical

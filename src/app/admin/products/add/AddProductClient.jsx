@@ -86,6 +86,11 @@ export default function AddProduct() {
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const seoGenerationLockRef = useRef(false);
 
+  const [isUploadingOgImage, setIsUploadingOgImage] = useState(false);
+  const [ogPreviewFit, setOgPreviewFit] = useState('cover'); // 'cover' | 'contain'
+  const [ogPreviewRatio, setOgPreviewRatio] = useState('landscape'); // 'landscape' | 'square'
+  const ogImageFileInputRef = useRef(null);
+
   const resetForm = useCallback(() => {
     setName("");
     setDescription("");
@@ -198,6 +203,36 @@ export default function AddProduct() {
     const reader = new FileReader();
     reader.onload = (ev) => setNewCatImage(ev.target?.result || "");
     reader.readAsDataURL(file);
+  };
+
+  const handleOgImageFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    try {
+      setIsUploadingOgImage(true);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result;
+        if (!dataUrl) return;
+        try {
+          const uploaded = await uploadImageDataUrl(dataUrl, "kifayatly_social_og");
+          if (uploaded?.url) {
+            setSeoOgImage(uploaded.url);
+            toast.success("Custom social preview image uploaded successfully!");
+          }
+        } catch (err) {
+          toast.error(err.message || "Failed to upload social image.");
+        } finally {
+          setIsUploadingOgImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Error reading image file.");
+      setIsUploadingOgImage(false);
+    } finally {
+      e.target.value = null;
+    }
   };
 
   const toggleCategory = (categoryId) => {
@@ -1162,86 +1197,182 @@ export default function AddProduct() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label>OG / Social Image</Label>
-                    <span className="text-[11px] text-muted-foreground">Select from product photos or enter URL</span>
+                    <span className="text-[11px] text-muted-foreground">Upload custom banner or select from photos</span>
                   </div>
 
-                  {images.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Quick Select from uploaded product photos:</p>
-                      <div className="flex flex-wrap gap-2.5">
-                        {images.map((img, idx) => {
-                          const isSelected = (seoOgImage ? seoOgImage === img.url : idx === 0);
-                          return (
-                            <button
-                              key={img.url || idx}
-                              type="button"
-                              onClick={() => setSeoOgImage(img.url)}
-                              className={cn(
-                                "relative size-14 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-background",
-                                isSelected
-                                  ? "border-emerald-600 ring-2 ring-emerald-600/30 scale-105"
-                                  : "border-border hover:border-muted-foreground/50 opacity-70 hover:opacity-100"
-                              )}
-                              title={isSelected ? "Active Social Image" : "Click to use as Social Share Image"}
-                            >
-                              <img src={img.url} alt={`Option ${idx + 1}`} className="size-full object-contain rounded-md" />
-                              {isSelected && (
-                                <span className="absolute bottom-0 right-0 bg-emerald-600 text-white rounded-tl-md p-0.5">
-                                  <Check className="size-3" />
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                        {seoOgImage && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSeoOgImage("")}
-                            className="h-14 px-3 text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            Reset to Default (1st image)
-                          </Button>
+                  {/* Upload button & Quick Pickers */}
+                  <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3.5">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <input
+                        ref={ogImageFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleOgImageFileSelect}
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={isUploadingOgImage}
+                        onClick={() => ogImageFileInputRef.current?.click()}
+                        className="rounded-lg shadow-sm text-xs font-semibold gap-2 border border-border"
+                      >
+                        {isUploadingOgImage ? (
+                          <>
+                            <Loader2 className="size-3.5 animate-spin" />
+                            Uploading Image...
+                          </>
+                        ) : (
+                          <>
+                            <CloudUpload className="size-3.5 text-emerald-600" />
+                            Upload Custom Social Image
+                          </>
                         )}
-                      </div>
-                    </div>
-                  )}
+                      </Button>
 
-                  <Input
-                    type="url"
-                    value={seoOgImage}
-                    onChange={(e) => setSeoOgImage(e.target.value)}
-                    className="h-10 px-4 text-xs font-mono"
-                    placeholder="https://res.cloudinary.com/... (Custom Image URL)"
-                  />
+                      {seoOgImage && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSeoOgImage("")}
+                          className="text-xs text-muted-foreground hover:text-foreground h-8"
+                        >
+                          Reset to 1st Product Photo
+                        </Button>
+                      )}
+                    </div>
+
+                    {images.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        <p className="text-[11px] font-medium text-muted-foreground">Or pick from uploaded product photos:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {images.map((img, idx) => {
+                            const isSelected = (seoOgImage ? seoOgImage === img.url : idx === 0);
+                            return (
+                              <button
+                                key={img.url || idx}
+                                type="button"
+                                onClick={() => setSeoOgImage(img.url)}
+                                className={cn(
+                                  "relative size-12 rounded-lg overflow-hidden border-2 transition-all p-0.5 bg-background",
+                                  isSelected
+                                    ? "border-emerald-600 ring-2 ring-emerald-600/30 scale-105"
+                                    : "border-border hover:border-muted-foreground/50 opacity-70 hover:opacity-100"
+                                )}
+                                title={isSelected ? "Active Social Image" : `Use Photo #${idx + 1}`}
+                              >
+                                <img src={img.url} alt={`Photo ${idx + 1}`} className="size-full object-cover rounded" />
+                                {isSelected && (
+                                  <span className="absolute bottom-0 right-0 bg-emerald-600 text-white rounded-tl-sm p-0.5">
+                                    <Check className="size-2.5" />
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-1">
+                      <Input
+                        type="url"
+                        value={seoOgImage}
+                        onChange={(e) => setSeoOgImage(e.target.value)}
+                        className="h-9 px-3 text-xs font-mono bg-background"
+                        placeholder="Or paste Cloudinary image URL directly..."
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Live WhatsApp / Social Card Preview */}
-              <div className="mt-4 rounded-xl border border-border bg-muted/20 p-4">
-                <div className="flex items-center justify-between mb-3">
+              <div className="mt-5 rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5">
                     <Share2 className="size-3.5 text-emerald-600" />
                     Live Social Share Card Preview (WhatsApp / Facebook)
                   </p>
-                  <span className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-md">Live Preview</span>
+                  
+                  {/* Preview Controls */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setOgPreviewFit('cover')}
+                        className={cn(
+                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                          ogPreviewFit === 'cover' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        title="Edge-to-edge fill (No white borders)"
+                      >
+                        Full Cover (No Borders)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOgPreviewFit('contain')}
+                        className={cn(
+                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                          ogPreviewFit === 'contain' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        title="Padded canvas for transparent PNGs"
+                      >
+                        Padded Canvas (For PNGs)
+                      </button>
+                    </div>
+
+                    <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setOgPreviewRatio('landscape')}
+                        className={cn(
+                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                          ogPreviewRatio === 'landscape' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        1.91:1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOgPreviewRatio('square')}
+                        className={cn(
+                          "px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                          ogPreviewRatio === 'square' ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        1:1
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="max-w-md mx-auto rounded-xl overflow-hidden border border-emerald-950/20 dark:border-emerald-900/50 shadow-md bg-[#0b2b24] text-white">
-                  <div className="relative aspect-[1.91/1] w-full bg-white flex items-center justify-center p-3 overflow-hidden border-b border-emerald-900/20">
+                  <div className={cn(
+                    "relative w-full overflow-hidden transition-all duration-200 border-b border-emerald-900/20",
+                    ogPreviewRatio === 'landscape' ? "aspect-[1.91/1]" : "aspect-square",
+                    ogPreviewFit === 'contain' ? "bg-white p-3 flex items-center justify-center" : "bg-neutral-900"
+                  )}>
                     {socialPreviewImage ? (
                       <img
                         src={socialPreviewImage}
                         alt={socialPreviewTitle}
-                        className="max-h-full max-w-full object-contain"
+                        className={cn(
+                          "w-full h-full transition-all",
+                          ogPreviewFit === 'cover' ? "object-cover" : "object-contain max-h-full max-w-full"
+                        )}
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground py-10">
                         <ImageIcon className="size-8 opacity-40" />
                         <span className="text-xs mt-1">No Image Available</span>
                       </div>
                     )}
+                    <span className="absolute top-2 right-2 rounded-md bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white/90">
+                      {ogPreviewRatio === 'landscape' ? '1200 × 630' : '1080 × 1080'}
+                    </span>
                   </div>
                   <div className="p-3 space-y-1 bg-[#0b2b24]">
                     <p className="font-semibold text-sm line-clamp-2 text-white leading-snug">
