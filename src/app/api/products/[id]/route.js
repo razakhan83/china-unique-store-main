@@ -154,18 +154,19 @@ export async function PUT(request, { params }) {
         revalidateTag('products');
         if (previousSlug) {
             revalidateTag(`product-${previousSlug}`);
-            revalidatePath(`/products/${previousSlug}`);
+            revalidatePath(`/products/${previousSlug}`, 'page');
         }
         if (existingProduct.slug) {
             revalidateTag(`product-${existingProduct.slug}`);
-            revalidatePath(`/products/${existingProduct.slug}`);
+            revalidatePath(`/products/${existingProduct.slug}`, 'page');
         }
         revalidateTag(`product-${existingProduct._id.toString()}`);
-        revalidatePath(`/products/${existingProduct._id.toString()}`);
+        revalidatePath(`/products/${existingProduct._id.toString()}`, 'page');
         revalidateTag('admin-dashboard');
         revalidateTag('home-sections');
         revalidatePath('/admin/products');
-        revalidatePath('/products');
+        revalidatePath('/products', 'page');
+        revalidatePath('/', 'page');
 
         return NextResponse.json({
             success: true,
