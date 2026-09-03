@@ -111,9 +111,47 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  const siteUrl = 'https://www.chinauniquestore.com';
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'OnlineStore',
+        '@id': `${siteUrl}/#organization`,
+        name: 'China Unique Store',
+        url: siteUrl,
+        logo: `${siteUrl}/Chaina-Store-fav-icon.png`,
+        description:
+          'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan with Cash on Delivery.',
+        address: {
+          '@type': 'PostalAddress',
+          addressCountry: 'PK',
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'China Unique Store',
+        publisher: {
+          '@id': `${siteUrl}/#organization`,
+        },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${siteUrl}/products?search={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
+
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         <AuthProvider>
           {children}
           <Suspense fallback={null}>

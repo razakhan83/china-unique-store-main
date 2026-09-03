@@ -9,6 +9,8 @@ import { getProductCategoryNames } from '@/lib/productCategories';
 import { getPrimaryProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
+import { X, ShoppingCart, Image as ImageIcon } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = 'China Unique Store' }) {
     const { addToCart } = useCartActions();
@@ -40,20 +42,21 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 animate-fadeIn"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs animate-fadeIn"
                 onClick={onClose}
             >
                 {/* Modal */}
                 <div
-                    className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-2xl animate-fadeInUp"
+                    className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-card border border-border/80 shadow-2xl animate-fadeInUp"
                     style={{ willChange: 'transform, opacity' }}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <button
                         onClick={onClose}
-                        className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        aria-label="Close dialog"
+                        className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-xl bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
                     >
-                        <i className="fa-solid fa-xmark"></i>
+                        <X className="size-4.5" />
                     </button>
 
                     <div className="flex flex-col md:flex-row">
@@ -62,42 +65,42 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                                 <Image
                                     src={primaryImageSrc}
                                     alt={product.Name || product.name || 'Product'}
-                    fill
-                    sizes="(max-width: 768px) 90vw, 28rem"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                    fill
+                                    sizes="(max-width: 768px) 90vw, 28rem"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
                                 />
                             ) : (
                                 <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
-                                    <i className="fa-solid fa-image text-6xl opacity-20"></i>
+                                    <ImageIcon className="size-12 opacity-20" />
                                 </div>
                             )}
                         </div>
 
-                        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center">
-                            <div className="flex flex-wrap gap-1.5 mb-3">
+                        <div className="w-full md:w-1/2 p-6 md:p-7 flex flex-col justify-center">
+                            <div className="flex flex-wrap gap-1.5 mb-2.5">
                                 {categories.length > 0 ? (
                                     categories.map((cat, i) => (
-                                        <Badge key={i} variant="secondary">
+                                        <Badge key={i} variant="secondary" className="rounded-md">
                                             {cat}
                                         </Badge>
                                     ))
                                 ) : (
-                                    <Badge variant="secondary">Premium Item</Badge>
+                                    <Badge variant="secondary" className="rounded-md">Premium Item</Badge>
                                 )}
                             </div>
 
-                            <h2 className="mb-3 text-2xl font-bold leading-tight text-foreground">
+                            <h2 className="mb-2 text-xl font-bold leading-tight text-foreground sm:text-2xl">
                                 {product.Name || product.name}
                             </h2>
-                            <div className="mb-4 text-3xl font-extrabold tracking-tight text-primary">
+                            <div className="mb-3 text-2xl font-extrabold tracking-tight text-primary tabular-nums">
                                 {formatPrice(product.Price || product.price)}
                             </div>
-                            <p className="mb-6 text-sm leading-relaxed text-muted-foreground md:text-base">
+                            <p className="mb-5 text-sm leading-relaxed text-muted-foreground line-clamp-4">
                                 {product.Description || product.description || "Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind."}
                             </p>
 
-                            <div className="flex flex-col sm:flex-row gap-3 mt-auto pt-4">
+                            <div className="flex flex-col sm:flex-row gap-2.5 mt-auto pt-2">
                                 <Button
                                     onClick={async () => {
                                         const result = await addToCart(product);
@@ -105,20 +108,24 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                                             onClose();
                                         }
                                     }}
-                                    className="flex-1 w-full"
+                                    className="flex-1 h-11 rounded-xl font-semibold bg-primary hover:bg-primary/95 text-primary-foreground shadow-none active:scale-[0.98] transition-all"
                                 >
-                                    <i className="fa-solid fa-cart-plus mr-2"></i> Add to Cart
+                                    <ShoppingCart className="size-4 mr-2" /> Add to Cart
                                 </Button>
 
                                 <a
                                     href={whatsappUrl || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 w-full"
+                                    className="flex-1"
                                 >
-                                    <Button variant="default" className="w-full bg-success text-success-foreground transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-1 hover:bg-success/90 shadow-sm hover:shadow-md">
-                                        <i className="fa-brands fa-whatsapp text-xl mr-2"></i> Order via WhatsApp
-                                    </Button>
+                                    <button
+                                        type="button"
+                                        className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/60 text-foreground font-semibold text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-none"
+                                    >
+                                        <WhatsAppIcon className="size-4.5 text-[#25D366] shrink-0" />
+                                        <span>WhatsApp</span>
+                                    </button>
                                 </a>
                             </div>
                         </div>

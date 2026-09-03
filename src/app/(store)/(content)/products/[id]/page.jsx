@@ -116,8 +116,10 @@ function getProductJsonLd({ product, reviewSummary = null }) {
   const keywords = getProductKeywords(product, categories);
   const price = getSellingPrice(product);
   const productTitle = getProductTitle(product);
-  const jsonLd = {
-    '@context': 'https://schema.org',
+  const productUrl = getCanonicalUrl(product);
+  const primaryCategory = categories[0];
+
+  const productSchema = {
     '@type': 'Product',
     name: productTitle,
     description: getProductDescription(product),
@@ -131,7 +133,7 @@ function getProductJsonLd({ product, reviewSummary = null }) {
     },
     offers: {
       '@type': 'Offer',
-      url: getCanonicalUrl(product),
+      url: productUrl,
       priceCurrency: 'PKR',
       price,
       availability:
@@ -143,14 +145,59 @@ function getProductJsonLd({ product, reviewSummary = null }) {
   };
 
   if (reviewSummary?.reviewCount > 0) {
-    jsonLd.aggregateRating = {
+    productSchema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: Number(reviewSummary.averageRating.toFixed(1)),
       reviewCount: reviewSummary.reviewCount,
     };
   }
 
-  return jsonLd;
+  const breadcrumbItems = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: siteUrl,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Products',
+      item: `${siteUrl}/products`,
+    },
+  ];
+
+  if (primaryCategory) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: primaryCategory.name,
+      item: `${siteUrl}/products?category=${encodeURIComponent(primaryCategory.slug || primaryCategory.id || primaryCategory.name)}`,
+    });
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 4,
+      name: productTitle,
+      item: productUrl,
+    });
+  } else {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: productTitle,
+      item: productUrl,
+    });
+  }
+
+  const breadcrumbSchema = {
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems,
+  };
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [productSchema, breadcrumbSchema],
+  };
 }
 
 async function getProductPageData(slug) {

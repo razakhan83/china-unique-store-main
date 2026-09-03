@@ -114,23 +114,26 @@ export default function ProductGallery({ images, primaryTag, product }) {
           className="h-full"
         >
           <CarouselContent viewportClassName="h-full" className="ml-0 h-full">
-            {normalizedImages.map((image, index) => (
-              <CarouselItem key={index} className="h-full basis-full pl-0">
-                <div className="relative h-full min-h-0 w-full">
-                  <Image
-                    src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
-                    alt={`Product Image ${index + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
-                    className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
-                    {...getBlurPlaceholderProps(image.blurDataURL)}
-                    priority={index === 0}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                  />
-                </div>
-              </CarouselItem>
-            ))}
+            {normalizedImages.map((image, index) => {
+              const productName = product?.Name || product?.name || 'Product';
+              return (
+                <CarouselItem key={index} className="h-full basis-full pl-0">
+                  <div className="relative h-full min-h-0 w-full">
+                    <Image
+                      src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
+                      alt={`${productName} - View ${index + 1}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
+                      className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
+                      {...getBlurPlaceholderProps(image.blurDataURL)}
+                      priority={index === 0}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                    />
+                  </div>
+                </CarouselItem>
+              );
+            })}
           </CarouselContent>
         </Carousel>
 
@@ -185,7 +188,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
                   <div className="absolute inset-0" style={{ backgroundColor: '#ffffff' }} />
                   <Image
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryThumb)}
-                    alt={`Thumbnail ${index + 1}`}
+                    alt={`${product?.Name || product?.name || 'Product'} thumbnail ${index + 1}`}
                     fill
                     sizes="(max-width: 768px) 31vw, 12vw"
                     loading="lazy"
