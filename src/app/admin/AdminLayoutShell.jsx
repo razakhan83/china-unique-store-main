@@ -91,6 +91,7 @@ const ordersNavItems = [
 const customersNavItems = [
   { href: '/admin/users', label: 'Customer List / Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
   { href: '/admin/manual-customers', label: 'Manual Customers', icon: Users, match: (pathname) => pathname.startsWith('/admin/manual-customers') },
+  { href: '/admin/feedback', label: 'Website Feedback', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/feedback') },
 ];
 
 // 5. Marketing

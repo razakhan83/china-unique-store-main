@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useVisitorTracker } from '@/hooks/use-visitor-tracker';
 
 function TrackerClient() {
@@ -9,10 +9,15 @@ function TrackerClient() {
 }
 
 export default function VisitorTracker() {
-  return (
-    <Suspense fallback={null}>
-      <TrackerClient />
-    </Suspense>
-  );
-}
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <TrackerClient />;
+}

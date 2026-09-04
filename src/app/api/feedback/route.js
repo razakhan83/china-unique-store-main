@@ -38,7 +38,7 @@ export async function POST(req) {
       await Notification.create({
         type: 'general',
         message: `New Website Feedback (${rating}★): ${senderName} submitted feedback / suggestions.`,
-        link: '/admin/settings',
+        link: '/admin/feedback',
         metadata: {
           feedbackId: newFeedback._id.toString(),
           senderName,

@@ -31,12 +31,12 @@ export default function NavbarSidebarFooter({ mobileMenuButtonClass = '', onClos
         <SidebarMenuItem>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() => {
               onCloseSidebar();
               signOut();
             }}
-            className="h-8 min-h-8 w-full justify-start rounded-lg px-2.5 py-1 text-[13px] font-medium transition-all duration-300 active:scale-[0.98] !bg-red-500/10 !text-red-500 hover:!bg-red-500/20 shadow-none border-0"
+            className="h-9 min-h-9 w-full justify-center rounded-xl px-2.5 py-1 text-xs font-semibold transition-all duration-200 active:scale-[0.98] border border-red-200/90 dark:border-red-900/60 bg-red-50/70 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 shadow-none cursor-pointer"
           >
             <LogOut className="mr-2 size-3.5" />
             Logout

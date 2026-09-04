@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
 import { DEFAULT_CUSTOM_PAGES, getCustomPageBySlug } from '@/lib/customPages';
@@ -9,7 +10,7 @@ export async function generateMetadata() {
       title: page?.seoTitle || page?.title || 'About Us',
       description: page?.seoDescription || page?.description || '',
     };
-  } catch (e) {
+  } catch {
     const fallbackPage = getCustomPageBySlug(DEFAULT_CUSTOM_PAGES, 'about-us');
     return {
       title: fallbackPage?.seoTitle || 'About Us',
@@ -19,6 +20,10 @@ export async function generateMetadata() {
 }
 
 export default async function AboutUsPage() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('custom-pages', 'settings');
+
   try {
     const [page, settings] = await Promise.all([
       getStoreCustomPageBySlug('about-us'),
@@ -27,7 +32,7 @@ export default async function AboutUsPage() {
 
     const finalPage = page || getCustomPageBySlug(DEFAULT_CUSTOM_PAGES, 'about-us');
     return <StoreCustomPage page={finalPage} storeName={settings?.storeName || 'China Unique Store'} />;
-  } catch (e) {
+  } catch {
     const fallbackPage = getCustomPageBySlug(DEFAULT_CUSTOM_PAGES, 'about-us');
     return <StoreCustomPage page={fallbackPage} storeName="China Unique Store" />;
   }

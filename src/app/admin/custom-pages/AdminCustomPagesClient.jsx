@@ -2,7 +2,20 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowDown, ArrowUp, ExternalLink, FileText, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Code2,
+  ExternalLink,
+  Eye,
+  FileText,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+  Type,
+  Wand2,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -17,6 +30,18 @@ import { DEFAULT_CUSTOM_PAGES, normalizeCustomPageSlug } from '@/lib/customPages
 import { cn } from '@/lib/utils';
 
 const NON_CUSTOM_PAGE_SLUGS = new Set(['auth', 'deals', 'orders', 'products', 'settings', 'signin', 'wishlist']);
+
+const HTML_SNIPPETS = [
+  { label: 'H2 Heading', snippet: '<h2>Section Title</h2>\n' },
+  { label: 'H3 Subheading', snippet: '<h3>Subsection Title</h3>\n' },
+  { label: 'Paragraph', snippet: '<p>Write your detailed text here...</p>\n' },
+  { label: 'Bold', snippet: '<strong>Bold text</strong>' },
+  { label: 'List', snippet: '<ul>\n  <li>Key point 1</li>\n  <li>Key point 2</li>\n</ul>\n' },
+  { label: 'Link', snippet: '<a href="https://wa.me/" class="text-primary underline font-medium">WhatsApp Link</a>' },
+  { label: 'Callout Box', snippet: '<div class="p-4 rounded-xl bg-primary/10 border border-primary/20 text-foreground">\n  <strong>Note:</strong> Important announcement or message here.\n</div>\n' },
+  { label: 'Table', snippet: '<table class="w-full border-collapse my-4">\n  <thead>\n    <tr>\n      <th class="border border-border p-2.5 bg-muted/40 text-left font-semibold">Header 1</th>\n      <th class="border border-border p-2.5 bg-muted/40 text-left font-semibold">Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td class="border border-border p-2.5">Row 1 Cell 1</td>\n      <td class="border border-border p-2.5">Row 1 Cell 2</td>\n    </tr>\n  </tbody>\n</table>\n' },
+  { label: 'Image', snippet: '<img src="https://..." alt="Custom image" class="w-full rounded-2xl my-4" />\n' },
+];
 
 function makeNewPage(pages = []) {
   const nextNumber = pages.length + 1;
@@ -49,6 +74,7 @@ function getPageMeta(page) {
 export default function AdminCustomPagesClient({ initialPages }) {
   const [pages, setPages] = useState(Array.isArray(initialPages) ? initialPages : []);
   const [selectedSlug, setSelectedSlug] = useState(initialPages?.[0]?.slug || '');
+  const [editorMode, setEditorMode] = useState('html');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -101,6 +127,43 @@ export default function AdminCustomPagesClient({ initialPages }) {
         .map((page, pageIndex) => ({ ...page, sortOrder: pageIndex }))
     );
     setSaved(false);
+  }
+
+  function insertSnippet(snippet) {
+    const currentContent = selectedPage?.content || '';
+    const textarea = document.getElementById(`custom-page-content-editor-${selectedIndex}`);
+    if (!textarea) {
+      updatePage(selectedIndex, 'content', currentContent + '\n' + snippet);
+      return;
+    }
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const nextContent = currentContent.slice(0, start) + snippet + currentContent.slice(end);
+    updatePage(selectedIndex, 'content', nextContent);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + snippet.length, start + snippet.length);
+    }, 50);
+  }
+
+  function convertPlainToHtml() {
+    const current = (selectedPage?.content || '').trim();
+    if (!current) return;
+    if (/<[a-z][\s\S]*>/i.test(current)) {
+      toast.info('Content already contains HTML tags.');
+      return;
+    }
+    const blocks = current.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+    const htmlBlocks = blocks.map((block) => {
+      const looksLikeHeading = block.length < 90 && !block.endsWith('.');
+      if (looksLikeHeading) {
+        return `<h2>${block}</h2>`;
+      }
+      return `<p>${block}</p>`;
+    });
+    updatePage(selectedIndex, 'content', htmlBlocks.join('\n\n'));
+    setEditorMode('html');
+    toast.success('Converted text to HTML structure.');
   }
 
   function addPage() {
@@ -370,15 +433,134 @@ export default function AdminCustomPagesClient({ initialPages }) {
 
                 <FieldGroup>
                   <Field>
-                    <FieldLabel>Page Content</FieldLabel>
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between mb-2">
+                      <div>
+                        <FieldLabel className="text-sm font-semibold">Page Content</FieldLabel>
+                        <FieldDescription className="text-xs">Write custom text, full HTML markup, or preview live.</FieldDescription>
+                      </div>
+
+                      {/* Mode Toggle */}
+                      <div className="flex items-center rounded-xl border border-border bg-muted/40 p-1 gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditorMode('html')}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                            editorMode === 'html'
+                              ? 'bg-background text-foreground shadow-xs border border-border/60'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          <Code2 className="size-3.5 text-primary" />
+                          HTML Code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditorMode('text')}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                            editorMode === 'text'
+                              ? 'bg-background text-foreground shadow-xs border border-border/60'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          <Type className="size-3.5" />
+                          Plain Text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditorMode('preview')}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                            editorMode === 'preview'
+                              ? 'bg-background text-foreground shadow-xs border border-border/60'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          <Eye className="size-3.5 text-emerald-600" />
+                          Live Preview
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* HTML Quick Snippet Toolbar (Only in HTML mode) */}
+                    {editorMode === 'html' && (
+                      <div className="mb-2.5 flex flex-wrap items-center gap-1.5 p-2 rounded-xl border border-border/80 bg-muted/20">
+                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-1">
+                          Quick Insert:
+                        </span>
+                        {HTML_SNIPPETS.map((item, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => insertSnippet(item.snippet)}
+                            className="px-2.5 py-1 rounded-md border border-border/60 bg-background text-[11.5px] font-medium text-foreground hover:bg-muted/60 hover:border-border transition-colors cursor-pointer"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={convertPlainToHtml}
+                          className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md border border-primary/30 bg-primary/10 text-[11.5px] font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                          title="Wrap text paragraphs into <p> and <h2> HTML tags automatically"
+                        >
+                          <Wand2 className="size-3" />
+                          Auto Format HTML
+                        </button>
+                      </div>
+                    )}
+
                     <FieldContent>
-                      <Textarea
-                        rows={12}
-                        value={selectedPage.content}
-                        onChange={(event) => updatePage(selectedIndex, 'content', event.target.value)}
-                        placeholder="Write your page content here. Separate paragraphs with a blank line."
-                      />
-                      <FieldDescription>Use blank lines to create separate content sections.</FieldDescription>
+                      {editorMode === 'preview' ? (
+                        <div className="min-h-[340px] max-h-[520px] overflow-y-auto rounded-xl border border-border bg-card p-6">
+                          <div className="mb-4 pb-3 border-b border-border/60 flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Live Storefront Preview ({selectedPage.title || 'Page'})
+                            </span>
+                            <span className="text-xs text-muted-foreground font-mono">Path: /{selectedPage.slug}</span>
+                          </div>
+                          {selectedPage.content?.trim() ? (
+                            /<[a-z][\s\S]*>/i.test(selectedPage.content) ? (
+                              <div
+                                className="custom-page-html-content space-y-4 text-[15px] leading-[1.85] text-foreground/85 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-foreground [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:my-3.5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-1.5 [&_a]:text-primary [&_a]:underline [&_a]:font-medium hover:[&_a]:opacity-85 [&_table]:w-full [&_table]:border-collapse [&_table]:my-6 [&_th]:border [&_th]:border-border [&_th]:p-3 [&_th]:bg-muted/40 [&_th]:font-semibold [&_th]:text-left [&_td]:border [&_td]:border-border [&_td]:p-3 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/60 [&_blockquote]:pl-4 [&_blockquote]:py-1 [&_blockquote]:italic [&_blockquote]:my-4 [&_img]:rounded-xl [&_img]:my-5 [&_img]:max-w-full [&_hr]:my-8 [&_hr]:border-border [&_strong]:font-bold [&_strong]:text-foreground"
+                                dangerouslySetInnerHTML={{ __html: selectedPage.content }}
+                              />
+                            ) : (
+                              <div className="space-y-4 text-[15px] leading-[1.85] text-foreground/85">
+                                {selectedPage.content.split(/\n{2,}/).map((block, i) => (
+                                  <p key={i}>{block}</p>
+                                ))}
+                              </div>
+                            )
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No content entered yet.</p>
+                          )}
+                        </div>
+                      ) : (
+                        <Textarea
+                          id={`custom-page-content-editor-${selectedIndex}`}
+                          rows={14}
+                          value={selectedPage.content}
+                          onChange={(event) => updatePage(selectedIndex, 'content', event.target.value)}
+                          placeholder={
+                            editorMode === 'html'
+                              ? '<h2>Page Title</h2>\n<p>Write custom HTML here, using any tags, styles, classes, tables, etc...</p>'
+                              : 'Write your page content here. Separate paragraphs with a blank line.'
+                          }
+                          className={cn(
+                            'transition-all duration-150',
+                            editorMode === 'html'
+                              ? 'font-mono text-xs sm:text-sm bg-muted/15 leading-relaxed tracking-tight selection:bg-primary/20'
+                              : 'text-sm leading-relaxed'
+                          )}
+                        />
+                      )}
+                      <FieldDescription>
+                        {editorMode === 'html'
+                          ? 'Full HTML supported: you can use <h2>, <p>, <strong>, <ul>, <li>, <a>, <table>, <img>, <div>, custom Tailwind classes, or inline styling.'
+                          : 'Use blank lines to create separate content paragraphs, or switch to HTML Code mode for custom layout & styling.'}
+                      </FieldDescription>
                     </FieldContent>
                   </Field>
                 </FieldGroup>

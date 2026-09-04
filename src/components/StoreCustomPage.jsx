@@ -209,27 +209,34 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
               </p>
             </div>
           </div>
-        ) : blocks.length > 0 ? (
-          /* Policy / About page */
+        ) : page?.content?.trim() ? (
+          /* Policy / About / Custom page */
           <article className="text-[15px] leading-[1.85] text-foreground/80">
-            {blocks.map((block, i) => {
-              /* Simple heuristic: short blocks (< 90 chars) that don't end in '.'
-                 are likely section headings entered by the admin */
-              const looksLikeHeading = block.length < 90 && !block.endsWith('.');
-              if (i > 0 && looksLikeHeading) {
-                return <SectionHeading key={i}>{block}</SectionHeading>;
-              }
-              return (
-                <p key={i} className={i > 0 ? 'mt-5' : ''}>
-                  {block}
-                </p>
-              );
-            })}
+            {/<[a-z][\s\S]*>/i.test(page.content) ? (
+              <div
+                className="custom-page-html-content space-y-4 text-[15px] leading-[1.85] text-foreground/85 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-foreground [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:my-3.5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-1.5 [&_a]:text-primary [&_a]:underline [&_a]:font-medium hover:[&_a]:opacity-85 [&_table]:w-full [&_table]:border-collapse [&_table]:my-6 [&_th]:border [&_th]:border-border [&_th]:p-3 [&_th]:bg-muted/40 [&_th]:font-semibold [&_th]:text-left [&_td]:border [&_td]:border-border [&_td]:p-3 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/60 [&_blockquote]:pl-4 [&_blockquote]:py-1 [&_blockquote]:italic [&_blockquote]:my-4 [&_img]:rounded-xl [&_img]:my-5 [&_img]:max-w-full [&_hr]:my-8 [&_hr]:border-border [&_strong]:font-bold [&_strong]:text-foreground"
+                dangerouslySetInnerHTML={{ __html: page.content }}
+              />
+            ) : (
+              blocks.map((block, i) => {
+                /* Simple heuristic: short blocks (< 90 chars) that don't end in '.'
+                   are likely section headings entered by the admin */
+                const looksLikeHeading = block.length < 90 && !block.endsWith('.');
+                if (i > 0 && looksLikeHeading) {
+                  return <SectionHeading key={i}>{block}</SectionHeading>;
+                }
+                return (
+                  <p key={i} className={i > 0 ? 'mt-5' : ''}>
+                    {block}
+                  </p>
+                );
+              })
+            )}
 
             <div className="mt-14 border-t border-border pt-8">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Questions about this policy?{' '}
+                  Questions about this page?{' '}
                   <a
                     href="https://wa.me/"
                     className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"

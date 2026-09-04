@@ -34,6 +34,7 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [type, setType] = useState('experience');
+  const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [suggestions, setSuggestions] = useState('');
   const [contact, setContact] = useState('');
@@ -68,6 +69,7 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
         body: JSON.stringify({
           rating,
           type,
+          name,
           message,
           suggestions,
           contact,
@@ -80,6 +82,7 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
         toast.success('Feedback submitted. Thank you!');
         setTimeout(() => {
           setSubmitted(false);
+          setName('');
           setMessage('');
           setSuggestions('');
           setContact('');
@@ -201,17 +204,31 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
                 />
               </div>
 
-              {/* 2-Column Inputs on PC (Suggestions & Contact) */}
+              {/* Optional Suggestions */}
+              <div>
+                <label htmlFor="fb-suggestions" className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                  What to add <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                </label>
+                <Input
+                  id="fb-suggestions"
+                  placeholder="Products, categories, or features you'd like us to add..."
+                  value={suggestions}
+                  onChange={(e) => setSuggestions(e.target.value)}
+                  className="h-10 text-xs sm:text-sm rounded-xl border-gray-200 focus-visible:ring-primary"
+                />
+              </div>
+
+              {/* 2-Column Inputs on PC (Name & Contact) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                 <div>
-                  <label htmlFor="fb-suggestions" className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
-                    What to add <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                  <label htmlFor="fb-name" className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                    Your Name <span className="text-gray-400 font-normal lowercase">(optional)</span>
                   </label>
                   <Input
-                    id="fb-suggestions"
-                    placeholder="Products or features..."
-                    value={suggestions}
-                    onChange={(e) => setSuggestions(e.target.value)}
+                    id="fb-name"
+                    placeholder="Your name..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="h-10 text-xs sm:text-sm rounded-xl border-gray-200 focus-visible:ring-primary"
                   />
                 </div>
@@ -222,7 +239,7 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
                   </label>
                   <Input
                     id="fb-contact"
-                    placeholder="For follow-up..."
+                    placeholder="For follow-up / reply..."
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     className="h-10 text-xs sm:text-sm rounded-xl border-gray-200 focus-visible:ring-primary"

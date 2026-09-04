@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
 import { notFound } from 'next/navigation';
@@ -12,6 +13,10 @@ export async function generateMetadata() {
 }
 
 export default async function RefundPolicyPage() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('custom-pages', 'settings');
+
   const [page, settings] = await Promise.all([
     getStoreCustomPageBySlug('refund-policy'),
     getStoreSettings(),
@@ -21,5 +26,5 @@ export default async function RefundPolicyPage() {
     notFound();
   }
 
-  return <StoreCustomPage page={page} storeName={settings.storeName} />;
+  return <StoreCustomPage page={page} storeName={settings?.storeName || 'China Unique Store'} />;
 }

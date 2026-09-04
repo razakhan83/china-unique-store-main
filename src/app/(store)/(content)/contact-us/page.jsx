@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -64,6 +65,10 @@ function ChevronRightSvg({ className = 'size-3' }) {
 }
 
 export default async function ContactUsPage() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('settings');
+
   const settings = await getStoreSettings();
 
   const storeName = settings.storeName || 'China Unique Store';

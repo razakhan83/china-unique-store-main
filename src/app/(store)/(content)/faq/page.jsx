@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import FaqPageClient from './FaqPageClient';
@@ -12,6 +13,10 @@ export async function generateMetadata() {
 }
 
 export default async function FaqPage() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('custom-pages', 'settings');
+
   const [page, settings] = await Promise.all([
     getStoreCustomPageBySlug('faq'),
     getStoreSettings(),
