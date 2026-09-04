@@ -47,7 +47,7 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
     const emailBranding = await getEmailBranding();
     const adminRecipients = getConfiguredAdminEmails();
-    const emailFrom = process.env.EMAIL_FROM || 'China Unique <onboarding@resend.dev>';
+    const emailFrom = process.env.EMAIL_FROM || 'China Unique <orders@chinauniquestore.com>';
     if (adminRecipients.length > 0) {
       const adminEmailResult = await resend.emails.send({
         from: emailFrom,

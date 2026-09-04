@@ -71,8 +71,7 @@ const primaryNavItems = [
 
 // 2. Products Management
 const productNavItems = [
-  { href: '/admin/products', label: 'Product List', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') && !pathname.startsWith('/admin/products/add') },
-  { href: '/admin/products/add', label: 'Add Product', icon: CirclePlus, match: (pathname) => pathname.startsWith('/admin/products/add') },
+  { href: '/admin/products', label: 'Product List', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') },
   { href: '/admin/restock-requests', label: 'Restock Requests', icon: Bell, match: (pathname) => pathname.startsWith('/admin/restock-requests') },
   { href: '/admin/vendors', label: 'Vendors', icon: Store, match: (pathname) => pathname.startsWith('/admin/vendors') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
