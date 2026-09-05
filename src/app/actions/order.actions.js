@@ -14,7 +14,8 @@ import { getStoreSettings } from '@/lib/data';
 import { DEFAULT_ORDER_STATUS, getOrderStatusQueryValue, isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
 import { getSiteUrlFromHeaders } from '@/lib/siteUrl';
 import { sendPurchaseTrackingEvents } from '@/lib/trackingServer';
-import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml, getEmailBranding } from '@/lib/emailTemplates';
+import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml, generateCustomerOrderDeliveredHtml, getEmailBranding } from '@/lib/emailTemplates';
+import { getEmailInlineAttachments } from '@/lib/emailInlineAssets';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
 
@@ -43,17 +44,42 @@ function normalizeSourceTag(value) {
   return String(value || '').trim();
 }
 
+export async function sendOrderDeliveredEmail({ order }) {
+  try {
+    if (!order?.customerEmail) return;
+    const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
+    const emailFrom = process.env.EMAIL_FROM || 'China Unique <orders@chinauniquestore.com>';
+    const deliveredHtml = generateCustomerOrderDeliveredHtml(order, emailBranding);
+    const customerEmailResult = await resend.emails.send({
+      from: emailFrom,
+      to: order.customerEmail,
+      subject: `Your Order Has Been Delivered! - ${order.orderId}`,
+      html: deliveredHtml,
+      attachments: getEmailInlineAttachments(deliveredHtml),
+      headers: {
+        'X-Click-Tracking': 'off',
+      },
+    });
+    console.log(`Customer Delivered email triggered for ${order.orderId}:`, customerEmailResult);
+    return customerEmailResult;
+  } catch (emailError) {
+    console.error(`Failed to send delivered email for ${order?.orderId}:`, emailError);
+  }
+}
+
 async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
-    const emailBranding = await getEmailBranding();
+    const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
     const adminRecipients = getConfiguredAdminEmails();
     const emailFrom = process.env.EMAIL_FROM || 'China Unique <orders@chinauniquestore.com>';
     if (adminRecipients.length > 0) {
+      const adminHtml = generateOrderEmailHtml(order, emailBranding);
       const adminEmailResult = await resend.emails.send({
         from: emailFrom,
         to: adminRecipients,
         subject: `New Order Received - ${customerName}`,
-        html: generateOrderEmailHtml(order, emailBranding),
+        html: adminHtml,
+        attachments: getEmailInlineAttachments(adminHtml),
         headers: {
           'X-Click-Tracking': 'off',
         },
@@ -62,11 +88,13 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
     }
 
     if (userEmail) {
+      const customerHtml = generateCustomerOrderConfirmationHtml(order, emailBranding);
       const customerEmailResult = await resend.emails.send({
         from: emailFrom,
         to: userEmail,
         subject: `Thank You for Your Order! - ${order.orderId}`,
-        html: generateCustomerOrderConfirmationHtml(order, emailBranding),
+        html: customerHtml,
+        attachments: getEmailInlineAttachments(customerHtml),
         headers: {
           'X-Click-Tracking': 'off',
         },
@@ -259,60 +287,64 @@ export async function submitOrderAction(input) {
       await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
     }
 
-    // Auto-generate linked Invoice for 2-way sync
-    try {
-      const Invoice = (await import('@/models/Invoice')).default;
-      const { getNextInvoiceNumberAction } = await import('@/app/actions/invoice.actions');
-      const invoiceNumber = await getNextInvoiceNumberAction();
-
-      const invoiceItems = normalizedItems.map((it) => ({
-        productId: String(it.productId || ''),
-        name: String(it.name || 'Item'),
-        image: String(it.image || ''),
-        quantity: Math.max(1, Number(it.quantity) || 1),
-        price: Math.max(0, Number(it.price) || 0),
-        amount: (Math.max(1, Number(it.quantity) || 1)) * (Math.max(0, Number(it.price) || 0)),
-      }));
-
-      const subtotal = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
-
-      const invoice = await Invoice.create({
-        invoiceNumber,
-        orderId: order.orderId,
-        orderRef: order._id,
-        customerName,
-        customerPhone,
-        customerEmail: userEmail || '',
-        customerAddress,
-        customerCity,
-        items: invoiceItems,
-        subtotal,
-        discountAmount: pricing.discountAmount || 0,
-        shippingAmount: pricing.shipping || 0,
-        totalAmount: pricing.total,
-        paidAmount: 0,
-        balanceDue: pricing.total,
-        status: 'DRAFT',
-      });
-
-      order.invoiceId = invoice._id;
-      order.invoiceNumber = invoice.invoiceNumber;
-      await order.save();
-    } catch (invoiceErr) {
-      console.error('Auto-invoice creation error:', invoiceErr);
-    }
-
     await applyInventoryAdjustments(normalizedItems);
 
-    revalidateTag('orders');
-    revalidateTag('admin-dashboard');
-    for (const item of normalizedItems) {
-      if (item.slug) {
-        revalidateTag(`product-${item.slug}`);
-      }
-    }
-
     after(async () => {
+      try {
+        const Invoice = (await import('@/models/Invoice')).default;
+        const { getNextInvoiceNumberAction } = await import('@/app/actions/invoice.actions');
+        const invoiceNumber = await getNextInvoiceNumberAction();
+
+        const invoiceItems = normalizedItems.map((it) => ({
+          productId: String(it.productId || ''),
+          name: String(it.name || 'Item'),
+          image: String(it.image || ''),
+          quantity: Math.max(1, Number(it.quantity) || 1),
+          price: Math.max(0, Number(it.price) || 0),
+          amount: (Math.max(1, Number(it.quantity) || 1)) * (Math.max(0, Number(it.price) || 0)),
+        }));
+
+        const subtotal = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
+
+        const invoice = await Invoice.create({
+          invoiceNumber,
+          orderId: order.orderId,
+          orderRef: order._id,
+          customerName,
+          customerPhone,
+          customerEmail: userEmail || '',
+          customerAddress,
+          customerCity,
+          items: invoiceItems,
+          subtotal,
+          discountAmount: pricing.discountAmount || 0,
+          shippingAmount: pricing.shipping || 0,
+          totalAmount: pricing.total,
+          paidAmount: 0,
+          balanceDue: pricing.total,
+          status: 'DRAFT',
+        });
+
+        await Order.findByIdAndUpdate(order._id, {
+          invoiceId: invoice._id,
+          invoiceNumber: invoice.invoiceNumber,
+        });
+      } catch (invoiceErr) {
+        console.error('Auto-invoice creation error:', invoiceErr);
+      }
+
+      try {
+        revalidateTag('orders');
+        revalidateTag('admin-dashboard');
+        for (const item of normalizedItems) {
+          if (item.slug) {
+            revalidateTag(`product-${item.slug}`);
+          }
+        }
+      } catch (revalidateError) {
+        console.error('Failed to revalidate after order create:', revalidateError);
+      }
+
       const backgroundTasks = [
         sendOrderEmails({ order, customerName, userEmail }),
         sendPurchaseTrackingEvents({
@@ -876,6 +908,12 @@ export async function updateOrderAction(id, updates) {
       console.error('Failed to create order log:', logError);
     }
 
+    if (hasStatusChanged && nextStatus === 'Delivered' && order.customerEmail) {
+      after(async () => {
+        await sendOrderDeliveredEmail({ order });
+      });
+    }
+
     revalidateTag('orders');
     revalidateTag('admin-dashboard');
     revalidatePath('/admin/orders');
@@ -1014,6 +1052,16 @@ export async function bulkUpdateOrderStatusAction({
       }
     } catch (invBulkErr) {
       console.error('Failed to sync invoices on bulk order update:', invBulkErr);
+    }
+
+    if (normalizedNextStatus === 'Delivered' && orders.length > 0) {
+      after(async () => {
+        for (const order of orders) {
+          if (order.customerEmail) {
+            await sendOrderDeliveredEmail({ order });
+          }
+        }
+      });
     }
 
     revalidateTag('orders');

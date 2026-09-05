@@ -83,6 +83,12 @@ const SEARCH_RESULTS_LIMIT = 24;
 const CHECKOUT_PROFILE_STORAGE_KEY = 'kifayatly_checkout_profile_v1';
 const CHECKOUT_SUCCESS_STORAGE_KEY = 'kifayatly_checkout_success_v1';
 
+function createIdempotencyKey() {
+  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `idemp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
 function normalizeCitySearchValue(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -232,54 +238,21 @@ function mergeCheckoutProfile(previous, nextProfile = {}, options = {}) {
   };
 }
 
-function readStoredSuccessfulOrder() {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const raw = window.sessionStorage.getItem(CHECKOUT_SUCCESS_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw);
-    if (!parsed?.orderId) return null;
-
-    return {
-      orderId: String(parsed.orderId),
-      whatsappUrl: String(parsed.whatsappUrl || ''),
-    };
-  } catch (error) {
-    console.error('Failed to restore checkout success state', error);
-    return null;
-  }
-}
-
-function persistSuccessfulOrder(order) {
+function persistGuestOrder(order) {
   if (typeof window === 'undefined' || !order?.orderId) return;
 
   try {
-    window.sessionStorage.setItem(
-      CHECKOUT_SUCCESS_STORAGE_KEY,
-      JSON.stringify({
-        orderId: order.orderId,
-        whatsappUrl: order.whatsappUrl || '',
-      }),
-    );
-
-    // Save to guest_orders in localStorage for review verification
-    try {
-      const existingGuestOrders = JSON.parse(window.localStorage.getItem('guest_orders') || '[]');
-      const newGuestOrder = {
-        orderId: order.orderId,
-        secureToken: order.secureToken || '',
-        items: order.items || [],
-        timestamp: Date.now(),
-      };
-      const updated = [newGuestOrder, ...existingGuestOrders.filter(o => o.orderId !== order.orderId)].slice(0, 20);
-      window.localStorage.setItem('guest_orders', JSON.stringify(updated));
-    } catch (guestErr) {
-      console.error('Failed to store guest order in localStorage', guestErr);
-    }
-  } catch (error) {
-    console.error('Failed to persist checkout success state', error);
+    const existingGuestOrders = JSON.parse(window.localStorage.getItem('guest_orders') || '[]');
+    const newGuestOrder = {
+      orderId: order.orderId,
+      secureToken: order.secureToken || '',
+      items: order.items || [],
+      timestamp: Date.now(),
+    };
+    const updated = [newGuestOrder, ...existingGuestOrders.filter((o) => o.orderId !== order.orderId)].slice(0, 20);
+    window.localStorage.setItem('guest_orders', JSON.stringify(updated));
+  } catch (guestErr) {
+    console.error('Failed to store guest order in localStorage', guestErr);
   }
 }
 
@@ -619,17 +592,10 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const [hasTrackedCheckoutView, setHasTrackedCheckoutView] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const submissionLockRef = useRef(false);
-  const idempotencyKeyRef = useRef(
-    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : `idemp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-  );
+  const idempotencyKeyRef = useRef(createIdempotencyKey());
 
   useEffect(() => {
-    const stored = readStoredSuccessfulOrder();
-    if (stored) {
-      setOrderState(stored);
-    }
+    clearStoredSuccessfulOrder();
   }, []);
 
   const [couponCodeInput, setCouponCodeInput] = useState('');
@@ -1018,12 +984,14 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   function handleModalClose() {
     clearStoredSuccessfulOrder();
+    idempotencyKeyRef.current = createIdempotencyKey();
     setOrderState({ orderId: '', whatsappUrl: '' });
-    router.replace('/');
+    window.location.assign('/');
   }
 
   function handleViewOrders() {
     clearStoredSuccessfulOrder();
+    idempotencyKeyRef.current = createIdempotencyKey();
     setOrderState({ orderId: '', whatsappUrl: '' });
     if (session) {
       router.push('/orders');
@@ -1040,34 +1008,47 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     setSubmitting(true);
     setErrors((previous) => ({ ...previous, submit: '' }));
 
+    const orderPayload = {
+      customerEmail: formData.email,
+      customerName: formData.fullName,
+      customerPhone: formData.phone,
+      customerAddress: formData.address,
+      customerCity: formData.city,
+      customerAddressOnly: formData.address,
+      landmark: formData.landmark,
+      notes: formData.instructions,
+      updateProfile: true,
+      totalAmount: total,
+      whatsappNumber: settings.whatsappNumber,
+      couponCode: appliedCoupon?.code,
+      items: cart.map((item) => ({
+        productId: item.id || item._id || item.slug,
+        slug: item.slug,
+        packLabel: item.packLabel || '',
+        name: item.Name || item.name,
+        price: item.discountedPrice != null ? item.discountedPrice : item.Price || item.price,
+        quantity: item.quantity,
+        image: getPrimaryProductImage(item)?.url || '',
+      })),
+    };
+
     (async () => {
+      let placed = false;
       try {
-        const result = await submitOrderAction({
+        let result = await submitOrderAction({
+          ...orderPayload,
           idempotencyKey: idempotencyKeyRef.current,
-          customerEmail: formData.email,
-          customerName: formData.fullName,
-          customerPhone: formData.phone,
-          customerAddress: formData.address,
-          customerCity: formData.city,
-          customerAddressOnly: formData.address,
-          landmark: formData.landmark,
-          notes: formData.instructions,
-          updateProfile: true,
-          totalAmount: total,
-          whatsappNumber: settings.whatsappNumber,
-          couponCode: appliedCoupon?.code,
-          items: cart.map((item) => ({
-            productId: item.id || item._id || item.slug,
-            slug: item.slug,
-            packLabel: item.packLabel || '',
-            name: item.Name || item.name,
-            price: item.discountedPrice != null ? item.discountedPrice : item.Price || item.price,
-            quantity: item.quantity,
-            image: getPrimaryProductImage(item)?.url || '',
-          })),
         });
 
-        if (!result?.success) {
+        if (result?.success && result.duplicate) {
+          idempotencyKeyRef.current = createIdempotencyKey();
+          result = await submitOrderAction({
+            ...orderPayload,
+            idempotencyKey: idempotencyKeyRef.current,
+          });
+        }
+
+        if (!result?.success || !result.orderId || result.duplicate) {
           setErrors((previous) => ({
             ...previous,
             submit: result?.error || 'Unable to place the order right now.',
@@ -1075,9 +1056,11 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           return;
         }
 
+        placed = true;
         trackPurchaseEvent({ orderId: result.orderId, cart, total: result.totalAmount || total });
+        idempotencyKeyRef.current = createIdempotencyKey();
+        persistGuestOrder(result);
         setOrderState(result);
-        persistSuccessfulOrder(result);
         clearCart();
       } catch (error) {
         setErrors((previous) => ({
@@ -1085,8 +1068,10 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           submit: error.message || 'Unable to place the order right now.',
         }));
       } finally {
-        submissionLockRef.current = false;
-        setSubmitting(false);
+        if (!placed) {
+          submissionLockRef.current = false;
+          setSubmitting(false);
+        }
       }
     })();
   }
@@ -1174,7 +1159,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   };
 
   return (
-    <>
+    <div className={cn(submitting && 'pointer-events-none')}>
       {/* ── TOP NAV BAR ── */}
       <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center shadow-sm">
         <div className="w-full max-w-[1130px] mx-auto relative flex items-center justify-between">
@@ -1589,17 +1574,20 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
             {/* Desktop CTA */}
             <button
               id="place-order-desktop"
+              type="button"
               className={cn(
-                'hidden md:flex w-full h-13 rounded-xl items-center justify-center gap-2 font-bold text-base transition-all duration-300 cursor-pointer',
+                'hidden md:flex w-full h-13 rounded-xl items-center justify-center gap-2 font-bold text-base transition-all duration-300',
+                submitting ? 'cursor-wait' : 'cursor-pointer',
                 isFormComplete
                   ? 'bg-primary text-primary-foreground hover:bg-primary/95 shadow-md active:scale-[0.98]'
                   : 'bg-card text-foreground border border-slate-300 hover:bg-muted/40 shadow-none'
               )}
               onClick={() => document.getElementById('checkout-submit')?.click()}
               disabled={submitting || !isInitialized}
+              aria-busy={submitting}
             >
               {submitting && <Loader2 className="size-4 animate-spin" />}
-              {submitting ? 'Placing Order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+              {submitting ? 'Placing order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
             </button>
 
             {/* Footer links */}
@@ -1632,17 +1620,20 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           </div>
           <button
             id="place-order-mobile"
+            type="button"
             className={cn(
-              'h-11 px-5 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2 transition-all duration-300 shrink-0 cursor-pointer',
+              'h-11 px-5 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2 transition-all duration-300 shrink-0',
+              submitting ? 'cursor-wait min-w-[148px]' : 'cursor-pointer',
               isFormComplete
                 ? 'bg-primary text-primary-foreground hover:bg-primary/95 shadow-sm active:scale-[0.97]'
                 : 'bg-card text-foreground border border-slate-300 hover:bg-muted/40 shadow-none'
             )}
             onClick={() => document.getElementById('checkout-submit')?.click()}
             disabled={submitting || !isInitialized}
+            aria-busy={submitting}
           >
             {submitting && <Loader2 className="size-4 animate-spin" />}
-            {submitting ? 'Placing…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+            {submitting ? 'Placing order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
           </button>
         </div>
       </div>
@@ -1708,6 +1699,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

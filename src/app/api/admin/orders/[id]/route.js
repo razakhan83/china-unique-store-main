@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { requireAdmin, requireMutationAccess } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
@@ -7,6 +8,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { applyInventoryAdjustments } from '@/lib/orderFulfillment';
 import { isValidOrderStatus, normalizeOrderStatus } from '@/lib/order-status';
+import { sendOrderDeliveredEmail } from '@/app/actions/order.actions';
 
 export async function PATCH(req, { params }) {
   try {
@@ -89,6 +91,12 @@ export async function PATCH(req, { params }) {
       });
     } catch (logError) {
       console.error('Failed to create API order log:', logError);
+    }
+
+    if (hasStatusChanged && nextStatus === 'Delivered' && order.customerEmail) {
+      after(async () => {
+        await sendOrderDeliveredEmail({ order });
+      });
     }
 
     return NextResponse.json({ success: true, data: order });

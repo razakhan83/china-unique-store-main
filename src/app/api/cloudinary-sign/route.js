@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { resolveCloudinaryFolder } from "@/lib/cloudinaryFolders";
@@ -11,6 +11,7 @@ cloudinary.config({
 });
 
 export async function GET(req) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(req.url);

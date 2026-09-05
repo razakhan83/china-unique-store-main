@@ -39,12 +39,14 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
 
   const handleClose = () => {
     if (onClose) onClose();
-    router.push('/');
   };
 
   const handleLinkClick = (e, href) => {
     e.preventDefault();
-    if (onClose) onClose();
+    if (href === '/') {
+      handleClose();
+      return;
+    }
     router.push(href);
   };
 
@@ -113,17 +115,17 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
             <div className="relative size-20 sm:size-18 flex items-center justify-center">
               <svg
                 viewBox="0 0 64 64"
-                className="absolute inset-0 size-full drop-shadow-sm"
+                className="absolute inset-0 size-full drop-shadow-md"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   d="M25.82 12.98 A7 7 0 0 1 38.18 12.98 A7 7 0 0 1 48.18 20.24 A7 7 0 0 1 52.00 32.00 A7 7 0 0 1 48.18 43.76 A7 7 0 0 1 38.18 51.02 A7 7 0 0 1 25.82 51.02 A7 7 0 0 1 15.82 43.76 A7 7 0 0 1 12.00 32.00 A7 7 0 0 1 15.82 20.24 A7 7 0 0 1 25.82 12.98 Z"
-                  className="fill-emerald-500/20 stroke-primary stroke-[2] dark:fill-emerald-500/30 dark:stroke-emerald-400"
+                  className="fill-white stroke-primary stroke-[2.2] dark:fill-card dark:stroke-primary"
                   strokeLinejoin="round"
                 />
               </svg>
-              <Check className="size-8 sm:size-7 text-primary dark:text-emerald-300 stroke-[3] relative z-10" />
+              <Check className="size-8 sm:size-7 text-primary stroke-[3] relative z-10" />
             </div>
           </div>
 
