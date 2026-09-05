@@ -406,11 +406,11 @@ function OrderSummaryContent({
                   <button
                     type="button"
                     onClick={() => handleRequestRemove ? handleRequestRemove(item) : null}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2 py-1 rounded-md transition-colors active:scale-95"
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 hover:text-red-700 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40 px-2 py-1 rounded-md transition-colors active:scale-95 cursor-pointer"
                     aria-label="Remove item"
                     title="Remove item"
                   >
-                    <Trash2 className="size-3.5" />
+                    <Trash2 className="size-3.5 text-red-500 dark:text-red-400" />
                     <span>Remove</span>
                   </button>
                 </div>
@@ -851,13 +851,13 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
     if (fieldName === 'fullName') {
       if (/\d/.test(val)) {
-        setErrors((prev) => ({ ...prev, fullName: 'Name mein numbers use nahi ho sakte.' }));
+        setErrors((prev) => ({ ...prev, fullName: 'Numbers are not allowed in name.' }));
       } else if (!/^[A-Za-z\s]+$/.test(val)) {
-        setErrors((prev) => ({ ...prev, fullName: 'Sirf alphabets (A-Z) use karein.' }));
+        setErrors((prev) => ({ ...prev, fullName: 'Please use letters only (A-Z).' }));
       } else if (val.length < 2) {
-        setErrors((prev) => ({ ...prev, fullName: 'Name kam az kam 2 characters ka ho.' }));
+        setErrors((prev) => ({ ...prev, fullName: 'Name must be at least 2 characters.' }));
       } else if (val.length > 20) {
-        setErrors((prev) => ({ ...prev, fullName: 'Name 20 characters ke andar hona chahiye.' }));
+        setErrors((prev) => ({ ...prev, fullName: 'Name must not exceed 20 characters.' }));
       } else {
         setErrors((prev) => ({ ...prev, fullName: '' }));
       }
@@ -866,9 +866,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     if (fieldName === 'phone') {
       const clean = val.replace(/\s+/g, '');
       if (!clean.startsWith('03')) {
-        setErrors((prev) => ({ ...prev, phone: 'Number 03 se shuru hona chahiye (e.g. 03001234567).' }));
+        setErrors((prev) => ({ ...prev, phone: 'Phone number must start with 03 (e.g. 03001234567).' }));
       } else if (clean.length !== 11 || !/^\d+$/.test(clean)) {
-        setErrors((prev) => ({ ...prev, phone: 'Pura 11-digit number enter karein (0300xxxxxxx).' }));
+        setErrors((prev) => ({ ...prev, phone: 'Please enter a complete 11-digit number (0300xxxxxxx).' }));
       } else {
         setErrors((prev) => ({ ...prev, phone: '' }));
       }
@@ -876,9 +876,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
     if (fieldName === 'address') {
       if (val.length < 5) {
-        setErrors((prev) => ({ ...prev, address: 'Pura address likhein (kam az kam 5 characters).' }));
+        setErrors((prev) => ({ ...prev, address: 'Please enter complete address (at least 5 characters).' }));
       } else if (val.length > 100) {
-        setErrors((prev) => ({ ...prev, address: 'Address 100 characters ke andar hona chahiye.' }));
+        setErrors((prev) => ({ ...prev, address: 'Address must not exceed 100 characters.' }));
       } else {
         setErrors((prev) => ({ ...prev, address: '' }));
       }
@@ -924,8 +924,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       nextErrors.fullName = 'Full Name is required.';
       missingFields.push('Full Name');
     } else if (!/^[a-zA-Z\s]{2,20}$/.test(cleanName)) {
-      nextErrors.fullName = 'Name alphabets mein (max 20 chars) hona chahiye.';
-      missingFields.push('Valid Name (Alphabets only, max 20 chars)');
+      nextErrors.fullName = 'Please enter a valid name (letters only, max 20 chars).';
+      missingFields.push('Valid Name (Letters only, max 20 chars)');
     }
     
     const cleanPhone = formData.phone.replace(/\s+/g, '');
@@ -933,7 +933,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       nextErrors.phone = 'Phone Number is required.';
       missingFields.push('Phone Number');
     } else if (!/^03\d{9}$/.test(cleanPhone)) {
-      nextErrors.phone = '11-digit valid number likhein (e.g. 03001234567).';
+      nextErrors.phone = 'Please enter a valid 11-digit phone number (e.g. 03001234567).';
       missingFields.push('Valid Phone (0300xxxxxxx)');
     }
 
@@ -942,7 +942,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       nextErrors.address = 'Complete Address is required.';
       missingFields.push('Complete Address');
     } else if (cleanAddress.length < 5 || cleanAddress.length > 100) {
-      nextErrors.address = 'Address 5 se 100 characters ke darmiyan hona chahiye.';
+      nextErrors.address = 'Address must be between 5 and 100 characters.';
       missingFields.push('Complete Address (within 100 chars)');
     }
 

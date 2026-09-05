@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import {
@@ -9,6 +10,7 @@ import {
   Tag,
   LogOut,
   User,
+  X,
 } from 'lucide-react';
 
 import {
@@ -23,6 +25,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import dynamic from 'next/dynamic';
 
 const MyOrdersButton = dynamic(() => import('@/components/MyOrdersButton'), { ssr: false });
@@ -36,6 +46,7 @@ export default function MobileMenuContent({
   setIsSidebarOpen,
 }) {
   const { data: session } = useSession();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   return (
     <Tabs defaultValue="menu" className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
@@ -175,28 +186,25 @@ export default function MobileMenuContent({
             </Button>
           </Link>
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/70 h-8.5">
-              <div className="size-6 rounded-full bg-muted text-foreground font-semibold text-[11px] flex items-center justify-center shrink-0 border border-border/60">
+          <div className="flex items-center justify-between gap-2.5 px-0.5">
+            <div className="flex-1 min-w-0 flex items-center gap-2.5">
+              <div className="size-7 rounded-full bg-primary/10 text-primary font-semibold text-xs flex items-center justify-center shrink-0 border border-primary/20">
                 {(session.user?.name || session.user?.email || 'U')[0]?.toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{session.user?.name || 'Account'}</p>
-                <p className="text-[10px] text-muted-foreground truncate leading-tight">{session.user?.email || ''}</p>
+                <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{session.user?.name || 'Account'}</p>
+                <p className="text-[11px] text-muted-foreground truncate leading-tight">{session.user?.email || ''}</p>
               </div>
             </div>
 
             <Button
               type="button"
-              variant="outline"
-              onClick={() => {
-                setIsSidebarOpen(false);
-                signOut();
-              }}
-              className="h-8.5 px-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-xs font-medium transition-all active:scale-95 shadow-none shrink-0 gap-1.5 cursor-pointer"
+              variant="ghost"
+              onClick={() => setLogoutConfirmOpen(true)}
+              className="h-8 px-2.5 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40 text-xs font-medium transition-all active:scale-95 shadow-none shrink-0 gap-1.5 cursor-pointer"
               title="Sign Out"
             >
-              <LogOut className="size-3.5 text-muted-foreground" />
+              <LogOut className="size-3.5 text-red-500 dark:text-red-400" />
               <span>Logout</span>
             </Button>
           </div>
@@ -257,6 +265,49 @@ export default function MobileMenuContent({
           </a>
         </div>
       </div>
+
+      <AlertDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
+        <AlertDialogContent className="max-w-[320px] p-5 rounded-2xl gap-4" showCloseButton={false}>
+          <div className="flex justify-between items-start">
+            <AlertDialogHeader className="text-left space-y-1">
+              <AlertDialogTitle className="text-base font-semibold text-foreground">Log out of your account?</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs text-muted-foreground">
+                You will need to sign in again to access your orders and saved details.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-md -mt-1 -mr-1 text-muted-foreground hover:bg-muted"
+              onClick={() => setLogoutConfirmOpen(false)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+          <AlertDialogFooter className="mt-1 flex-row gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLogoutConfirmOpen(false)}
+              className="flex-1 rounded-lg text-xs h-9 font-medium"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                setLogoutConfirmOpen(false);
+                setIsSidebarOpen(false);
+                signOut();
+              }}
+              className="flex-1 rounded-lg text-xs h-9 font-semibold bg-red-600 hover:bg-red-700 text-white"
+            >
+              Log Out
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Tabs>
   );
 }

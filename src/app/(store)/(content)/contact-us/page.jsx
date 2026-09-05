@@ -1,16 +1,19 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
+import { resolveStorePhone } from '@/lib/storeContact';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Contact Us | China Unique',
-  description: 'Contact China Unique customer support on WhatsApp, Phone, or Email for order assistance and inquiries.',
-};
+import { pageMetadata } from '@/lib/siteSeo';
+
+export const metadata = pageMetadata({
+  title: 'Contact Us',
+  description: 'Contact China Unique customer support on WhatsApp, phone, or email for order assistance and inquiries.',
+});
 
 function PhoneSvg({ className = 'size-5' }) {
   return (
@@ -72,7 +75,7 @@ export default async function ContactUsPage() {
   const settings = await getStoreSettings();
 
   const storeName = settings.storeName || 'China Unique Store';
-  const whatsappNumber = settings.whatsappNumber || '03052622043';
+  const whatsappNumber = resolveStorePhone(settings.whatsappNumber);
   const cleanPhone = whatsappNumber.replace(/[^0-9+]/g, '');
   const whatsappUrl = createWhatsAppUrl(whatsappNumber, `Hello ${storeName}, I need assistance with an order/product.`);
   const supportEmail = settings.supportEmail || 'support@chinaunique.pk';

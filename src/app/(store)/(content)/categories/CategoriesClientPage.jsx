@@ -1,41 +1,17 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import CategoryPillCard from '@/components/home/CategoryPillCard';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import Link from 'next/link';
-import { Search, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function CategoriesClientPage({ initialCategories = [] }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [fade, setFade] = useState(false);
-
-  // Rotating placeholder text every 5 seconds with animation
-  useEffect(() => {
-    if (!initialCategories || initialCategories.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setFade(true); // Start fading out
-      
-      setTimeout(() => {
-        setPlaceholderIndex((prev) => (prev + 1) % initialCategories.length);
-        setFade(false); // Fade back in
-      }, 300); // 300ms matches the CSS transition duration
-      
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [initialCategories]);
-
-  const currentPlaceholder = initialCategories.length > 0 
-    ? `Search ${initialCategories[placeholderIndex].name}...`
-    : 'Search...';
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return initialCategories;
@@ -76,17 +52,9 @@ export default function CategoriesClientPage({ initialCategories = [] }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search categories"
               className="h-12 rounded-full border-border/80 bg-background/90 pl-11 pr-4 text-base shadow-sm backdrop-blur-sm transition-all focus-visible:ring-primary focus-visible:ring-offset-2"
             />
-            
-            {/* Animated Fake Placeholder */}
-            {!searchQuery && (
-              <div 
-                className={`pointer-events-none absolute left-11 top-1/2 -translate-y-1/2 z-10 text-muted-foreground transition-opacity duration-300 ${fade ? 'opacity-0' : 'opacity-100'}`}
-              >
-                {currentPlaceholder}
-              </div>
-            )}
           </div>
         </div>
 

@@ -84,7 +84,7 @@ Q: What should I do if I receive a damaged or incorrect item?
 A: Please contact our support team as soon as possible with your order details and photos so we can review the issue and help with a replacement or refund process.
 
 Q: How can I contact your team?
-A: You can reach us through the WhatsApp and contact options available on the store for order help, delivery questions, and general support.`,
+A: Call or WhatsApp us on our official number listed on the Contact Us page. Our team can help with orders, delivery questions, and general support.`,
     seoTitle: 'FAQ | China Unique Store',
     seoDescription: 'Read common questions and answers about shopping with China Unique Store.',
     isEnabled: true,

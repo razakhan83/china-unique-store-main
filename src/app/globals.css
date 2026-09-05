@@ -677,6 +677,7 @@
 .category-icon-carousel-item {
   min-width: 0;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 @media (min-width: 640px) {

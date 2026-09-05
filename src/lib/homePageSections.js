@@ -16,6 +16,7 @@ export const HOME_PAGE_SECTION_TYPES = [
   'ProductGridByCategory',
   'ProductCollection',
   'VideoCatalog',
+  'CustomerReviews',
 ];
 
 function cleanText(value = '') {
@@ -166,6 +167,13 @@ export function normalizeHomePageSection(section, index = 0) {
         url: cleanText(mobileVideo.url),
         publicId: cleanText(mobileVideo.publicId || mobileVideo.public_id),
       } : null,
+    };
+  }
+
+  if (type === 'CustomerReviews') {
+    return {
+      ...baseSection,
+      reviewLimit: Math.min(10, Math.max(1, safeNumber(section?.reviewLimit, 10))),
     };
   }
 

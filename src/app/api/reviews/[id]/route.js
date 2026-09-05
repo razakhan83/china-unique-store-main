@@ -22,6 +22,8 @@ export async function DELETE(req, { params }) {
     }
 
     revalidateTag(`reviews-${review.productId?.toString?.() || review.productId}`);
+    revalidateTag('all-reviews');
+    revalidateTag('storefront-testimonials');
 
     return NextResponse.json({ success: true, message: 'Review deleted successfully' });
   } catch (error) {

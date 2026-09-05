@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import SearchField from '@/components/SearchField';
 import { trackSearchEvent } from '@/lib/clientTracking';
 
-export default function NavbarSearchPanel({ open, onOpenChange, placeholder, autoFocus, inlineSuggestions = false }) {
+export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'Search products', autoFocus, inlineSuggestions = false }) {
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
@@ -36,10 +38,46 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder, aut
     const controller = new AbortController();
 
     async function loadSuggestions() {
-      if (!debouncedSearch.trim()) {
-        if (isActive) {
+      const query = debouncedSearch.trim();
+
+      if (!query) {
+        setIsLoadingSuggestions(true);
+        try {
+          const response = await fetch('/api/search-products?suggest=1', { signal: controller.signal });
+          const result = await response.json();
+          if (!isActive) return;
           setSuggestions([]);
-          setIsLoadingSuggestions(false);
+          setCategories(
+            Array.isArray(result?.categories)
+              ? result.categories.map((category) => ({
+                  ...category,
+                  onSelect: () => {
+                    onOpenChange(false);
+                    setIsFocused(false);
+                    router.push(`/products?category=${encodeURIComponent(category.slug || category.id || category.label)}`, { scroll: true });
+                  },
+                }))
+              : [],
+          );
+          setTrending(
+            Array.isArray(result?.trending)
+              ? result.trending.map((product) => ({
+                  ...product,
+                  onSelect: () => {
+                    onOpenChange(false);
+                    setIsFocused(false);
+                    router.push(`/products/${product.slug || product._id || product.id}`, { scroll: true });
+                  },
+                }))
+              : [],
+          );
+        } catch (error) {
+          if (error?.name !== 'AbortError' && isActive) {
+            setCategories([]);
+            setTrending([]);
+          }
+        } finally {
+          if (isActive) setIsLoadingSuggestions(false);
         }
         return;
       }
@@ -47,7 +85,7 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder, aut
       setIsLoadingSuggestions(true);
 
       try {
-        const response = await fetch(`/api/search-products?q=${encodeURIComponent(debouncedSearch.trim())}&limit=5`, {
+        const response = await fetch(`/api/search-products?q=${encodeURIComponent(query)}&limit=5`, {
           signal: controller.signal,
         });
         const result = await response.json();
@@ -105,11 +143,13 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder, aut
         setSearchTerm('');
         setDebouncedSearch('');
         setSuggestions([]);
-        setIsFocused(false);
+        setIsFocused(true);
       }}
       onFocus={() => setIsFocused(true)}
       isFocused={isFocused}
       suggestions={suggestions}
+      categories={categories}
+      trending={trending}
       showSuggestions
       isLoading={isLoadingSuggestions}
       emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}

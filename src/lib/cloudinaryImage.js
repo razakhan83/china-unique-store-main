@@ -113,6 +113,21 @@ export function optimizeCloudinaryUrl(url = '', options = {}) {
   }
 }
 
+export function getProductSocialShareImage(url = '', ratio = '1.91:1', fit = 'cover') {
+  const source = String(url || '').trim();
+  if (!source) return '';
+
+  const isSquare = ratio === '1:1';
+  const isPng = source.toLowerCase().includes('.png') || source.toLowerCase().includes('/png');
+  const usePad = fit === 'contain' || isPng;
+
+  const preset = isSquare
+    ? (usePad ? CLOUDINARY_IMAGE_PRESETS.socialShareSquarePad : CLOUDINARY_IMAGE_PRESETS.socialShareSquare)
+    : (usePad ? CLOUDINARY_IMAGE_PRESETS.socialSharePad : CLOUDINARY_IMAGE_PRESETS.socialShare);
+
+  return optimizeCloudinaryUrl(source, preset) || source;
+}
+
 export function optimizeCloudinaryAsset(asset, options = {}) {
   if (!asset || typeof asset !== 'object') return asset;
 

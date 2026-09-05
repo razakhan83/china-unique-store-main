@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Search, TrendingUp, LayoutGrid, X } from "lucide-react";
 
 import {
   InputGroup,
@@ -25,16 +25,23 @@ export default function SearchField({
   onFocus,
   isFocused,
   suggestions = [],
+  categories = [],
+  trending = [],
   emptyLabel,
   className,
   inputClassName,
   buttonLabel = "Search",
   showSuggestions = true,
   isLoading = false,
-  placeholder = "Search for premium products...",
+  placeholder = "Search products",
   autoFocus = false,
   inlineSuggestions = false,
 }) {
+  const hasQuery = Boolean(value.trim());
+  const showPanel = showSuggestions && isFocused;
+  const showDiscovery = showPanel && !hasQuery;
+  const showResults = showPanel && hasQuery;
+
   return (
     <div className={cn("relative w-full", className)}>
       <form onSubmit={onSubmit} className="flex w-full items-center">
@@ -48,32 +55,22 @@ export default function SearchField({
               <Search className="size-4" />
             </InputGroupText>
           </InputGroupAddon>
-          <div className="absolute inset-y-0 left-[2.75rem] right-12 flex items-center pointer-events-none overflow-hidden">
-            {!value ? (
-              <span
-                key={placeholder}
-                className="animate-in fade-in slide-in-from-bottom-3 duration-500 text-muted-foreground/80 text-sm md:text-[0.95rem] truncate"
-              >
-                {placeholder}
-              </span>
-            ) : null}
-          </div>
           <InputGroupInput
             type="text"
             value={value}
             onChange={onChange}
             onFocus={onFocus}
             autoFocus={autoFocus}
-            aria-label={placeholder || "Search for products"}
+            aria-label={placeholder || "Search products"}
             className={cn(
-              "h-12 min-w-0 border-0 bg-transparent pl-11 pr-10 text-sm text-foreground shadow-none outline-none ring-0 transition-none placeholder:text-transparent",
+              "h-12 min-w-0 border-0 bg-transparent pl-11 pr-10 text-sm text-foreground shadow-none outline-none ring-0 transition-none placeholder:text-muted-foreground/80",
               "hover:border-0 hover:bg-transparent hover:shadow-none",
               "focus-visible:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0",
               "aria-invalid:border-0 aria-invalid:bg-transparent aria-invalid:shadow-none aria-invalid:ring-0",
               "md:text-[0.95rem]",
               inputClassName
             )}
-            placeholder=""
+            placeholder={placeholder}
           />
           <InputGroupAddon align="inline-end" className="gap-1.5 pr-2">
             {value ? (
@@ -92,7 +89,64 @@ export default function SearchField({
         </InputGroup>
       </form>
 
-      {showSuggestions && isFocused && value.trim() ? (
+      {showDiscovery ? (
+        <div
+          className={cn(
+            "w-full overflow-hidden",
+            inlineSuggestions
+              ? "mt-3 bg-transparent border-0 shadow-none"
+              : "absolute top-full z-40 mt-3 rounded-xl border border-border/80 bg-popover/98 shadow-lg backdrop-blur"
+          )}
+        >
+          <div className="flex flex-col gap-4 p-4">
+            {categories.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground/80">
+                  <LayoutGrid className="size-4 text-primary" />
+                  <p className="text-xs font-semibold uppercase tracking-wider">Popular categories</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id || category.slug || category.label}
+                      type="button"
+                      onClick={() => category.onSelect?.(category)}
+                      className="rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                    >
+                      {category.label || category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {trending.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground/80">
+                  <TrendingUp className="size-4 text-primary" />
+                  <p className="text-xs font-semibold uppercase tracking-wider">Trending products</p>
+                </div>
+                <ul className="divide-y divide-border/70 rounded-lg border border-border/50 overflow-hidden">
+                  {trending.map((product, index) => (
+                    <li key={`${product._id || product.id || "trend"}-${index}`}>
+                      <button
+                        type="button"
+                        onClick={() => product.onSelect?.(product)}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-muted"
+                      >
+                        <span className="truncate text-sm font-medium">{product.Name || product.name}</span>
+                        <ArrowRight className="size-4 text-muted-foreground" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {showResults ? (
         <div 
           className={cn(
             "w-full overflow-hidden",
@@ -106,7 +160,7 @@ export default function SearchField({
               {[1, 2, 3, 4].map((i) => (
                 <li key={i} className="flex w-full items-center gap-3 px-4 py-3">
                   <Skeleton className="size-12 rounded-xl shrink-0" />
-                  <div className="min-w-0 flex-1 space-y-2">
+                  <div className="min-w-0 flex-1 flex flex-col gap-2">
                     <Skeleton className="h-4 w-2/3" />
                     <Skeleton className="h-3 w-1/3" />
                   </div>

@@ -1,181 +1,161 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Link from "next/link";
-import CategoryPillCard from "@/components/home/CategoryPillCard";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import CategoryPillCard from '@/components/home/CategoryPillCard';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  useCarousel,
+} from '@/components/ui/carousel';
 
-export default function CategoryIconCarousel({ categories }) {
-  const categoryCount = categories?.length ?? 0;
-  const carouselRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+function CategoryCarouselArrows() {
+  const { scrollPrev, scrollNext, canGoToPrev, canGoToNext } = useCarousel();
+  return (
+    <div className="hidden md:flex items-center gap-2">
+      <button
+        type="button"
+        className="flex size-9 items-center justify-center rounded-full border border-primary/15 bg-background/80 text-primary shadow-[0_4px_12px_rgba(10,61,46,0.06)] transition-transform hover:scale-105 hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+        disabled={!canGoToPrev}
+        onClick={() => scrollPrev()}
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="size-5" />
+      </button>
+      <button
+        type="button"
+        className="flex size-9 items-center justify-center rounded-full border border-primary/15 bg-background/80 text-primary shadow-[0_4px_12px_rgba(10,61,46,0.06)] transition-transform hover:scale-105 hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+        disabled={!canGoToNext}
+        onClick={() => scrollNext()}
+        aria-label="Next slide"
+      >
+        <ChevronRight className="size-5" />
+      </button>
+    </div>
+  );
+}
 
-  const [isMounted, setIsMounted] = useState(false);
+function CarouselDots({ slideCount = 8 }) {
+  const { api, scrollTo } = useCarousel();
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
-    setIsMounted(true);
-    const carousel = carouselRef.current;
-    if (!carousel) return undefined;
+    if (!api) return;
 
-    let rAF = null;
-
-    const updateScrollState = () => {
-      if (rAF !== null) return;
-
-      rAF = window.requestAnimationFrame(() => {
-        rAF = null;
-        if (!carouselRef.current) return;
-        const el = carouselRef.current;
-        const maxScrollLeft = el.scrollWidth - el.clientWidth;
-        const nextCanLeft = el.scrollLeft > 8;
-        const nextCanRight = maxScrollLeft - el.scrollLeft > 8;
-
-        setCanScrollLeft((prev) => (prev !== nextCanLeft ? nextCanLeft : prev));
-        setCanScrollRight((prev) => (prev !== nextCanRight ? nextCanRight : prev));
-
-        const nextProgress = maxScrollLeft > 0 ? el.scrollLeft / maxScrollLeft : 0;
-        setScrollProgress((prev) => (Math.abs(prev - nextProgress) > 0.01 ? nextProgress : prev));
-      });
+    const onSelect = () => {
+      try {
+        const snap = api.selectedScrollSnap ? api.selectedScrollSnap() : (api.selectedSnap ? api.selectedSnap() : 0);
+        setSelectedIndex(snap % (slideCount || 1));
+      } catch {
+        // ignore
+      }
     };
 
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(updateScrollState);
-    } else {
-      setTimeout(updateScrollState, 150);
-    }
-
-    carousel.addEventListener('scroll', updateScrollState, { passive: true });
-    window.addEventListener('resize', updateScrollState, { passive: true });
+    onSelect();
+    api.on('select', onSelect);
+    api.on('reInit', onSelect);
 
     return () => {
-      carousel.removeEventListener('scroll', updateScrollState);
-      window.removeEventListener('resize', updateScrollState);
-      if (rAF !== null) window.cancelAnimationFrame(rAF);
+      try {
+        api.off('select', onSelect);
+        api.off('reInit', onSelect);
+      } catch {
+        // ignore
+      }
     };
-  }, [categoryCount]);
+  }, [api, slideCount]);
 
-  if (!categoryCount) return null;
+  if (slideCount <= 1) return null;
 
-  function scrollCategories(direction) {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-    const distance = Math.max(carousel.clientWidth * 0.72, 220);
-    carousel.scrollBy({
-      left: direction === 'left' ? -distance : distance,
-      behavior: 'smooth',
-    });
-  }
+  const handleGoTo = (idx) => {
+    try {
+      if (api && typeof api.scrollTo === 'function') {
+        api.scrollTo(idx);
+      } else if (typeof scrollTo === 'function') {
+        scrollTo(idx);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
-  // Calculate which dot is active based on scroll progress (0 to 1)
-  const numDots = 4;
-  const activeDotIndex = Math.min(
-    Math.max(Math.round(scrollProgress * (numDots - 1)), 0),
-    numDots - 1
+  return (
+    <div className="relative z-30 mt-4 flex items-center justify-center gap-1.5 pt-1">
+      {Array.from({ length: slideCount }, (_, idx) => (
+        <button
+          key={idx}
+          type="button"
+          aria-label={`Go to category ${idx + 1}`}
+          onClick={() => handleGoTo(idx)}
+          className={cn(
+            'rounded-full transition-all duration-300 ease-out cursor-pointer p-0 border-0 outline-none',
+            idx === selectedIndex
+              ? 'w-4 h-1.5 bg-primary'
+              : 'size-1.5 bg-primary/25 hover:bg-primary/50'
+          )}
+        />
+      ))}
+    </div>
   );
+}
+
+export default function CategoryIconCarousel({ categories = [] }) {
+  const displayedCategories = Array.isArray(categories) ? categories.slice(0, 8) : [];
+  if (displayedCategories.length === 0) return null;
 
   return (
     <section className="relative border-b border-border bg-card/70 py-6 md:py-8">
       <div className="relative mx-auto max-w-7xl px-4">
-        {/* Section header */}
-        <div className="mb-[-12px] md:mb-8 flex items-center justify-between gap-4 md:items-end">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-[1.25rem] leading-tight font-bold tracking-[-0.03em] text-primary [text-wrap:balance] sm:text-[1.5rem] md:text-[2.1rem]">
-              Shop by Category
-            </h2>
-          </div>
+        <Carousel
+          opts={{
+            align: 'start',
+            loop: displayedCategories.length > 5,
+            watchDrag: true,
+            duration: 25,
+          }}
+          className="w-full"
+        >
+          {/* Section Header */}
+          <div className="mb-3 md:mb-6 flex items-center justify-between gap-4 md:items-end">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[1.25rem] leading-tight font-bold tracking-[-0.03em] text-primary [text-wrap:balance] sm:text-[1.5rem] md:text-[2.1rem]">
+                Shop by Category
+              </h2>
+            </div>
 
-          <div className="flex items-center gap-4">
-            {/* Scroll arrows */}
-            {categoryCount > 1 && isMounted && (
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => scrollCategories('left')}
-                  disabled={!canScrollLeft}
-                  aria-label="Scroll categories left"
-                  className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 disabled:opacity-40 disabled:pointer-events-none"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollCategories('right')}
-                  disabled={!canScrollRight}
-                  aria-label="Scroll categories right"
-                  className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 disabled:opacity-40 disabled:pointer-events-none"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Button "View All" Link */}
-            <Link
-              href="/categories"
-              className="inline-flex h-8 md:h-10 shrink-0 items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap rounded-lg border border-primary/15 bg-background/80 bg-clip-padding px-3 md:px-4 text-[13px] md:text-sm font-semibold text-primary outline-none select-none shadow-[0_12px_30px_rgba(10,61,46,0.08)] transition-[transform,background-color,color,box-shadow] duration-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_16px_36px_rgba(10,61,46,0.14)] active:scale-[0.96]"
-            >
-              View All
-              <ArrowRight className="ml-1 size-3.5 md:size-4" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Carousel wrapper */}
-        <div className="relative -my-4 overflow-visible py-4 md:-mx-6">
-          {/* Left fade */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-y-4 left-0 z-10 w-8 transition-opacity duration-300",
-              canScrollLeft ? "opacity-100" : "opacity-0"
-            )}
-            style={{ background: "linear-gradient(to right, var(--color-card) 20%, transparent)" }}
-          />
-          {/* Right fade */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-y-4 right-0 z-10 w-8 transition-opacity duration-300",
-              canScrollRight ? "opacity-100" : "opacity-0"
-            )}
-            style={{ background: "linear-gradient(to left, var(--color-card) 20%, transparent)" }}
-          />
-
-          <div
-            ref={carouselRef}
-            className="category-icon-carousel"
-            data-interactive={categoryCount > 1 ? "true" : "false"}
-            aria-label="Shop by category"
-            aria-roledescription="carousel"
-          >
-            {categories.map((category, index) => (
-              <div
-                key={`${category._id || category.id}-${index}`}
-                className="category-icon-carousel-item"
+            <div className="flex items-center gap-3">
+              {displayedCategories.length > 1 ? <CategoryCarouselArrows /> : null}
+              <Link
+                href="/categories"
+                prefetch={false}
+                className="inline-flex h-8 md:h-10 shrink-0 items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap rounded-lg border border-primary/20 bg-background px-3 md:px-4 text-[13px] md:text-sm font-semibold text-primary outline-none select-none shadow-xs transition-[transform,background-color,color,border-color] duration-200 focus-visible:border-ring focus-visible:ring-2 hover:border-primary hover:bg-primary hover:text-primary-foreground active:scale-[0.97]"
               >
-                <CategoryPillCard category={category} index={index} />
-              </div>
-            ))}
+                <span>View All</span>
+                <ArrowRight className="ml-1 size-3.5 md:size-4" />
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {/* Pagination Dots */}
-        {categoryCount > 1 && isMounted && (
-          <div className="mt-8 flex items-center justify-center gap-1.5">
-            {Array.from({ length: numDots }).map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "rounded-full transition-all duration-300 ease-out",
-                  activeDotIndex === i 
-                    ? "w-6 h-2.5 bg-primary" 
-                    : "size-2.5 bg-background border-2 border-primary/60 hover:bg-primary/20"
-                )}
-              />
+          {/* Carousel Slides */}
+          <CarouselContent className="-ml-3 md:-ml-4" viewportClassName="pt-4 pb-4 -mt-4 -mb-4 overflow-hidden">
+            {displayedCategories.map((category, index) => (
+              <CarouselItem
+                key={`${category._id || category.id}-${index}`}
+                className="pl-3 md:pl-4 basis-[42%] sm:basis-[28%] md:basis-[20%] lg:basis-[16.66%]"
+              >
+                <div className="h-full min-w-0">
+                  <CategoryPillCard category={category} index={index} />
+                </div>
+              </CarouselItem>
             ))}
-          </div>
-        )}
+          </CarouselContent>
+
+          {/* Carousel Pagination Dots */}
+          <CarouselDots slideCount={displayedCategories.length} />
+        </Carousel>
       </div>
     </section>
   );

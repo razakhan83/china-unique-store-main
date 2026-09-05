@@ -3,8 +3,13 @@ import { Suspense } from 'react';
 import HomeSectionRenderer from '@/components/home/HomeSectionRenderer';
 import HomeBelowFold from '@/components/home/HomeBelowFold';
 import { getStorefrontHomePage } from '@/lib/data';
+import { SITE_DESCRIPTION, SITE_TITLE_DEFAULT } from '@/lib/siteSeo';
 
 export const metadata = {
+  title: {
+    absolute: SITE_TITLE_DEFAULT,
+  },
+  description: SITE_DESCRIPTION,
   alternates: {
     canonical: '/',
   },

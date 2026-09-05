@@ -158,6 +158,12 @@ const HomePageSectionSchema = new mongoose.Schema(
       min: 1,
       max: 24,
     },
+    reviewLimit: {
+      type: Number,
+      default: 10,
+      min: 1,
+      max: 10,
+    },
     slides: {
       type: [HomePageHeroSlideSchema],
       default: [],

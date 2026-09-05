@@ -108,10 +108,22 @@ export default function OrderSuccessModal({ isOpen, onClose, orderId }) {
             <X className="size-5" />
           </button>
 
-          {/* Clean Success Icon Badge */}
-          <div className="relative mb-5 z-10 pop-in">
-            <div className="relative bg-emerald-500/10 text-primary rounded-full p-4 border border-primary/20 shadow-sm">
-              <Check className="size-8 stroke-[2.5]" />
+          {/* 10-Point Scallop Rosette Success Badge */}
+          <div className="relative mb-6 z-10 pop-in flex items-center justify-center">
+            <div className="relative size-20 sm:size-18 flex items-center justify-center">
+              <svg
+                viewBox="0 0 64 64"
+                className="absolute inset-0 size-full drop-shadow-sm"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M25.82 12.98 A7 7 0 0 1 38.18 12.98 A7 7 0 0 1 48.18 20.24 A7 7 0 0 1 52.00 32.00 A7 7 0 0 1 48.18 43.76 A7 7 0 0 1 38.18 51.02 A7 7 0 0 1 25.82 51.02 A7 7 0 0 1 15.82 43.76 A7 7 0 0 1 12.00 32.00 A7 7 0 0 1 15.82 20.24 A7 7 0 0 1 25.82 12.98 Z"
+                  className="fill-emerald-500/20 stroke-primary stroke-[2] dark:fill-emerald-500/30 dark:stroke-emerald-400"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <Check className="size-8 sm:size-7 text-primary dark:text-emerald-300 stroke-[3] relative z-10" />
             </div>
           </div>
 

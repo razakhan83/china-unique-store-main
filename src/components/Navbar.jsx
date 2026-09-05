@@ -234,10 +234,6 @@ function NavbarContent({
     }
   }, [isNavbarHidden]);
   
-  const searchPlaceholders = categories?.length > 0 
-    ? categories.map(c => `What are you finding? ${c.label}`)
-    : ["What are you finding? Kitchen Accessories", "What are you finding? Stationeries", "What are you finding? Gadgets"];
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isCartBumping, setIsCartBumping] = useState(false);
 
   useEffect(() => {
@@ -248,13 +244,6 @@ function NavbarContent({
 
     window.addEventListener('cart-item-landed', handleCartLanded);
     return () => window.removeEventListener('cart-item-landed', handleCartLanded);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % searchPlaceholders.length);
-    }, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const closeCategoriesTimeoutRef = useRef(null);
@@ -505,7 +494,7 @@ function NavbarContent({
               <NavbarSearchPanel
                 open={true}
                 onOpenChange={() => {}}
-                placeholder={searchPlaceholders[placeholderIndex]}
+                placeholder="Search products"
               />
             </div>
 

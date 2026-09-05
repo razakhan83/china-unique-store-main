@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowUpRight, CircleHelp, FileText, Lock, RotateCcw, Store, Truck } from 'lucide-react';
+import { ArrowUpRight, CircleHelp, FileText, Lock, Phone, RotateCcw, Store, Truck } from 'lucide-react';
 import FaqAccordion from '@/components/FaqAccordion';
+import { getStoreSettings } from '@/lib/data';
+import { createWhatsAppUrl } from '@/lib/whatsapp';
+import { formatStorePhone, resolveStorePhone, storePhoneTelHref } from '@/lib/storeContact';
 
 const PAGE_META = {
   'about-us': { Icon: Store, label: 'Our Story' },
@@ -101,7 +104,7 @@ const FULL_FAQ = [
     id: 'f15',
     question: 'How do I contact customer support?',
     answer:
-      'The fastest way is WhatsApp: tap the chat button on any page. We are also reachable at our Gul Tijarah Mall shop in Karachi. We respond promptly during business hours.',
+      'The fastest way is WhatsApp or a direct call using the official store number shown at the bottom of this page. We also welcome visits to our Karachi shop during business hours.',
   },
 ];
 
@@ -137,7 +140,12 @@ function SectionHeading({ children }) {
   );
 }
 
-export default function StoreCustomPage({ page, storeName = 'China Unique Store' }) {
+export default async function StoreCustomPage({ page, storeName = 'China Unique Store', whatsappNumber = '' }) {
+  const settings = await getStoreSettings().catch(() => null);
+  const phone = resolveStorePhone(whatsappNumber || settings?.whatsappNumber);
+  const displayPhone = formatStorePhone(phone);
+  const telHref = storePhoneTelHref(phone);
+  const whatsappUrl = createWhatsAppUrl(phone, `Hello ${storeName}, I have a question.`);
   const meta = PAGE_META[page?.slug] || { Icon: FileText, label: 'Info' };
   const { Icon, label } = meta;
 
@@ -198,14 +206,18 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
 
             <div className="mt-12 border-t border-border pt-8">
               <p className="text-sm text-muted-foreground">
-                Still have a question?{' '}
+                Still have a question? Call{' '}
+                <a href={telHref} className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                  {displayPhone}
+                </a>
+                {' '}or{' '}
                 <a
-                  href="https://wa.me/"
+                  href={whatsappUrl || '#'}
                   className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
                 >
-                  Message us on WhatsApp
-                </a>{' '}
-                for fast assistance.
+                  message us on WhatsApp
+                </a>
+                {' '}for fast assistance.
               </p>
             </div>
           </div>
@@ -235,16 +247,22 @@ export default function StoreCustomPage({ page, storeName = 'China Unique Store'
 
             <div className="mt-14 border-t border-border pt-8">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Questions about this page?{' '}
+                <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                  <p>
+                    Questions about this page? Call{' '}
+                    <a href={telHref} className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                      {displayPhone}
+                    </a>
+                    .
+                  </p>
                   <a
-                    href="https://wa.me/"
-                    className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
+                    href={whatsappUrl || '#'}
+                    className="inline-flex items-center gap-1.5 font-semibold text-foreground underline underline-offset-4 hover:text-primary"
                   >
+                    <Phone className="size-3.5" />
                     Ask us on WhatsApp
                   </a>
-                  .
-                </p>
+                </div>
                 <Link
                   href="/products"
                   className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-foreground underline underline-offset-4 hover:text-primary"

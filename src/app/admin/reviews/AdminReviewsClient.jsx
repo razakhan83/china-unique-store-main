@@ -4,11 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Calendar, ChevronLeft, ChevronRight, MessageSquare, Package, Search, Star, Trash2, Check, Eye, X, Image as ImageIcon } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, MessageSquare, Package, Search, Star, Trash2, Check, Eye, X, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
+import { Switch } from '@/components/ui/switch';
 import AppPagination from '@/components/AppPagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,7 @@ export default function AdminReviewsClient({
   const [reviews, setReviews] = useState(initialReviews);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [loadingId, setLoadingId] = useState(null);
+  const [togglingHomeId, setTogglingHomeId] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
   const [viewReview, setViewReview] = useState(null);
 
@@ -93,6 +94,58 @@ export default function AdminReviewsClient({
     });
   }
 
+  async function handleToggleShowOnHome(id, currentShowOnHome) {
+    const nextShowOnHome = !currentShowOnHome;
+    setTogglingHomeId(id);
+
+    // Optimistic UI update
+    setReviews((prev) =>
+      prev.map((r) =>
+        r._id === id
+          ? { ...r, showOnHome: nextShowOnHome, ...(nextShowOnHome ? { status: 'Approved', isApproved: true } : {}) }
+          : r
+      )
+    );
+    if (viewReview && viewReview._id === id) {
+      setViewReview((prev) => ({
+        ...prev,
+        showOnHome: nextShowOnHome,
+        ...(nextShowOnHome ? { status: 'Approved', isApproved: true } : {}),
+      }));
+    }
+
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, showOnHome: nextShowOnHome }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        // Revert optimistic update
+        setReviews((prev) =>
+          prev.map((r) => (r._id === id ? { ...r, showOnHome: currentShowOnHome } : r))
+        );
+        if (viewReview && viewReview._id === id) {
+          setViewReview((prev) => ({ ...prev, showOnHome: currentShowOnHome }));
+        }
+        toast.error(data.error || 'Failed to update home review showcase');
+        return;
+      }
+
+      toast.success(data.message || (nextShowOnHome ? 'Featured on Home' : 'Removed from Home'));
+      router.refresh();
+    } catch {
+      setReviews((prev) =>
+        prev.map((r) => (r._id === id ? { ...r, showOnHome: currentShowOnHome } : r))
+      );
+      toast.error('An error occurred while updating review');
+    } finally {
+      setTogglingHomeId(null);
+    }
+  }
+
   async function handleStatusChange(id, status) {
     setLoadingId(id);
 
@@ -111,14 +164,28 @@ export default function AdminReviewsClient({
       }
 
       setReviews((prev) => 
-        prev.map((review) => review._id === id ? { ...review, status, isApproved: status === 'Approved' } : review)
+        prev.map((review) =>
+          review._id === id
+            ? {
+                ...review,
+                status,
+                isApproved: status === 'Approved',
+                ...(status === 'Rejected' ? { showOnHome: false } : {}),
+              }
+            : review
+        )
       );
       toast.success(`Review ${status.toLowerCase()} successfully`);
       router.refresh();
       
-      // If modal is open for this review, update its status too or close it
+      // If modal is open for this review, update its status too
       if (viewReview && viewReview._id === id) {
-         setViewReview(prev => ({ ...prev, status, isApproved: status === 'Approved' }));
+         setViewReview(prev => ({
+           ...prev,
+           status,
+           isApproved: status === 'Approved',
+           ...(status === 'Rejected' ? { showOnHome: false } : {}),
+         }));
       }
     } catch (error) {
       toast.error('An error occurred while updating the review');
@@ -133,11 +200,11 @@ export default function AdminReviewsClient({
         <div>
           <p className="admin-page-kicker">Feedback</p>
           <h1 className="admin-page-title">Reviews</h1>
-          <p className="admin-page-subtitle">Track ratings and remove low-quality feedback fast.</p>
+          <p className="admin-page-subtitle">Track ratings, feature customer reviews on Home (up to 10), and manage feedback.</p>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="admin-stat-card border-none shadow-none">
           <CardHeader className="pb-2">
             <CardDescription className="text-muted-foreground">Total Reviews</CardDescription>
@@ -147,6 +214,22 @@ export default function AdminReviewsClient({
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <MessageSquare className="size-3" />
               <span>All feedback</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="admin-stat-card border-none shadow-none">
+          <CardHeader className="pb-2">
+            <CardDescription className="text-muted-foreground">Home Showcase</CardDescription>
+            <CardTitle className="text-3xl font-bold text-primary flex items-baseline gap-1.5">
+              <span>{summary.featuredReviews ?? 0}</span>
+              <span className="text-sm font-normal text-muted-foreground">/ 10 featured</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Sparkles className="size-3 text-primary" />
+              <span>Active on Home</span>
             </div>
           </CardContent>
         </Card>
@@ -201,10 +284,11 @@ export default function AdminReviewsClient({
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-[180px]">User</TableHead>
-              <TableHead className="w-[120px]">Rating</TableHead>
+              <TableHead className="w-[110px]">Rating</TableHead>
               <TableHead>Comment</TableHead>
               <TableHead>Product</TableHead>
-              <TableHead className="w-[140px]">Date</TableHead>
+              <TableHead className="w-[140px] text-center">Home Showcase</TableHead>
+              <TableHead className="w-[130px]">Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -254,17 +338,34 @@ export default function AdminReviewsClient({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="max-w-[300px] truncate text-sm text-foreground" title={review.comment}>
+                    <p className="max-w-[280px] truncate text-sm text-foreground" title={review.comment}>
                       {review.comment || <span className="italic text-muted-foreground">No comment</span>}
                     </p>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2 max-w-[200px]">
+                    <div className="flex items-center gap-2 max-w-[180px]">
                       <Package className="size-3 shrink-0 text-muted-foreground" />
                       <span className="truncate text-xs font-medium text-muted-foreground">
                         {review.productId?.Name || 'Deleted Product'}
                       </span>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleShowOnHome(review._id, Boolean(review.showOnHome))}
+                      disabled={togglingHomeId === review._id}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-all border cursor-pointer",
+                        review.showOnHome
+                          ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 shadow-xs"
+                          : "bg-muted/40 border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                      title={review.showOnHome ? "Featured on Home (Click to remove)" : "Click to feature on Home"}
+                    >
+                      <Sparkles className={cn("size-3", review.showOnHome ? "fill-primary text-primary" : "text-muted-foreground")} />
+                      <span>{review.showOnHome ? "Featured" : "Show on Home"}</span>
+                    </button>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -317,7 +418,7 @@ export default function AdminReviewsClient({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-72 text-center py-8">
+                <TableCell colSpan={7} className="h-72 text-center py-8">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Image
                       src="/undraw_polaroid_qqdz.svg"
@@ -359,7 +460,7 @@ export default function AdminReviewsClient({
             <DialogTitle>Review Details</DialogTitle>
           </DialogHeader>
           {viewReview && (
-            <div className="space-y-6 pt-4 font-sans">
+            <div className="flex flex-col gap-5 pt-4 font-sans">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex size-10 items-center justify-center rounded-full bg-muted font-bold text-foreground">
@@ -383,6 +484,24 @@ export default function AdminReviewsClient({
                     <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none uppercase tracking-wider">Pending</Badge>
                   )}
                 </div>
+              </div>
+
+              {/* Home Page Showcase Toggle */}
+              <div className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/30 p-4">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="size-4 text-primary" />
+                    Feature on Home Showcase
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Highlight this customer testimonial on the storefront home page (max 10).
+                  </p>
+                </div>
+                <Switch
+                  checked={Boolean(viewReview.showOnHome)}
+                  disabled={togglingHomeId === viewReview._id}
+                  onCheckedChange={() => handleToggleShowOnHome(viewReview._id, Boolean(viewReview.showOnHome))}
+                />
               </div>
               
               <div className="rounded-xl bg-muted/40 p-4 border text-sm">

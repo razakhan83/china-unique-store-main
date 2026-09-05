@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { getMetadataBase } from "@/lib/siteUrl";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE_DEFAULT } from "@/lib/siteSeo";
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
@@ -20,12 +21,12 @@ const socialPreviewAlt = 'China Unique Store social preview image';
 
 export const metadata = {
   metadataBase: getMetadataBase(),
-  applicationName: 'China Unique Store',
+  applicationName: SITE_NAME,
   title: {
-    default: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
-    template: '%s | China Unique Store',
+    default: SITE_TITLE_DEFAULT,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
+  description: SITE_DESCRIPTION,
   keywords: [
     'China Unique Store',
     'China Unique Items',
@@ -46,20 +47,23 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: '/Chaina-Store-fav-icon.png?v=3', sizes: '192x192', type: 'image/png' },
-      { url: '/favicon.ico?v=3' },
+      { url: '/favicon.ico' },
+      { url: '/favicon-48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
     ],
-    shortcut: '/Chaina-Store-fav-icon.png?v=3',
+    shortcut: '/favicon.ico',
     apple: [
-      { url: '/Chaina-Store-fav-icon.png?v=3', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
     ],
   },
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
-    description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
+    title: SITE_TITLE_DEFAULT,
+    description: SITE_DESCRIPTION,
     type: 'website',
     url: 'https://www.chinauniquestore.com',
     siteName: 'China Unique Store',
@@ -77,8 +81,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'China Unique Store | Premium Kitchenware & Lifestyle Products in Pakistan',
-    description: 'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan. Fast delivery across Pakistan with Cash on Delivery.',
+    title: SITE_TITLE_DEFAULT,
+    description: SITE_DESCRIPTION,
     images: [
       {
         url: 'https://www.chinauniquestore.com/opengraph-image.png',
@@ -118,11 +122,10 @@ export default function RootLayout({ children }) {
       {
         '@type': 'OnlineStore',
         '@id': `${siteUrl}/#organization`,
-        name: 'China Unique Store',
+        name: SITE_NAME,
         url: siteUrl,
-        logo: `${siteUrl}/Chaina-Store-fav-icon.png`,
-        description:
-          'Shop premium kitchenware, innovative home decor, gadgets, and lifestyle essentials at China Unique Store Pakistan with Cash on Delivery.',
+        logo: `${siteUrl}/favicon-192.png`,
+        description: SITE_DESCRIPTION,
         address: {
           '@type': 'PostalAddress',
           addressCountry: 'PK',

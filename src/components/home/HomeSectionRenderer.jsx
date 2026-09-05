@@ -4,6 +4,7 @@ import HomeProductBanner from '@/components/home/HomeProductBanner';
 import HomeProductGridSection from '@/components/home/HomeProductGridSection';
 import HomeScrollableBannerCarousel from '@/components/home/HomeScrollableBannerCarousel';
 import HomeVideoCatalog from '@/components/home/HomeVideoCatalog';
+import HomeTestimonialsCarousel from '@/components/HomeTestimonialsCarousel';
 
 export default function HomeSectionRenderer({ sections = [] }) {
   const safeSections = Array.isArray(sections) ? sections : [];
@@ -28,6 +29,18 @@ export default function HomeSectionRenderer({ sections = [] }) {
               key={section.id}
               title={section.title}
               categories={section.categories}
+            />
+          );
+        }
+
+        if (section.type === 'CustomerReviews') {
+          if (!section.reviews || !section.reviews.length) return null;
+          return (
+            <HomeTestimonialsCarousel
+              key={section.id}
+              title={section.title}
+              description={section.description}
+              reviews={section.reviews}
             />
           );
         }

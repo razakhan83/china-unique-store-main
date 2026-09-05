@@ -24,6 +24,7 @@ import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { cn } from '@/lib/utils';
 import { PRODUCT_TAGS } from '@/lib/productTags';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
 
 const selectionChipClass = (selected) =>
   cn(
@@ -80,7 +81,6 @@ export default function EditProduct({ id }) {
   const [isUploadingOgImage, setIsUploadingOgImage] = useState(false);
   const [seoOgImageRatio, setSeoOgImageRatio] = useState('1.91:1');
   const [ogPreviewFit, setOgPreviewFit] = useState('cover'); // 'cover' | 'contain'
-  const [ogPreviewRatio, setOgPreviewRatio] = useState('landscape'); // 'landscape' | 'square'
   const ogImageFileInputRef = useRef(null);
 
   const showToast = (message, type = 'success') => {
@@ -127,7 +127,6 @@ export default function EditProduct({ id }) {
           setSeoOgImage(p.seoOgImage || '');
           const loadedRatio = p.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1';
           setSeoOgImageRatio(loadedRatio);
-          setOgPreviewRatio(loadedRatio === '1:1' ? 'square' : 'landscape');
           setPrice(p.Price || '');
           setCompareAtPrice(p.compareAtPrice ?? '');
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
@@ -466,7 +465,12 @@ export default function EditProduct({ id }) {
     (Price
       ? `Price: Rs. ${Number(Price).toLocaleString('en-PK')}. ${trimmedSeoDescription || plainDescription || 'Buy online from China Unique Store.'}`
       : trimmedSeoDescription || plainDescription || 'Buy online from China Unique Store.');
-  const socialPreviewImage = seoOgImage.trim() || images?.[0]?.url || '/opengraph-image.png';
+  const socialPreviewImage = getProductSocialShareImage(
+    seoOgImage.trim() || images?.[0]?.url || '/opengraph-image.png',
+    seoOgImageRatio,
+    ogPreviewFit
+  );
+  const isSquarePreview = seoOgImageRatio === '1:1';
   const seoChecks = [
     { label: 'SEO title', complete: trimmedSeoTitle.length >= 10 },
     { label: 'Meta description', complete: trimmedSeoDescription.length >= 50 },
@@ -1267,10 +1271,7 @@ export default function EditProduct({ id }) {
                     <div className="inline-flex rounded-lg border border-border bg-background p-0.5 shadow-sm">
                       <button
                         type="button"
-                        onClick={() => {
-                          setSeoOgImageRatio('1.91:1');
-                          setOgPreviewRatio('landscape');
-                        }}
+                        onClick={() => setSeoOgImageRatio('1.91:1')}
                         className={cn(
                           "px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
                           seoOgImageRatio === '1.91:1' ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
@@ -1281,10 +1282,7 @@ export default function EditProduct({ id }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setSeoOgImageRatio('1:1');
-                          setOgPreviewRatio('square');
-                        }}
+                        onClick={() => setSeoOgImageRatio('1:1')}
                         className={cn(
                           "px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
                           seoOgImageRatio === '1:1' ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
@@ -1298,17 +1296,20 @@ export default function EditProduct({ id }) {
                 </div>
 
                 <div className="max-w-md mx-auto rounded-xl overflow-hidden border border-emerald-950/20 dark:border-emerald-900/50 shadow-md bg-[#0b2b24] text-white">
-                  <div className={cn(
-                    "relative w-full overflow-hidden transition-all duration-200 border-b border-emerald-900/20",
-                    ogPreviewRatio === 'landscape' ? "aspect-[1.91/1]" : "aspect-square",
+                  <div
+                    className={cn(
+                    "relative w-full overflow-hidden border-b border-emerald-900/20",
+                    isSquarePreview ? "aspect-square" : "aspect-[1.91/1]",
                     ogPreviewFit === 'contain' ? "bg-white p-3 flex items-center justify-center" : "bg-neutral-900"
-                  )}>
+                  )}
+                    style={{ aspectRatio: isSquarePreview ? '1 / 1' : '1.91 / 1' }}
+                  >
                     {socialPreviewImage ? (
                       <img
                         src={socialPreviewImage}
                         alt={socialPreviewTitle}
                         className={cn(
-                          "w-full h-full transition-all",
+                          "size-full",
                           ogPreviewFit === 'cover' ? "object-cover" : "object-contain max-h-full max-w-full"
                         )}
                       />
@@ -1319,7 +1320,7 @@ export default function EditProduct({ id }) {
                       </div>
                     )}
                     <span className="absolute top-2 right-2 rounded-md bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white/90">
-                      {ogPreviewRatio === 'landscape' ? '1200 × 630' : '1080 × 1080'}
+                      {isSquarePreview ? '1080 × 1080' : '1200 × 630'}
                     </span>
                   </div>
                   <div className="p-3 space-y-1 bg-[#0b2b24]">

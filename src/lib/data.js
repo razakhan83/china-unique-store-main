@@ -1308,11 +1308,38 @@ export async function getStorefrontHomePage() {
             : null;
         }
 
+        if (section.type === 'CustomerReviews') {
+          return {
+            ...section,
+          };
+        }
+
         return null;
       })
       .filter(Boolean);
 
-    return { sections };
+    // If CustomerReviews section is included, load testimonials
+    const hasReviewsSection = sections.some((s) => s.type === 'CustomerReviews');
+    let testimonials = [];
+    if (hasReviewsSection) {
+      const reviewSection = sections.find((s) => s.type === 'CustomerReviews');
+      testimonials = await getStorefrontTestimonials(reviewSection?.reviewLimit || 10).catch(() => []);
+    }
+
+    const finalSections = sections
+      .map((section) => {
+        if (section.type === 'CustomerReviews') {
+          if (!testimonials || testimonials.length === 0) return null;
+          return {
+            ...section,
+            reviews: testimonials,
+          };
+        }
+        return section;
+      })
+      .filter(Boolean);
+
+    return { sections: finalSections };
   } catch (error) {
     if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn('[BUILD] MongoDB connection failed while building homepage, returning empty sections.');
@@ -1458,10 +1485,43 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   };
 }
 
+export async function getStorefrontTestimonials(limit = 10) {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('all-reviews', 'storefront-testimonials', 'home-page');
+
+  await mongooseConnect();
+  const Review = (await import('@/models/Review')).default;
+  const safeLimit = Math.min(10, Math.max(1, Number(limit) || 10));
+
+  const reviews = await Review.find({
+    showOnHome: true,
+    $or: [{ status: 'Approved' }, { isApproved: true }],
+    comment: { $exists: true, $nin: [null, ''] },
+  })
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .limit(safeLimit)
+    .populate({ path: 'productId', select: 'Name slug Images' })
+    .lean();
+
+  return reviews
+    .map((review) => ({
+      _id: review._id.toString(),
+      userName: review.userName || 'Customer',
+      rating: Number(review.rating || 5),
+      comment: String(review.comment || '').trim(),
+      productName: review.productId?.Name || '',
+      productSlug: review.productId?.slug || review.productId?._id?.toString?.() || '',
+      productImage: review.productId?.Images?.[0]?.url || '',
+      createdAt: review.createdAt ? new Date(review.createdAt).toISOString() : null,
+    }))
+    .filter((review) => review.comment.length > 0);
+}
+
 export async function getApprovedReviews(productId) {
   'use cache';
   cacheLife('foreverish');
-  cacheTag(`reviews-${productId}`);
+  cacheTag(`reviews-${productId}`, 'all-reviews');
 
   const safeProductId = String(productId || '').trim();
   if (!safeProductId) return [];
@@ -2213,9 +2273,9 @@ export async function getAdminReviewsPage({
 
   const skip = (safePage - 1) * safeLimit;
 
-  const [items, total, totalReviews, recentReviews, ratings] = await Promise.all([
+  const [items, total, totalReviews, recentReviews, featuredReviews, ratings] = await Promise.all([
     Review.find(query)
-      .populate('productId', 'Name slug')
+      .populate('productId', 'Name slug Images')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
@@ -2223,6 +2283,7 @@ export async function getAdminReviewsPage({
     Review.countDocuments(query),
     Review.countDocuments(),
     Review.countDocuments({ createdAt: { $gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
+    Review.countDocuments({ showOnHome: true }),
     Review.aggregate([{ $group: { _id: null, average: { $avg: '$rating' } } }]),
   ]);
 
@@ -2230,6 +2291,7 @@ export async function getAdminReviewsPage({
     items: items.map((review) => ({
       ...review,
       _id: review._id.toString(),
+      showOnHome: Boolean(review.showOnHome),
       productId: review.productId
         ? {
             ...review.productId,
@@ -2249,6 +2311,7 @@ export async function getAdminReviewsPage({
     summary: {
       totalReviews,
       recentReviews,
+      featuredReviews,
       averageRating: Number(ratings[0]?.average || 0),
     },
   };

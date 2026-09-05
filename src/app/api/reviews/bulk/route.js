@@ -102,6 +102,8 @@ export async function POST(req) {
 
       revalidateTag(`reviews-${resolvedProductId.toString()}`);
       revalidateTag(`reviews-${productId}`);
+      revalidateTag('all-reviews');
+      revalidateTag('storefront-testimonials');
 
       results.push(newReview);
     }

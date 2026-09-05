@@ -41,35 +41,108 @@ export async function PATCH(req) {
   try {
     const auth = await requireApiAdmin({ mutation: true });
     if (auth.error) return auth.error;
-    const { id, status } = await req.json();
+    const body = await req.json();
+    const { id, status, showOnHome } = body;
 
-    if (!id || !status) {
-      return NextResponse.json({ success: false, error: 'Review ID and status are required' }, { status: 400 });
-    }
-
-    if (!['Approved', 'Rejected'].includes(status)) {
-      return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
     }
 
     await mongooseConnect();
-    const result = await Review.findByIdAndUpdate(
-      id,
-      {
-        status,
-        isApproved: status === 'Approved',
-      },
-      { new: true }
-    );
 
-    if (!result) {
-      return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 });
+    // Handle showOnHome toggle
+    if (typeof showOnHome === 'boolean') {
+      if (showOnHome) {
+        const featuredCount = await Review.countDocuments({ showOnHome: true, _id: { $ne: id } });
+        if (featuredCount >= 10) {
+          return NextResponse.json(
+            { success: false, error: 'Maximum 10 reviews can be featured on Home. Please remove another review first.' },
+            { status: 400 }
+          );
+        }
+      }
+
+      const updateData = { showOnHome };
+      // If featuring on home, automatically ensure review is approved
+      if (showOnHome) {
+        updateData.status = 'Approved';
+        updateData.isApproved = true;
+      }
+
+      const result = await Review.findByIdAndUpdate(id, updateData, { new: true });
+      if (!result) {
+        return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 });
+      }
+
+      revalidateTag(`reviews-${result.productId?.toString?.() || result.productId}`);
+      revalidateTag('all-reviews');
+      revalidateTag('storefront-testimonials');
+      revalidateTag('home-page');
+
+      return NextResponse.json({
+        success: true,
+        message: showOnHome ? 'Review featured on Home page' : 'Review removed from Home page',
+        data: { _id: result._id.toString(), showOnHome: result.showOnHome, status: result.status },
+      });
     }
 
-    revalidateTag(`reviews-${result.productId?.toString?.() || result.productId}`);
+    // Handle status change
+    if (status) {
+      if (!['Approved', 'Rejected'].includes(status)) {
+        return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
+      }
 
-    return NextResponse.json({ success: true, message: `Review ${status.toLowerCase()} successfully` });
+      const updatePayload = {
+        status,
+        isApproved: status === 'Approved',
+      };
+      if (status === 'Rejected') {
+        updatePayload.showOnHome = false;
+      }
+
+      const result = await Review.findByIdAndUpdate(id, updatePayload, { new: true });
+
+      if (!result) {
+        return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 });
+      }
+
+      revalidateTag(`reviews-${result.productId?.toString?.() || result.productId}`);
+      revalidateTag('all-reviews');
+      revalidateTag('storefront-testimonials');
+      revalidateTag('home-page');
+
+      return NextResponse.json({ success: true, message: `Review ${status.toLowerCase()} successfully` });
+    }
+
+    return NextResponse.json({ success: false, error: 'No valid action provided' }, { status: 400 });
   } catch (error) {
     console.error('Admin reviews PATCH error:', error);
     return NextResponse.json({ success: false, error: 'Failed to update review' }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const auth = await requireApiAdmin({ mutation: true });
+    if (auth.error) return auth.error;
+
+    await mongooseConnect();
+    const Product = (await import('@/models/Product')).default;
+    const deleted = await Review.deleteMany({});
+    await Product.updateMany({}, { $set: { averageRating: 0, reviewCount: 0 } });
+
+    revalidateTag('all-reviews');
+    revalidateTag('storefront-testimonials');
+    revalidateTag('products');
+    revalidateTag('home-page');
+
+    return NextResponse.json({
+      success: true,
+      message: 'All reviews were removed. The review system is ready for new submissions.',
+      deletedCount: deleted.deletedCount || 0,
+    });
+  } catch (error) {
+    console.error('Admin reviews DELETE error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to delete reviews' }, { status: 500 });
   }
 }

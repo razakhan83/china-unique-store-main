@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 
 function MobileNavButton({
   active = false,
@@ -113,6 +114,7 @@ export default function MobileBottomNav({
 }) {
   const { data: session } = useSession();
   const router = useRouter();
+  const [accountLoading, setAccountLoading] = useState(false);
   const { setIsCartOpen = () => {}, setIsSidebarOpen = () => {} } = useCartActions() || {};
   const { isCartOpen: isCartOpenCtx = false, isSidebarOpen: isSidebarOpenCtx = false } = useCartUi() || {};
   const isSidebarOpen = isSidebarOpenProp ?? isSidebarOpenCtx;
@@ -120,7 +122,7 @@ export default function MobileBottomNav({
 
   const isScrollHidePage = pathname === '/' || pathname === '/products' || pathname.startsWith('/products');
   const isHiddenOnScroll = isScrollHidePage && isNavbarHidden;
-  const isHidden = isSidebarOpen || isCartOpen || isHiddenOnScroll;
+  const isHidden = isSidebarOpen || isCartOpen || (isHiddenOnScroll && !isSearchOpen);
 
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const mobileDrawerReservedLane = 'calc(env(safe-area-inset-bottom) + var(--mobile-bottom-nav-offset))';
@@ -135,8 +137,17 @@ export default function MobileBottomNav({
   const accountPanelOpen = session ? accountOpen : isAuthOpen;
 
   useEffect(() => {
+    if (pathname?.startsWith('/auth/signin')) {
+      setAccountLoading(false);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     if (session?.user?.email) {
       router.prefetch('/orders');
+      router.prefetch('/auth/signin');
+    } else {
+      router.prefetch('/auth/signin');
     }
   }, [router, session?.user?.email]);
 
@@ -166,6 +177,7 @@ export default function MobileBottomNav({
       return;
     }
 
+    setAccountLoading(true);
     onAuthOpenChange?.(true);
   }
 
@@ -183,7 +195,7 @@ export default function MobileBottomNav({
           "fixed inset-x-0 bottom-0 md:hidden bg-background border-t border-border/70 shadow-[0_-8px_22px_rgba(0,0,0,0.05)] transition-all duration-300 ease-in-out",
           isHidden ? "translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100 pointer-events-auto"
         )}
-        style={{ zIndex: 40 }}
+        style={{ zIndex: 350 }}
       >
         <div className="mx-auto w-full max-w-xl">
           <nav
@@ -237,7 +249,13 @@ export default function MobileBottomNav({
                 openAccountPanel();
               }}
               active={accountPanelOpen || pathname.startsWith('/settings')}
-              iconSwap={accountPanelOpen ? <X className="size-5" strokeWidth={2.5} /> : undefined}
+              iconSwap={
+                accountLoading && !session
+                  ? <Spinner className="size-5" />
+                  : accountPanelOpen
+                    ? <X className="size-5" strokeWidth={2.5} />
+                    : undefined
+              }
             />
           </nav>
         </div>

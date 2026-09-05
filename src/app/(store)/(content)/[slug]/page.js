@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
+import { pageMetadata } from '@/lib/siteSeo';
 
 export async function generateStaticParams() {
   const settings = await getStoreSettings();
@@ -18,10 +19,10 @@ export async function generateMetadata({ params }) {
     return {};
   }
 
-  return {
+  return pageMetadata({
     title: page.seoTitle || page.title || 'Store Page',
     description: page.seoDescription || page.description || '',
-  };
+  });
 }
 
 export default async function DynamicCustomPage({ params }) {

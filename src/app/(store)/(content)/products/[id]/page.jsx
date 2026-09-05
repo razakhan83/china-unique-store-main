@@ -32,7 +32,8 @@ import { getProductCategories } from '@/lib/productCategories';
 import { getProductTagById } from '@/lib/productTags';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
-import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
+import { metadataTitle } from '@/lib/siteSeo';
+import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
 import { cn } from '@/lib/utils';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
@@ -64,7 +65,7 @@ function getProductDescription(product) {
 }
 
 function getProductTitle(product) {
-  return product.seoTitle || product.Name;
+  return metadataTitle(product.seoTitle || product.Name);
 }
 
 function getCanonicalUrl(product) {
@@ -100,14 +101,7 @@ function getShareDescription(product) {
 function getPrimaryImage(product) {
   const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
   if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
-  const isPng = rawUrl.toLowerCase().includes('.png') || rawUrl.toLowerCase().includes('/png');
-  const isSquare = product.seoOgImageRatio === '1:1';
-  
-  const preset = isSquare
-    ? (isPng ? CLOUDINARY_IMAGE_PRESETS.socialShareSquarePad : CLOUDINARY_IMAGE_PRESETS.socialShareSquare)
-    : (isPng ? CLOUDINARY_IMAGE_PRESETS.socialSharePad : CLOUDINARY_IMAGE_PRESETS.socialShare);
-
-  return optimizeCloudinaryUrl(rawUrl, preset);
+  return getProductSocialShareImage(rawUrl, product.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1');
 }
 
 function getProductJsonLd({ product, reviewSummary = null }) {
@@ -253,7 +247,7 @@ export async function generateMetadata({ params }) {
   const reviewSummary = await getProductReviewSummarySafe(product._id);
   const categories = getProductCategories(product);
   const productTitle = getProductTitle(product);
-  const socialTitle = product.seoOgTitle?.trim() || productTitle;
+  const socialTitle = metadataTitle(product.seoOgTitle?.trim() || productTitle);
   const productUrl = getCanonicalUrl(product);
   const productImage = getPrimaryImage(product);
   const shareDescription = getShareDescription(product);

@@ -1,131 +1,156 @@
 /**
- * Conversion-focused FAQs for China Unique Store
- * Bilingual-friendly, reassuring, and direct.
+ * Official FAQs for China Unique Store
+ * Accurate, reassuring, and concise store policies.
  */
 
 export const HOME_FAQS = [
   {
     id: 'h1',
-    question: 'Do you offer Cash on Delivery (COD) in Pakistan?',
-    answer: 'Yes, Cash on Delivery (COD) is available nationwide! You only pay the rider when your parcel is safely delivered to your doorstep. Bank transfer options are also available.',
+    question: 'How long does delivery take across Pakistan?',
+    answer:
+      'Orders are processed and dispatched within 24 hours. Major hubs (Karachi, Lahore, Islamabad) receive deliveries in 2 to 3 business days, while other cities take 3 to 5 business days.',
   },
   {
     id: 'h2',
-    question: 'How long does shipping and delivery take?',
-    answer: 'We deliver all over Pakistan within 3 to 6 working days. Karachi orders are super fast and usually arrive in 1 to 2 working days.',
+    question: 'What if the item arrives broken or defective?',
+    answer:
+      'Simply record a quick unboxing video or take clear photos and share them with us on WhatsApp within 3 to 5 days. Once verified, we will dispatch a brand-new replacement unit at zero extra charge.',
   },
   {
     id: 'h3',
-    question: 'Can I check my parcel before paying the rider?',
-    answer: 'Yes! We support a "Parcel Open Policy". You can ask the delivery rider to let you check the contents of your box before paying, ensuring 100% peace of mind.',
+    question: 'Do I need an account to place an order?',
+    answer:
+      'No. We offer a 1-click guest checkout. Simply add your product to the cart, provide your contact number and shipping address, and confirm your order instantly.',
   },
   {
     id: 'h4',
-    question: 'What is your damage or replacement guarantee?',
-    answer: 'We offer a 7-day exchange and replacement guarantee. If any item is damaged during delivery or doesn\'t work, just message us on WhatsApp with a photo/video within 48 hours and we will send a new one for free!',
+    question: 'Will I receive the exact same product shown on the website?',
+    answer:
+      'Absolutely. All product images and specifications reflect the actual physical stock we dispatch. What you see on the store is exactly what arrives at your doorstep.',
   },
   {
     id: 'h5',
-    question: 'Are your imported products authentic and tested?',
-    answer: 'Yes, absolutely. We source directly from verified manufacturers and inspect every product for quality and functionality before dispatching it to you.',
+    question: 'How can I track my parcel once ordered?',
+    answer:
+      'As soon as your parcel is handed over to the courier, an automated tracking ID and link are sent to your WhatsApp/SMS for real-time tracking. Furthermore, by simply signing in to your account on our website, you can view your complete order history, live parcel statuses, and past invoices in one place.',
   },
-  {
-    id: 'h6',
-    question: 'How do unique gadgets like the Mechanical Calculator or Keychains work?',
-    answer: 'Our fun gadgets (like the clicky Keyboard Keychain or Mechanical Switch Calculator) come ready to use out of the box with batteries included/pre-installed. They make excellent gifts and satisfying desk toys!',
-  },
-  {
-    id: 'h7',
-    question: 'Can I cancel or make changes to my order?',
-    answer: 'Yes, you can modify or cancel your order via WhatsApp before it is dispatched (usually within 12 hours). Once shipped, orders cannot be changed.',
-  }
 ];
 
 export const CATEGORIES = [
   { id: 'delivery', label: 'Shipping & Delivery', icon: 'Truck' },
   { id: 'orders', label: 'Orders & Payments', icon: 'Wallet' },
-  { id: 'returns', label: 'Returns & Guarantee', icon: 'ShieldCheck' },
-  { id: 'products', label: 'Product Support', icon: 'HelpCircle' }
+  { id: 'returns', label: 'Returns & Support', icon: 'ShieldCheck' },
 ];
 
 export const FULL_FAQS = [
-  // Category 1: Shipping & Delivery
+  // ── 1. Shipping & Delivery ──
   {
     id: 'f1',
     categoryId: 'delivery',
-    question: 'What are your delivery charges across Pakistan?',
-    answer: 'Delivery is Rs. 150 for Karachi and Rs. 250 for all other cities in Pakistan. The best part? Shipping is 100% FREE on all orders of Rs. 5,000 or above!',
+    question: 'How long does delivery take across Pakistan?',
+    answer:
+      'Orders are processed and dispatched within 24 hours. Major hubs (Karachi, Lahore, Islamabad) receive deliveries in 2 to 3 business days, while other cities take 3 to 5 business days.',
   },
   {
     id: 'f2',
     categoryId: 'delivery',
-    question: 'Which courier services do you use?',
-    answer: 'We partner with top logistics networks in Pakistan, including Leopard, Call Courier, and Trax, to ensure secure, tracked, and timely shipments.',
+    question: 'What are your delivery charges across Pakistan?',
+    answer:
+      'We offer standard flat-rate delivery nationwide. Any ongoing free shipping promotions or promotional discount codes will be applied automatically at checkout.',
   },
   {
     id: 'f3',
     categoryId: 'delivery',
-    question: 'How do I track my order once it is shipped?',
-    answer: 'Once your parcel is dispatched, you will receive a tracking number and tracking link via WhatsApp/SMS. If you logged in before buying, you can also view it in your dashboard under "My Orders".',
+    question: 'Which courier services do you use?',
+    answer:
+      'We partner with Pakistan’s leading logistics networks (including TCS, Leopards, and PostEx) to ensure fast and secure parcel transit.',
   },
-
-  // Category 2: Orders & Payments
   {
     id: 'f4',
-    categoryId: 'orders',
-    question: 'How do I place an order on the website?',
-    answer: 'Simply browse our unique collections, click "Add to Cart" on the items you want, click on the cart icon, and proceed to checkout. Fill in your delivery details, select your payment option, and place order. It takes less than 2 minutes!',
+    categoryId: 'delivery',
+    question: 'How do I track my order once it is shipped?',
+    answer:
+      'As soon as your parcel is handed over to the courier, an automated tracking ID and link are sent to your WhatsApp/SMS for real-time tracking. Furthermore, by simply signing in to your account on our website, you can view your complete order history, live parcel statuses, and past invoices in one place.',
   },
   {
     id: 'f5',
-    categoryId: 'orders',
-    question: 'Can I pay online instead of COD?',
-    answer: 'Yes! We support Direct Bank Transfer (UBL) in addition to Cash on Delivery. Select "Bank Deposit" at checkout to see our bank account details and submit your payment screenshot via WhatsApp.',
+    categoryId: 'delivery',
+    question: 'What happens if I miss my delivery call?',
+    answer:
+      'Courier riders attempt delivery up to two times. If you miss the first attempt, the rider will contact you again on the next working day. You can also message our support team to reschedule the delivery time.',
   },
+
+  // ── 2. Orders & Payments ──
   {
     id: 'f6',
     categoryId: 'orders',
-    question: 'Do you offer bulk or wholesale rates for retailers?',
-    answer: 'Yes, we supply retail stores, resellers, and corporate clients across Pakistan. Reach out to us directly on WhatsApp with your required product quantities for exclusive B2B wholesale pricing.',
+    question: 'Do I need an account to place an order?',
+    answer:
+      'No. We offer a 1-click guest checkout. Simply add your product to the cart, provide your contact number and shipping address, and confirm your order instantly.',
   },
-
-  // Category 3: Returns & Guarantee
   {
     id: 'f7',
-    categoryId: 'returns',
-    question: 'How do I claim my 7-day replacement or refund?',
-    answer: 'Claims are fast and stress-free. Message our WhatsApp support with your Order ID and a clear photo/video showing the issue. Once approved, we will ship a replacement or issue store credit immediately.',
+    categoryId: 'orders',
+    question: 'Do you confirm orders before dispatch?',
+    answer:
+      'Yes. To prevent fake bookings and wrong addresses, our support team contacts every customer via WhatsApp or phone call for quick verbal/text confirmation before releasing the shipment.',
   },
   {
     id: 'f8',
-    categoryId: 'returns',
-    question: 'Are there any return shipping charges?',
-    answer: 'If the item is damaged, defective, or incorrect on arrival, we bear all shipping costs. For standard exchanges (change of mind), customers are responsible for shipping costs to send the item back.',
+    categoryId: 'orders',
+    question: 'Can I cancel or edit my order details?',
+    answer:
+      'You can modify your delivery address, phone number, or cancel your order anytime before dispatch by reaching out to our WhatsApp customer team with your Order ID.',
   },
   {
     id: 'f9',
-    categoryId: 'returns',
-    question: 'How long does a refund take to process?',
-    answer: 'Refund approvals take 24–48 hours once requested. Once approved, refunds are processed via Bank Transfer, Easypaisa, or JazzCash within 3 to 5 working days.',
+    categoryId: 'orders',
+    question: 'Are there any hidden taxes or advance charges?',
+    answer:
+      'None. The total amount displayed on your checkout invoice is the exact final price you hand over to the delivery rider.',
   },
-
-  // Category 4: Product Support
   {
     id: 'f10',
-    categoryId: 'products',
-    question: 'How do your mechanical keychains and solar items work?',
-    answer: 'All electronic or interactive toys are tested before shipping. Keychains and calculators include pre-installed long-lasting batteries. Solar helicopter diffusers operate automatically under direct sunlight without any batteries or charging.',
+    categoryId: 'orders',
+    question: 'Will I receive the exact same product shown on the website?',
+    answer:
+      'Absolutely. All product images and specifications reflect the actual physical stock we dispatch. What you see on the store is exactly what arrives at your doorstep.',
   },
+
+  // ── 3. Returns, Replacements & Support ──
   {
     id: 'f11',
-    categoryId: 'products',
-    question: 'What are your customer support contact hours?',
-    answer: 'Our WhatsApp support team is active from 10:00 AM to 10:00 PM, Monday through Saturday. We generally respond to queries within a few minutes during operating hours!',
+    categoryId: 'returns',
+    question: 'What if the item arrives broken or defective?',
+    answer:
+      'Simply record a quick unboxing video or take clear photos and share them with us on WhatsApp within 3 to 5 days. Once verified, we will dispatch a brand-new replacement unit at zero extra charge.',
   },
   {
     id: 'f12',
-    categoryId: 'products',
-    question: 'Do you have a physical shop in Karachi?',
-    answer: 'Yes, you can visit our shop at Gul Tijarah Mall, Liaquatabad, Karachi to see and purchase our unique gadgets, kitchenware, and lifestyle items in person.',
-  }
+    categoryId: 'returns',
+    question: 'What is your claim window for damaged products?',
+    answer:
+      'You must report any transit defect, crack, or missing part within 3 to 5 days of delivery along with photographic or video proof.',
+  },
+  {
+    id: 'f13',
+    categoryId: 'returns',
+    question: 'What qualifies as valid proof for a replacement?',
+    answer:
+      'A short video showing the parcel unboxing or clear photographs highlighting the flaw alongside the packaging box.',
+  },
+  {
+    id: 'f14',
+    categoryId: 'returns',
+    question: 'Can I get a cash refund instead of a replacement?',
+    answer:
+      'Our standard procedure is a direct replacement. If the exact product is out of stock or permanently unavailable, we issue a monetary refund directly to your Bank Account, JazzCash, or Easypaisa within 3 to 5 working days.',
+  },
+  {
+    id: 'f15',
+    categoryId: 'returns',
+    question: 'How do I contact customer support?',
+    answer:
+      'Our team is active Monday through Saturday via WhatsApp. You can message our official WhatsApp line directly for instant order tracking and claim inquiries.',
+  },
 ];

@@ -39,6 +39,11 @@ const ReviewSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Legacy field, kept for backward compatibility
     },
+    showOnHome: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -46,6 +51,7 @@ const ReviewSchema = new mongoose.Schema(
 );
 
 ReviewSchema.index({ productId: 1, isApproved: 1, createdAt: -1 });
+ReviewSchema.index({ showOnHome: 1, isApproved: 1, createdAt: -1 });
 ReviewSchema.index({ userId: 1, createdAt: -1 });
 ReviewSchema.index({ createdAt: -1 });
 
@@ -54,8 +60,9 @@ const cachedReview = mongoose.models.Review;
 if (cachedReview) {
   const hasImages = !!cachedReview.schema.paths.images;
   const hasStatus = !!cachedReview.schema.paths.status;
+  const hasShowOnHome = !!cachedReview.schema.paths.showOnHome;
   
-  if (!hasImages || !hasStatus) {
+  if (!hasImages || !hasStatus || !hasShowOnHome) {
     delete mongoose.models.Review;
   }
 }

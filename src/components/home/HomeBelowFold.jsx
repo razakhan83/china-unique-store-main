@@ -2,14 +2,12 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import TiltedProductMarquee from '@/components/TiltedProductMarquee';
+import HomeFaqSection from '@/components/HomeFaqSection';
 import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
 const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
   loading: () => <div className="h-48 w-full bg-background" aria-hidden="true" />,
-});
-const HomeFaqSection = dynamic(() => import('@/components/HomeFaqSection'), {
-  loading: () => <div className="h-64 w-full bg-background" aria-hidden="true" />,
 });
 
 export default async function HomeBelowFold() {
@@ -43,9 +41,9 @@ export default async function HomeBelowFold() {
             href={whatsappLink || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#25D366] px-8 py-3.5 text-base font-semibold text-white shadow-sm border border-black/10 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#20ba59] active:translate-y-0 active:scale-[0.98]"
+            className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-[15px] font-semibold text-primary-foreground shadow-none transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
-            <WhatsAppIcon className="size-5 shrink-0 transition-transform duration-200 group-hover:scale-105" />
+            <WhatsAppIcon className="size-4 sm:size-4.5 shrink-0 transition-transform duration-200 group-hover:scale-105" />
             Chat on WhatsApp
           </a>
         </div>

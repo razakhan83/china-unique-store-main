@@ -134,7 +134,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                             <div className="min-h-0">
                               <Card
                                 size="sm"
-                                className="gap-0 border border-border/50 bg-card hover:border-border/80 py-0 shadow-2xs transition-[background-color,border-color] duration-150"
+                                className="gap-0 border border-border/50 bg-card hover:border-border/80 py-0 shadow-none transition-[background-color,border-color] duration-150"
                               >
                                 <CardContent className="px-2.5 py-2">
                                   <div className="flex items-stretch gap-2.5">
@@ -194,7 +194,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                                           variant="ghost"
                                           size="icon-sm"
                                           onClick={() => scheduleRemove(item)}
-                                          className="relative size-8 sm:size-7 rounded-[var(--radius-lg)] text-muted-foreground transition-[transform,color] duration-150 hover:text-destructive active:scale-[0.96] [&_svg]:size-3.5 after:absolute after:-inset-1.5 after:content-['']"
+                                          className="relative size-8 sm:size-7 rounded-[var(--radius-lg)] text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-950/30 transition-[transform,color,background-color] duration-150 active:scale-[0.96] [&_svg]:size-3.5 after:absolute after:-inset-1.5 after:content-['']"
                                           aria-label="Remove item"
                                         >
                                           <Trash2 />
@@ -251,7 +251,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
 
           {cart.length ? (
             <SidebarFooter className="gap-2.5 border-t border-sidebar-border bg-background px-4 pt-3.5 pb-[calc(env(safe-area-inset-bottom,0.75rem)+0.75rem)] md:px-5 md:pt-4 md:pb-5">
-              <Card size="sm" className="gap-0 border border-sidebar-border/80 bg-muted/30 py-0 shadow-[inset_0_1px_0_color-mix(in_oklab,white_72%,transparent)]">
+              <Card size="sm" className="gap-0 border border-sidebar-border/80 bg-muted/30 py-0 shadow-none">
                 <CardHeader className="flex flex-row items-center justify-between gap-3 px-3.5 py-2.5 md:px-4 md:py-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Subtotal</CardTitle>
                   <p className="text-lg font-bold text-foreground tabular-nums">

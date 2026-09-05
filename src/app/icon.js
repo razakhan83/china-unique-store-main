@@ -1,44 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { getStoreSettings } from '@/lib/data';
+export const size = {
+  width: 48,
+  height: 48,
+};
 
-async function readFallbackFavicon() {
-  const faviconPath = path.join(process.cwd(), 'src', 'app', 'favicon.ico');
-  const bytes = await readFile(faviconPath);
+export const contentType = 'image/png';
+
+export default async function Icon() {
+  const iconPath = path.join(process.cwd(), 'public', 'favicon-48.png');
+  const bytes = await readFile(iconPath);
 
   return new Response(bytes, {
     headers: {
-      'Content-Type': 'image/x-icon',
-      'Cache-Control': 'public, max-age=0, must-revalidate',
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=86400, must-revalidate',
     },
   });
-}
-
-export default async function Icon() {
-  const settings = await getStoreSettings();
-  const faviconUrl = String(settings?.faviconUrl || '').trim();
-
-  if (!faviconUrl) {
-    return readFallbackFavicon();
-  }
-
-  try {
-    const response = await fetch(faviconUrl, { cache: 'no-store' });
-    if (!response.ok) {
-      return readFallbackFavicon();
-    }
-
-    const contentType = response.headers.get('content-type') || 'image/png';
-    const bytes = await response.arrayBuffer();
-
-    return new Response(bytes, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=0, must-revalidate',
-      },
-    });
-  } catch {
-    return readFallbackFavicon();
-  }
 }

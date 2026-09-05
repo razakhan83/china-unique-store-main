@@ -2,14 +2,15 @@ import { cacheLife, cacheTag } from 'next/cache';
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
 import { notFound } from 'next/navigation';
+import { pageMetadata } from '@/lib/siteSeo';
 
 export async function generateMetadata() {
   const page = await getStoreCustomPageBySlug('privacy-policy');
 
-  return {
+  return pageMetadata({
     title: page?.seoTitle || page?.title || 'Privacy Policy',
     description: page?.seoDescription || page?.description || '',
-  };
+  });
 }
 
 export default async function PrivacyPolicyPage() {

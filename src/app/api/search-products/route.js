@@ -12,9 +12,42 @@ export async function GET(req) {
         const { searchParams } = new URL(req.url);
         const query = String(searchParams.get('q') || '').trim();
         const limit = Math.min(12, Math.max(1, Number(searchParams.get('limit')) || 5));
+        const suggest = searchParams.get('suggest') === '1';
 
-        if (!query) {
-            return NextResponse.json({ success: true, data: [] });
+        if (suggest || !query) {
+            const [categories, trending] = await Promise.all([
+                Category.find({}, 'name slug').sort({ sortOrder: 1, name: 1 }).limit(8).lean(),
+                Product.find(
+                    { showOnStore: { $ne: false }, isBestSelling: true },
+                    'Name slug _id'
+                )
+                    .sort({ createdAt: -1 })
+                    .limit(6)
+                    .lean(),
+            ]);
+
+            const trendingFallback = trending.length
+                ? trending
+                : await Product.find({ showOnStore: { $ne: false } }, 'Name slug _id')
+                    .sort({ createdAt: -1 })
+                    .limit(6)
+                    .lean();
+
+            return NextResponse.json({
+                success: true,
+                data: [],
+                categories: categories.map((category) => ({
+                    id: category._id.toString(),
+                    slug: category.slug || category.name,
+                    label: category.name,
+                    name: category.name,
+                })),
+                trending: trendingFallback.map((product) => ({
+                    ...product,
+                    _id: product._id.toString(),
+                    id: product.slug || product._id.toString(),
+                })),
+            });
         }
 
         const searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');

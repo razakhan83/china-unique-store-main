@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useId, useMemo, useState } from 'react';
 import {
   closestCenter,
@@ -42,6 +43,7 @@ import {
   Flame,
   Trophy,
   Sparkles,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -90,6 +92,11 @@ const SECTION_TEMPLATES = [
     type: 'HeroSlider',
     label: 'Hero Slider',
     icon: Images,
+  },
+  {
+    type: 'CustomerReviews',
+    label: 'Customer Reviews (Testimonials)',
+    icon: MessageSquareQuote,
   },
   {
     type: 'ProductCollection',
@@ -241,6 +248,17 @@ function createSection(template, index = 0) {
     };
   }
 
+  if (type === 'CustomerReviews') {
+    return {
+      id: createSectionId(type, index),
+      type,
+      title: 'What Customers Say',
+      description: 'Real reviews from verified shoppers',
+      reviewLimit: 10,
+      isEnabled: true,
+    };
+  }
+
   return {
     id: createSectionId(type, index),
     type,
@@ -249,6 +267,7 @@ function createSection(template, index = 0) {
     collectionKey: template?.collectionKey || '',
     categoryId: '',
     productLimit: 8,
+    reviewLimit: 10,
     isEnabled: true,
   };
 }
@@ -261,6 +280,7 @@ function normalizeSections(input = []) {
     id: cleanText(section.id) || createSectionId(section.type, index),
     title: section.title || '',
     description: section.description || '',
+    reviewLimit: Math.min(10, Math.max(1, Number(section.reviewLimit || 10))),
     desktopImages: Array.isArray(section.desktopImages)
       ? [section.desktopImages[0], section.desktopImages[1]].map((item) => ({
           image: item?.image || null,
@@ -836,6 +856,59 @@ function SortableSectionCard({
                   onChange={(event) => onSectionVideoUpload(section.id, 'mobileVideo', event)}
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {section.type === 'CustomerReviews' && (
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field>
+                <FieldLabel>Section Heading</FieldLabel>
+                <Input
+                  value={section.title || ''}
+                  onChange={(event) => onSectionChange(section.id, { title: event.target.value })}
+                  placeholder="What Customers Say"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Max Reviews to Display (1 - 10)</FieldLabel>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={section.reviewLimit || 10}
+                  onChange={(event) =>
+                    onSectionChange(section.id, {
+                      reviewLimit: Math.min(10, Math.max(1, Number(event.target.value) || 10)),
+                    })
+                  }
+                  placeholder="10"
+                />
+              </Field>
+            </div>
+
+            <Field>
+              <FieldLabel>Supporting Subtitle</FieldLabel>
+              <Input
+                value={section.description || ''}
+                onChange={(event) => onSectionChange(section.id, { description: event.target.value })}
+                placeholder="Real feedback from verified shoppers"
+              />
+            </Field>
+
+            <div className="flex flex-col gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-foreground/85">
+              <div className="flex items-center gap-2 font-semibold text-primary">
+                <Sparkles className="size-4" />
+                <span>Curated Customer Reviews</span>
+              </div>
+              <p className="leading-relaxed text-muted-foreground">
+                To manage which reviews appear in this showcase, visit{' '}
+                <Link href="/admin/reviews" className="font-semibold text-foreground underline underline-offset-4 hover:text-primary">
+                  Admin &gt; Reviews
+                </Link>{' '}
+                and toggle <strong>&quot;Show on Home&quot;</strong> for up to 10 reviews. If no reviews are featured or this section is switched off, it automatically hides from the storefront.
+              </p>
             </div>
           </div>
         )}

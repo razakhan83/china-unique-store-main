@@ -180,8 +180,10 @@ export async function POST(req) {
       }
     });
 
-    revalidateTag(`reviews-${resolvedProductId.toString()}`);
-    revalidateTag(`reviews-${productId}`);
+      revalidateTag(`reviews-${resolvedProductId.toString()}`);
+      revalidateTag(`reviews-${productId}`);
+      revalidateTag('all-reviews');
+      revalidateTag('storefront-testimonials');
 
     return NextResponse.json({ success: true, data: review });
   } catch (error) {

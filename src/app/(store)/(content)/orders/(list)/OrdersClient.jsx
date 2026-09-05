@@ -26,6 +26,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -759,29 +760,31 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, on
 
   const hasAnyRating = Object.values(reviews).some(r => r.rating > 0);
 
+  const fileToDataUrl = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const uploadImages = async (imagesArray) => {
     if (!imagesArray || imagesArray.length === 0) return [];
-    
-    const sigRes = await fetch('/api/cloudinary-sign?folder=kifayatly_reviews');
-    const sigData = await sigRes.json();
-    if (!sigRes.ok) throw new Error(sigData.error || 'Failed to get Cloudinary signature');
 
     const urls = [];
     for (const img of imagesArray) {
-      const formData = new FormData();
-      formData.append('file', img.file);
-      formData.append('api_key', sigData.apiKey);
-      formData.append('timestamp', sigData.timestamp);
-      formData.append('signature', sigData.signature);
-      formData.append('folder', sigData.folder);
-
-      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.error?.message || 'Failed to upload image');
-      urls.push(uploadData.secure_url);
+      if (img.url && img.url.startsWith('http')) {
+        urls.push(img.url);
+        continue;
+      }
+      const dataUrl = img.file ? await fileToDataUrl(img.file) : img.preview;
+      if (dataUrl) {
+        const uploadResult = await uploadImageDataUrl(dataUrl, 'kifayatly_reviews');
+        if (uploadResult?.url) {
+          urls.push(uploadResult.url);
+        }
+      }
     }
     return urls;
   };
@@ -803,13 +806,15 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, on
               productId: review.productId,
               rating: review.rating,
               comment: review.text,
-              images: imageUrls
+              images: imageUrls,
+              orderId: order?.orderId || order?._id,
+              secureToken: order?.secureToken,
             })
           });
           
-          if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Failed to submit review');
+          const data = await res.json();
+          if (!res.ok || !data?.success) {
+            throw new Error(data?.error || 'Failed to submit review');
           }
         }
       }
@@ -818,13 +823,13 @@ const FeedbackModal = ({ order, onRemindLater, onDismissPermanently, onClose, on
       if (onSuccess) {
         onSuccess(order._id);
       }
+      toast.success('Thank you! Review submitted successfully.');
       setTimeout(() => {
         if (onClose) onClose();
         else onDismissPermanently();
       }, 2000);
     } catch (error) {
-      // Assuming toast from 'sonner' is available in scope or we use standard alert
-      alert(error.message || 'Something went wrong');
+      toast.error(error.message || 'Something went wrong while submitting review');
     } finally {
       setIsSubmitting(false);
     }
