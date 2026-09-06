@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import Ssr from 'embla-carousel-ssr';
 
 import { cn } from '@/lib/utils';
 
@@ -11,6 +12,64 @@ import { cn } from '@/lib/utils';
 /** @typedef {import('embla-carousel').EmblaPluginType} CarouselPlugin */
 
 const CarouselContext = React.createContext(null);
+
+function withoutLegacySsrOption(opts) {
+  if (!opts || typeof opts !== 'object') {
+    return { emblaOptions: {}, ssrPluginOptions: null };
+  }
+
+  const { ssr, breakpoints, ...rest } = opts;
+  const ssrPluginOptions = {};
+
+  if (Array.isArray(ssr) && ssr.length > 0) {
+    ssrPluginOptions.slideSizes = ssr;
+  }
+
+  if (breakpoints && typeof breakpoints === 'object') {
+    const emblaBreakpoints = {};
+    const ssrBreakpoints = {};
+
+    for (const [query, breakpointOptions] of Object.entries(breakpoints)) {
+      if (!breakpointOptions || typeof breakpointOptions !== 'object') {
+        continue;
+      }
+
+      const { ssr: breakpointSsr, ...breakpointRest } = breakpointOptions;
+      if (Object.keys(breakpointRest).length > 0) {
+        emblaBreakpoints[query] = breakpointRest;
+      }
+      if (Array.isArray(breakpointSsr) && breakpointSsr.length > 0) {
+        ssrBreakpoints[query] = { slideSizes: breakpointSsr };
+      }
+    }
+
+    if (Object.keys(emblaBreakpoints).length > 0) {
+      rest.breakpoints = emblaBreakpoints;
+    }
+
+    if (Object.keys(ssrBreakpoints).length > 0) {
+      ssrPluginOptions.breakpoints = ssrBreakpoints;
+    }
+  }
+
+  return {
+    emblaOptions: rest,
+    ssrPluginOptions: Array.isArray(ssrPluginOptions.slideSizes)
+      ? ssrPluginOptions
+      : null,
+  };
+}
+
+function getCarouselSsrStyles(serverApi, contentId) {
+  try {
+    return (
+      serverApi?.plugins?.().ssr?.getStyles(`#${contentId}`, '[data-embla-slide]') ||
+      ''
+    );
+  } catch {
+    return '';
+  }
+}
 
 function useCarousel() {
   const context = React.useContext(CarouselContext);
@@ -27,6 +86,7 @@ function Carousel({
   opts,
   setApi,
   plugins,
+  ssr,
   className,
   children,
   ...props
@@ -37,17 +97,29 @@ function Carousel({
     [reactId]
   );
   const contentId = `${carouselId}-container`;
+  const { emblaOptions, ssrPluginOptions: legacySsrPluginOptions } = React.useMemo(
+    () => withoutLegacySsrOption(opts),
+    [opts]
+  );
+  const ssrPluginOptions = ssr || legacySsrPluginOptions;
+  const emblaPlugins = React.useMemo(() => {
+    const nextPlugins = Array.isArray(plugins) ? [...plugins] : [];
+    const hasSsrPlugin = nextPlugins.some((plugin) => plugin?.name === 'ssr');
+
+    if (!hasSsrPlugin && ssrPluginOptions) {
+      nextPlugins.push(Ssr(ssrPluginOptions));
+    }
+
+    return nextPlugins;
+  }, [plugins, ssrPluginOptions]);
   const [carouselRef, api, serverApi] = useEmblaCarousel(
     {
       axis: orientation === 'horizontal' ? 'x' : 'y',
-      ...opts,
+      ...emblaOptions,
     },
-    plugins
+    emblaPlugins
   );
-  const ssrStyles =
-    !api && serverApi && Array.isArray(opts?.ssr) && opts.ssr.length > 0
-      ? serverApi.ssrStyles(`#${contentId}`, '[data-embla-slide]')
-      : '';
+  const ssrStyles = !api ? getCarouselSsrStyles(serverApi, contentId) : '';
 
   React.useEffect(() => {
     if (!api) {

@@ -27,8 +27,16 @@ export default function ProductGallery({ images, primaryTag, product }) {
       loop: hasMultipleImages,
       slideChanges: false,
       slidesToScroll: 1,
-      ssr: Array.from({ length: normalizedImages.length }, () => 100),
     }),
+    [hasMultipleImages]
+  );
+  const mainSsr = useMemo(
+    () =>
+      hasMultipleImages
+        ? {
+            slideSizes: Array.from({ length: normalizedImages.length }, () => 100),
+          }
+        : undefined,
     [hasMultipleImages, normalizedImages.length]
   );
   const thumbsOptions = useMemo(
@@ -39,14 +47,8 @@ export default function ProductGallery({ images, primaryTag, product }) {
       dragFree: true,
       slideChanges: false,
       slidesToScroll: 1,
-      ssr: Array.from({ length: normalizedImages.length }, () => 31.25),
-      breakpoints: {
-        '(min-width: 768px)': {
-          ssr: Array.from({ length: normalizedImages.length }, () => 33.33),
-        },
-      },
     }),
-    [hasMultipleImages, normalizedImages.length]
+    [hasMultipleImages]
   );
 
   useEffect(() => {
@@ -111,6 +113,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
         <Carousel
           setApi={setMainApi}
           opts={mainOptions}
+          ssr={mainSsr}
           className="h-full"
         >
           <CarouselContent viewportClassName="h-full" className="ml-0 h-full">
