@@ -106,34 +106,61 @@ export function mapNocStatusToStoreLifecycle(rawNocStatus) {
 
 /**
  * Maps raw courier checkpoint to clean, customer-friendly status and description.
- * Customer sees understandable descriptions rather than courier internal codes.
+ * Decouples intermediate courier milestones (Hub, In Transit, Destination, Out for Delivery)
+ * into distinct, user-friendly stages.
+ * Fully case-insensitive, space-agnostic, and punctuation-proof (e.g. INTRANSIT, REACHEDATDESTINATION).
  */
 export function mapCourierEventForCustomer(rawStatus, rawRemarks = '') {
   const s = String(rawStatus || '').trim().toLowerCase();
+  const compact = s.replace(/[^a-z0-9]/g, '');
   const rem = String(rawRemarks || '').trim();
 
   // 1. Delivered
   if (
-    s.includes('payment') ||
-    s.includes('paid') ||
-    s.includes('remit') ||
-    s.includes('cr done') ||
-    (s.includes('deliver') && !s.includes('out for') && !s.includes('attempt') && !s.includes('fail') && !s.includes('under deliver'))
+    compact.includes('payment') ||
+    compact.includes('paid') ||
+    compact.includes('remit') ||
+    compact.includes('crdone') ||
+    compact.includes('cashcollect') ||
+    compact.includes('cheque') ||
+    (compact.includes('deliver') &&
+      !compact.includes('outfor') &&
+      !compact.includes('attempt') &&
+      !compact.includes('fail') &&
+      !compact.includes('underdeliver') &&
+      !compact.includes('undeliver'))
   ) {
     return {
       title: 'Delivered',
-      description: 'Package successfully delivered. Thank you for shopping!',
+      description: 'Parcel has been successfully delivered.',
     };
   }
 
-  // 2. Return
+  // 2. Delivery Attempt Failed / Consignee unavailable / Rescheduled
   if (
-    s.includes('return') ||
-    s.includes('refus') ||
-    s.includes('rto') ||
-    s.includes('rts') ||
-    s.includes('damage') ||
-    s.includes('reject')
+    compact.includes('attempt') ||
+    compact.includes('fail') ||
+    compact.includes('undeliver') ||
+    compact.includes('reschedule') ||
+    compact.includes('unavailable') ||
+    compact.includes('notavailable') ||
+    compact.includes('notreach')
+  ) {
+    return {
+      title: 'Delivery Rescheduled',
+      description: 'Courier could not reach you; next attempt scheduled.',
+    };
+  }
+
+  // 3. Returned / Refused / Cancelled / RTO
+  if (
+    compact.includes('return') ||
+    compact.includes('refus') ||
+    compact.includes('rto') ||
+    compact.includes('rts') ||
+    compact.includes('damage') ||
+    compact.includes('reject') ||
+    compact.includes('cancel')
   ) {
     return {
       title: 'Returned',
@@ -141,35 +168,113 @@ export function mapCourierEventForCustomer(rawStatus, rawRemarks = '') {
     };
   }
 
-  // 3. Delivery Attempt Failed / Consignee unavailable
-  if (s.includes('attempt') || s.includes('fail') || s.includes('undelivered') || s.includes('reschedule') || s.includes('unavailable')) {
+  // 4. Out For Delivery (with rider / on runsheet)
+  if (
+    compact.includes('outfordeliver') ||
+    compact.includes('withrider') ||
+    compact.includes('rider') ||
+    compact.includes('runsheet') ||
+    compact.includes('underdeliver') ||
+    compact.includes('courierdeliver') ||
+    (compact.includes('out') && compact.includes('deliver'))
+  ) {
     return {
-      title: 'Delivery Rescheduled',
-      description: 'Courier could not reach you; next attempt scheduled.',
+      title: 'Out for Delivery',
+      description: 'Rider is on the way to deliver your parcel today.',
     };
   }
 
-  // 4. In Transit / Out for delivery / Destination city / Runsheet
-  if (s.includes('transit') || s.includes('out for') || s.includes('rider') || s.includes('runsheet') || s.includes('under deliver') || s.includes('dispatch') || s.includes('route') || s.includes('hub') || s.includes('destination')) {
+  // 5. REACHED AT DESTINATION (Arrived in Destination City / Local station)
+  if (
+    compact.includes('reachedatdestination') ||
+    compact.includes('arrivedatdestination') ||
+    compact.includes('arrivalatdestination') ||
+    compact.includes('reacheddestination') ||
+    compact.includes('arriveddestination') ||
+    compact.includes('destinationhub') ||
+    compact.includes('destinationoffice') ||
+    compact.includes('destinationfacility') ||
+    compact.includes('destinationstation') ||
+    compact.includes('destinationcity') ||
+    compact.includes('arrivedin') ||
+    (compact.includes('destination') &&
+      (compact.includes('reach') ||
+        compact.includes('arriv') ||
+        compact.includes('hub') ||
+        compact.includes('station') ||
+        compact.includes('office') ||
+        compact.includes('facility') ||
+        compact.includes('city') ||
+        compact.includes('at')))
+  ) {
     return {
-      title: 'In Transit',
-      description: 'Package is on the way to your city.',
+      title: 'Arrived in Your City',
+      description: 'Package has reached your local delivery station.',
     };
   }
 
-  // 5. Received at office / Sorting facility
-  if (s.includes('received at') || s.includes('pickup') || s.includes('office') || s.includes('facility')) {
+  // 6. INTRANSIT / In Transit / On the Way
+  if (
+    compact.includes('intransit') ||
+    compact.includes('transit') ||
+    compact.includes('enroute') ||
+    compact.includes('linehaul') ||
+    compact.includes('ontheway') ||
+    compact.includes('onroute') ||
+    s.includes('in transit') ||
+    s.includes('dispatched')
+  ) {
     return {
-      title: 'In Transit',
-      description: 'Package received at courier facility.',
+      title: 'On the Way',
+      description: 'Package is moving towards your destination city.',
     };
   }
 
-  // 6. Booking / Shipped
-  if (s.includes('book') || s.includes('manifest') || s.includes('shipped')) {
+  // 7. Received At Office / Processing at Hub
+  if (
+    compact.includes('receivedatoffice') ||
+    compact.includes('receivedat') ||
+    compact.includes('originhub') ||
+    compact.includes('pickupdone') ||
+    compact.includes('pickedup') ||
+    compact.includes('facility') ||
+    compact.includes('office') ||
+    compact.includes('sorting') ||
+    s.includes('received at')
+  ) {
+    return {
+      title: 'Processing at Hub',
+      description: 'Package received at origin sorting facility.',
+    };
+  }
+
+  // 8. Parcel Booked / Order Shipped
+  if (
+    compact.includes('parcelbooked') ||
+    compact.includes('booked') ||
+    compact.includes('booking') ||
+    compact.includes('manifest') ||
+    (compact.includes('shipped') && !compact.includes('return')) ||
+    compact.includes('ordershipped')
+  ) {
     return {
       title: 'Order Shipped',
-      description: 'Parcel has been booked with courier partner.',
+      description: 'Parcel has been handed over to courier partner.',
+    };
+  }
+
+  // 9. Order Placed
+  if (
+    compact.includes('orderplaced') ||
+    compact.includes('orderconfirmed') ||
+    compact.includes('ordercreated') ||
+    compact.includes('orderreceived') ||
+    s.includes('order placed') ||
+    s.includes('order confirmed')
+  ) {
+    return {
+      title: 'Order Placed',
+      description: 'Order received & confirmed.',
     };
   }
 
