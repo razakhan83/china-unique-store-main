@@ -1,4 +1,4 @@
-import { cache, Suspense } from 'react';
+import { cache } from 'react';
 import { Star } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
@@ -12,10 +12,7 @@ import ProductViewTracking from '@/components/ProductViewTracking';
 import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 import ProductMetaTags from './ProductMetaTags';
 import ProductReviews from '@/components/ProductReviews';
-import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 import MobileBackButton from '@/components/MobileBackButton';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,17 +21,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getProductPrerenderParams, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
-import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
-import { getProductTagById } from '@/lib/productTags';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { metadataTitle } from '@/lib/siteSeo';
 import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
-import { cn } from '@/lib/utils';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 const getSellingPrice = (product) =>
@@ -303,93 +296,72 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function ProductPage({ params }) {
-  return (
-    <div className="product-detail-shell min-h-screen bg-gray-50">
-      <ProductPageScrollReset />
-
-      <Suspense fallback={null}>
-        <ProductJsonLdScript paramsPromise={params} />
-      </Suspense>
-
-      <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
-        <div className="flex items-center justify-between md:hidden">
-          <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
-          <Suspense fallback={null}>
-            <ProductMobileStockTag paramsPromise={params} />
-          </Suspense>
-        </div>
-        <div className="hidden md:block pb-1">
-          <Suspense fallback={<ProductBreadcrumbSkeleton />}>
-            <ProductBreadcrumb paramsPromise={params} />
-          </Suspense>
-        </div>
-      </div>
-
-      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-0 md:pb-8 md:pt-4">
-        <Suspense fallback={<ProductHeroSkeleton />}>
-          <ProductHeroSection paramsPromise={params} />
-        </Suspense>
-
-        <Suspense fallback={<div className="mt-10 h-64 w-full animate-pulse rounded-xl bg-muted md:mt-16" />}>
-          <ProductTabsWrapper paramsPromise={params} />
-        </Suspense>
-      </div>
-
-      <Suspense fallback={<RelatedProductsSkeleton />}>
-        <RelatedProductsSection paramsPromise={params} />
-      </Suspense>
-    </div>
-  );
-}
-
-async function ProductJsonLdScript({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
-  if (!pageData?.product) return null;
-
-  const reviewSummary = await getProductReviewSummarySafe(pageData.product._id);
-  const jsonLd = getProductJsonLd({ product: pageData.product, reviewSummary });
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
-  );
-}
-
-async function ProductMobileStockTag({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
-  if (!pageData?.product) return null;
-  
-  const product = pageData.product;
-  const isOutOfStock = product.StockStatus === "Out of Stock" || product.showOnStore === false;
-  
-  return isOutOfStock ? (
-    <div className="rounded-md border border-destructive/20 bg-destructive/10 text-destructive px-2.5 py-1 text-[11px] font-bold">
-      Out of Stock
-    </div>
-  ) : (
-    <div className="rounded-md border border-emerald-500/20 bg-emerald-50 text-emerald-600 px-2.5 py-1 text-[11px] font-bold tracking-wide flex items-center">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
-      In Stock
-    </div>
-  );
-}
-
-async function ProductBreadcrumb({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
+export default async function ProductPage({ params }) {
+  const { id: slug } = await params;
+  const pageData = await getProductPageData(slug);
 
   if (!pageData?.product) {
     notFound();
   }
 
-  const product = pageData.product;
+  const { product, settings } = pageData;
   const primaryCategory = getProductCategories(product)[0];
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
+  const jsonLd = getProductJsonLd({ product, reviewSummary });
+  const isOutOfStock = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
 
+  return (
+    <div className="product-detail-shell min-h-screen bg-gray-50">
+      <ProductPageScrollReset />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
+
+      <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
+        <div className="flex items-center justify-between md:hidden">
+          <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
+          <ProductMobileStockTag isOutOfStock={isOutOfStock} />
+        </div>
+        <div className="hidden md:block pb-1">
+          <ProductBreadcrumb product={product} primaryCategory={primaryCategory} />
+        </div>
+      </div>
+
+      <div className="container mx-auto max-w-7xl px-4 pb-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset)+3.5rem)] pt-0 md:pb-8 md:pt-4">
+        <ProductHeroSection
+          product={product}
+          settings={settings}
+          reviewSummary={reviewSummary}
+          categoryLabel={primaryCategory?.name || ''}
+        />
+
+        <ProductTabsWrapper product={product} reviewSummary={reviewSummary} />
+      </div>
+
+      <RelatedProductsSection
+        primaryCategory={primaryCategory}
+        excludeSlug={product.slug}
+      />
+    </div>
+  );
+}
+
+function ProductMobileStockTag({ isOutOfStock }) {
+  return isOutOfStock ? (
+    <div className="rounded-md border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-[11px] font-bold text-destructive">
+      Out of Stock
+    </div>
+  ) : (
+    <div className="flex items-center rounded-md border border-emerald-500/20 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-emerald-600">
+      <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+      In Stock
+    </div>
+  );
+}
+
+function ProductBreadcrumb({ product, primaryCategory }) {
   return (
     <Breadcrumb className="overflow-x-auto">
       <BreadcrumbList>
@@ -412,35 +384,17 @@ async function ProductBreadcrumb({ paramsPromise }) {
         ) : null}
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>{pageData.product.Name}</BreadcrumbPage>
+          <BreadcrumbPage>{product.Name}</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );
 }
 
-async function ProductHeroSection({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
-
-  if (!pageData) {
-    notFound();
-  }
-
-  const { product, settings } = pageData;
-
-  const primaryCategory = getProductCategories(product)[0];
-  const categoryLabel = primaryCategory?.name || '';
-  const reviewSummary = await getProductReviewSummarySafe(product._id);
-  const colors = getCategoryColor(categoryLabel); // colors contains bg, text, etc.
-  const productJsonLd = getProductJsonLd({ product });
+function ProductHeroSection({ product, settings, reviewSummary, categoryLabel }) {
   const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
-  const isOutOfStock = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
   const compareAtPrice = getVisibleCompareAtPrice(product);
-  const descriptionHtml =
-    formatRichTextDescriptionHtml(product.Description) ||
-    'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
 
   return (
     <>
@@ -458,12 +412,6 @@ async function ProductHeroSection({ paramsPromise }) {
         category={categoryLabel || 'Product'}
         value={price}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c'),
-        }}
-      />
 
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-10">
         <div className="w-full md:w-[45%] lg:w-[42%]">
@@ -471,34 +419,30 @@ async function ProductHeroSection({ paramsPromise }) {
         </div>
 
         <div className="w-full md:w-[55%] lg:w-[58%]">
-          <div className="flex flex-col gap-4 md:gap-6 md:sticky md:top-[164px]">
+          <div className="flex flex-col gap-4 md:sticky md:top-[164px] md:gap-6">
             <div className="space-y-2 md:space-y-4">
-              <div className="flex items-start justify-between gap-4 mt-2">
-                <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-2xl md:text-4xl leading-tight sm:leading-tight md:leading-tight">
+              <div className="mt-2 flex items-start justify-between gap-4">
+                <h1 className="text-lg font-bold leading-tight tracking-tight text-foreground sm:text-2xl sm:leading-tight md:text-4xl md:leading-tight">
                   {product.Name}
                 </h1>
-                <ProductSocialActions product={product} className="md:hidden shrink-0 mt-0.5" />
+                <ProductSocialActions product={product} className="mt-0.5 shrink-0 md:hidden" />
               </div>
 
               {reviewSummary.reviewCount > 0 && (
                 <a 
                   href="#product-reviews"
-                  className="flex items-center gap-2 group w-fit -mt-1"
+                  className="group -mt-1 flex w-fit items-center gap-2"
                 >
                    <div className="flex items-center text-amber-400">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
                       ))}
                    </div>
-                   <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                   <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
                      ({reviewSummary.reviewCount} {reviewSummary.reviewCount === 1 ? 'review' : 'reviews'})
                    </span>
                 </a>
               )}
-
-              <div className="hidden">
-                {/* Static price block moved to ProductActions for dynamic pack options */}
-              </div>
             </div>
 
             <div className="pt-2">
@@ -513,7 +457,7 @@ async function ProductHeroSection({ paramsPromise }) {
 
             {product.shortDescription ? (
               <div
-                className="text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 border-t border-border pt-6 mt-6"
+                className="mt-6 border-t border-border pt-6 text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: product.shortDescription }}
               />
             ) : <Separator className="my-6" />}
@@ -532,16 +476,7 @@ async function ProductHeroSection({ paramsPromise }) {
   );
 }
 
-async function ProductTabsWrapper({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
-
-  if (!pageData?.product) {
-    return null;
-  }
-
-  const product = pageData.product;
-  const reviewSummary = await getProductReviewSummarySafe(product._id);
+function ProductTabsWrapper({ product, reviewSummary }) {
   const descriptionHtml =
     formatRichTextDescriptionHtml(product.Description) ||
     'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.';
@@ -557,25 +492,15 @@ async function ProductTabsWrapper({ paramsPromise }) {
   );
 }
 
-async function RelatedProductsSection({ paramsPromise }) {
-  const { id: slug } = await paramsPromise;
-  const pageData = await getCachedProductPageData(slug);
-
-  if (!pageData?.product) {
-    notFound();
-  }
-
-  const product = pageData.product;
-
-  const primaryCategory = getProductCategories(product)[0];
+async function RelatedProductsSection({ primaryCategory, excludeSlug }) {
   const categorySlug = primaryCategory?.id || '';
   const relatedProducts = await getRelatedProductsSafe({
     category: categorySlug,
-    excludeSlug: product.slug,
+    excludeSlug,
     limit: 8,
   });
 
-  if (relatedProducts.length === 0) {
+  if (!relatedProducts || relatedProducts.length === 0) {
     return null;
   }
 
@@ -595,72 +520,6 @@ async function RelatedProductsSection({ paramsPromise }) {
             />
           ))}
         </CategoryProductSlider>
-      </div>
-    </div>
-  );
-}
-
-function ProductBreadcrumbSkeleton() {
-  return <Skeleton className="h-4 w-52 rounded-md" />;
-}
-
-function ProductHeroSkeleton() {
-  return (
-    <div className="flex flex-col gap-5 md:flex-row md:gap-8 lg:gap-10">
-      <div className="w-full md:w-[55%] lg:w-[58%]">
-        <Skeleton className="aspect-square w-full rounded-2xl" />
-        <div className="mt-3 flex gap-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="aspect-square w-20 rounded-xl" />
-          ))}
-        </div>
-      </div>
-
-      <div className="w-full md:w-[45%] lg:w-[42%]">
-        <div className="flex flex-col gap-4 md:sticky md:top-[164px]">
-          <Skeleton className="h-7 w-32 rounded-lg" />
-          <Skeleton className="h-10 w-3/4 rounded-lg" />
-          <Skeleton className="h-12 w-40 rounded-lg" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full rounded-md" />
-            <Skeleton className="h-4 w-full rounded-md" />
-            <Skeleton className="h-4 w-5/6 rounded-md" />
-          </div>
-          <Skeleton className="h-14 w-full rounded-xl" />
-          <div className="grid grid-cols-3 gap-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-24 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProductReviewsSkeleton() {
-  return (
-    <div className="rounded-2xl border border-border p-6 md:p-8">
-      <Skeleton className="mb-4 h-8 w-48 rounded-lg" />
-      <div className="grid gap-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-24 rounded-xl" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RelatedProductsSkeleton() {
-  return (
-    <div className="border-t border-border bg-muted/35 py-10 md:py-14">
-      <div className="container mx-auto max-w-7xl px-4">
-        <Skeleton className="mb-6 h-8 w-56 rounded-lg" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <ProductCardSkeleton key={index} />
-          ))}
-        </div>
       </div>
     </div>
   );
