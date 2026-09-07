@@ -37,9 +37,6 @@ const nextConfig = {
     'exceljs',
     'jspdf',
     'jspdf-autotable',
-    'html2canvas',
-    'html-to-image',
-    'sanitize-html',
     'resend',
   ],
 
