@@ -87,40 +87,22 @@ function HeroSlideImage({ slide, isPriority }) {
     );
   }
 
-  return (
-    <>
-      {/* Mobile banner */}
-      <div className="relative h-full w-full md:hidden">
-        <Image
-          src={optimizeCloudinaryUrl(mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile)}
-          alt={slide.alt}
-          fill
-          sizes="100vw"
-          priority={isPriority}
-          fetchPriority={isPriority ? 'high' : 'auto'}
-          loading={isPriority ? 'eager' : 'lazy'}
-          className="object-cover"
-          quality={80}
-          {...getBlurPlaceholderProps(slide.images.mobileBlur || slide.images.desktopBlur)}
-        />
-      </div>
+  const desktopOptimized = optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
+  const mobileOptimized = optimizeCloudinaryUrl(mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile);
 
-      {/* Desktop banner */}
-      <div className="relative hidden h-full w-full md:block">
-        <Image
-          src={optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull)}
-          alt={slide.alt}
-          fill
-          sizes="100vw"
-          priority={isPriority}
-          fetchPriority={isPriority ? 'high' : 'auto'}
-          loading={isPriority ? 'eager' : 'lazy'}
-          className="object-cover"
-          quality={85}
-          {...getBlurPlaceholderProps(slide.images.desktopBlur || slide.images.mobileBlur)}
-        />
-      </div>
-    </>
+  return (
+    <picture className="relative block h-full w-full">
+      <source media="(min-width: 768px)" srcSet={desktopOptimized} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={mobileOptimized}
+        alt={slide.alt}
+        fetchPriority={isPriority ? 'high' : 'auto'}
+        loading={isPriority ? 'eager' : 'lazy'}
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+    </picture>
   );
 }
 
