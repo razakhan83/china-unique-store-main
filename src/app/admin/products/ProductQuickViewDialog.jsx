@@ -172,6 +172,11 @@ export function ProductQuickViewDialog({ open, onOpenChange, product: rowProduct
                         🔥 Best Seller
                       </Badge>
                     )}
+                    {product.isFreeDelivery && (
+                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-300 text-[10px] sm:text-xs px-2 py-0 flex items-center gap-1 font-semibold">
+                        🚚 Free Delivery
+                      </Badge>
+                    )}
                     {isLoading && (
                       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <Loader2 className="size-3 animate-spin" /> Loading…

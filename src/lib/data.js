@@ -205,6 +205,7 @@ function serializeProduct(product) {
     isNewArrival: safeProduct.isNewArrival === true,
     isBestSelling: safeProduct.isBestSelling === true,
     isFeatured: safeProduct.isFeatured === true,
+    isFreeDelivery: safeProduct.isFreeDelivery === true,
     featuredPriority: Number(safeProduct.featuredPriority || 0),
     tags: Array.isArray(safeProduct.tags) ? safeProduct.tags : [],
     primaryTag: safeProduct.primaryTag || '',
@@ -229,6 +230,7 @@ function toProductCardItem(product) {
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
     isFeatured: product.isFeatured === true,
+    isFreeDelivery: product.isFreeDelivery === true,
     featuredPriority: Number(product.featuredPriority || 0),
     averageRating: Number(product.averageRating || 0),
     reviewCount: Number(product.reviewCount || 0),
@@ -268,6 +270,7 @@ function toProductDetailView(product) {
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
     isFeatured: product.isFeatured === true,
+    isFreeDelivery: product.isFreeDelivery === true,
     featuredPriority: Number(product.featuredPriority || 0),
     seoTitle: product.seoTitle || '',
     seoDescription: product.seoDescription || '',
@@ -298,6 +301,7 @@ function toAdminProductRow(product) {
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
     isFeatured: product.isFeatured === true,
+    isFreeDelivery: product.isFreeDelivery === true,
     featuredPriority: Number(product.featuredPriority || 0),
     vendors: Array.isArray(product.vendors)
       ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
@@ -1676,15 +1680,17 @@ export async function getProductBySlug(slug) {
       // 2. If not found, try finding by Mongo _id
       if (!product) {
         for (const candidate of slugCandidates) {
-          if (mongoose.Types.ObjectId.isValid(candidate)) {
-            product = await Product.findOne({
-              _id: candidate,
-              showOnStore: { $ne: false },
-            })
-              .select(PRODUCT_DETAIL_PROJECTION)
-              .populate(PRODUCT_CATEGORY_POPULATE)
-              .lean();
-            if (product) break;
+          if (mongoose.Types.ObjectId.isValid(candidate) && candidate.length === 24) {
+            try {
+              product = await Product.findOne({
+                _id: new mongoose.Types.ObjectId(candidate),
+                showOnStore: { $ne: false },
+              })
+                .select(PRODUCT_DETAIL_PROJECTION)
+                .populate(PRODUCT_CATEGORY_POPULATE)
+                .lean();
+              if (product) break;
+            } catch {}
           }
         }
       }

@@ -12,6 +12,7 @@ import {
   PlusCircle,
   Share2,
   Trash2,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -72,6 +73,7 @@ export default function AddProduct() {
   const [isNewArrival, setIsNewArrival] = useState(true);
   const [isBestSelling, setIsBestSelling] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [isFreeDelivery, setIsFreeDelivery] = useState(false);
   const [featuredPriority, setFeaturedPriority] = useState(0);
   const [tags, setTags] = useState([]);
   const [primaryTag, setPrimaryTag] = useState("");
@@ -91,6 +93,17 @@ export default function AddProduct() {
   const [seoOgImageRatio, setSeoOgImageRatio] = useState('1.91:1');
   const [ogPreviewFit, setOgPreviewFit] = useState('cover'); // 'cover' | 'contain'
   const ogImageFileInputRef = useRef(null);
+
+  const handleFreeDeliveryToggle = (checked) => {
+    setIsFreeDelivery(checked);
+    if (checked) {
+      setTags((prev) => (prev.includes('free-shipping') ? prev : [...prev, 'free-shipping']));
+      setPrimaryTag((prev) => (!prev ? 'free-shipping' : prev));
+    } else {
+      setTags((prev) => prev.filter((t) => t !== 'free-shipping'));
+      setPrimaryTag((prev) => (prev === 'free-shipping' ? '' : prev));
+    }
+  };
 
   const resetForm = useCallback(() => {
     setName("");
@@ -117,6 +130,7 @@ export default function AddProduct() {
     setIsNewArrival(true);
     setIsBestSelling(false);
     setIsFeatured(false);
+    setIsFreeDelivery(false);
     setFeaturedPriority(0);
     setTags([]);
     setPrimaryTag("");
@@ -350,6 +364,7 @@ export default function AddProduct() {
           isNewArrival,
           isBestSelling,
           isFeatured,
+          isFreeDelivery,
           featuredPriority: Number(featuredPriority) || 0,
           tags,
           primaryTag,
@@ -874,7 +889,7 @@ export default function AddProduct() {
             <AccordionContent className="pb-4">
               <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label
                   className="mr-2 cursor-pointer text-xs text-muted-foreground"
@@ -893,7 +908,7 @@ export default function AddProduct() {
                 </Label>
                 <Switch id="toggle-new" checked={isNewArrival} onCheckedChange={setIsNewArrival} />
               </div>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label
                   className="mr-2 cursor-pointer text-xs text-muted-foreground"
                   htmlFor="toggle-best"
@@ -901,6 +916,19 @@ export default function AddProduct() {
                   Best Selling
                 </Label>
                 <Switch id="toggle-best" checked={isBestSelling} onCheckedChange={setIsBestSelling} />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label
+                  className="mr-2 cursor-pointer text-xs text-muted-foreground"
+                  htmlFor="toggle-free-marketing"
+                >
+                  Free Delivery
+                </Label>
+                <Switch 
+                  id="toggle-free-marketing" 
+                  checked={isFreeDelivery} 
+                  onCheckedChange={handleFreeDeliveryToggle}
+                />
               </div>
             </div>
             

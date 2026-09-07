@@ -1,6 +1,7 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import mongoose from 'mongoose';
 import { authOptions } from '@/lib/auth';
 
 import mongooseConnect from '@/lib/mongooseConnect';
@@ -12,15 +13,52 @@ import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
 
+export function resolveProductQuery(id) {
+    const rawId = String(id || '').trim();
+    if (!rawId) return { _id: null };
+
+    let decoded = rawId;
+    try {
+        decoded = decodeURIComponent(rawId).trim();
+    } catch {}
+
+    const hyphenCandidate = decoded.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+    const candidates = Array.from(new Set([rawId, decoded, rawId.toLowerCase(), decoded.toLowerCase(), hyphenCandidate])).filter(Boolean);
+
+    const validObjectIds = candidates
+        .filter((val) => mongoose.Types.ObjectId.isValid(val) && val.length === 24 && String(new mongoose.Types.ObjectId(val)) === val)
+        .map((val) => new mongoose.Types.ObjectId(val));
+
+    if (validObjectIds.length > 0) {
+        return {
+            $or: [
+                { _id: { $in: validObjectIds } },
+                { slug: { $in: candidates } }
+            ]
+        };
+    }
+
+    return { slug: { $in: candidates } };
+}
+
 export async function GET(_request, { params }) {
     try {
         await mongooseConnect();
 
         const { id } = await params;
-        const product = await Product.findById(id)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured featuredPriority vendors packOptions tags primaryTag')
+        const query = resolveProductQuery(id);
+        let product = await Product.findOne(query)
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
+
+        if (!product && typeof id === 'string' && id.trim()) {
+            const escaped = id.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            product = await Product.findOne({ slug: { $regex: new RegExp(`^${escaped}$`, 'i') } })
+                .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
+                .populate({ path: 'Category', select: 'name slug bgColor' })
+                .lean();
+        }
 
         if (!product) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
@@ -58,7 +96,8 @@ export async function PUT(request, { params }) {
 
         const { id } = await params;
         const body = await request.json();
-        const existingProduct = await Product.findById(id);
+        const query = resolveProductQuery(id);
+        const existingProduct = await Product.findOne(query);
 
         if (!existingProduct) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
@@ -137,10 +176,13 @@ export async function PUT(request, { params }) {
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.showOnStore = body.showOnStore !== false && body.showOnStore !== 'false';
         
-        // Marketing flags
+        // Marketing flags & delivery
         existingProduct.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';
         existingProduct.isBestSelling = body.isBestSelling === true || body.isBestSelling === 'true';
         existingProduct.isFeatured = body.isFeatured === true || body.isFeatured === 'true';
+        if (body.isFreeDelivery !== undefined) {
+            existingProduct.isFreeDelivery = body.isFreeDelivery === true || body.isFreeDelivery === 'true';
+        }
         if (body.featuredPriority !== undefined) {
             existingProduct.featuredPriority = Number(body.featuredPriority) || 0;
         }
@@ -202,6 +244,7 @@ export async function PATCH(request, { params }) {
 
         const { id } = await params;
         const body = await request.json();
+        const query = resolveProductQuery(id);
 
         if (body.stockQuantity !== undefined) {
             const nextQuantity = Math.max(0, Number(body.stockQuantity) || 0);
@@ -211,11 +254,15 @@ export async function PATCH(request, { params }) {
                     ? 'In Stock'
                     : 'Out of Stock';
 
-            const updatedProduct = await Product.findByIdAndUpdate(
-                id,
+            const updatedProduct = await Product.findOneAndUpdate(
+                query,
                 { $set: { stockQuantity: nextQuantity, StockStatus: nextStatus } },
                 { new: true, runValidators: false, strict: false }
             ).lean();
+
+            if (!updatedProduct) {
+                return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+            }
 
             revalidateTag('products');
             if (updatedProduct.slug) {
@@ -242,11 +289,15 @@ export async function PATCH(request, { params }) {
 
         // Handle StockStatus toggle
         if (body.StockStatus !== undefined) {
-            const updatedProduct = await Product.findByIdAndUpdate(
-                id,
+            const updatedProduct = await Product.findOneAndUpdate(
+                query,
                 { $set: { StockStatus: body.StockStatus } },
                 { new: true, runValidators: false, strict: false }
             ).lean();
+
+            if (!updatedProduct) {
+                return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+            }
 
             revalidateTag('products');
             if (updatedProduct.slug) {
@@ -279,11 +330,15 @@ export async function PATCH(request, { params }) {
             if (body.isFeatured !== undefined) updateFields.isFeatured = body.isFeatured === true || body.isFeatured === 'true';
             if (body.featuredPriority !== undefined) updateFields.featuredPriority = Number(body.featuredPriority) || 0;
 
-            const updatedProduct = await Product.findByIdAndUpdate(
-                id,
+            const updatedProduct = await Product.findOneAndUpdate(
+                query,
                 { $set: updateFields },
                 { new: true, runValidators: false, strict: false }
             ).lean();
+
+            if (!updatedProduct) {
+                return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+            }
 
             revalidateTag('products');
             if (updatedProduct.slug) {
@@ -313,7 +368,7 @@ export async function PATCH(request, { params }) {
         const pct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
 
         // We need the current price to compute discountedPrice
-        const existing = await Product.findById(id).select('Price slug Name').lean();
+        const existing = await Product.findOne(query).select('Price slug Name').lean();
         if (!existing) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
@@ -322,23 +377,15 @@ export async function PATCH(request, { params }) {
             ? Math.round(Number(existing.Price) * (1 - pct / 100))
             : null;
 
-        // Atomic write directly to MongoDB — avoids any Mongoose validation issues
-        // 'strict: false' is CRUCIAL here because Mongoose caches schemas during Next.js HMR.
-        // If the dev server is using an old cached schema model, it will silently drop new fields!
-        const updatedProduct = await Product.findByIdAndUpdate(
-            id,
+        const updatedProduct = await Product.findOneAndUpdate(
+            query,
             { $set: { discountPercentage: pct, isDiscounted: pct > 0, discountedPrice } },
             { new: true, runValidators: false, strict: false }
         ).lean();
 
-        // Verify the saved document in Vercel / server logs
-        console.log('[PATCH discount] Saved to MongoDB:', JSON.stringify({
-            _id: updatedProduct._id.toString(),
-            name: updatedProduct.Name,
-            discountPercentage: updatedProduct.discountPercentage,
-            isDiscounted: updatedProduct.isDiscounted,
-            discountedPrice: updatedProduct.discountedPrice,
-        }));
+        if (!updatedProduct) {
+            return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+        }
 
         // Hard-flush all caches so the storefront reflects changes immediately
         revalidateTag('products');
@@ -383,7 +430,8 @@ export async function DELETE(_request, { params }) {
         await mongooseConnect();
 
         const { id } = await params;
-        const deletedProduct = await Product.findByIdAndDelete(id);
+        const query = resolveProductQuery(id);
+        const deletedProduct = await Product.findOneAndDelete(query);
 
         if (!deletedProduct) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });

@@ -61,6 +61,19 @@ import { DEFAULT_ADMIN_FILTER_STATUS, DEFAULT_ORDER_STATUS, ORDER_STATUSES, norm
 import { formatSmartTimeAgo, formatFullDateTime, formatFullDate, formatFullTime } from '@/lib/timeAgo';
 import { toast } from 'sonner';
 
+async function safeReadJson(res) {
+  try {
+    const text = await res.text();
+    if (!text) return { success: false, error: 'Empty response received from server.' };
+    return JSON.parse(text);
+  } catch {
+    return {
+      success: false,
+      error: `Server returned non-JSON response (${res.status} ${res.statusText || ''}).`.trim(),
+    };
+  }
+}
+
 export function getOrderOriginInfo(order) {
   const isAdmin = 
     order?.orderType === 'Admin' ||
@@ -418,7 +431,7 @@ export default function AdminOrdersClient({
         }),
       });
 
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         toast.success(data.message || `Successfully booked ${selectedOrders.length} parcel(s) with NOC Express!`);
         setNocBookingOpen(false);
@@ -512,7 +525,7 @@ export default function AdminOrdersClient({
         body: JSON.stringify({ orderIds: ids }),
       });
 
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success && Array.isArray(data.results)) {
         const resultMap = new Map();
         data.results.forEach((r) => {
@@ -581,7 +594,7 @@ export default function AdminOrdersClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderIds: activeIds }),
           })
-            .then((r) => r.json())
+            .then(safeReadJson)
             .then((data) => {
               if (data?.success && Array.isArray(data.results) && data.changedCount > 0) {
                 router.refresh();
@@ -658,7 +671,7 @@ export default function AdminOrdersClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderIds: ids }),
         });
-        const data = await res.json();
+        const data = await safeReadJson(res);
         if (data.success && Array.isArray(data.results)) {
           const resultMap = new Map();
           data.results.forEach((r) => {

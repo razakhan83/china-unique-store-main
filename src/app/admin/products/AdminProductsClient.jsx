@@ -982,6 +982,13 @@ export default function AdminProductsClient({
                             >
                               {product.Name}
                             </button>
+                            {product.isFreeDelivery && (
+                              <div className="mt-0.5 flex items-center">
+                                <span className="inline-flex items-center rounded-sm bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 px-1 py-0.2 text-[9.5px] font-bold tracking-tight">
+                                  Free DC
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>

@@ -29,6 +29,16 @@ export function getNocCredentials(portalKey = 'portal_1') {
   return { userName, password, signature };
 }
 
+async function safeParseNocResponse(response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    const preview = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 150);
+    throw new Error(`Invalid response from NOC API (HTTP ${response.status}): ${preview || 'Non-JSON response'}`);
+  }
+}
+
 /**
  * 1. Book Parcels (Single or Bulk)
  * Endpoint: POST /api/BookParcel
@@ -78,10 +88,12 @@ export async function bookNocParcels(parcels, portalKey = 'portal_1') {
       });
 
       if (!response.ok) {
-        throw new Error(`NOC API HTTP error: ${response.status} ${response.statusText}`);
+        const text = await response.text();
+        const clean = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+        throw new Error(`NOC API HTTP error (${response.status}): ${clean || response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await safeParseNocResponse(response);
       return data;
     } catch (err) {
       lastError = err;
@@ -114,7 +126,7 @@ export async function fetchNocCities(portalKey = 'portal_1') {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeParseNocResponse(response);
         return data;
       }
     } catch (err) {
@@ -149,7 +161,7 @@ export async function trackNocParcel(parcelNo, portalKey = 'portal_1') {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeParseNocResponse(response);
         return data;
       }
     } catch (err) {
@@ -184,10 +196,12 @@ export async function cancelNocParcel(parcelNos, portalKey = 'portal_1') {
   });
 
   if (!response.ok) {
-    throw new Error(`NOC API HTTP error: ${response.status}`);
+    const text = await response.text();
+    const clean = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    throw new Error(`NOC API HTTP error (${response.status}): ${clean || response.statusText}`);
   }
 
-  const data = await response.json();
+  const data = await safeParseNocResponse(response);
   return data;
 }
 

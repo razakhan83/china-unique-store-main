@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, CloudUpload, Image as ImageIcon, Loader2, Plus, PlusCircle, Share2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, CloudUpload, Image as ImageIcon, Loader2, Plus, PlusCircle, Share2, Trash2, Truck, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import ProductCard from "@/components/ProductCard";
@@ -60,6 +60,7 @@ export default function EditProduct({ id }) {
   const [isNewArrival, setIsNewArrival] = useState(false);
   const [isBestSelling, setIsBestSelling] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [isFreeDelivery, setIsFreeDelivery] = useState(false);
   const [featuredPriority, setFeaturedPriority] = useState(0);
   const [tags, setTags] = useState([]);
   const [primaryTag, setPrimaryTag] = useState("");
@@ -86,6 +87,17 @@ export default function EditProduct({ id }) {
   const showToast = (message, type = 'success') => {
     if (type === 'error') toast.error(message);
     else toast.success(message);
+  };
+
+  const handleFreeDeliveryToggle = (checked) => {
+    setIsFreeDelivery(checked);
+    if (checked) {
+      setTags((prev) => (prev.includes('free-shipping') ? prev : [...prev, 'free-shipping']));
+      setPrimaryTag((prev) => (!prev ? 'free-shipping' : prev));
+    } else {
+      setTags((prev) => prev.filter((t) => t !== 'free-shipping'));
+      setPrimaryTag((prev) => (prev === 'free-shipping' ? '' : prev));
+    }
   };
 
   const fetchCategories = useCallback(async () => {
@@ -150,6 +162,7 @@ export default function EditProduct({ id }) {
           setIsNewArrival(p.isNewArrival === true);
           setIsBestSelling(p.isBestSelling === true);
           setIsFeatured(p.isFeatured === true);
+          setIsFreeDelivery(p.isFreeDelivery === true);
           setFeaturedPriority(p.featuredPriority || 0);
           setTags(Array.isArray(p.tags) ? p.tags : []);
           setPrimaryTag(p.primaryTag || '');
@@ -367,6 +380,7 @@ export default function EditProduct({ id }) {
           isNewArrival,
           isBestSelling,
           isFeatured,
+          isFreeDelivery,
           featuredPriority: Number(featuredPriority) || 0,
           tags,
           primaryTag,
@@ -574,9 +588,7 @@ export default function EditProduct({ id }) {
             </div>
           </div>
 
-
-
-                    <div>
+          <div>
             <div className="mb-2 flex items-center justify-between">
               <Label>Categories</Label>
               <Link
@@ -844,7 +856,7 @@ export default function EditProduct({ id }) {
                         {/* Marketing Flags */}
           <div className="pt-2">
             <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-featured">Featured (Ads)</Label>
                 <Switch id="toggle-featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
@@ -853,9 +865,17 @@ export default function EditProduct({ id }) {
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-new">New Arrival</Label>
                 <Switch id="toggle-new" checked={isNewArrival} onCheckedChange={setIsNewArrival} />
               </div>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
                 <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-best">Best Selling</Label>
                 <Switch id="toggle-best" checked={isBestSelling} onCheckedChange={setIsBestSelling} />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-free-marketing-edit">Free Delivery</Label>
+                <Switch 
+                  id="toggle-free-marketing-edit" 
+                  checked={isFreeDelivery} 
+                  onCheckedChange={handleFreeDeliveryToggle} 
+                />
               </div>
             </div>
             

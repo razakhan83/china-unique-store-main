@@ -34,7 +34,13 @@ export default function SyncNocSheetModal({ open, onOpenChange, onSuccess }) {
         body: formData,
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { success: false, error: 'Server returned non-JSON response.' };
+      }
 
       if (res.ok && data.success) {
         toast.success(data.message || `Successfully synced ${data.updatedCount || 0} orders!`);

@@ -53,6 +53,19 @@ import { PAKISTAN_CITIES } from '@/lib/cities';
 import { formatSmartTimeAgo, formatFullDateTime, formatSmartTimeAgoWithExact } from '@/lib/timeAgo';
 import { openPrintWindow, writePrintWindow, formatPrintCurrency, escapeHtml } from '../orderPrintUtils';
 
+async function safeReadJson(res) {
+  try {
+    const text = await res.text();
+    if (!text) return { success: false, error: 'Empty response received from server.' };
+    return JSON.parse(text);
+  } catch {
+    return {
+      success: false,
+      error: `Server returned non-JSON response (${res.status} ${res.statusText || ''}).`.trim(),
+    };
+  }
+}
+
 export function getStatusBadgeClass(status, isDraft = false) {
   if (isDraft) {
     return 'border-slate-300 bg-slate-50 text-slate-700';
@@ -151,7 +164,7 @@ export default function OrderDetailView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: [order._id || order.orderId] }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         const itemResult = data.results?.[0];
         if (itemResult?.changed) {
@@ -182,7 +195,7 @@ export default function OrderDetailView({
           portalKey: selectedPortal,
         }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         toast.success(data.message || 'Parcel booked successfully with NOC Express!');
         setBookingModalOpen(false);
@@ -206,7 +219,7 @@ export default function OrderDetailView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: [order._id || order.orderId] }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         toast.success('Order moved to trash');
         router.push('/admin/orders');
@@ -231,7 +244,7 @@ export default function OrderDetailView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: [order._id || order.orderId] }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success && Array.isArray(data.results) && data.results.length > 0) {
         const item = data.results[0];
         if (item.nocParcelNo) {
@@ -269,7 +282,7 @@ export default function OrderDetailView({
     setManualParcelInput('');
     try {
       const res = await fetch(`/api/admin/courier/search-portal?orderId=${encodeURIComponent(order.orderId || order._id)}&portalKey=${selectedSearchPortal}`);
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success && Array.isArray(data.matches)) {
         setNocCandidateMatches(data.matches);
       } else {
@@ -288,7 +301,7 @@ export default function OrderDetailView({
     setIsSearchingNoc(true);
     try {
       const res = await fetch(`/api/admin/courier/search-portal?orderId=${encodeURIComponent(order.orderId || order._id)}&portalKey=${pKey}`);
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success && Array.isArray(data.matches)) {
         setNocCandidateMatches(data.matches);
         if (data.matches.length === 0) {
@@ -320,7 +333,7 @@ export default function OrderDetailView({
           nocStatusTime: candidate.statusDate || '',
         }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         toast.success(data.message || `Linked NOC Parcel #${candidate.parcelNo} successfully!`);
         setCheckNocModalOpen(false);
@@ -355,7 +368,7 @@ export default function OrderDetailView({
           portalKey: selectedSearchPortal === 'portal_2' ? 'portal_2' : 'portal_1',
         }),
       });
-      const data = await res.json();
+      const data = await safeReadJson(res);
       if (data.success) {
         toast.success(data.message || `Linked NOC Parcel #${clean} successfully!`);
         setCheckNocModalOpen(false);

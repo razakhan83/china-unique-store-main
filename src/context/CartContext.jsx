@@ -47,6 +47,7 @@ function normalizeCartItem(item) {
     discountedPrice,
     discountPercentage,
     isDiscounted,
+    isFreeDelivery: item.isFreeDelivery === true,
     Category: Array.isArray(item.Category) ? item.Category : item.Category ? [item.Category] : [],
     Images: item.Images || [],
     quantity: Math.max(1, Number(item.quantity || 1)),

@@ -87,8 +87,7 @@ function getShareDescription(product) {
   if (product.seoOgDescription?.trim()) {
     return product.seoOgDescription.trim();
   }
-  const price = getSellingPrice(product);
-  return `Price: ${formatPrice(price)}. ${getProductDescription(product)}`;
+  return getProductDescription(product);
 }
 
 function getPrimaryImage(product) {

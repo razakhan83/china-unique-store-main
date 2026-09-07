@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
 import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
@@ -132,6 +132,17 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
               )}
             >
               {discountLabel}
+            </Badge>
+          )}
+
+          {product.isFreeDelivery && primaryTag?.id !== 'free-shipping' && (
+            <Badge
+              className={cn(
+                "pointer-events-auto rounded border-none bg-emerald-600 dark:bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white tracking-wide shadow-sm flex items-center gap-1"
+              )}
+            >
+              <Truck className="size-3" />
+              Free Delivery
             </Badge>
           )}
 

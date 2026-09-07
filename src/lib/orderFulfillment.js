@@ -92,7 +92,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
       ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
     ],
   })
-    .select('slug Name Price discountedPrice isDiscounted vendors Images packOptions')
+    .select('slug Name Price discountedPrice isDiscounted isFreeDelivery vendors Images packOptions')
     .lean();
   const productMap = buildProductLookupMap(products);
 
@@ -161,6 +161,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
       quantity: item.quantity,
       image: toCleanString(images[0]?.url),
       sourcingVendors: sourcingMap.get(item.productId) || [],
+      isFreeDelivery: Boolean(product.isFreeDelivery),
     };
   });
 

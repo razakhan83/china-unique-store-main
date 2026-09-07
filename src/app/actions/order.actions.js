@@ -232,11 +232,14 @@ export async function submitOrderAction(input) {
       }
     }
 
+    const hasFreeDeliveryProduct = normalizedItems.some((item) => Boolean(item.isFreeDelivery));
     const pricing = calculateCheckoutPricing({
       subtotal: canonicalSubtotalAmount,
       city: customerCity,
       settings,
       appliedCoupon,
+      hasFreeDeliveryProduct,
+      items: normalizedItems,
     });
 
     // STRICT VALIDATION

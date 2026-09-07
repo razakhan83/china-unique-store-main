@@ -751,11 +751,18 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     return CITY_OPTIONS.filter((city) => city.sortKey.includes(normalizedCitySearch)).slice(0, SEARCH_RESULTS_LIMIT);
   }, [normalizedCitySearch]);
 
+  const hasFreeDeliveryProduct = useMemo(
+    () => cart.some((item) => Boolean(item?.isFreeDelivery)),
+    [cart]
+  );
+
   const pricing = calculateCheckoutPricing({
     subtotal,
     city: formData.city,
     settings,
     appliedCoupon,
+    hasFreeDeliveryProduct,
+    items: cart,
   });
   const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi, discountAmount } = pricing;
 

@@ -1,14 +1,10 @@
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import AnimatedStats from '@/components/AnimatedStats';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import TiltedProductMarquee from '@/components/TiltedProductMarquee';
 import HomeFaqSection from '@/components/HomeFaqSection';
 import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
-
-const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
-  loading: () => <div className="h-48 w-full bg-background" aria-hidden="true" />,
-});
 
 export default async function HomeBelowFold() {
   const settings = await getStoreSettings();

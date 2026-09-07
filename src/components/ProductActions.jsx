@@ -157,8 +157,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 discountedPrice: selectedPack.price,
                 discountPercentage: 0,
                 isDiscounted: false,
-                packLabel: selectedPack.label
-            } : product;
+                packLabel: selectedPack.label,
+                isFreeDelivery: Boolean(product?.isFreeDelivery),
+            } : {
+                ...product,
+                isFreeDelivery: Boolean(product?.isFreeDelivery),
+            };
 
             const result = await addToCart(productToAdd, quantity);
             if (result?.success) {
@@ -183,8 +187,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 discountedPrice: selectedPack.price,
                 discountPercentage: 0,
                 isDiscounted: false,
-                packLabel: selectedPack.label
-            } : product;
+                packLabel: selectedPack.label,
+                isFreeDelivery: Boolean(product?.isFreeDelivery),
+            } : {
+                ...product,
+                isFreeDelivery: Boolean(product?.isFreeDelivery),
+            };
 
             const result = await addToCart(productToAdd, quantity);
             if (result?.success) {
