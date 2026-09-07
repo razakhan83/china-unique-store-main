@@ -244,7 +244,7 @@ export default function InvoiceViewClient({ invoice }) {
         },
         {
           storeName: 'China Unique Items',
-          businessAddress: 'Shop No - G29, Ghaziani Mall, Sadar Karachi • 03353127708',
+          businessAddress: 'Shop No - G29, Ghaziani Mall, Sadar Karachi • 03228252592',
           supportEmail: 'chinaunique.pk@gmail.com',
           darkLogoUrl: currentInvoice.storeLogoUrl || '/email-footer-logo-dark-cropped.png',
         }
@@ -825,7 +825,7 @@ export default function InvoiceViewClient({ invoice }) {
                           <div className="text-[10px] sm:text-[10.5px] text-gray-800 space-y-0 font-sans leading-tight text-left">
                             <p className="font-semibold text-gray-900">Shop No - G29, Ghaziani Mall, Sadar</p>
                             <p className="text-gray-700">Karachi</p>
-                            <p className="font-bold text-gray-900">03353127708</p>
+                            <p className="font-bold text-gray-900">03228252592</p>
                           </div>
                         </div>
 

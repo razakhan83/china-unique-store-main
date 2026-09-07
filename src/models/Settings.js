@@ -139,7 +139,7 @@ const SettingsSchema = new mongoose.Schema(
         // WhatsApp
         whatsappNumber: {
             type: String,
-            default: '',
+            default: '923228252592',
         },
         facebookPageUrl: {
             type: String,

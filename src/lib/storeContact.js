@@ -1,4 +1,4 @@
-export const DEFAULT_STORE_PHONE = '03353127708';
+export const DEFAULT_STORE_PHONE = '03228252592';
 
 export function resolveStorePhone(value = '') {
   const digits = String(value || '').replace(/\D/g, '');
