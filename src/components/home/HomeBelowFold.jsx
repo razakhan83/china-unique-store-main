@@ -34,7 +34,7 @@ export default async function HomeBelowFold() {
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Wholesale & Bulk Orders
           </h2>
-          <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mb-8 text-base leading-relaxed text-foreground/85 sm:text-lg">
             Looking to stock premium imported gadgets, kitchenware, and lifestyle products? We supply top-notch quality items at competitive wholesale rates. Connect with us directly for <span className="font-semibold text-primary">bulk orders</span> and <span className="font-semibold text-primary">exclusive B2B pricing</span>.
           </p>
           <a
