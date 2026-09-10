@@ -635,6 +635,11 @@ async function getCategoriesRaw() {
       sortOrder: category.sortOrder ?? 0,
       isEnabled: category.isEnabled !== false,
       showOnHome: category.showOnHome !== false,
+      storefrontProductLimit: Math.min(24, Math.max(1, Number(category.storefrontProductLimit || 8))),
+      featuredProductIds: Array.isArray(category.featuredProductIds)
+        ? category.featuredProductIds.map((id) => (id?._id ? id._id.toString() : id.toString())).filter(Boolean)
+        : [],
+      showcaseSelectionMode: category.showcaseSelectionMode || 'pinned_first',
     }));
   }
 
@@ -1271,13 +1276,49 @@ export async function getStorefrontHomePage() {
           const category = categoryMap.get(section.categoryId);
           if (!category || category.isEnabled === false) return null;
 
-          const products = (productsByCategoryId.get(section.categoryId) || []).slice(0, section.productLimit || 8);
-          if (products.length === 0) return null;
+          const limit = Math.min(24, Math.max(1, Number(section.productLimit || category.storefrontProductLimit || 8)));
+          const allCategoryItems = productsByCategoryId.get(section.categoryId) || [];
+          const itemMap = new Map(allCategoryItems.map((item) => [String(item._id), item]));
+          const pinnedIds = Array.isArray(category.featuredProductIds) ? category.featuredProductIds : [];
+          const mode = category.showcaseSelectionMode || 'pinned_first';
+
+          let resolvedProducts = [];
+
+          if (mode === 'curated_only') {
+            for (const pid of pinnedIds) {
+              const matched = itemMap.get(String(pid));
+              if (matched && !resolvedProducts.some((p) => p._id === matched._id)) {
+                resolvedProducts.push(matched);
+                if (resolvedProducts.length >= limit) break;
+              }
+            }
+          } else if (mode === 'latest') {
+            resolvedProducts = allCategoryItems.slice(0, limit);
+          } else {
+            // 'pinned_first'
+            for (const pid of pinnedIds) {
+              const matched = itemMap.get(String(pid));
+              if (matched && !resolvedProducts.some((p) => p._id === matched._id)) {
+                resolvedProducts.push(matched);
+                if (resolvedProducts.length >= limit) break;
+              }
+            }
+            if (resolvedProducts.length < limit) {
+              for (const item of allCategoryItems) {
+                if (!resolvedProducts.some((p) => p._id === item._id)) {
+                  resolvedProducts.push(item);
+                  if (resolvedProducts.length >= limit) break;
+                }
+              }
+            }
+          }
+
+          if (resolvedProducts.length === 0) return null;
 
           return {
             ...section,
             category,
-            products,
+            products: resolvedProducts,
           };
         }
 

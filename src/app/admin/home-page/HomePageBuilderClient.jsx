@@ -86,6 +86,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { uploadImageDataUrl, uploadVideoFile } from '@/lib/cloudinaryUpload';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { cn } from '@/lib/utils';
+import CategoryShowcaseDialog from '../categories/CategoryShowcaseDialog';
 
 const SECTION_TEMPLATES = [
   {
@@ -435,6 +436,7 @@ function SortableSectionCard({
   onCarouselBannerChange,
   onRemoveCarouselBanner,
   onMoveCarouselBanner,
+  onOpenCategoryShowcase,
 }) {
   const template = SECTION_TEMPLATES.find(
     (item) => item.type === section.type && (!item.collectionKey || item.collectionKey === section.collectionKey),
@@ -763,7 +765,13 @@ function SortableSectionCard({
               <FieldLabel>Category</FieldLabel>
               <Select
                 value={section.categoryId || ''}
-                onValueChange={(value) => onSectionChange(section.id, { categoryId: value })}
+                onValueChange={(value) => {
+                  const cat = categories.find((c) => c._id === value);
+                  onSectionChange(section.id, {
+                    categoryId: value,
+                    productLimit: cat?.storefrontProductLimit || section.productLimit || 8,
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a category" />
@@ -788,8 +796,32 @@ function SortableSectionCard({
                 value={section.productLimit || 8}
                 onChange={(event) => onSectionChange(section.id, { productLimit: Number(event.target.value || 8) })}
               />
-              <FieldDescription>Top products shown for this category on the home page.</FieldDescription>
+              <FieldDescription>Number of items displayed on storefront for this category (1–24).</FieldDescription>
             </Field>
+
+            {section.categoryId && (
+              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl border border-primary/20 bg-primary/5">
+                <div className="text-xs text-foreground">
+                  <span className="font-semibold text-primary">Curated Showcase: </span>
+                  <span className="text-muted-foreground">
+                    Customize front products and pinning order for this category.
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const cat = categories.find((c) => c._id === section.categoryId);
+                    onOpenCategoryShowcase?.(cat || { _id: section.categoryId, name: section.title || 'Category' });
+                  }}
+                  className="text-xs font-semibold gap-1.5 h-8 rounded-lg border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  <Sparkles className="size-3.5" />
+                  Customize Front Products & Order
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -1155,6 +1187,7 @@ function HomePageSectionsWorkspace({
   onCarouselBannerChange,
   onRemoveCarouselBanner,
   onMoveCarouselBanner,
+  onOpenCategoryShowcase,
 }) {
   if (sections.length === 0) {
     return (
@@ -1213,6 +1246,7 @@ function HomePageSectionsWorkspace({
                 onCarouselBannerChange={onCarouselBannerChange}
                 onRemoveCarouselBanner={onRemoveCarouselBanner}
                 onMoveCarouselBanner={onMoveCarouselBanner}
+                onOpenCategoryShowcase={onOpenCategoryShowcase}
               />
             ))}
           </div>
@@ -1258,6 +1292,7 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
   const [saved, setSaved] = useState(false);
   const [uploadingKey, setUploadingKey] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+  const [showcaseModal, setShowcaseModal] = useState({ open: false, category: null });
 
   const toggleSection = (sectionId) => {
     setExpandedIds((current) => {
@@ -1688,8 +1723,18 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
           onCarouselBannerChange={handleCarouselBannerChange}
           onRemoveCarouselBanner={handleRemoveCarouselBanner}
           onMoveCarouselBanner={handleMoveCarouselBanner}
+          onOpenCategoryShowcase={(cat) => setShowcaseModal({ open: true, category: cat })}
         />
       </div>
+
+      <CategoryShowcaseDialog
+        category={showcaseModal.category}
+        isOpen={showcaseModal.open}
+        onClose={() => setShowcaseModal({ open: false, category: null })}
+        onSaved={(updatedCategory) => {
+          toast.success(`Showcase settings updated for ${updatedCategory.name}`);
+        }}
+      />
     </div>
   );
 }

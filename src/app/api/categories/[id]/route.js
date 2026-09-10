@@ -117,9 +117,26 @@ export async function PATCH(req, { params }) {
     if (body.showOnHome !== undefined) {
       existingCategory.showOnHome = body.showOnHome === true || body.showOnHome === 'true';
     }
+    if (body.storefrontProductLimit !== undefined) {
+      const parsedLimit = Number(body.storefrontProductLimit);
+      existingCategory.storefrontProductLimit = Number.isFinite(parsedLimit)
+        ? Math.min(24, Math.max(1, parsedLimit))
+        : 8;
+    }
+    if (body.featuredProductIds !== undefined) {
+      existingCategory.featuredProductIds = Array.isArray(body.featuredProductIds)
+        ? body.featuredProductIds.filter(Boolean)
+        : [];
+    }
+    if (body.showcaseSelectionMode !== undefined) {
+      existingCategory.showcaseSelectionMode = ['pinned_first', 'curated_only', 'latest'].includes(body.showcaseSelectionMode)
+        ? body.showcaseSelectionMode
+        : 'pinned_first';
+    }
 
     await existingCategory.save();
     revalidateTag('categories');
+    revalidateTag('home-page');
     revalidateTag('products');
 
     const productCount = await Product.countDocuments({ Category: existingCategory._id });
@@ -139,6 +156,11 @@ export async function PATCH(req, { params }) {
           bgColor: existingCategory.bgColor || "",
           productCount,
           showOnHome: existingCategory.showOnHome !== false,
+          storefrontProductLimit: Math.min(24, Math.max(1, Number(existingCategory.storefrontProductLimit || 8))),
+          featuredProductIds: Array.isArray(existingCategory.featuredProductIds)
+            ? existingCategory.featuredProductIds.map((id) => (id?._id ? id._id.toString() : id.toString())).filter(Boolean)
+            : [],
+          showcaseSelectionMode: existingCategory.showcaseSelectionMode || 'pinned_first',
         },
       },
       { status: 200 },

@@ -15,6 +15,7 @@ import {
   Upload,
   X,
   GripVertical,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -62,6 +63,7 @@ import { cn } from "@/lib/utils";
 import CategoryPillCard from "@/components/home/CategoryPillCard";
 import { getCategoryColorByIndex } from "@/lib/categoryColors";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerAnimations";
+import CategoryShowcaseDialog from "./CategoryShowcaseDialog";
 
 
 
@@ -83,10 +85,15 @@ function mapCategory(category, index = 0) {
     sortOrder: Number(category.sortOrder ?? index) || 0,
     isEnabled: category.isEnabled !== false,
     productCount: Number(category.productCount || 0),
+    storefrontProductLimit: Number(category.storefrontProductLimit || 8),
+    featuredProductIds: Array.isArray(category.featuredProductIds)
+      ? category.featuredProductIds.map((id) => (id?._id ? id._id.toString() : id.toString())).filter(Boolean)
+      : [],
+    showcaseSelectionMode: category.showcaseSelectionMode || "pinned_first",
   };
 }
 
-function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
+function CategoryCard({ category, onEdit, onDelete, onToggleEnabled, onManageShowcase }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: category._id,
   });
@@ -98,6 +105,8 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
   };
 
   const imageCount = [category.image, category.secondaryImage, category.tertiaryImage].filter(Boolean).length;
+  const pinnedCount = Array.isArray(category.featuredProductIds) ? category.featuredProductIds.length : 0;
+  const productLimit = category.storefrontProductLimit || 8;
 
   return (
     <div
@@ -164,7 +173,18 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
             </Badge>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">{category.slug}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <p className="text-xs text-muted-foreground">{category.slug}</p>
+          <span className="text-muted-foreground/40">•</span>
+          <button
+            type="button"
+            onClick={() => onManageShowcase?.(category)}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+          >
+            <Sparkles className="size-3" />
+            <span>Storefront: {productLimit} items {pinnedCount > 0 ? `(${pinnedCount} pinned)` : ''}</span>
+          </button>
+        </div>
       </div>
 
       <div className="hidden text-right md:block">
@@ -174,7 +194,19 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
         <p className="mt-1 text-sm font-semibold text-foreground">{category.productCount}</p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onManageShowcase?.(category)}
+          className="hidden sm:inline-flex items-center gap-1.5 h-8 text-xs font-semibold rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/30 shadow-2xs"
+          title="Manage Storefront Products & Limit"
+        >
+          <Sparkles className="size-3.5" />
+          <span>Showcase ({productLimit})</span>
+        </Button>
+
         <div className="flex flex-col items-end gap-1">
           <span className={cn(
             "text-[10px] font-semibold uppercase tracking-[0.16em]",
@@ -202,9 +234,13 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => onManageShowcase?.(category)}>
+                <Sparkles />
+                Storefront Showcase ({productLimit})
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit?.(category)}>
                 <Pencil />
-                Edit
+                Edit Category
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -231,6 +267,7 @@ export default function AdminCategoriesClient() {
   const [newTertiaryImage, setNewTertiaryImage] = useState("");
   const [newBgColor, setNewBgColor] = useState("");
   const [deleteModal, setDeleteModal] = useState({ open: false, category: null });
+  const [showcaseModal, setShowcaseModal] = useState({ open: false, category: null });
   const [deleting, setDeleting] = useState(false);
   const [editModal, setEditModal] = useState({ open: false, category: null });
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -879,6 +916,7 @@ export default function AdminCategoriesClient() {
                     onEdit={openEditModal}
                     onDelete={(selectedCategory) => setDeleteModal({ open: true, category: selectedCategory })}
                     onToggleEnabled={toggleCategoryEnabled}
+                    onManageShowcase={(selectedCategory) => setShowcaseModal({ open: true, category: selectedCategory })}
                   />
                 </StaggerItem>
               ))}
@@ -1169,6 +1207,17 @@ export default function AdminCategoriesClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CategoryShowcaseDialog
+        category={showcaseModal.category}
+        isOpen={showcaseModal.open}
+        onClose={() => setShowcaseModal({ open: false, category: null })}
+        onSaved={(updatedCategory) => {
+          setCategories((prev) =>
+            prev.map((c) => (c._id === updatedCategory._id ? { ...c, ...updatedCategory } : c))
+          );
+        }}
+      />
     </div>
   );
 }

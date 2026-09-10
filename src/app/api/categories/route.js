@@ -58,6 +58,11 @@ export async function GET() {
         tertiaryImage: optimizeCloudinaryUrl(category.tertiaryImage || ''),
         productCount: productCountMap.get(String(category._id)) || 0,
         showOnHome: category.showOnHome !== false,
+        storefrontProductLimit: Math.min(24, Math.max(1, Number(category.storefrontProductLimit || 8))),
+        featuredProductIds: Array.isArray(category.featuredProductIds)
+          ? category.featuredProductIds.map((id) => (id?._id ? id._id.toString() : id.toString())).filter(Boolean)
+          : [],
+        showcaseSelectionMode: category.showcaseSelectionMode || 'pinned_first',
       })),
     });
   } catch (error) {
