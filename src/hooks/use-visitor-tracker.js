@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import PusherClient from 'pusher-js';
 
 const GEO_STORAGE_KEY = 'cu_visitor_geo';
 
@@ -70,6 +69,10 @@ export function useVisitorTracker() {
         const city = encodeURIComponent(geo?.city || 'Karachi');
         const country = encodeURIComponent(geo?.country || 'Pakistan');
         const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2';
+
+        // Dynamic import to keep pusher-js out of the initial critical JS bundle
+        const { default: PusherClient } = await import('pusher-js');
+        if (isCancelled) return;
 
         client = new PusherClient(pusherKey, {
           cluster,

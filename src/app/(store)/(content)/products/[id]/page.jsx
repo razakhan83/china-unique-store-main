@@ -1,4 +1,4 @@
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import { Star } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
@@ -353,10 +353,12 @@ export default async function ProductPage({ params }) {
         <ProductTabsWrapper product={product} reviewSummary={reviewSummary} />
       </div>
 
-      <RelatedProductsSection
-        primaryCategory={primaryCategory}
-        excludeSlug={product.slug}
-      />
+      <Suspense fallback={<div className="border-t border-border bg-primary/5 py-8 md:py-12" aria-hidden="true" />}>
+        <RelatedProductsSection
+          primaryCategory={primaryCategory}
+          excludeSlug={product.slug}
+        />
+      </Suspense>
     </div>
   );
 }

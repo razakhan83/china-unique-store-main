@@ -157,7 +157,9 @@ export default function RootLayout({ children }) {
         />
         <AuthProvider>
           {children}
-          <VisitorTracker />
+          <Suspense fallback={null}>
+            <VisitorTracker />
+          </Suspense>
           <Toaster position="bottom-center" richColors />
           <ServiceWorkerRegister />
         </AuthProvider>
