@@ -406,7 +406,7 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
         enabled={settings.trackingEnabled === true}
         facebookPixelId={settings.facebookPixelId}
         tiktokPixelId={settings.tiktokPixelId}
-        productId={product.slug || product._id}
+        productId={String(product._id || product.id || product.slug)}
         name={product.Name}
         category={categoryLabel || 'Product'}
         value={price}

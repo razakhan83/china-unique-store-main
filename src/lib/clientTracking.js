@@ -152,7 +152,19 @@ export function trackSearchEvent({ searchString }) {
 
 export function trackInitiateCheckoutEvent({ cart = [], total = 0 }) {
   const contentIds = cart
-    .map((item) => String(item?.id || item?._id || item?.slug || '').trim())
+    .map((item) => String(item?._id || item?.productId || item?.id || item?.slug || '').trim())
+    .filter(Boolean);
+
+  const contents = cart
+    .map((item) => {
+      const id = String(item?._id || item?.productId || item?.id || item?.slug || '').trim();
+      if (!id) return null;
+      return {
+        id,
+        quantity: Math.max(1, Number(item?.quantity || 1)),
+        item_price: Number(item?.discountedPrice ?? item?.Price ?? item?.price ?? 0),
+      };
+    })
     .filter(Boolean);
 
   const eventId = createEventId('initiate-checkout');
@@ -161,6 +173,7 @@ export function trackInitiateCheckoutEvent({ cart = [], total = 0 }) {
     value: Number(total || 0),
     content_type: 'product',
     content_ids: contentIds,
+    contents,
   };
 
   if (typeof window.fbq === 'function') {
@@ -177,8 +190,21 @@ export function trackInitiateCheckoutEvent({ cart = [], total = 0 }) {
 
 export function trackPurchaseEvent({ orderId, cart = [], total = 0 }) {
   const contentIds = cart
-    .map((item) => String(item?.id || item?._id || item?.slug || '').trim())
+    .map((item) => String(item?._id || item?.productId || item?.id || item?.slug || '').trim())
     .filter(Boolean);
+
+  const contents = cart
+    .map((item) => {
+      const id = String(item?._id || item?.productId || item?.id || item?.slug || '').trim();
+      if (!id) return null;
+      return {
+        id,
+        quantity: Math.max(1, Number(item?.quantity || 1)),
+        item_price: Number(item?.discountedPrice ?? item?.Price ?? item?.price ?? 0),
+      };
+    })
+    .filter(Boolean);
+
   const eventId = String(orderId || createEventId('purchase')).trim();
 
   const customData = {
@@ -186,6 +212,7 @@ export function trackPurchaseEvent({ orderId, cart = [], total = 0 }) {
     value: Number(total || 0),
     content_type: 'product',
     content_ids: contentIds,
+    contents,
   };
 
   if (typeof window.fbq === 'function') {

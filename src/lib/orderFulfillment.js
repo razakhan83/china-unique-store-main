@@ -154,7 +154,9 @@ export async function buildOrderItemsWithSourcing(items = []) {
     }
 
     return {
-      productId: item.productId,
+      productId: product._id ? product._id.toString() : item.productId,
+      _id: product._id ? product._id.toString() : item.productId,
+      slug: product.slug || '',
       name: finalName,
       price: resolveCheckoutUnitPrice(product, item.packLabel),
       packLabel: item.packLabel,

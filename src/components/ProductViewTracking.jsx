@@ -13,10 +13,11 @@ export default function ProductViewTracking({
   value,
 }) {
   useEffect(() => {
-    if (!enabled || !productId) return;
+    const safeProductId = String(productId || '').trim();
+    if (!enabled || !safeProductId) return;
 
     const payload = {
-      content_ids: [productId],
+      content_ids: [safeProductId],
       content_name: name,
       content_category: category,
       content_type: 'product',
@@ -25,7 +26,7 @@ export default function ProductViewTracking({
     };
 
     if (facebookPixelId) {
-      trackViewContentEvent({ productId, name, category, value });
+      trackViewContentEvent({ productId: safeProductId, name, category, value });
     }
 
     if (tiktokPixelId && typeof window.ttq?.track === 'function') {

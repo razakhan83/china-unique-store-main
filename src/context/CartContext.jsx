@@ -36,10 +36,13 @@ function normalizeCartItem(item) {
       ? `${originalName} (${packLabel})` 
       : originalName;
 
+  const resolvedCatalogId = String(item._id || item.productId || item.id || item.slug || '').trim();
+
   return {
     id: getCartItemId(item),
-    slug: item.slug || item.id || item._id || '',
-    _id: item._id || item.id || item.slug || '',
+    slug: item.slug || '',
+    _id: resolvedCatalogId,
+    productId: resolvedCatalogId,
     Name: finalName,
     originalName,
     packLabel,
@@ -74,6 +77,19 @@ function applyOptimisticCartMutation(currentCart, mutation) {
   switch (mutation.type) {
     case 'add':
       return mergeCartItems(currentCart, mutation.item);
+    case 'update':
+      return currentCart
+        .map((item) => {
+          if (item.id !== mutation.id) return item;
+          const nextQuantity = Math.max(0, Number(mutation.quantity || 0));
+          if (nextQuantity === 0) return null;
+          return { ...item, quantity: nextQuantity };
+        })
+        .filter(Boolean);
+    case 'remove':
+      return currentCart.filter((item) => item.id !== mutation.id);
+    case 'clear':
+      return [];
     default:
       return currentCart;
   }
@@ -82,32 +98,31 @@ function applyOptimisticCartMutation(currentCart, mutation) {
 function CartProviderContent({ children }) {
   const [cart, setCart] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [optimisticCart, addOptimisticCart] = useOptimistic(cart, applyOptimisticCartMutation);
+  const [optimisticCart, addOptimisticCart] = useOptimistic(
+    cart,
+    applyOptimisticCartMutation
+  );
 
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
-        const parsed = JSON.parse(savedCart);
-        const nextCart = Array.isArray(parsed?.items) ? parsed.items.map(normalizeCartItem) : [];
-        setCart(nextCart);
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed?.items)) {
+          setCart(parsed.items.map(normalizeCartItem));
+        }
       }
     } catch (error) {
-      console.error('Failed to parse cart from local storage', error);
+      console.error('Failed to load cart from local storage', error);
     } finally {
       setIsInitialized(true);
     }
   }, []);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    persistCartSnapshot(cart);
-  }, [cart, isInitialized]);
-
-  function persistCartSnapshot(nextCart) {
+  function persistCart(nextCart) {
     try {
       localStorage.setItem(
         CART_STORAGE_KEY,
@@ -116,12 +131,15 @@ function CartProviderContent({ children }) {
           items: nextCart,
         })
       );
-      return true;
     } catch (error) {
       console.error('Failed to persist cart to local storage', error);
-      return false;
     }
   }
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    persistCart(cart);
+  }, [cart, isInitialized]);
 
   const actions = useMemo(
     () => ({
@@ -149,8 +167,9 @@ function CartProviderContent({ children }) {
         });
 
         try {
+          const catalogProductId = String(normalized._id || normalized.productId || normalized.id || normalized.slug || '').trim();
           trackAddToCartEvent({
-            productId: normalized.slug || normalized._id || normalized.id,
+            productId: catalogProductId,
             name: normalized.Name,
             category: Array.isArray(normalized.Category) ? normalized.Category.join(', ') : '',
             value: normalized.discountedPrice ?? normalized.Price,

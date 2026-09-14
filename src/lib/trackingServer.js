@@ -35,9 +35,9 @@ function sanitizeUserData(userData = {}) {
 
 function buildContents(items) {
   return items.map((item) => ({
-    id: String(item.productId || item.name || ''),
+    id: String(item.productId || item._id || item.id || item.name || ''),
     quantity: Number(item.quantity || 1),
-    item_price: Number(item.price || 0),
+    item_price: Number(item.price || item.discountedPrice || 0),
   }));
 }
 
@@ -126,7 +126,7 @@ async function sendMetaPurchaseEventWithUserData({ order, items, settings, userD
       value: Number(order.totalAmount || 0),
       content_type: 'product',
       contents: buildContents(items),
-      content_ids: items.map((item) => String(item.productId || item.name || '')).filter(Boolean),
+      content_ids: items.map((item) => String(item.productId || item._id || item.id || item.name || '')).filter(Boolean),
     },
     settings,
   });
