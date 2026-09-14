@@ -48,14 +48,14 @@ export async function GET(_request, { params }) {
         const { id } = await params;
         const query = resolveProductQuery(id);
         let product = await Product.findOne(query)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
+            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
         if (!product && typeof id === 'string' && id.trim()) {
             const escaped = id.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             product = await Product.findOne({ slug: { $regex: new RegExp(`^${escaped}$`, 'i') } })
-                .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
+                .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
                 .populate({ path: 'Category', select: 'name slug bgColor' })
                 .lean();
         }
@@ -165,6 +165,7 @@ export async function PUT(request, { params }) {
         existingProduct.seoOgDescription = typeof body.seoOgDescription === 'string' ? body.seoOgDescription.trim() : '';
         existingProduct.seoOgImage = typeof body.seoOgImage === 'string' ? body.seoOgImage.trim() : '';
         existingProduct.seoOgImageRatio = body.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1';
+        existingProduct.seoOgImageFit = body.seoOgImageFit === 'contain' ? 'contain' : 'cover';
         existingProduct.Price = Number(body.Price);
         existingProduct.compareAtPrice = Number.isFinite(normalizedCompareAtPrice) ? normalizedCompareAtPrice : null;
         existingProduct.Images = normalizedImages;

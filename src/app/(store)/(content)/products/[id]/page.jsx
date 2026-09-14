@@ -87,13 +87,26 @@ function getShareDescription(product) {
   if (product.seoOgDescription?.trim()) {
     return product.seoOgDescription.trim();
   }
+  const sellingPrice = getSellingPrice(product);
+  const plainDescription = product.seoDescription?.trim() || stripHtmlTags(product.Description);
+  if (sellingPrice > 0) {
+    return `Price: Rs. ${sellingPrice.toLocaleString('en-PK')}. ${plainDescription || 'Buy online from China Unique Store.'}`;
+  }
   return getProductDescription(product);
 }
 
 function getPrimaryImage(product) {
   const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
   if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
-  return getProductSocialShareImage(rawUrl, product.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1');
+  const optimized = getProductSocialShareImage(
+    rawUrl,
+    product.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1',
+    product.seoOgImageFit || 'cover'
+  );
+  if (optimized && optimized.startsWith('/')) {
+    return `${siteUrl}${optimized}`;
+  }
+  return optimized;
 }
 
 function getProductJsonLd({ product, reviewSummary = null }) {
@@ -239,7 +252,7 @@ export async function generateMetadata({ params }) {
   const reviewSummary = await getProductReviewSummarySafe(product._id);
   const categories = getProductCategories(product);
   const productTitle = getProductTitle(product);
-  const socialTitle = metadataTitle(product.seoOgTitle?.trim() || productTitle);
+  const socialTitle = product.seoOgTitle?.trim() || product.seoTitle?.trim() || product.Name;
   const productUrl = getCanonicalUrl(product);
   const productImage = getPrimaryImage(product);
   const shareDescription = getShareDescription(product);
@@ -250,6 +263,7 @@ export async function generateMetadata({ params }) {
   const isSquare = product.seoOgImageRatio === '1:1';
   const ogWidth = isSquare ? 1080 : 1200;
   const ogHeight = isSquare ? 1080 : 630;
+  const imageType = productImage.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
 
   return {
     title: productTitle,
@@ -270,7 +284,7 @@ export async function generateMetadata({ params }) {
           secureUrl: productImage,
           width: ogWidth,
           height: ogHeight,
-          type: 'image/jpeg',
+          type: imageType,
           alt: socialTitle,
         },
       ],

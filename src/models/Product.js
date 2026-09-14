@@ -155,6 +155,11 @@ const ProductSchema = new mongoose.Schema(
             enum: ['1.91:1', '1:1'],
             default: '1.91:1',
         },
+        seoOgImageFit: {
+            type: String,
+            enum: ['cover', 'contain'],
+            default: 'cover',
+        },
         Price: {
             type: Number,
             required: [true, 'Please provide a price.'],

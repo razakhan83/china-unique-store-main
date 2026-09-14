@@ -351,6 +351,7 @@ export default function AddProduct() {
           seoOgDescription,
           seoOgImage,
           seoOgImageRatio,
+          seoOgImageFit: ogPreviewFit,
           Price: Number(Price),
           compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,

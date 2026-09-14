@@ -139,6 +139,8 @@ export default function EditProduct({ id }) {
           setSeoOgImage(p.seoOgImage || '');
           const loadedRatio = p.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1';
           setSeoOgImageRatio(loadedRatio);
+          const loadedFit = p.seoOgImageFit === 'contain' ? 'contain' : 'cover';
+          setOgPreviewFit(loadedFit);
           setPrice(p.Price || '');
           setCompareAtPrice(p.compareAtPrice ?? '');
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
@@ -370,6 +372,7 @@ export default function EditProduct({ id }) {
           seoOgDescription,
           seoOgImage,
           seoOgImageRatio,
+          seoOgImageFit: ogPreviewFit,
           Price: Number(Price),
           compareAtPrice: compareAtPrice === '' ? null : Number(compareAtPrice),
           Images: finalImages,
