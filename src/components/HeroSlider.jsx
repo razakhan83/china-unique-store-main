@@ -254,18 +254,18 @@ export default function HeroSlider({ slides = [] }) {
 
         {/* Dot indicators */}
         {resolvedSlides.length > 1 ? (
-          <div className="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-1">
+          <div className="absolute inset-x-0 bottom-3.5 z-10 flex justify-center gap-1.5">
             {resolvedSlides.map((slide, index) => (
               <button
                 key={slide.id || `dot-${index}`}
                 type="button"
                 aria-label={`Go to slide ${index + 1}`}
                 onClick={() => goToSlide(index)}
-                className="flex min-h-[32px] min-w-[32px] -m-1 items-center justify-center cursor-pointer p-0 border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
+                className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
               >
                 <span
-                  className={`h-2 rounded-full shadow-md transition-all duration-300 origin-center pointer-events-none block ${
-                    safeActiveIndex === index ? 'w-8 bg-white' : 'w-2 bg-white/55 hover:bg-white/80'
+                  className={`h-1.5 rounded-full shadow-md transition-all duration-300 origin-center pointer-events-none block ${
+                    safeActiveIndex === index ? 'w-6 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
                   }`}
                 />
               </button>

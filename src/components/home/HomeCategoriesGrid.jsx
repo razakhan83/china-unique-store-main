@@ -84,14 +84,14 @@ function CarouselDots({ slideCount = 8 }) {
   };
 
   return (
-    <div className="relative z-30 mt-4 flex items-center justify-center gap-0.5 pt-1">
+    <div className="relative z-30 mt-2 flex items-center justify-center gap-1.5">
       {Array.from({ length: slideCount }, (_, idx) => (
         <button
           key={idx}
           type="button"
           aria-label={`Go to category ${idx + 1}`}
           onClick={() => handleGoTo(idx)}
-          className="flex min-h-[28px] min-w-[28px] items-center justify-center cursor-pointer p-0 border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
+          className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
         >
           <span
             className={cn(

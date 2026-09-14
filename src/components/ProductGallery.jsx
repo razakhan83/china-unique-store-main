@@ -141,7 +141,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
         </Carousel>
 
         {hasMultipleImages && (
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-1 md:hidden z-10 pointer-events-none">
+          <div className="absolute bottom-2.5 left-0 right-0 flex justify-center items-center gap-1.5 md:hidden z-10 pointer-events-none">
             {normalizedImages.map((_, index) => (
               <button
                 key={index}
@@ -149,14 +149,14 @@ export default function ProductGallery({ images, primaryTag, product }) {
                 onClick={() => handleThumbnailClick(index)}
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={index === selectedIndex}
-                className="group relative inline-flex size-7 min-h-[28px] min-w-[28px] items-center justify-center p-0 pointer-events-auto cursor-pointer focus:outline-none"
+                className="group relative inline-flex items-center justify-center p-1 pointer-events-auto cursor-pointer focus:outline-none"
               >
                 <span
                   className={cn(
                     'rounded-full transition-all duration-300 pointer-events-none block shadow-xs',
                     index === selectedIndex
-                      ? 'w-5 h-2 bg-primary'
-                      : 'size-2 bg-background border-[1.5px] border-primary/60 group-hover:bg-primary/20'
+                      ? 'w-4 h-1.5 bg-primary'
+                      : 'size-1.5 bg-background border-[1.5px] border-primary/60 group-hover:bg-primary/20'
                   )}
                 />
               </button>
