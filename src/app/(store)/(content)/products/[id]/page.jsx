@@ -261,9 +261,18 @@ export async function generateMetadata({ params }) {
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
 
   const isSquare = product.seoOgImageRatio === '1:1';
-  const ogWidth = isSquare ? 1080 : 1200;
-  const ogHeight = isSquare ? 1080 : 630;
-  const imageType = productImage.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
+  const ogWidth = isSquare ? 800 : 1200;
+  const ogHeight = isSquare ? 800 : 630;
+  const isJpg =
+    productImage.includes('f_jpg') ||
+    productImage.includes('res.cloudinary.com') ||
+    productImage.toLowerCase().includes('.jpg') ||
+    productImage.toLowerCase().includes('.jpeg');
+  const imageType = isJpg
+    ? 'image/jpeg'
+    : productImage.toLowerCase().includes('.png')
+      ? 'image/png'
+      : 'image/jpeg';
 
   return {
     title: productTitle,
@@ -296,6 +305,9 @@ export async function generateMetadata({ params }) {
       images: [productImage],
     },
     other: {
+      'og:image:secure_url': productImage,
+      'og:image:type': imageType,
+      'image_src': productImage,
       'product:price:amount': String(price),
       'product:price:currency': 'PKR',
       'product:availability': availability,

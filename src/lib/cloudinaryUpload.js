@@ -78,7 +78,7 @@ export async function uploadImageDataUrl(dataUrl, folder = "kifayatly_products")
     const blurDataURL = placeholderData?.blurDataURL || "";
 
     return {
-      url: optimizeCloudinaryUrl(uploadData.secure_url),
+      url: uploadData.secure_url,
       publicId: uploadData.public_id || "",
       blurDataURL,
     };

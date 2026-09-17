@@ -1189,9 +1189,30 @@ export default function AddProduct() {
 
             {/* Social Share & OpenGraph Controls */}
             <div className="mt-8 pt-6 border-t border-border space-y-4">
-              <div className="flex items-center gap-2">
-                <Share2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <h3 className="text-sm font-semibold text-foreground">Social Share & OpenGraph (WhatsApp, Facebook & Twitter)</h3>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Share2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="text-sm font-semibold text-foreground">Social Share & OpenGraph (WhatsApp, Facebook & Twitter)</h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const candidateTitle = (trimmedSeoTitle || Name || '').slice(0, 100);
+                    const priceText = Price ? `Price: Rs. ${Number(Price).toLocaleString('en-PK')}. ` : '';
+                    const candidateDesc = `${priceText}${trimmedSeoDescription || plainDescription || 'Buy online from China Unique Store. Cash on Delivery all across Pakistan.'}`.slice(0, 350);
+                    setSeoOgTitle(candidateTitle);
+                    setSeoOgDescription(candidateDesc);
+                    if (!seoOgImage && images?.[0]?.url) {
+                      setSeoOgImage(images[0].url);
+                    }
+                    showToast('OG preview fields filled from product details!', 'success');
+                  }}
+                  className="h-7 text-[11px] font-medium border-emerald-600/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+                >
+                  ⚡ Auto-fill OG from Product
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
                 Customize the headline, description, and preview image that appear when this product link is shared on WhatsApp, Facebook, Instagram, and Twitter.
@@ -1379,7 +1400,7 @@ export default function AddProduct() {
                           "px-2.5 py-1 rounded text-[11px] font-semibold transition-all",
                           seoOgImageRatio === '1:1' ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                         )}
-                        title="1:1 Square Card (1080 × 1080 px)"
+                        title="1:1 Square Card (800 × 800 px - Optimized for WhatsApp)"
                       >
                         1:1
                       </button>
@@ -1412,7 +1433,7 @@ export default function AddProduct() {
                       </div>
                     )}
                     <span className="absolute top-2 right-2 rounded-md bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white/90">
-                      {isSquarePreview ? '1080 × 1080' : '1200 × 630'}
+                      {isSquarePreview ? '800 × 800' : '1200 × 630'}
                     </span>
                   </div>
                   <div className="p-3 space-y-1 bg-[#0b2b24]">

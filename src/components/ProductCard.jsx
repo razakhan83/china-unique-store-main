@@ -170,6 +170,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 priority={priority}
                 fetchPriority={priority ? "high" : "auto"}
                 loading={priority ? "eager" : "lazy"}
+                decoding="async"
                 className={cn(
                   "object-cover transition-transform duration-500 ease-out",
                   "md:group-hover:scale-105",
@@ -187,6 +188,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     draggable={false}
                     sizes="(max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
+                    decoding="async"
                     className={cn(
                       "object-cover transition-opacity duration-500 ease-out absolute inset-0 opacity-0",
                       "md:group-hover:opacity-100 md:group-hover:scale-105",

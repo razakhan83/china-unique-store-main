@@ -887,11 +887,21 @@
   }
 }
 
-/* Mobile scroll: native-feeling momentum with bounce prevention */
+/* Mobile scroll: native-feeling momentum with bounce prevention & 60fps compositor acceleration */
 @media (max-width: 767px) {
   html {
-    /* Prevent horizontal bounce on iOS */
     overscroll-behavior-x: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .product-card-surface {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: paint layout;
   }
 }
 

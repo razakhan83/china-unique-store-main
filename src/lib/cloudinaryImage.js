@@ -37,12 +37,12 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   productModal: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
   // Social share preview card (WhatsApp / Facebook / Twitter):
-  // 1200x630 landscape banner
-  socialShare: { width: 1200, height: 630, crop: 'fill', gravity: 'auto', format: 'jpg', quality: 85 },
-  socialSharePad: { width: 1200, height: 630, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 85 },
-  // 1080x1080 square card (for 1:1 social preview)
-  socialShareSquare: { width: 1080, height: 1080, crop: 'fill', gravity: 'auto', format: 'jpg', quality: 85 },
-  socialShareSquarePad: { width: 1080, height: 1080, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 85 },
+  // 1200x630 landscape banner (strictly under WhatsApp's 300KB limit)
+  socialShare: { width: 1200, height: 630, crop: 'fill', gravity: 'auto', format: 'jpg', quality: 75 },
+  socialSharePad: { width: 1200, height: 630, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 75 },
+  // 800x800 square card (for 1:1 social preview, super lightweight ~80KB, perfect for WhatsApp)
+  socialShareSquare: { width: 800, height: 800, crop: 'fill', gravity: 'auto', format: 'jpg', quality: 75 },
+  socialShareSquarePad: { width: 800, height: 800, crop: 'pad', background: 'rgb:ffffff', format: 'jpg', quality: 75 },
 
   // ── Admin-facing presets ─────────────────────────────────────────────────────
   // Admin thumbnails don't need AVIF since they're behind auth and not LCP-critical
@@ -114,8 +114,12 @@ export function optimizeCloudinaryUrl(url = '', options = {}) {
 }
 
 export function getProductSocialShareImage(url = '', ratio = '1.91:1', fit = 'cover') {
-  const source = String(url || '').trim();
+  let source = String(url || '').trim();
   if (!source) return '';
+
+  if (source.startsWith('http://')) {
+    source = source.replace('http://', 'https://');
+  }
 
   const isSquare = ratio === '1:1';
   const isPng = source.toLowerCase().includes('.png') || source.toLowerCase().includes('/png');
