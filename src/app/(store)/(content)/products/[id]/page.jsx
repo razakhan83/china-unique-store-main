@@ -96,8 +96,22 @@ function getShareDescription(product) {
 }
 
 function getPrimaryImage(product) {
-  const rawUrl = product.seoOgImage?.trim() || product.Images?.[0]?.url;
-  if (!rawUrl) return `${siteUrl}/opengraph-image.png`;
+  let rawUrl = '';
+  if (product.seoOgImage && typeof product.seoOgImage === 'string' && !product.seoOgImage.startsWith('data:')) {
+    rawUrl = product.seoOgImage.trim();
+  }
+
+  if (!rawUrl && Array.isArray(product.Images)) {
+    const validImage = product.Images.find((img) => img?.url && typeof img.url === 'string' && !img.url.startsWith('data:'));
+    if (validImage) {
+      rawUrl = validImage.url.trim();
+    }
+  }
+
+  if (!rawUrl || rawUrl.startsWith('data:')) {
+    return `${siteUrl}/opengraph-image.png`;
+  }
+
   const optimized = getProductSocialShareImage(
     rawUrl,
     product.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1',

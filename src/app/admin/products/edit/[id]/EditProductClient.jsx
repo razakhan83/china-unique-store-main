@@ -136,7 +136,7 @@ export default function EditProduct({ id }) {
           setSeoCanonicalUrl(p.seoCanonicalUrl || '');
           setSeoOgTitle(p.seoOgTitle || '');
           setSeoOgDescription(p.seoOgDescription || '');
-          setSeoOgImage(p.seoOgImage || '');
+          setSeoOgImage((p.seoOgImage && !p.seoOgImage.startsWith('data:')) ? p.seoOgImage : '');
           const loadedRatio = p.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1';
           setSeoOgImageRatio(loadedRatio);
           const loadedFit = p.seoOgImageFit === 'contain' ? 'contain' : 'cover';
@@ -370,7 +370,7 @@ export default function EditProduct({ id }) {
           seoCanonicalUrl,
           seoOgTitle,
           seoOgDescription,
-          seoOgImage,
+          seoOgImage: seoOgImage.startsWith('data:') ? '' : seoOgImage,
           seoOgImageRatio,
           seoOgImageFit: ogPreviewFit,
           Price: Number(Price),

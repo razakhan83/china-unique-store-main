@@ -349,7 +349,7 @@ export default function AddProduct() {
           seoCanonicalUrl,
           seoOgTitle,
           seoOgDescription,
-          seoOgImage,
+          seoOgImage: seoOgImage.startsWith('data:') ? '' : seoOgImage,
           seoOgImageRatio,
           seoOgImageFit: ogPreviewFit,
           Price: Number(Price),

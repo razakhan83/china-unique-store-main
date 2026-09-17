@@ -1866,10 +1866,6 @@ export async function getAdminProducts() {
 }
 
 export async function getAdminProductCategoryOptions() {
-  'use cache';
-  cacheLife({ stale: 60, revalidate: 300, expire: 1800 });
-  cacheTag('categories');
-
   const categories = await getCategoriesRaw();
 
   return categories.map((category) => ({
@@ -2057,9 +2053,6 @@ export async function getAdminOrdersPage({
   page = 1,
   limit = 12,
 } = {}) {
-  'use cache';
-  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
-  cacheTag('orders');
   await mongooseConnect();
 
   const safeSearch = String(search || '').trim();
@@ -2165,9 +2158,6 @@ export async function getAdminOrdersPage({
 }
 
 export async function getAdminTrashOrders() {
-  'use cache';
-  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
-  cacheTag('orders');
   await mongooseConnect();
 
   const items = await Order.find({ isDeleted: true })
@@ -2484,9 +2474,6 @@ export async function getCustomerOtherOrders(phone, currentOrderId) {
 }
 
 export async function getAdminDashboardData() {
-  'use cache';
-  cacheLife({ stale: 15, revalidate: 30, expire: 120 });
-  cacheTag('admin-dashboard', 'orders', 'products');
   await mongooseConnect();
 
   const startOfToday = new Date();
@@ -2717,9 +2704,6 @@ export async function getAdminDashboardData() {
 }
 
 export async function getAdminChartData(period = 'monthly') {
-  'use cache';
-  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
-  cacheTag('admin-dashboard', 'orders');
   await mongooseConnect();
 
   const now = new Date();
@@ -2804,9 +2788,6 @@ export async function getAdminChartData(period = 'monthly') {
 }
 
 export async function getAdminSettings() {
-  'use cache';
-  cacheLife({ stale: 30, revalidate: 60, expire: 300 });
-  cacheTag('settings');
   await mongooseConnect();
 
   let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
@@ -2849,9 +2830,6 @@ export async function getAdminSettings() {
 }
 
 export async function getAdminTopProductsPage({ page = 1, limit = 20 } = {}) {
-  'use cache';
-  cacheLife({ stale: 20, revalidate: 45, expire: 180 });
-  cacheTag('orders', 'products');
   await mongooseConnect();
 
   const skip = (Math.max(1, Number(page)) - 1) * limit;

@@ -41,8 +41,11 @@ const nextConfig = {
   ],
 
   // ── Image Optimization ───────────────────────────────────────────────────────
-  // Removed `unoptimized: true` — was bypassing ALL Next.js image optimization.
+  // unoptimized: true bypasses Vercel's proxy so images stream directly from
+  // Cloudinary CDN (which already applies AVIF/WebP compression via CLOUDINARY_IMAGE_PRESETS).
+  // This saves ~80-90% of Vercel Fast Origin Transfer and completely halts Vercel Image Cache Writes.
   images: {
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

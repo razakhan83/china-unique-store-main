@@ -179,7 +179,7 @@ export async function POST(req) {
             seoCanonicalUrl: typeof seoCanonicalUrl === 'string' ? seoCanonicalUrl.trim() : '',
             seoOgTitle: typeof seoOgTitle === 'string' ? seoOgTitle.trim() : '',
             seoOgDescription: typeof seoOgDescription === 'string' ? seoOgDescription.trim() : '',
-            seoOgImage: typeof seoOgImage === 'string' ? seoOgImage.trim() : '',
+            seoOgImage: typeof seoOgImage === 'string' && !seoOgImage.startsWith('data:') ? seoOgImage.trim() : '',
             seoOgImageRatio: body.seoOgImageRatio === '1:1' ? '1:1' : '1.91:1',
             seoOgImageFit: body.seoOgImageFit === 'contain' ? 'contain' : 'cover',
             Price: normalizedPrice,
