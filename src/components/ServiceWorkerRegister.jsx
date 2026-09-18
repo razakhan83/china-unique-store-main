@@ -4,20 +4,22 @@ import { useEffect } from 'react';
 
 export default function ServiceWorkerRegister() {
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    if (typeof window === 'undefined') return;
 
-    if (process.env.NODE_ENV === 'production') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then(() => {})
-          .catch(() => {});
-      });
-    } else {
-      // Unregister any active service worker on localhost/dev to prevent stale chunk caching
+    // Unregister any active service worker to avoid stale App Router caches
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (const registration of registrations) {
           registration.unregister();
+        }
+      });
+    }
+
+    // Clear any stale Cache Storage created by past service workers
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          caches.delete(name);
         }
       });
     }
@@ -25,3 +27,4 @@ export default function ServiceWorkerRegister() {
 
   return null;
 }
+
