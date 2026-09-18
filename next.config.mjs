@@ -51,8 +51,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
     // Mobile-first device sizes: phones (360-428px) → tablet (768px) → desktop
     deviceSizes: [360, 428, 640, 768, 1024, 1280, 1920],
@@ -63,7 +61,15 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: '**.cloudinary.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
       },
       {
         protocol: 'https',
@@ -88,9 +94,9 @@ const nextConfig = {
           "default-src 'self'",
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://analytics.tiktok.com https://www.googletagmanager.com https://va.vercel-scripts.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-          "img-src 'self' blob: data: https://res.cloudinary.com https://lh3.googleusercontent.com https://www.facebook.com https://*.facebook.com https://*.tiktok.com",
+          "img-src 'self' blob: data: https://*.cloudinary.com https://res.cloudinary.com https://lh3.googleusercontent.com https://*.googleusercontent.com https://www.facebook.com https://*.facebook.com https://*.tiktok.com https:",
           "font-src 'self' https://fonts.gstatic.com data:",
-          "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://res.cloudinary.com https://*.facebook.com https://*.tiktok.com https://analytics.tiktok.com https://www.google-analytics.com https://api.resend.com https://*.vercel-insights.com https://*.on.aws https://*.a.run.app",
+          "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://*.cloudinary.com https://res.cloudinary.com https://*.facebook.com https://*.tiktok.com https://analytics.tiktok.com https://www.google-analytics.com https://api.resend.com https://*.vercel-insights.com https://*.on.aws https://*.a.run.app",
           "frame-src 'self' https://www.facebook.com https://www.google.com https://maps.google.com",
           "object-src 'none'",
           "base-uri 'self'",
