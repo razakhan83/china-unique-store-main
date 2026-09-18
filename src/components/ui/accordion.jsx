@@ -8,11 +8,16 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 function Accordion({
   className,
+  type,
+  collapsible,
+  openMultiple,
   ...props
 }) {
+  const isMultiple = openMultiple ?? type === "multiple";
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
+      openMultiple={isMultiple}
       className={cn("flex w-full flex-col", className)}
       {...props} />
   );

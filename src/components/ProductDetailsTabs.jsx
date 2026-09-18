@@ -5,7 +5,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 export default function ProductDetailsTabs({ reviewCount, descriptionContent, reviewsContent }) {
   return (
     <div className="mt-6 md:mt-16 w-full max-w-4xl mx-auto px-4 md:px-0">
-      <Accordion type="single" collapsible className="border-t border-border/60">
+      <Accordion className="border-t border-border/60">
         {/* Description Accordion Item */}
         <AccordionItem value="description" className="border-b border-border/60">
 

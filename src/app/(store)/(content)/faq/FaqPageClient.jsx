@@ -151,7 +151,7 @@ export default function FaqPageClient({ whatsappNumber, storeName, pageTitle, pa
         <div className="space-y-4">
           {filteredFaqs.length > 0 ? (
             <div className="rounded-2xl border border-border bg-card p-2 sm:p-4 shadow-none divide-y divide-border/60">
-              <Accordion type="single" collapsible="true" className="w-full">
+              <Accordion className="w-full">
                 {filteredFaqs.map((faq) => (
                   <AccordionItem
                     key={faq.id}
