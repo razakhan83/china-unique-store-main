@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
 import { updateTag } from 'next/cache';
 
 import { authOptions } from '@/lib/auth';
@@ -64,10 +63,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
   updateTag(`product-${product._id.toString()}`);
   updateTag('admin-dashboard');
   updateTag('home-sections');
-  revalidatePath(`/products/${product.slug}`);
-  revalidatePath(`/products/${product._id.toString()}`);
-  revalidatePath('/admin/products');
-  revalidatePath('/products');
+
 
   return { success: true, showOnStore: isLive };
 }
@@ -103,10 +99,7 @@ export async function deleteProductAction(productId) {
   updateTag(`product-${product._id.toString()}`);
   updateTag('admin-dashboard');
   updateTag('home-sections');
-  revalidatePath(`/products/${product.slug}`);
-  revalidatePath(`/products/${product._id.toString()}`);
-  revalidatePath('/admin/products');
-  revalidatePath('/products');
+
 
   return { success: true };
 }
@@ -143,10 +136,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
   updateTag(`product-${product._id.toString()}`);
   updateTag('admin-dashboard');
   updateTag('home-sections');
-  revalidatePath(`/products/${product.slug}`);
-  revalidatePath(`/products/${product._id.toString()}`);
-  revalidatePath('/admin/products');
-  revalidatePath('/products');
+
 
   return { success: true, discountPercentage: product.discountPercentage, isDiscounted: product.isDiscounted };
 }

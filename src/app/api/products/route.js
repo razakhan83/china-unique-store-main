@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -210,10 +210,6 @@ export async function POST(req) {
         revalidateTag(`product-${product._id.toString()}`);
         revalidateTag('admin-dashboard');
         revalidateTag('home-sections');
-        revalidatePath('/admin/products');
-        revalidatePath('/products');
-        revalidatePath(`/products/${uniqueSlug}`);
-        revalidatePath(`/products/${product._id.toString()}`);
         return NextResponse.json({
             success: true,
             data: {

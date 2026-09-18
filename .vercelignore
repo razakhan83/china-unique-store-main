@@ -6,3 +6,8 @@ scratch
 scripts
 *.md
 Metadata Preview.png
+*.gz
+*.tar
+*.zip
+*.log
+*.dump

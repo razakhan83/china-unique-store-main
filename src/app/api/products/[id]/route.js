@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import mongoose from 'mongoose';
@@ -12,6 +12,21 @@ import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
+
+function triggerProductRevalidations(product, previousSlug = null) {
+    revalidateTag('products');
+    if (previousSlug) {
+        revalidateTag(`product-${previousSlug}`);
+    }
+    if (product?.slug) {
+        revalidateTag(`product-${product.slug}`);
+    }
+    if (product?._id) {
+        revalidateTag(`product-${product._id.toString()}`);
+    }
+    revalidateTag('admin-dashboard');
+    revalidateTag('home-sections');
+}
 
 export function resolveProductQuery(id) {
     const rawId = String(id || '').trim();
@@ -106,18 +121,7 @@ export async function PUT(request, { params }) {
         if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'showOnStore')) {
             existingProduct.showOnStore = body.showOnStore === true || body.showOnStore === 'true';
             await existingProduct.save();
-            revalidateTag('products');
-            if (existingProduct.slug) {
-                revalidateTag(`product-${existingProduct.slug}`);
-            }
-            revalidateTag(`product-${existingProduct._id.toString()}`);
-            revalidatePath(`/products/${existingProduct.slug}`);
-            revalidatePath(`/products/${existingProduct._id.toString()}`);
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
-            revalidatePath('/admin/products');
-            revalidatePath('/products');
-            revalidatePath('/');
+            triggerProductRevalidations(existingProduct);
             return NextResponse.json({
                 success: true,
                 data: {
@@ -195,22 +199,7 @@ export async function PUT(request, { params }) {
 
         await existingProduct.save();
         await existingProduct.populate({ path: 'Category', select: 'name slug bgColor' });
-        revalidateTag('products');
-        if (previousSlug) {
-            revalidateTag(`product-${previousSlug}`);
-            revalidatePath(`/products/${previousSlug}`, 'page');
-        }
-        if (existingProduct.slug) {
-            revalidateTag(`product-${existingProduct.slug}`);
-            revalidatePath(`/products/${existingProduct.slug}`, 'page');
-        }
-        revalidateTag(`product-${existingProduct._id.toString()}`);
-        revalidatePath(`/products/${existingProduct._id.toString()}`, 'page');
-        revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
-        revalidatePath('/admin/products');
-        revalidatePath('/products', 'page');
-        revalidatePath('/', 'page');
+        triggerProductRevalidations(existingProduct, previousSlug);
 
         return NextResponse.json({
             success: true,
@@ -265,18 +254,7 @@ export async function PATCH(request, { params }) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
             }
 
-            revalidateTag('products');
-            if (updatedProduct.slug) {
-                revalidateTag(`product-${updatedProduct.slug}`);
-                revalidatePath(`/products/${updatedProduct.slug}`);
-            }
-            revalidateTag(`product-${updatedProduct._id.toString()}`);
-            revalidatePath(`/products/${updatedProduct._id.toString()}`);
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
-            revalidatePath('/admin/products');
-            revalidatePath('/products');
-            revalidatePath('/');
+            triggerProductRevalidations(updatedProduct);
 
             return NextResponse.json({
                 success: true,
@@ -341,18 +319,7 @@ export async function PATCH(request, { params }) {
                 return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
             }
 
-            revalidateTag('products');
-            if (updatedProduct.slug) {
-                revalidateTag(`product-${updatedProduct.slug}`);
-                revalidatePath(`/products/${updatedProduct.slug}`);
-            }
-            revalidateTag(`product-${updatedProduct._id.toString()}`);
-            revalidatePath(`/products/${updatedProduct._id.toString()}`);
-            revalidateTag('admin-dashboard');
-            revalidateTag('home-sections');
-            revalidatePath('/admin/products');
-            revalidatePath('/products');
-            revalidatePath('/');
+            triggerProductRevalidations(updatedProduct);
 
             return NextResponse.json({
                 success: true,
@@ -389,18 +356,7 @@ export async function PATCH(request, { params }) {
         }
 
         // Hard-flush all caches so the storefront reflects changes immediately
-        revalidateTag('products');
-        if (updatedProduct.slug) {
-            revalidateTag(`product-${updatedProduct.slug}`);
-            revalidatePath(`/products/${updatedProduct.slug}`);
-        }
-        revalidateTag(`product-${updatedProduct._id.toString()}`);
-        revalidatePath(`/products/${updatedProduct._id.toString()}`);
-        revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
-        revalidatePath('/admin/products');
-        revalidatePath('/products');
-        revalidatePath('/');
+        triggerProductRevalidations(updatedProduct);
 
         return NextResponse.json({
             success: true,
@@ -438,17 +394,7 @@ export async function DELETE(_request, { params }) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        revalidateTag('products');
-        if (deletedProduct.slug) {
-            revalidateTag(`product-${deletedProduct.slug}`);
-            revalidatePath(`/products/${deletedProduct.slug}`);
-        }
-        revalidateTag(`product-${deletedProduct._id.toString()}`);
-        revalidatePath(`/products/${deletedProduct._id.toString()}`);
-        revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
-        revalidatePath('/admin/products');
-        revalidatePath('/products');
+        triggerProductRevalidations(deletedProduct);
 
         return NextResponse.json({ success: true, message: 'Product deleted successfully' });
     } catch (error) {
