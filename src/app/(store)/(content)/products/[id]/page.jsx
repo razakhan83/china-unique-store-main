@@ -350,7 +350,7 @@ export default async function ProductPage({ params }) {
   const isOutOfStock = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
 
   return (
-    <div className="product-detail-shell min-h-screen bg-gray-50">
+    <div className="product-detail-shell min-h-screen bg-background">
       <ProductPageScrollReset />
 
       <script
@@ -379,7 +379,7 @@ export default async function ProductPage({ params }) {
         <ProductTabsWrapper product={product} reviewSummary={reviewSummary} />
       </div>
 
-      <Suspense fallback={<div className="border-t border-border bg-primary/5 py-8 md:py-12" aria-hidden="true" />}>
+      <Suspense fallback={<RelatedProductsSkeleton />}>
         <RelatedProductsSection
           primaryCategory={primaryCategory}
           excludeSlug={product.slug}
@@ -565,3 +565,29 @@ async function RelatedProductsSection({ primaryCategory, excludeSlug }) {
     </div>
   );
 }
+
+function RelatedProductsSkeleton() {
+  return (
+    <div className="border-t border-border bg-primary/5 py-8 md:py-12">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+            <div className="h-6 w-44 rounded-lg bg-muted animate-pulse" />
+          </div>
+          <div className="h-7 w-20 rounded-lg bg-muted animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="space-y-2.5 rounded-2xl border border-border/60 bg-card p-2.5">
+              <div className="aspect-square w-full rounded-xl bg-muted animate-pulse" />
+              <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+              <div className="h-5 w-1/2 rounded bg-muted animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

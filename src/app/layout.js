@@ -6,7 +6,7 @@ import { getMetadataBase } from "@/lib/siteUrl";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE_DEFAULT } from "@/lib/siteSeo";
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-
+import NavigationProgressBar from "@/components/NavigationProgressBar";
 import VisitorTracker from "@/components/VisitorTracker";
 
 
@@ -156,6 +156,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
         <AuthProvider>
+          <NavigationProgressBar />
           {children}
           <Suspense fallback={null}>
             <VisitorTracker />

@@ -1,19 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 export default function ProductPageScrollReset() {
-  useEffect(() => {
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    };
-
-    scrollToTop();
-    const frameId = window.requestAnimationFrame(scrollToTop);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
+  useLayoutEffect(() => {
+    // Immediate pre-paint scroll reset to prevent post-mount visual jumps
+    if (typeof window !== 'undefined' && window.scrollY > 0) {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   return null;

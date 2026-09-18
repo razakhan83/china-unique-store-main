@@ -65,7 +65,6 @@ export default function CategoryPillCard({ category, index = 0, href }) {
   return (
     <Link
       href={targetHref}
-      prefetch={false}
       className="group flex w-full h-full flex-col items-center justify-start text-center select-none pt-4 md:pt-5"
     >
       {/* Main Container - Compact Solid Rounded Box */}

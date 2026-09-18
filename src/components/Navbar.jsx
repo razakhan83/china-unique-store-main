@@ -441,7 +441,8 @@ function NavbarContent({
   const navActionButtonClass =
     'nav-icon-button relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground transition-all duration-300 ease-out hover:-translate-y-1.5 hover:scale-110 hover:border-[#E3FCEF] hover:bg-[#E3FCEF] hover:text-[#015347] hover:shadow-[0_8px_25px_rgba(227,252,239,0.8)] active:scale-95 active:translate-y-0';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
-  const showAnnouncementBar = announcementBarEnabled && announcementItems.length > 0;
+  const isHomePage = pathname === '/';
+  const showAnnouncementBar = isHomePage && announcementBarEnabled && announcementItems.length > 0;
 
   if (pathname?.startsWith('/checkout')) {
     return null;

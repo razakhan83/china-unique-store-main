@@ -91,7 +91,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
   return (
     <Card
       className={cn(
-        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border-none ring-0 bg-card shadow-none [@media(hover:hover)]:hover:-translate-y-0.5 transition-transform duration-150 ease-out",
+        "@container product-card-surface group relative flex flex-col h-full gap-0 overflow-hidden rounded-xl border-none ring-0 bg-card shadow-none [@media(hover:hover)]:hover:-translate-y-0.5 transition-transform duration-150 ease-out active:scale-[0.99]",
         "py-0",
         className
       )}
@@ -153,7 +153,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
 
         <Link
           href={productHref}
-          prefetch={false}
           scroll={true}
           className="relative block aspect-square w-full overflow-hidden rounded-t-[11px]"
           style={{ backgroundColor: resolvedBg }}
@@ -219,7 +218,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
           <>
             <Link
               href={productHref}
-              prefetch={false}
               scroll={true}
               className="block text-left"
               draggable={false}

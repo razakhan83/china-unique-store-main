@@ -41,6 +41,7 @@ yarn-error.log*
 
 # temp scripts & debug output
 tmp/
+scratch/
 *.py
 
 # generated

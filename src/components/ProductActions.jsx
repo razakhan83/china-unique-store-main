@@ -114,29 +114,40 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     useEffect(() => {
         const updateFromAttr = () => {
             const isHidden = document.documentElement.getAttribute('data-nav-hidden') === 'true';
-            setIsBottomNavHidden(isHidden);
+            setIsBottomNavHidden(prev => prev !== isHidden ? isHidden : prev);
         };
 
         const observer = new MutationObserver(updateFromAttr);
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-nav-hidden'] });
 
+        let frameId = null;
         let lastScrollY = window.scrollY;
         const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-            if (currentScrollY <= 16) {
-                setIsBottomNavHidden(false);
-            } else if (currentScrollY > lastScrollY + 30 && currentScrollY > 80) {
-                setIsBottomNavHidden(true);
-            } else if (currentScrollY < lastScrollY - 12) {
-                setIsBottomNavHidden(false);
-            }
-            lastScrollY = currentScrollY;
+            if (frameId !== null) return;
+            frameId = window.requestAnimationFrame(() => {
+                frameId = null;
+                const currentScrollY = window.scrollY;
+                let nextHidden = false;
+                if (currentScrollY <= 16) {
+                    nextHidden = false;
+                } else if (currentScrollY > lastScrollY + 30 && currentScrollY > 80) {
+                    nextHidden = true;
+                } else if (currentScrollY < lastScrollY - 12) {
+                    nextHidden = false;
+                } else {
+                    lastScrollY = currentScrollY;
+                    return;
+                }
+                lastScrollY = currentScrollY;
+                setIsBottomNavHidden(prev => prev !== nextHidden ? nextHidden : prev);
+            });
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             observer.disconnect();
             window.removeEventListener('scroll', handleScroll);
+            if (frameId !== null) window.cancelAnimationFrame(frameId);
         };
     }, []);
 

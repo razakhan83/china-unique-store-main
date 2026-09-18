@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Minus, Plus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
@@ -55,6 +56,8 @@ const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK'
 const EXIT_ANIMATION_MS = 180;
 
 export default function CartDrawer({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
+  const pathname = usePathname();
+  const effectiveHasAnnouncementBar = pathname === '/' && Boolean(hasAnnouncementBar);
   const { cart } = useCartItems();
   const { isCartOpen } = useCartUi();
   const { updateQuantity, removeFromCart, clearCart, setIsCartOpen } = useCartActions();
@@ -93,7 +96,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetContent side="right" className={cn("data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-background p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:!w-[25vw] md:data-[side=right]:!w-[25vw] md:!min-w-[400px] md:!max-w-[25vw] md:data-[side=right]:!max-w-[25vw] md:!top-0 md:!h-full md:!pt-0 md:!z-[250]", hasAnnouncementBar ? "max-md:!top-[96px] max-md:!h-[calc(100dvh-96px)]" : "max-md:!top-[64px] max-md:!h-[calc(100dvh-64px)]")} closeButtonClassName="max-md:hidden" overlayClassName="md:!z-[250]">
+      <SheetContent side="right" className={cn("data-[side=right]:w-full w-full min-w-0 max-w-none gap-0 bg-background p-0 sm:data-[side=right]:w-screen sm:w-screen sm:max-w-none md:!w-[25vw] md:data-[side=right]:!w-[25vw] md:!min-w-[400px] md:!max-w-[25vw] md:data-[side=right]:!max-w-[25vw] md:!top-0 md:!h-full md:!pt-0 md:!z-[250]", effectiveHasAnnouncementBar ? "max-md:!top-[96px] max-md:!h-[calc(100dvh-96px)]" : "max-md:!top-[64px] max-md:!h-[calc(100dvh-64px)]")} closeButtonClassName="max-md:hidden" overlayClassName="md:!z-[250]">
         <Sidebar className="h-full bg-transparent text-inherit border-0 shadow-none pb-0">
           <SidebarHeader className="max-md:hidden border-b border-sidebar-border px-5 pb-4 pt-5">
             <p className="text-xl font-bold text-sidebar-foreground [text-wrap:balance]">Your Cart</p>
