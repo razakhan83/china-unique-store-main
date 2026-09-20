@@ -89,12 +89,12 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
             const productSlug = product.slug || product._id || product.id;
             router.push(`/products/${productSlug}`);
           }}
-          className="inline-flex shrink-0 size-9 sm:size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 outline-none transition-all duration-300 ease-out hover:bg-slate-200 hover:text-slate-900 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50 shadow-sm"
+          className="inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 outline-none transition-all duration-300 ease-out hover:bg-slate-200 hover:text-slate-900 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50 shadow-sm"
           aria-label="Notify Me"
           title="Notify Me When In Stock"
         >
-          <span className="relative block size-4.5 sm:size-5">
-            <BellRing className="absolute inset-0 size-4.5 sm:size-5 transition-all duration-300 ease-out" />
+          <span className="relative block size-4 sm:size-5">
+            <BellRing className="absolute inset-0 size-4 sm:size-5 transition-all duration-300 ease-out" />
           </span>
         </button>
       );
@@ -108,16 +108,16 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
         data-state={animationState}
         aria-busy={isBusy}
         className={cn(
-          "inline-flex shrink-0 size-9 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50",
+          "inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50",
           (isBusy || isLoading) && "pointer-events-none opacity-60"
         )}
         aria-label="Add to cart"
       >
-        <span className="relative block size-4.5 sm:size-5">
+        <span className="relative block size-4 sm:size-5">
           {isLoading ? (
-            <Spinner className="absolute inset-0 size-4.5 sm:size-5" />
+            <Spinner className="absolute inset-0 size-4 sm:size-5" />
           ) : (
-            <ShoppingCart className="absolute inset-0 size-4.5 sm:size-5 transition-all duration-300 ease-out" />
+            <ShoppingCart className="absolute inset-0 size-4 sm:size-5 transition-all duration-300 ease-out" />
           )}
         </span>
       </button>

@@ -1,17 +1,17 @@
-const CUSTOMER_FOLDERS = new Set(['kifayatly_reviews']);
+const CUSTOMER_FOLDERS = new Set(['china_unique_items_reviews']);
 
 const ADMIN_FOLDERS = new Set([
-  'kifayatly_products',
-  'kifayatly_videos',
-  'kifayatly_homepage',
-  'kifayatly_homepage_videos',
-  'kifayatly_branding',
-  'kifayatly_categories',
-  'kifayatly_covers',
+  'china_unique_items_products',
+  'china_unique_items_videos',
+  'china_unique_items_homepage',
+  'china_unique_items_homepage_videos',
+  'china_unique_items_branding',
+  'china_unique_items_categories',
+  'china_unique_items_covers',
 ]);
 
 export function resolveCloudinaryFolder(rawFolder, session) {
-  const folder = String(rawFolder || 'kifayatly_products').trim();
+  const folder = String(rawFolder || 'china_unique_items_products').trim();
 
   if (!/^[a-zA-Z0-9_-]+$/.test(folder)) {
     return { error: 'Invalid upload folder.', status: 400 };

@@ -6,7 +6,7 @@ import { CheckCircle2, ShoppingCart } from 'lucide-react';
 
 import { trackAddToCartEvent } from '@/lib/clientTracking';
 
-const CART_STORAGE_KEY = 'kifayatly_cart_v2';
+const CART_STORAGE_KEY = 'china_unique_items_cart_v2';
 
 const CartItemsContext = createContext(null);
 const CartUiContext = createContext(null);

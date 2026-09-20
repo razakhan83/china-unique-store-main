@@ -80,8 +80,8 @@ const formatPriceLabel = (raw) => `Rs.\u00A0${formatPrice(raw).toLocaleString('e
 const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
 const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
 const SEARCH_RESULTS_LIMIT = 24;
-const CHECKOUT_PROFILE_STORAGE_KEY = 'kifayatly_checkout_profile_v1';
-const CHECKOUT_SUCCESS_STORAGE_KEY = 'kifayatly_checkout_success_v1';
+const CHECKOUT_PROFILE_STORAGE_KEY = 'china_unique_items_checkout_profile_v1';
+const CHECKOUT_SUCCESS_STORAGE_KEY = 'china_unique_items_checkout_success_v1';
 
 function createIdempotencyKey() {
   return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -1183,7 +1183,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
               storeName={settings.storeName}
               lightLogoUrl={settings.lightLogoUrl}
               darkLogoUrl={settings.darkLogoUrl}
-              logoScalePercent={settings.logoScalePercent}
+              logoScalePercent={settings.logoScalePercent * 0.85}
               compact
             />
           </div>

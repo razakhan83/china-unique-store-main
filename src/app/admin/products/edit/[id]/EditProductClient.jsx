@@ -209,7 +209,7 @@ export default function EditProduct({ id }) {
       let uploadedCategoryImagePublicId = '';
       let uploadedCategoryBlurDataURL = '';
       if (newCatImage) {
-        const uploaded = await uploadImageDataUrl(newCatImage, 'kifayatly_categories');
+        const uploaded = await uploadImageDataUrl(newCatImage, 'china_unique_items_categories');
         uploadedCategoryImage = uploaded.url;
         uploadedCategoryImagePublicId = uploaded.publicId;
         uploadedCategoryBlurDataURL = uploaded.blurDataURL;
@@ -260,7 +260,7 @@ export default function EditProduct({ id }) {
         const dataUrl = ev.target?.result;
         if (!dataUrl) return;
         try {
-          const uploaded = await uploadImageDataUrl(dataUrl, 'kifayatly_social_og');
+          const uploaded = await uploadImageDataUrl(dataUrl, 'china_unique_items_social_og');
           if (uploaded?.url) {
             setSeoOgImage(uploaded.url);
             showToast('Custom social preview image uploaded successfully!', 'success');
@@ -345,7 +345,7 @@ export default function EditProduct({ id }) {
                   publicId: img.publicId || '',
                 });
             } else {
-                const uploadedImage = await uploadImageDataUrl(img.url, 'kifayatly_products');
+                const uploadedImage = await uploadImageDataUrl(img.url, 'china_unique_items_products');
                 finalImages.push(uploadedImage);
             }
         }

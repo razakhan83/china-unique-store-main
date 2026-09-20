@@ -84,12 +84,12 @@ export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', store
             type="button"
             onClick={handleWhatsApp}
             className={cn(
-                "w-full h-11 sm:h-12 flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/60 text-foreground font-bold text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-none",
+                "w-full h-9 flex items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/60 text-foreground font-medium text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-none",
                 className
             )}
         >
-            <WhatsAppIcon className="size-5 text-[#25D366] shrink-0" />
-            <span className="font-bold text-sm text-foreground">Order on WhatsApp</span>
+            <WhatsAppIcon className="size-4.5 text-[#25D366] shrink-0" />
+            <span className="font-medium text-[13.5px] text-foreground">Order on WhatsApp</span>
         </button>
     );
 }
@@ -354,23 +354,22 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             )}
 
             {!isOutOfStock ? (
-                <div className="hidden items-center gap-4 md:flex">
-                    <span className="text-sm font-semibold text-foreground">Quantity</span>
-                    <div className="inline-flex items-center overflow-hidden rounded-xl border border-border bg-background shadow-none">
+                <div className="hidden items-center gap-2.5 md:flex">
+                    <div className="inline-flex h-9 w-28 items-center justify-between rounded-lg bg-background border border-border overflow-hidden">
                         <button
                             onClick={decrement}
-                            className="inline-flex size-10 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             aria-label="Decrease quantity"
                         >
-                            <Minus className="size-4" />
+                            <Minus className="size-3.5" />
                         </button>
-                        <span className="inline-flex min-w-12 items-center justify-center text-sm font-semibold text-foreground">{quantity}</span>
+                        <span className="inline-flex flex-1 items-center justify-center text-[13.5px] font-medium text-foreground">{quantity}</span>
                         <button
                             onClick={increment}
-                            className="inline-flex size-10 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             aria-label="Increase quantity"
                         >
-                            <Plus className="size-4" />
+                            <Plus className="size-3.5" />
                         </button>
                     </div>
                 </div>
@@ -393,20 +392,20 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleAddToCart}
                             disabled={addLock.isPending || isOutOfStock}
                             className={cn(
-                                "add-to-cart-button h-11 flex-1 inline-flex items-center justify-center rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-border text-foreground bg-card hover:bg-muted/50 hover:border-border shadow-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
-                                addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-border/40 opacity-80" : "bg-card text-foreground border-border hover:border-border"
+                                "add-to-cart-button h-9 flex-1 inline-flex items-center justify-center rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+                                addLock.isPending || isOutOfStock ? "opacity-80" : ""
                             )}
                         >
-                            <span className="relative inline-flex size-5 items-center justify-center mr-2">
+                            <span className="relative inline-flex size-4.5 items-center justify-center mr-2">
                                 <Spinner
                                     className={cn(
-                                        "add-to-cart-icon absolute size-5",
+                                        "add-to-cart-icon absolute size-4.5",
                                         addLock.isPending ? "is-visible" : ""
                                     )}
                                 />
                                 <ShoppingCart
                                     className={cn(
-                                        "add-to-cart-icon absolute size-5",
+                                        "add-to-cart-icon absolute size-4.5",
                                         !addLock.isPending ? "is-visible" : "",
                                         didJustAdd ? "text-primary" : ""
                                     )}
@@ -418,18 +417,17 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleBuyNow}
                             disabled={buyLock.isPending || isOutOfStock}
                             className={cn(
-                                "buy-now-button h-11 flex-1 rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95",
+                                "buy-now-button h-9 flex-[1.2] rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
                                 buyLock.isPending ? "opacity-90 cursor-wait" : ""
                             )}
-                            size="lg"
                         >
                             {buyLock.isPending ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <Spinner className="size-4 animate-spin text-primary-foreground" />
+                                <span className="flex items-center justify-center gap-1.5">
+                                    <Spinner className="size-3.5 animate-spin text-primary-foreground" />
                                     <span>Opening Checkout...</span>
                                 </span>
                             ) : (
-                                <span className="flex items-center justify-center gap-2">
+                                <span className="flex items-center justify-center gap-1.5">
                                     <PackageCheck className="size-4" />
                                     <span>Buy Now</span>
                                 </span>
@@ -440,23 +438,16 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 <ProductSocialActions product={product} />
             </div>
 
-            <div 
-                className="product-sticky-bar fixed left-0 right-0 z-30 flex flex-col gap-2 border-t border-border/80 bg-background/98 p-2.5 backdrop-blur-md md:hidden transition-[bottom,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-[bottom]"
-                style={{
-                    bottom: isBottomNavHidden
-                        ? 'env(safe-area-inset-bottom, 0px)'
-                        : 'calc(env(safe-area-inset-bottom, 0px) + var(--mobile-bottom-nav-offset, 58px))'
-                }}
-            >
+            <div className="flex flex-col gap-2 pt-2 md:hidden">
                 {!isOutOfStock ? (
                     <>
                         <div className="flex items-center gap-2">
-                            <div className="inline-flex flex-[0.7] items-center justify-between overflow-hidden rounded-xl border border-border bg-background h-11 px-1 shadow-none">
-                                <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                            <div className="inline-flex h-9 flex-[0.35] items-center justify-between rounded-lg bg-background border border-border overflow-hidden">
+                                <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Minus className="size-3.5" />
                                 </button>
-                                <span className="inline-flex min-w-6 items-center justify-center text-sm font-semibold text-foreground">{quantity}</span>
-                                <button onClick={increment} aria-label="Increase quantity" className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                <span className="inline-flex flex-1 items-center justify-center text-[13.5px] font-medium text-foreground">{quantity}</span>
+                                <button onClick={increment} aria-label="Increase quantity" className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                     <Plus className="size-3.5" />
                                 </button>
                             </div>
@@ -465,11 +456,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 onClick={handleAddToCart}
                                 disabled={addLock.isPending || isOutOfStock}
                                 className={cn(
-                                    "add-to-cart-button h-11 flex-[1.3] inline-flex items-center justify-center rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-border text-foreground bg-card hover:bg-muted/50 hover:border-border shadow-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
-                                    addLock.isPending || isOutOfStock ? "bg-muted/20 text-foreground border-border/40 opacity-80" : "bg-card text-foreground border-border hover:border-border"
+                                    "add-to-cart-button h-9 flex-[0.65] inline-flex items-center justify-center rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+                                    addLock.isPending || isOutOfStock ? "opacity-80" : ""
                                 )}
                             >
-                                <span className="relative inline-flex size-4 items-center justify-center mr-1.5">
+                                <span className="relative inline-flex size-4.5 items-center justify-center mr-1.5">
                                     <Spinner
                                         className={cn(
                                             "add-to-cart-icon absolute size-4",
@@ -491,17 +482,17 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             onClick={handleBuyNow}
                             disabled={buyLock.isPending || isOutOfStock}
                             className={cn(
-                                "buy-now-button h-11 w-full rounded-xl active:scale-[0.96] font-semibold text-sm transition-all duration-200 border border-transparent shadow-none bg-primary text-primary-foreground hover:bg-primary/95",
+                                "buy-now-button h-9 w-full rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
                                 buyLock.isPending ? "opacity-90 cursor-wait" : ""
                             )}
                         >
                             {buyLock.isPending ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <Spinner className="size-4 animate-spin text-primary-foreground" />
+                                <span className="flex items-center justify-center gap-1.5">
+                                    <Spinner className="size-3.5 animate-spin text-primary-foreground" />
                                     <span>Opening Checkout...</span>
                                 </span>
                             ) : (
-                                <span className="flex items-center justify-center gap-2">
+                                <span className="flex items-center justify-center gap-1.5">
                                     <PackageCheck className="size-4" />
                                     <span>Buy Now</span>
                                 </span>

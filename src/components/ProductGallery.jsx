@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ImageIcon } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { ImageIcon, Maximize2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { normalizeProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
@@ -92,10 +93,10 @@ export default function ProductGallery({ images, primaryTag, product }) {
         
         {mainTag && (
           <div 
-            className={cn("absolute left-3 top-3 z-20 pointer-events-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-md backdrop-blur-md border border-white/30 text-xs font-semibold", mainTag.bgColor, mainTag.color)}
+            className={cn("absolute left-3 top-3 z-20 pointer-events-auto flex items-center gap-1 rounded-full px-2 py-0.5 shadow-md backdrop-blur-md border border-white/30 text-[9px] md:text-[10px] font-bold tracking-wide", mainTag.bgColor, mainTag.color)}
             title={mainTag.label}
           >
-            <mainTag.icon className="size-4 drop-shadow-sm" />
+            <mainTag.icon className="size-3 drop-shadow-sm" />
             {mainTag.label}
           </div>
         )}
@@ -121,17 +122,11 @@ export default function ProductGallery({ images, primaryTag, product }) {
               const productName = product?.Name || product?.name || 'Product';
               return (
                 <CarouselItem key={index} className="h-full basis-full pl-0">
-                  <div className="relative h-full min-h-0 w-full">
-                    <Image
+                  <div className="relative h-full min-h-0 w-full bg-white rounded-2xl overflow-hidden flex items-center justify-center">
+                    <img
                       src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
                       alt={`${productName} - View ${index + 1}`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 58vw, 42vw"
-                      className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
-                      {...getBlurPlaceholderProps(image.blurDataURL)}
-                      priority={index === 0}
-                      fetchPriority={index === 0 ? 'high' : 'auto'}
-                      loading={index === 0 ? 'eager' : 'lazy'}
+                      className="w-full h-full object-contain transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
                     />
                   </div>
                 </CarouselItem>
@@ -163,6 +158,26 @@ export default function ProductGallery({ images, primaryTag, product }) {
             ))}
           </div>
         )}
+
+        {/* Full View Button */}
+        {normalizedImages.length > 0 && (
+          <Dialog>
+            <DialogTrigger 
+              className="absolute bottom-3 right-3 z-20 pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/70 backdrop-blur-md shadow-sm border border-white/40 text-foreground hover:bg-white hover:scale-105 hover:bg-white hover:scale-105 active:scale-95 transition-all md:bottom-4 md:right-4 md:size-9"
+              title="View Full Size"
+            >
+              <Maximize2 className="size-4" />
+            </DialogTrigger>
+            <DialogContent className="max-w-[100vw] h-[100dvh] sm:max-w-4xl sm:h-[90vh] p-0 bg-black border-none shadow-none [&>button]:text-black [&>button]:bg-black/10 [&>button]:hover:bg-black/20 [&>button]:backdrop-blur-md [&>button]:size-10 [&>button]:top-4 [&>button]:right-4 z-[510]">
+              <div className="relative size-full flex items-center justify-center rounded-none overflow-hidden bg-white">
+                <img
+                  src={optimizeCloudinaryUrl(normalizedImages[selectedIndex]?.url || normalizedImages[selectedIndex], CLOUDINARY_IMAGE_PRESETS.productModal)}
+                  alt="Full view"
+                  className="w-full h-full object-contain" draggable={false} />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {hasMultipleImages ? (
@@ -188,15 +203,12 @@ export default function ProductGallery({ images, primaryTag, product }) {
                       : 'border-transparent opacity-60 hover:scale-[1.02] hover:opacity-100'
                   }`}
                 >
-                  <div className="absolute inset-0" style={{ backgroundColor: '#ffffff' }} />
-                  <Image
+                  <div className="absolute inset-0 bg-white" />
+                  <img
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryThumb)}
                     alt={`${product?.Name || product?.name || 'Product'} thumbnail ${index + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 31vw, 12vw"
                     loading="lazy"
-                    className="object-cover"
-                    {...getBlurPlaceholderProps(image.blurDataURL)}
+                    className="relative w-full h-full object-contain"
                   />
                 </button>
               </CarouselItem>

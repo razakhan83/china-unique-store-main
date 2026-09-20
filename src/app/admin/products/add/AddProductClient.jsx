@@ -175,7 +175,7 @@ export default function AddProduct() {
       if (newCatImage) {
         const uploaded = await uploadImageDataUrl(
           newCatImage,
-          "kifayatly_categories"
+          "china_unique_items_categories"
         );
         uploadedCategoryImage = uploaded.url;
         uploadedCategoryImagePublicId = uploaded.publicId;
@@ -231,7 +231,7 @@ export default function AddProduct() {
         const dataUrl = ev.target?.result;
         if (!dataUrl) return;
         try {
-          const uploaded = await uploadImageDataUrl(dataUrl, "kifayatly_social_og");
+          const uploaded = await uploadImageDataUrl(dataUrl, "china_unique_items_social_og");
           if (uploaded?.url) {
             setSeoOgImage(uploaded.url);
             toast.success("Custom social preview image uploaded successfully!");
@@ -323,7 +323,7 @@ export default function AddProduct() {
       for (const img of images) {
         const uploaded = await uploadImageDataUrl(
           img.url,
-          "kifayatly_products"
+          "china_unique_items_products"
         );
         finalImages.push(uploaded);
       }

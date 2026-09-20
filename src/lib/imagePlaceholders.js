@@ -1,7 +1,7 @@
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 const FALLBACK_BLUR_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeDI9IjEwMCUiIHkxPSIwJSIgeTI9IjEwMCUiPjxzdG9wIHN0b3AtY29sb3I9IiNlZWYyZjciIG9mZnNldD0iMCUiLz48c3RvcCBzdG9wLWNvbG9yPSIjZDVkZGVhIiBvZmZzZXQ9IjEwMCUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=";
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+";
 
 export async function generateBlurDataURLFromDataUrl(dataUrl) {
   // If it's already a data URL, we use it directly or return the fallback
@@ -18,7 +18,8 @@ export async function generateBlurDataURLFromRemoteUrl(url) {
     const optimizedUrl = optimizeCloudinaryUrl(source, {
       width: 20,
       height: 20,
-      crop: 'fill',
+      crop: 'pad',
+      background: 'rgb:f4f4f5',
       quality: 30,
       format: 'jpg',
     });

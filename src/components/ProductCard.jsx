@@ -230,7 +230,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
               </h3>
             </Link>
 
-            <div className="mt-auto flex flex-row items-end justify-between gap-3 pt-3 sm:pt-4">
+            <div className="mt-auto flex flex-row items-center justify-between gap-3 pt-3 sm:pt-4">
               {!isPreviewMode && (
                 <>
                   <div className="flex flex-col items-start gap-1 sm:gap-1.5 flex-1 min-w-0">
@@ -243,18 +243,18 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     {compareAtPrice ? (
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p
-                          className="text-[13px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[14px] sm:text-[15px]"
+                          className="text-[11px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[12px] sm:text-[15px]"
                           draggable={false}
                         >
                           {formatPrice(compareAtPrice)}
                         </p>
-                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1.5 py-0.5 text-[11px] font-medium text-success tracking-normal border-none shadow-none h-[22px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[12px] sm:h-[24px]">
+                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1 py-0 text-[10px] font-medium text-success tracking-normal border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[12px] sm:h-[24px]">
                           Save {formatPrice(compareAtPrice - sellingPrice)}
                         </Badge>
                       </div>
                     ) : null}
                   </div>
-                  <div className="shrink-0 mb-0.5">
+                  <div className="shrink-0">
                     <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
                   </div>
                 </>

@@ -21,6 +21,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getProductPrerenderParams, getProductReviewSummary, getRelatedProducts, getStoreSettings } from '@/lib/data';
 import { getProductCategories } from '@/lib/productCategories';
@@ -359,10 +360,7 @@ export default async function ProductPage({ params }) {
       />
 
       <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
-        <div className="flex items-center justify-between md:hidden">
-          <MobileBackButton className="-ml-2 bg-transparent border-transparent shadow-none" />
-          <ProductMobileStockTag isOutOfStock={isOutOfStock} />
-        </div>
+        {/* Mobile top actions removed as per user request to maximize image space */}
         <div className="hidden md:block pb-1">
           <ProductBreadcrumb product={product} primaryCategory={primaryCategory} />
         </div>
@@ -463,7 +461,7 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
           <div className="flex flex-col gap-4 md:sticky md:top-[164px] md:gap-6">
             <div className="space-y-2 md:space-y-4">
               <div className="mt-2 flex items-start justify-between gap-4">
-                <h1 className="text-lg font-bold leading-tight tracking-tight text-foreground sm:text-2xl sm:leading-tight md:text-4xl md:leading-tight">
+                <h1 className="text-[1.05rem] font-bold leading-tight tracking-tight text-foreground sm:text-xl sm:leading-tight md:text-3xl md:leading-tight">
                   {product.Name}
                 </h1>
                 <ProductSocialActions product={product} className="mt-0.5 shrink-0 md:hidden" />
@@ -486,6 +484,22 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
               )}
             </div>
 
+            {product.shortDescription && (
+              <Accordion type="single" collapsible className="w-full mt-2">
+                <AccordionItem value="details" className="border-b-0 border-t border-border">
+                  <AccordionTrigger className="py-3 text-sm font-bold text-foreground">
+                    Product Details
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div
+                      className="text-[13.5px] leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+                      dangerouslySetInnerHTML={{ __html: product.shortDescription }}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+
             <div className="pt-2">
               <ProductActions 
                 product={product} 
@@ -496,14 +510,7 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
               />
             </div>
 
-            {product.shortDescription ? (
-              <div
-                className="mt-6 border-t border-border pt-6 text-base leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
-                dangerouslySetInnerHTML={{ __html: product.shortDescription }}
-              />
-            ) : <Separator className="my-6" />}
-
-            <div className="mt-4">
+            <div className="mt-1">
               <ProductWhatsAppOrderButton 
                 product={product} 
                 whatsappNumber={settings.whatsappNumber} 
@@ -526,6 +533,7 @@ function ProductTabsWrapper({ product, reviewSummary }) {
     <div id="product-reviews" className="scroll-mt-24 md:scroll-mt-32">
       <ProductDetailsTabs
         reviewCount={reviewSummary.reviewCount}
+        detailsContent={null}
         descriptionContent={<ProductDescription html={descriptionHtml} />}
         reviewsContent={<ProductReviews productId={product._id} productName={product.Name} />}
       />

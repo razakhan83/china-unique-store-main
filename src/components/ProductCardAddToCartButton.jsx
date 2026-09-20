@@ -14,7 +14,7 @@ const ProductCardAddToCartButtonClient = dynamic(
 function AddToCartSkeleton({ mode }) {
   if (mode === 'icon') {
     return (
-      <Skeleton className="size-9 sm:size-10 shrink-0 rounded-full" aria-hidden="true" />
+      <Skeleton className="size-8 sm:size-10 shrink-0 rounded-full" aria-hidden="true" />
     );
   }
   return <Skeleton className="w-full h-8 sm:h-9 rounded-md" aria-hidden="true" />;

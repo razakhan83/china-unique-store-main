@@ -155,7 +155,7 @@ function AnnouncementMarquee({ items = [] }) {
   if (items.length === 0) return null;
 
   const totalCharacters = items.reduce((count, item) => count + item.length, 0);
-  const durationSeconds = Math.min(120, Math.max(56, totalCharacters * 0.7));
+  const durationSeconds = Math.min(150, Math.max(80, totalCharacters * 1.5));
 
   const marqueeItems = Array.from({ length: 4 }, (_, repeatIndex) =>
     items.map((text) => ({
@@ -455,13 +455,13 @@ function NavbarContent({
         isNavbarHidden ? '-translate-y-full' : 'translate-y-0'
       )}>
       {showAnnouncementBar ? (
-        <div className="relative flex min-h-8 md:min-h-9 items-center bg-primary py-1.5 md:py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
+        <div className="relative flex min-h-7 md:min-h-8 items-center bg-primary py-1 md:py-1.5 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)] before:absolute before:-top-px before:left-0 before:right-0 before:h-px before:bg-primary before:content-['']">
           <AnnouncementMarquee items={announcementItems} />
         </div>
       ) : null}
 
       <div className="relative z-50">
-          <header className="relative z-[60] mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+          <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
             <div className="flex items-center gap-4 lg:gap-8 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
                 <span className="relative flex size-6 items-center justify-center">
@@ -478,7 +478,7 @@ function NavbarContent({
                 storeName={storeName}
                 lightLogoUrl={lightLogoUrl}
                 darkLogoUrl={darkLogoUrl}
-                logoScalePercent={logoScalePercent * 1.35}
+                logoScalePercent={logoScalePercent * 0.85}
                 variant="light-surface"
                 priority
                 onClick={(event) => {
@@ -518,25 +518,26 @@ function NavbarContent({
                 aria-label="Open cart"
                 title="Cart"
               >
-                <span className="relative flex size-6 md:size-[1.65rem] items-center justify-center">
+                <span className="relative flex size-5 md:size-[1.65rem] items-center justify-center">
                   <ShoppingBag strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
                   <X strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-all duration-300', isCartOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
                 {isCartInitialized ? (
                   cartCount > 0 ? (
                     <span className={cn(
-                      "absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white transition-transform duration-200",
+                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white transition-transform duration-200",
                       isCartBumping && "scale-125"
                     )}>
                       {cartCount}
                     </span>
                   ) : null
                 ) : (
-                  <span className="absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
+                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
                     <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
                   </span>
                 )}
               </Button>
+
 
               <NavbarDesktopAccountControl navActionButtonClass={navActionButtonClass} />
             </div>
@@ -741,18 +742,18 @@ export function NavbarStaticShell({
   return (
     <div className="navbar-shell sticky top-0 z-[200] overflow-visible bg-card shadow-[0_1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">
       {showAnnouncementBar ? (
-        <div className="relative flex min-h-8 md:min-h-9 items-center bg-primary py-1.5 md:py-2 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)]">
+        <div className="relative flex min-h-7 md:min-h-8 items-center bg-primary py-1 md:py-1.5 text-primary-foreground shadow-[inset_0_-1px_0_rgba(255,255,255,0.08)]">
           <AnnouncementMarquee items={announcementItems} />
         </div>
       ) : null}
       <div className="relative z-50">
-        <header className="relative z-[60] mx-auto flex h-16 md:h-20 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+        <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
           <div className="flex items-center gap-4 lg:gap-8 shrink-0">
             <StoreLogo
               storeName={storeName}
               lightLogoUrl={lightLogoUrl}
               darkLogoUrl={darkLogoUrl}
-              logoScalePercent={logoScalePercent * 1.35}
+              logoScalePercent={logoScalePercent * 0.85}
               variant="light-surface"
               priority
               isLink={false}
@@ -775,7 +776,7 @@ export function NavbarStaticShell({
               className="relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground"
               aria-label="Cart"
             >
-              <span className="relative flex size-6 md:size-[1.65rem] items-center justify-center">
+              <span className="relative flex size-5 md:size-[1.65rem] items-center justify-center">
                 <ShoppingBag strokeWidth={1.5} className="size-full" />
               </span>
             </Button>

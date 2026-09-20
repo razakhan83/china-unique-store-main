@@ -58,9 +58,7 @@ export const metadata = {
       { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
     ],
   },
-  alternates: {
-    canonical: '/',
-  },
+  alternates: {},
   openGraph: {
     title: SITE_TITLE_DEFAULT,
     description: SITE_DESCRIPTION,

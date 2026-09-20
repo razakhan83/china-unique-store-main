@@ -2,13 +2,24 @@
 
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
-export default function ProductDetailsTabs({ reviewCount, descriptionContent, reviewsContent }) {
+export default function ProductDetailsTabs({ reviewCount, detailsContent, descriptionContent, reviewsContent }) {
   return (
     <div className="mt-6 md:mt-16 w-full max-w-4xl mx-auto px-4 md:px-0">
       <Accordion className="border-t border-border/60">
+        {/* Details Accordion Item */}
+        {detailsContent && (
+          <AccordionItem value="details" className="border-b border-border/60">
+            <AccordionTrigger className="w-full flex items-center justify-between py-3 md:py-5 text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors hover:no-underline">
+              Product Details
+            </AccordionTrigger>
+            <AccordionContent className="pb-5 pt-2">
+              {detailsContent}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
         {/* Description Accordion Item */}
         <AccordionItem value="description" className="border-b border-border/60">
-
           <AccordionTrigger className="w-full flex items-center justify-between py-3 md:py-5 text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors hover:no-underline">
             Description
           </AccordionTrigger>
