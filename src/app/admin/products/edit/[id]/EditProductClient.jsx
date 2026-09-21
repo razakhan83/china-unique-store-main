@@ -42,7 +42,8 @@ export default function EditProduct({ id }) {
 
   const [Name, setName] = useState('');
   const [Description, setDescription] = useState('');
-  const [shortDescription, setShortDescription] = useState('');
+  const [bulletPoints, setBulletPoints] = useState([""]);
+  const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [seoKeywords, setSeoKeywords] = useState('');
@@ -52,7 +53,9 @@ export default function EditProduct({ id }) {
   const [seoOgImage, setSeoOgImage] = useState('');
   const [Price, setPrice] = useState('');
   const [compareAtPrice, setCompareAtPrice] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState('');
   const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
+  const [enablePackOptions, setEnablePackOptions] = useState(false);
   const [Categories, setCategories] = useState([]); // array of selected category ids
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
@@ -129,7 +132,8 @@ export default function EditProduct({ id }) {
           const p = data.data;
           setName(p.Name || '');
           setDescription(p.Description || '');
-          setShortDescription(p.shortDescription || '');
+          setBulletPoints(Array.isArray(p.bulletPoints) && p.bulletPoints.length > 0 ? p.bulletPoints : [""]);
+          setSpecifications(Array.isArray(p.specifications) && p.specifications.length > 0 ? p.specifications : [{ name: "", value: "" }]);
           setSeoTitle(p.seoTitle || '');
           setSeoDescription(p.seoDescription || '');
           setSeoKeywords(p.seoKeywords || '');
@@ -143,6 +147,7 @@ export default function EditProduct({ id }) {
           setOgPreviewFit(loadedFit);
           setPrice(p.Price || '');
           setCompareAtPrice(p.compareAtPrice ?? '');
+          setDiscountPercentage(p.discountPercentage || '');
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
           setVendorAssignments(
             Array.isArray(p.vendors)
@@ -153,6 +158,7 @@ export default function EditProduct({ id }) {
                 })).filter((vendor) => vendor.vendorId)
               : []
           );
+          setEnablePackOptions(p.packOptions?.length > 0);
           setPackOptions(p.packOptions?.length > 0 ? p.packOptions : [{ label: "1 pcs", price: p.Price || "" }]);
           
           const existingImages = normalizeProductImages(
@@ -363,7 +369,8 @@ export default function EditProduct({ id }) {
         body: JSON.stringify({
           Name,
           Description: sanitizedDescription,
-          shortDescription,
+          bulletPoints: bulletPoints.filter(bp => bp.trim() !== ""),
+          specifications: specifications.filter(spec => spec.name.trim() !== "" || spec.value.trim() !== ""),
           seoTitle,
           seoDescription,
           seoKeywords,
@@ -375,10 +382,11 @@ export default function EditProduct({ id }) {
           seoOgImageFit: ogPreviewFit,
           Price: Number(Price),
           compareAtPrice: compareAtPrice === '' ? null : Number(compareAtPrice),
+          discountPercentage: Number(discountPercentage) || 0,
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
-          packOptions: packOptions.filter(p => p.label && p.price),
+          packOptions: enablePackOptions ? packOptions.filter(p => p.label && p.price) : [],
           showOnStore,
           isNewArrival,
           isBestSelling,
@@ -392,7 +400,7 @@ export default function EditProduct({ id }) {
       const data = await res.json();
       if (res.ok && data.success) {
         showToast('Product updated successfully!', 'success');
-        setTimeout(() => router.push('/admin/products'), 1500);
+        setTimeout(() => router.back(), 1500);
       } else {
         showToast(data.message || data.error || 'Failed to update product', 'error');
       }
@@ -570,7 +578,16 @@ export default function EditProduct({ id }) {
               <Input
                 type="number"
                 value={Price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const newPrice = e.target.value;
+                  setPrice(newPrice);
+                  setPackOptions((prev) => {
+                    if (prev.length === 1) {
+                      return [{ ...prev[0], price: newPrice }];
+                    }
+                    return prev;
+                  });
+                }}
                 className="h-11 px-4"
                 placeholder="0.00"
                 step="0.01"
@@ -589,6 +606,20 @@ export default function EditProduct({ id }) {
                 step="0.01"
               />
             </div>
+          </div>
+          
+          <div>
+              <Label className="mb-2">Discount Percentage (%)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={discountPercentage}
+                onChange={(e) => setDiscountPercentage(e.target.value)}
+                className="h-11 px-4"
+                placeholder="e.g. 25"
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">Set a discount percentage to automatically apply a discount. The original price will become the compare-at price.</p>
           </div>
 
           <div>
@@ -747,82 +778,189 @@ export default function EditProduct({ id }) {
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <div className="pt-2">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Pack Variations</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Define different pack sizes and their prices. Leave empty if not applicable.
-              </p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Enable Pack Variations</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Define different pack sizes and their prices. 1st pack rate is linked to base price.
+                </p>
+              </div>
+              <Switch
+                checked={enablePackOptions}
+                onCheckedChange={(checked) => {
+                  setEnablePackOptions(checked);
+                  if (checked && packOptions.length === 0) {
+                    setPackOptions([{ label: "1 pcs", price: Price || "" }]);
+                  }
+                }}
+              />
             </div>
-            {packOptions.map((pack, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    value={pack.label}
-                    onChange={(e) => {
-                      const newOptions = [...packOptions];
-                      newOptions[index].label = e.target.value;
-                      setPackOptions(newOptions);
-                    }}
-                    className="h-11 px-4"
-                    placeholder="e.g., Pack of 5"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    value={pack.price}
-                    onChange={(e) => {
-                      const newOptions = [...packOptions];
-                      newOptions[index].price = e.target.value;
-                      setPackOptions(newOptions);
-                    }}
-                    className="h-11 px-4"
-                    placeholder="Price (Rs)"
-                    step="0.01"
-                  />
-                </div>
+            {enablePackOptions && (
+              <>
+                {packOptions.map((pack, index) => (
+                  <div key={index} className="flex items-center gap-3 mb-3">
+                    <div className="flex-1">
+                      <Input
+                        type="text"
+                        value={pack.label}
+                        onChange={(e) => {
+                          const newOptions = [...packOptions];
+                          newOptions[index].label = e.target.value;
+                          setPackOptions(newOptions);
+                        }}
+                        className="h-11 px-4"
+                        placeholder="e.g., Pack of 5"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="number"
+                        value={pack.price}
+                        onChange={(e) => {
+                          const newOptions = [...packOptions];
+                          newOptions[index].price = e.target.value;
+                          setPackOptions(newOptions);
+                        }}
+                        className="h-11 px-4"
+                        placeholder="Price (Rs)"
+                        step="0.01"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => setPackOptions(packOptions.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={() => setPackOptions(packOptions.filter((_, i) => i !== index))}
+                  onClick={() => setPackOptions([...packOptions, { label: "", price: "" }])}
+                  className="w-full rounded-xl border-dashed mt-2"
                 >
-                  <Trash2 className="size-4" />
+                  <PlusCircle className="mr-2 size-4" />
+                  Add More Pack Option
                 </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPackOptions([...packOptions, { label: "", price: "" }])}
-              className="w-full rounded-xl border-dashed"
-            >
-              <PlusCircle className="mr-2 size-4" />
-              Add More Pack Option
-            </Button>
+              </>
+            )}
           </div>
             </AccordionContent>
           </AccordionItem>
 
           
-          <AccordionItem value="short-description" className="rounded-xl border border-border bg-background shadow-sm px-4">
+          <AccordionItem value="product-details" className="rounded-xl border border-border bg-background shadow-sm px-4">
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-semibold text-foreground">Short Description</span>
-                <span className="text-xs font-normal text-muted-foreground mt-0.5">A brief summary displayed right below the price.</span>
+                <span className="text-sm font-semibold text-foreground">Product Details & Specs</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">Highlight key features and structured specifications.</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4">
-              <div>
-            <Label className="mb-2">Short Description</Label>
-            <ProductRichTextEditor
-              value={shortDescription}
-              onChange={setShortDescription}
-              placeholder="A brief summary displayed right below the price on the product page..."
-            />
-          </div>
+              <div className="space-y-6 pt-2">
+                {/* Bullet Points Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold">Bullet Points</h4>
+                    <p className="text-xs text-muted-foreground">Short key features of the product.</p>
+                  </div>
+                  {bulletPoints.map((bp, index) => (
+                    <div key={`bp-${index}`} className="flex items-center gap-3">
+                      <Input
+                        type="text"
+                        value={bp}
+                        onChange={(e) => {
+                          const newBps = [...bulletPoints];
+                          newBps[index] = e.target.value;
+                          setBulletPoints(newBps);
+                        }}
+                        className="h-11 px-4 flex-1"
+                        placeholder="e.g., 100% Organic Cotton"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => setBulletPoints(bulletPoints.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setBulletPoints([...bulletPoints, ""])}
+                    className="w-full rounded-xl border-dashed"
+                  >
+                    <PlusCircle className="mr-2 size-4" />
+                    Add Bullet Point
+                  </Button>
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Specifications Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold">Specifications</h4>
+                    <p className="text-xs text-muted-foreground">Structured specs like Weight, Dimensions, Material.</p>
+                  </div>
+                  {specifications.map((spec, index) => (
+                    <div key={`spec-${index}`} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <Input
+                          type="text"
+                          value={spec.name}
+                          onChange={(e) => {
+                            const newSpecs = [...specifications];
+                            newSpecs[index].name = e.target.value;
+                            setSpecifications(newSpecs);
+                          }}
+                          className="h-11 px-4"
+                          placeholder="Name (e.g., Weight)"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="text"
+                          value={spec.value}
+                          onChange={(e) => {
+                            const newSpecs = [...specifications];
+                            newSpecs[index].value = e.target.value;
+                            setSpecifications(newSpecs);
+                          }}
+                          className="h-11 px-4"
+                          placeholder="Value (e.g., 1 kg)"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => setSpecifications(specifications.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSpecifications([...specifications, { name: "", value: "" }])}
+                    className="w-full rounded-xl border-dashed"
+                  >
+                    <PlusCircle className="mr-2 size-4" />
+                    Add Specification
+                  </Button>
+                </div>
+              </div>
             </AccordionContent>
           </AccordionItem>
 

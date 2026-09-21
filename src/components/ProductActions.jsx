@@ -94,6 +94,38 @@ export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', store
     );
 }
 
+export function ProductWhatsAppTextLink({ product, whatsappNumber = '', storeName = 'China Unique Store', className = '' }) {
+    const handleWhatsApp = (e) => {
+        e.preventDefault();
+        const name = product.Name || product.name || 'this product';
+        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const message = buildProductWhatsAppMessage({
+            productName: name,
+            productUrl: url,
+            storeName,
+        });
+        const whatsappUrl = createWhatsAppUrl(whatsappNumber, message);
+        if (!whatsappUrl) {
+            toast.error('WhatsApp number is not available right now.');
+            return;
+        }
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+        <a
+            href="#"
+            onClick={handleWhatsApp}
+            className={cn(
+                "inline-flex items-center text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4",
+                className
+            )}
+        >
+            Order on WhatsApp instead
+        </a>
+    );
+}
+
 export default function ProductActions({ product, whatsappNumber = '', storeName = 'China Unique Store', basePrice = 0, compareAtPrice = null }) {
     const { addToCart } = useCartActions();
     const router = useRouter();
@@ -162,12 +194,13 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         }
         const startedAt = performance.now();
         try {
+            const finalPackPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : 0;
             const productToAdd = selectedPack ? {
                 ...product,
                 Price: selectedPack.price,
-                discountedPrice: selectedPack.price,
-                discountPercentage: 0,
-                isDiscounted: false,
+                discountedPrice: finalPackPrice,
+                discountPercentage: product.isDiscounted ? product.discountPercentage : 0,
+                isDiscounted: Boolean(product.isDiscounted),
                 packLabel: selectedPack.label,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             } : {
@@ -192,12 +225,13 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const handleBuyNow = () => buyLock.run(async () => {
         if (isOutOfStock) return;
         try {
+            const finalPackPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : 0;
             const productToAdd = selectedPack ? {
                 ...product,
                 Price: selectedPack.price,
-                discountedPrice: selectedPack.price,
-                discountPercentage: 0,
-                isDiscounted: false,
+                discountedPrice: finalPackPrice,
+                discountPercentage: product.isDiscounted ? product.discountPercentage : 0,
+                isDiscounted: Boolean(product.isDiscounted),
                 packLabel: selectedPack.label,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             } : {
@@ -274,16 +308,31 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     };
 
     const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
-    const displayPrice = selectedPack ? selectedPack.price : basePrice;
+
+    const getPackDiscountedPrice = (packPrice) => {
+        if (product.isDiscounted && product.discountPercentage > 0) {
+            return Math.round(packPrice * (1 - product.discountPercentage / 100));
+        }
+        return packPrice;
+    };
+
+    const displayPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : basePrice;
     const displayComparePrice = (() => {
-        if (!compareAtPrice) return null;
+        if (!compareAtPrice) {
+            // If no compare price is set globally but pack option is discounted, show original pack price as compare price
+            if (selectedPack && product.isDiscounted && product.discountPercentage > 0) {
+                return selectedPack.price > displayPrice ? selectedPack.price : null;
+            }
+            return null;
+        }
+        
         if (!selectedPack) return compareAtPrice > basePrice ? compareAtPrice : null;
         
         const match = selectedPack.label.match(/\d+/);
         const quantity = match ? parseInt(match[0], 10) : 1;
         const calculatedCompare = compareAtPrice * quantity;
         
-        return calculatedCompare > selectedPack.price ? calculatedCompare : null;
+        return calculatedCompare > displayPrice ? calculatedCompare : null;
     })();
 
     return (
@@ -291,19 +340,24 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                    <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
                         {formatPrice(displayPrice)}
                     </span>
                     {displayComparePrice ? (
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-medium text-muted-foreground line-through">
+                            <span className="text-sm font-medium text-muted-foreground line-through">
                                 {formatPrice(displayComparePrice)}
                             </span>
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-none font-bold tracking-wide">
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-none font-bold tracking-wide text-xs">
                                 Save {formatPrice(displayComparePrice - displayPrice)}
                             </Badge>
                         </div>
                     ) : null}
+                    
+                    <div className="flex items-center gap-1 text-primary font-semibold text-[13px] ml-1">
+                        <BadgeCheck className="size-4" />
+                        <span>COD Available</span>
+                    </div>
                 </div>
 
                 {Array.isArray(product.tags) && product.tags.filter(tagId => tagId !== product.primaryTag).length > 0 && (
@@ -353,161 +407,77 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 </div>
             )}
 
-            {!isOutOfStock ? (
-                <div className="hidden items-center gap-2.5 md:flex">
-                    <div className="inline-flex h-9 w-28 items-center justify-between rounded-lg bg-background border border-border overflow-hidden">
-                        <button
-                            onClick={decrement}
-                            className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                            aria-label="Decrease quantity"
-                        >
-                            <Minus className="size-3.5" />
-                        </button>
-                        <span className="inline-flex flex-1 items-center justify-center text-[13.5px] font-medium text-foreground">{quantity}</span>
-                        <button
-                            onClick={increment}
-                            className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                            aria-label="Increase quantity"
-                        >
-                            <Plus className="size-3.5" />
-                        </button>
-                    </div>
-                </div>
-            ) : null}
-
-            <div className="hidden gap-4 md:flex">
-                {isOutOfStock ? (
-                    <Button
-                        onClick={() => setNotifyModalOpen(true)}
-                        size="lg"
-                        className="h-11 flex-1 rounded-xl active:scale-[0.96] shadow-none font-semibold"
-                    >
-                        <BellRing className="size-4.5" />
-                        Notify Me When In Stock
-                    </Button>
-                ) : (
-                    <>
-                        <button
-                            type="button"
-                            onClick={handleAddToCart}
-                            disabled={addLock.isPending || isOutOfStock}
-                            className={cn(
-                                "add-to-cart-button h-9 flex-1 inline-flex items-center justify-center rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
-                                addLock.isPending || isOutOfStock ? "opacity-80" : ""
-                            )}
-                        >
-                            <span className="relative inline-flex size-4.5 items-center justify-center mr-2">
-                                <Spinner
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-4.5",
-                                        addLock.isPending ? "is-visible" : ""
-                                    )}
-                                />
-                                <ShoppingCart
-                                    className={cn(
-                                        "add-to-cart-icon absolute size-4.5",
-                                        !addLock.isPending ? "is-visible" : "",
-                                        didJustAdd ? "text-primary" : ""
-                                    )}
-                                />
-                            </span>
-                            {didJustAdd ? "Added" : "Add to Cart"}
-                        </button>
-                        <Button
-                            onClick={handleBuyNow}
-                            disabled={buyLock.isPending || isOutOfStock}
-                            className={cn(
-                                "buy-now-button h-9 flex-[1.2] rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
-                                buyLock.isPending ? "opacity-90 cursor-wait" : ""
-                            )}
-                        >
-                            {buyLock.isPending ? (
-                                <span className="flex items-center justify-center gap-1.5">
-                                    <Spinner className="size-3.5 animate-spin text-primary-foreground" />
-                                    <span>Opening Checkout...</span>
-                                </span>
-                            ) : (
-                                <span className="flex items-center justify-center gap-1.5">
-                                    <PackageCheck className="size-4" />
-                                    <span>Buy Now</span>
-                                </span>
-                            )}
-                        </Button>
-                    </>
-                )}
-                <ProductSocialActions product={product} />
-            </div>
-
-            <div className="flex flex-col gap-2 pt-2 md:hidden">
+            <div className="space-y-4 pt-2">
                 {!isOutOfStock ? (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <div className="inline-flex h-9 flex-[0.35] items-center justify-between rounded-lg bg-background border border-border overflow-hidden">
-                                <button onClick={decrement} aria-label="Decrease quantity" className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                    <Minus className="size-3.5" />
-                                </button>
-                                <span className="inline-flex flex-1 items-center justify-center text-[13.5px] font-medium text-foreground">{quantity}</span>
-                                <button onClick={increment} aria-label="Increase quantity" className="inline-flex h-full w-8 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                    <Plus className="size-3.5" />
-                                </button>
-                            </div>
+                    <div className="space-y-1.5">
+                        <span className="text-sm font-medium text-muted-foreground block">Quantity</span>
+                        <div className="inline-flex h-11 w-32 items-center justify-between rounded-lg bg-background border border-border overflow-hidden">
+                            <button
+                                onClick={decrement}
+                                className="inline-flex h-full w-10 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                aria-label="Decrease quantity"
+                            >
+                                <Minus className="size-4" />
+                            </button>
+                            <span className="inline-flex flex-1 items-center justify-center text-[15px] font-medium text-foreground">{quantity}</span>
+                            <button
+                                onClick={increment}
+                                className="inline-flex h-full w-10 items-center justify-center bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                aria-label="Increase quantity"
+                            >
+                                <Plus className="size-4" />
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
+
+                <div className="flex flex-col gap-3">
+                    {isOutOfStock ? (
+                        <Button
+                            onClick={() => setNotifyModalOpen(true)}
+                            size="lg"
+                            className="h-12 w-full rounded-xl active:scale-[0.96] shadow-none font-semibold text-[15px]"
+                        >
+                            <BellRing className="size-5 mr-2" />
+                            Notify Me When In Stock
+                        </Button>
+                    ) : (
+                        <>
                             <button
                                 type="button"
                                 onClick={handleAddToCart}
                                 disabled={addLock.isPending || isOutOfStock}
                                 className={cn(
-                                    "add-to-cart-button h-9 flex-[0.65] inline-flex items-center justify-center rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+                                    "add-to-cart-button h-12 w-full inline-flex items-center justify-center rounded-xl active:scale-[0.98] font-medium text-[15px] transition-all duration-200 border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
                                     addLock.isPending || isOutOfStock ? "opacity-80" : ""
                                 )}
                             >
-                                <span className="relative inline-flex size-4.5 items-center justify-center mr-1.5">
-                                    <Spinner
-                                        className={cn(
-                                            "add-to-cart-icon absolute size-4",
-                                            addLock.isPending ? "is-visible" : ""
-                                        )}
-                                    />
-                                    <ShoppingCart
-                                        className={cn(
-                                            "add-to-cart-icon absolute size-4",
-                                            !addLock.isPending ? "is-visible" : "",
-                                            didJustAdd ? "text-primary" : ""
-                                        )}
-                                    />
-                                </span>
-                                {didJustAdd ? "Added" : "Add to Cart"}
+                                {addLock.isPending ? (
+                                    <Spinner className="absolute size-5 is-visible" />
+                                ) : (
+                                    <span>{didJustAdd ? "Added" : "Add to cart"}</span>
+                                )}
                             </button>
-                        </div>
-                        <Button
-                            onClick={handleBuyNow}
-                            disabled={buyLock.isPending || isOutOfStock}
-                            className={cn(
-                                "buy-now-button h-9 w-full rounded-lg active:scale-[0.98] font-medium text-[13.5px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
-                                buyLock.isPending ? "opacity-90 cursor-wait" : ""
-                            )}
-                        >
-                            {buyLock.isPending ? (
-                                <span className="flex items-center justify-center gap-1.5">
-                                    <Spinner className="size-3.5 animate-spin text-primary-foreground" />
-                                    <span>Opening Checkout...</span>
-                                </span>
-                            ) : (
-                                <span className="flex items-center justify-center gap-1.5">
-                                    <PackageCheck className="size-4" />
-                                    <span>Buy Now</span>
-                                </span>
-                            )}
-                        </Button>
-                    </>
-                ) : (
-                    <Button
-                        onClick={() => setNotifyModalOpen(true)}
-                        className="h-11 w-full rounded-xl active:scale-[0.96] font-bold text-sm"
-                    >
-                        <BellRing className="size-4 mr-2" />
-                        Notify Me
-                    </Button>
-                )}
+                            <Button
+                                onClick={handleBuyNow}
+                                disabled={buyLock.isPending || isOutOfStock}
+                                className={cn(
+                                    "buy-now-button h-12 w-full rounded-xl active:scale-[0.98] font-medium text-[15px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
+                                    buyLock.isPending ? "opacity-90 cursor-wait" : ""
+                                )}
+                            >
+                                {buyLock.isPending ? (
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <Spinner className="size-4 animate-spin text-white" />
+                                        <span>Opening Checkout...</span>
+                                    </span>
+                                ) : (
+                                    <span>Buy it now</span>
+                                )}
+                            </Button>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
         <Dialog open={notifyModalOpen} onOpenChange={setNotifyModalOpen}>

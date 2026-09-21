@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ImageIcon, Maximize2 } from 'lucide-react';
+import { ImageIcon, Maximize2, Badge as BadgeIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
@@ -86,19 +86,33 @@ export default function ProductGallery({ images, primaryTag, product }) {
   };
 
   const mainTag = primaryTag ? getProductTagById(primaryTag) : null;
+  const discountLabel = product?.isDiscounted && product?.discountPercentage > 0
+    ? `${product.discountPercentage}% OFF`
+    : null;
 
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#ffffff' }}>
         
-        {mainTag && (
-          <div 
-            className={cn("absolute left-3 top-3 z-20 pointer-events-auto flex items-center gap-1 rounded-full px-2 py-0.5 shadow-md backdrop-blur-md border border-white/30 text-[9px] md:text-[10px] font-bold tracking-wide", mainTag.bgColor, mainTag.color)}
-            title={mainTag.label}
-          >
-            <mainTag.icon className="size-3 drop-shadow-sm" />
-            {mainTag.label}
+        {discountLabel ? (
+          <div className="absolute left-3 top-3 z-20 pointer-events-auto flex flex-col items-center justify-center w-10 h-10 md:w-11 md:h-11 text-white drop-shadow-md">
+            <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
+            <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
+              <span className="text-[11px] md:text-[12px] font-bold mt-[1px]">{product.discountPercentage}%</span>
+              <span className="text-[7.5px] md:text-[8px] font-extrabold mt-[0.5px]">OFF</span>
+            </div>
           </div>
+        ) : (
+          mainTag && (
+            <div className="absolute left-3 top-3 z-20 pointer-events-auto">
+              <div 
+                className={`flex items-center justify-center rounded-full p-2 shadow-sm backdrop-blur-md border border-white/20 ${mainTag.bgColor} ${mainTag.color}`}
+                title={mainTag.label}
+              >
+                <mainTag.icon className="size-5 drop-shadow-sm" />
+              </div>
+            </div>
+          )
         )}
 
         {product && (

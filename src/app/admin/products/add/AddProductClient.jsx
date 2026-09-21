@@ -52,7 +52,8 @@ export default function AddProduct() {
 
   const [Name, setName] = useState("");
   const [Description, setDescription] = useState("");
-  const [shortDescription, setShortDescription] = useState("");
+  const [bulletPoints, setBulletPoints] = useState([""]);
+  const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
@@ -64,6 +65,7 @@ export default function AddProduct() {
   const [compareAtPrice, setCompareAtPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
+  const [enablePackOptions, setEnablePackOptions] = useState(false);
   const [stockQuantity, setStockQuantity] = useState("1");
   const [stockStatus, setStockStatus] = useState("In Stock");
   const [Categories, setCategories] = useState([]);
@@ -108,7 +110,8 @@ export default function AddProduct() {
   const resetForm = useCallback(() => {
     setName("");
     setDescription("");
-    setShortDescription("");
+    setBulletPoints([""]);
+    setSpecifications([{ name: "", value: "" }]);
     setSeoTitle("");
     setSeoDescription("");
     setSeoKeywords("");
@@ -121,6 +124,7 @@ export default function AddProduct() {
     setCompareAtPrice("");
     setDiscountPercentage("");
     setPackOptions([{ label: "1 pcs", price: "" }]);
+    setEnablePackOptions(false);
     setStockQuantity("1");
     setStockStatus("In Stock");
     setCategories([]);
@@ -342,7 +346,8 @@ export default function AddProduct() {
         body: JSON.stringify({
           Name: Name.trim(),
           Description: sanitizedDescription,
-          shortDescription,
+          bulletPoints: bulletPoints.filter(bp => bp.trim() !== ""),
+          specifications: specifications.filter(spec => spec.name.trim() !== "" || spec.value.trim() !== ""),
           seoTitle,
           seoDescription,
           seoKeywords,
@@ -360,7 +365,7 @@ export default function AddProduct() {
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
-          packOptions: packOptions.filter(p => p.label && p.price),
+          packOptions: enablePackOptions ? packOptions.filter(p => p.label && p.price) : [],
           showOnStore,
           isNewArrival,
           isBestSelling,
@@ -374,10 +379,8 @@ export default function AddProduct() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("Product created!");
-        resetForm();
-        router.push("/admin/products");
-        router.refresh();
+        toast.success("Product added successfully!");
+        setTimeout(() => router.back(), 1500);
       } else {
         toast.error(data.message || data.error || "Failed to create product");
       }
@@ -549,7 +552,16 @@ export default function AddProduct() {
               <Input
                 type="number"
                 value={Price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const newPrice = e.target.value;
+                  setPrice(newPrice);
+                  setPackOptions((prev) => {
+                    if (prev.length === 1) {
+                      return [{ ...prev[0], price: newPrice }];
+                    }
+                    return prev;
+                  });
+                }}
                 className="h-11 px-4"
                 placeholder="0.00"
                 step="0.01"
@@ -569,88 +581,207 @@ export default function AddProduct() {
                 step="0.01"
               />
             </div>
-
-            <div>
-              <Label className="mb-2">Discount Percentage</Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value={discountPercentage}
-                onChange={(e) => setDiscountPercentage(e.target.value)}
-                className="h-11 px-4"
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Pack Variations</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Define different pack sizes and their prices. Leave empty if not applicable.
-              </p>
-            </div>
-            {packOptions.map((pack, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    value={pack.label}
-                    onChange={(e) => {
-                      const newOptions = [...packOptions];
-                      newOptions[index].label = e.target.value;
-                      setPackOptions(newOptions);
-                    }}
-                    className="h-11 px-4"
-                    placeholder="e.g., Pack of 5"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    value={pack.price}
-                    onChange={(e) => {
-                      const newOptions = [...packOptions];
-                      newOptions[index].price = e.target.value;
-                      setPackOptions(newOptions);
-                    }}
-                    className="h-11 px-4"
-                    placeholder="Price (Rs)"
-                    step="0.01"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={() => setPackOptions(packOptions.filter((_, i) => i !== index))}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPackOptions([...packOptions, { label: "", price: "" }])}
-              className="w-full rounded-xl border-dashed"
-            >
-              <PlusCircle className="mr-2 size-4" />
-              Add More Pack Option
-            </Button>
           </div>
 
           <div>
-            <Label className="mb-2">Short Description</Label>
-            <ProductRichTextEditor
-              value={shortDescription}
-              onChange={setShortDescription}
-              placeholder="A brief summary displayed right below the price on the product page..."
+            <Label className="mb-2">Discount Percentage (%)</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={discountPercentage}
+              onChange={(e) => setDiscountPercentage(e.target.value)}
+              className="h-11 px-4"
+              placeholder="e.g. 25"
             />
+            <p className="text-xs text-muted-foreground mt-1.5">Set a discount percentage to automatically apply a discount. The original price will become the compare-at price.</p>
           </div>
+
+          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Enable Pack Variations</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Define different pack sizes and their prices. 1st pack rate is linked to base price.
+                </p>
+              </div>
+              <Switch
+                checked={enablePackOptions}
+                onCheckedChange={(checked) => {
+                  setEnablePackOptions(checked);
+                  if (checked && packOptions.length === 0) {
+                    setPackOptions([{ label: "1 pcs", price: Price || "" }]);
+                  }
+                }}
+              />
+            </div>
+            {enablePackOptions && (
+              <>
+                {packOptions.map((pack, index) => (
+                  <div key={index} className="flex items-center gap-3 mb-3">
+                    <div className="flex-1">
+                      <Input
+                        type="text"
+                        value={pack.label}
+                        onChange={(e) => {
+                          const newOptions = [...packOptions];
+                          newOptions[index].label = e.target.value;
+                          setPackOptions(newOptions);
+                        }}
+                        className="h-11 px-4"
+                        placeholder="e.g., Pack of 5"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="number"
+                        value={pack.price}
+                        onChange={(e) => {
+                          const newOptions = [...packOptions];
+                          newOptions[index].price = e.target.value;
+                          setPackOptions(newOptions);
+                        }}
+                        className="h-11 px-4"
+                        placeholder="Price (Rs)"
+                        step="0.01"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => setPackOptions(packOptions.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPackOptions([...packOptions, { label: "", price: "" }])}
+                  className="w-full rounded-xl border-dashed mt-2"
+                >
+                  <PlusCircle className="mr-2 size-4" />
+                  Add More Pack Option
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="product-details" className="rounded-xl border border-border bg-muted/35 px-4 shadow-sm">
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-sm font-semibold text-foreground">Product Details & Specs</span>
+                  <span className="text-xs font-normal text-muted-foreground mt-0.5">Highlight key features and structured specifications.</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="space-y-6 pt-2">
+                  {/* Bullet Points Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Bullet Points</h4>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Short key features of the product.</p>
+                    </div>
+                    {bulletPoints.map((bp, index) => (
+                      <div key={`bp-${index}`} className="flex items-center gap-3">
+                        <Input
+                          type="text"
+                          value={bp}
+                          onChange={(e) => {
+                            const newBps = [...bulletPoints];
+                            newBps[index] = e.target.value;
+                            setBulletPoints(newBps);
+                          }}
+                          className="h-11 px-4 flex-1"
+                          placeholder="e.g., 100% Organic Cotton"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => setBulletPoints(bulletPoints.filter((_, i) => i !== index))}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setBulletPoints([...bulletPoints, ""])}
+                      className="w-full rounded-xl border-dashed"
+                    >
+                      <PlusCircle className="mr-2 size-4" />
+                      Add Bullet Point
+                    </Button>
+                  </div>
+
+                  <div className="border-t border-border" />
+
+                  {/* Specifications Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Specifications</h4>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Structured specs like Weight, Dimensions, Material, etc.</p>
+                    </div>
+                    {specifications.map((spec, index) => (
+                      <div key={`spec-${index}`} className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <Input
+                            type="text"
+                            value={spec.name}
+                            onChange={(e) => {
+                              const newSpecs = [...specifications];
+                              newSpecs[index].name = e.target.value;
+                              setSpecifications(newSpecs);
+                            }}
+                            className="h-11 px-4"
+                            placeholder="Name (e.g., Weight)"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            type="text"
+                            value={spec.value}
+                            onChange={(e) => {
+                              const newSpecs = [...specifications];
+                              newSpecs[index].value = e.target.value;
+                              setSpecifications(newSpecs);
+                            }}
+                            className="h-11 px-4"
+                            placeholder="Value (e.g., 1 kg)"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-11 w-11 shrink-0 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => setSpecifications(specifications.filter((_, i) => i !== index))}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSpecifications([...specifications, { name: "", value: "" }])}
+                      className="w-full rounded-xl border-dashed"
+                    >
+                      <PlusCircle className="mr-2 size-4" />
+                      Add Specification
+                    </Button>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <div>
             <div className="mb-2 flex items-center justify-between">

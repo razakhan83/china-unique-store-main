@@ -105,12 +105,16 @@ const PRODUCT_DETAIL_PROJECTION = [
   'seoOgImageFit',
   'vendors',
   'packOptions',
+  'bulletPoints',
+  'specifications',
 ].join(' ');
 const PRODUCT_ADMIN_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
   'stockQuantity',
   'vendors',
   'packOptions',
+  'bulletPoints',
+  'specifications',
 ].join(' ');
 let hasLoggedSettingsFetchFailure = false;
 const SLOW_DATA_LOG_MS = 700;
@@ -251,6 +255,15 @@ function toProductDetailView(product) {
     Name: product.Name,
     Description: product.Description || '',
     shortDescription: product.shortDescription || '',
+    bulletPoints: Array.isArray(product.bulletPoints) 
+      ? product.bulletPoints.map(bp => String(bp || ''))
+      : [],
+    specifications: Array.isArray(product.specifications) 
+      ? product.specifications.map(s => ({
+          name: String(s?.name || ''),
+          value: String(s?.value || '')
+        }))
+      : [],
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,

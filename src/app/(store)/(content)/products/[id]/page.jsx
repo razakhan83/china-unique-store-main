@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductCard from '@/components/ProductCard';
-import ProductActions, { ProductSocialActions, ProductWhatsAppOrderButton } from '@/components/ProductActions';
+import ProductActions, { ProductSocialActions, ProductWhatsAppOrderButton, ProductWhatsAppTextLink } from '@/components/ProductActions';
 import ProductDescription from '@/components/ProductDescription';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductGallery from '@/components/ProductGallery';
@@ -31,12 +31,27 @@ import { metadataTitle } from '@/lib/siteSeo';
 import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
-const getSellingPrice = (product) =>
-  Number(product.discountedPrice ?? product.Price ?? 0);
-const getVisibleCompareAtPrice = (product) => {
-  const compareAtPrice = Number(product.compareAtPrice ?? 0);
-  const sellingPrice = getSellingPrice(product);
+const getSellingPrice = (product) => {
+  const productPrice = Number(product.Price || product.price || 0);
 
+  if (product.isDiscounted && product.discountPercentage > 0) {
+    return product.discountedPrice != null
+      ? Number(product.discountedPrice)
+      : Math.round(productPrice * (1 - product.discountPercentage / 100));
+  }
+
+  return productPrice;
+};
+
+const getVisibleCompareAtPrice = (product) => {
+  const sellingPrice = getSellingPrice(product);
+  
+  if (product.isDiscounted && product.discountPercentage > 0) {
+    const originalPrice = Number(product.Price || product.price || 0);
+    return originalPrice > sellingPrice ? originalPrice : null;
+  }
+
+  const compareAtPrice = Number(product.compareAtPrice ?? 0);
   return compareAtPrice > sellingPrice ? compareAtPrice : null;
 };
 const siteUrl = getSiteUrl();
@@ -452,16 +467,16 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
         value={price}
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-10">
-        <div className="w-full md:w-[45%] lg:w-[42%]">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8 lg:gap-12">
+        <div className="w-full md:w-[50%] lg:w-[55%]">
           <ProductGallery images={product.Images} primaryTag={product.primaryTag} product={product} />
         </div>
 
-        <div className="w-full md:w-[55%] lg:w-[58%]">
+        <div className="w-full md:w-[50%] lg:w-[45%]">
           <div className="flex flex-col gap-4 md:sticky md:top-[164px] md:gap-6">
             <div className="space-y-2 md:space-y-4">
               <div className="mt-2 flex items-start justify-between gap-4">
-                <h1 className="text-[1.05rem] font-bold leading-tight tracking-tight text-foreground sm:text-xl sm:leading-tight md:text-3xl md:leading-tight">
+                <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl sm:leading-tight md:text-4xl md:leading-tight">
                   {product.Name}
                 </h1>
                 <ProductSocialActions product={product} className="mt-0.5 shrink-0 md:hidden" />
@@ -484,17 +499,41 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
               )}
             </div>
 
-            {product.shortDescription && (
+            {(product.bulletPoints?.length > 0 || product.specifications?.length > 0) && (
               <Accordion type="single" collapsible className="w-full mt-2">
                 <AccordionItem value="details" className="border-b-0 border-t border-border">
                   <AccordionTrigger className="py-3 text-sm font-bold text-foreground">
                     Product Details
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div
-                      className="text-[13.5px] leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
-                      dangerouslySetInnerHTML={{ __html: product.shortDescription }}
-                    />
+                    <div className="flex flex-col gap-5 pt-1 pb-2">
+                      {product.bulletPoints?.length > 0 && (
+                        <ul className="list-disc pl-5 space-y-1.5 text-[14px] leading-relaxed text-muted-foreground marker:text-primary">
+                          {product.bulletPoints.map((bp, i) => (
+                            <li key={i}>{bp}</li>
+                          ))}
+                        </ul>
+                      )}
+                      
+                      {product.specifications?.length > 0 && (
+                        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                          <table className="w-full text-left text-[14px]">
+                            <tbody className="divide-y divide-border">
+                              {product.specifications.map((spec, i) => (
+                                <tr key={i} className="hover:bg-muted/30 transition-colors">
+                                  <th className="px-4 py-3 font-semibold text-foreground w-[35%] border-r border-border bg-muted/10 align-top">
+                                    {spec.name}
+                                  </th>
+                                  <td className="px-4 py-3 text-muted-foreground align-top">
+                                    {spec.value}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -508,14 +547,13 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
                 basePrice={price}
                 compareAtPrice={compareAtPrice}
               />
-            </div>
-
-            <div className="mt-1">
-              <ProductWhatsAppOrderButton 
-                product={product} 
-                whatsappNumber={settings.whatsappNumber} 
-                storeName={settings.storeName} 
-              />
+              <div className="mt-5 flex justify-center">
+                <ProductWhatsAppTextLink 
+                  product={product}
+                  whatsappNumber={settings.whatsappNumber}
+                  storeName={settings.storeName}
+                />
+              </div>
             </div>
           </div>
         </div>

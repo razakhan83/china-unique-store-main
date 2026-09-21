@@ -242,6 +242,19 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        bulletPoints: {
+            type: [String],
+            default: [],
+        },
+        specifications: {
+            type: [
+                {
+                    name: { type: String, trim: true },
+                    value: { type: String, trim: true },
+                }
+            ],
+            default: [],
+        },
         tags: {
             type: [String],
             default: [],
@@ -274,7 +287,8 @@ if (
     cachedProduct &&
     (
         !cachedProduct.schema.path('compareAtPrice') ||
-        !cachedProduct.schema.path('shortDescription') ||
+        !cachedProduct.schema.path('bulletPoints') ||
+        !cachedProduct.schema.path('specifications') ||
         !cachedProduct.schema.path('vendors') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorProductName') ||
         !cachedProduct.schema.path('vendors').schema?.path('vendorPrice') ||

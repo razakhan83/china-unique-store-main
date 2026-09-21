@@ -117,8 +117,9 @@ export async function POST(req) {
             featuredPriority,
             vendors,
             packOptions,
-            tags,
             primaryTag,
+            bulletPoints,
+            specifications,
         } = body;
 
         if (!Name || !Price || !categoryInput) {
@@ -203,6 +204,8 @@ export async function POST(req) {
             packOptions: Array.isArray(packOptions) ? packOptions : [],
             tags: Array.isArray(tags) ? tags : [],
             primaryTag: primaryTag || '',
+            bulletPoints: Array.isArray(bulletPoints) ? bulletPoints : [],
+            specifications: Array.isArray(specifications) ? specifications : [],
         });
 
         revalidateTag('products');

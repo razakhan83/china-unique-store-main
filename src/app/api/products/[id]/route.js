@@ -63,14 +63,14 @@ export async function GET(_request, { params }) {
         const { id } = await params;
         const query = resolveProductQuery(id);
         let product = await Product.findOne(query)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
+            .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
         if (!product && typeof id === 'string' && id.trim()) {
             const escaped = id.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             product = await Product.findOne({ slug: { $regex: new RegExp(`^${escaped}$`, 'i') } })
-                .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
+                .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions tags primaryTag')
                 .populate({ path: 'Category', select: 'name slug bgColor' })
                 .lean();
         }
@@ -178,6 +178,8 @@ export async function PUT(request, { params }) {
         existingProduct.packOptions = Array.isArray(body.packOptions) ? body.packOptions : [];
         existingProduct.set('tags', Array.isArray(body.tags) ? body.tags : [], { strict: false });
         existingProduct.set('primaryTag', body.primaryTag || '', { strict: false });
+        existingProduct.set('bulletPoints', Array.isArray(body.bulletPoints) ? body.bulletPoints : [], { strict: false });
+        existingProduct.set('specifications', Array.isArray(body.specifications) ? body.specifications : [], { strict: false });
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.showOnStore = body.showOnStore !== false && body.showOnStore !== 'false';
         

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star, Truck } from "lucide-react";
+import { ShoppingCart, Star, Truck, BadgePercent, Badge as BadgeIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProductCardAddToCartButton from "@/components/ProductCardAddToCartButton";
 import ProductCardWishlistSlot from "@/components/ProductCardWishlistSlot";
@@ -30,6 +30,10 @@ function getSellingPrice(product) {
 }
 
 function getVisibleCompareAtPrice(product, sellingPrice) {
+  if (product.isDiscounted && product.discountPercentage > 0) {
+    const originalPrice = Number(product.Price || product.price || 0);
+    return originalPrice > sellingPrice ? originalPrice : null;
+  }
   const compareAtPrice = Number(product.compareAtPrice ?? 0);
   return compareAtPrice > sellingPrice ? compareAtPrice : null;
 }
@@ -46,7 +50,7 @@ function getFeatureBadge(product) {
     return {
       label: "Best Seller",
       className:
-        "pointer-events-auto rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-semibold text-secondary-foreground uppercase tracking-[0.08em]",
+        "pointer-events-auto rounded-full border border-border bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground uppercase tracking-[0.08em]",
     };
   }
 
@@ -99,54 +103,54 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
     >
       <div className="relative">
         <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1.5">
-          {ratingLabel ? (
-            <Badge
-              className={cn(
-                "pointer-events-auto rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-amber-700 tabular-nums"
-              )}
-            >
-              <Star className="mr-1 size-3.5 fill-current" />
-              {ratingLabel}
-            </Badge>
-          ) : null}
-
-          {primaryTag && (
-            <div 
-              className={cn("pointer-events-auto flex items-center justify-center rounded-full p-1.5 shadow-sm backdrop-blur-md border border-white/20", primaryTag.bgColor, primaryTag.color)}
-              title={primaryTag.label}
-            >
-              <primaryTag.icon className="size-4 drop-shadow-sm" />
+          {discountLabel ? (
+            <div className="relative flex flex-col items-center justify-center w-8 h-8 text-white drop-shadow-md">
+              <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
+              <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
+                <span className="text-[9px] font-bold mt-[1px]">{product.discountPercentage}%</span>
+                <span className="text-[6px] font-extrabold mt-[0.5px]">OFF</span>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {ratingLabel ? (
+                <Badge
+                  className={cn(
+                    "pointer-events-auto rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold text-amber-700 tabular-nums"
+                  )}
+                >
+                  <Star className="mr-1 size-3.5 fill-current" />
+                  {ratingLabel}
+                </Badge>
+              ) : null}
 
-          {featureBadge && (
-            <Badge className={cn(featureBadge.className)}>
-              {featureBadge.label}
-            </Badge>
-          )}
-
-          {discountLabel && (
-            <Badge
-              className={cn(
-                "pointer-events-auto rounded border-none bg-primary px-2 py-1 text-[11px] font-bold text-primary-foreground tracking-wide shadow-sm"
+              {primaryTag && (
+                <div 
+                  className={cn("pointer-events-auto flex items-center justify-center rounded-full p-1.5 shadow-sm backdrop-blur-md border border-white/20", primaryTag.bgColor, primaryTag.color)}
+                  title={primaryTag.label}
+                >
+                  <primaryTag.icon className="size-4 drop-shadow-sm" />
+                </div>
               )}
-            >
-              {discountLabel}
-            </Badge>
-          )}
 
-          {product.isFreeDelivery && primaryTag?.id !== 'free-shipping' && (
-            <Badge
-              className={cn(
-                "pointer-events-auto rounded border-none bg-emerald-600 dark:bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white tracking-wide shadow-sm flex items-center gap-1"
+              {featureBadge && (
+                <Badge className={cn(featureBadge.className)}>
+                  {featureBadge.label}
+                </Badge>
               )}
-            >
-              <Truck className="size-3" />
-              Free Delivery
-            </Badge>
+
+              {product.isFreeDelivery && primaryTag?.id !== 'free-shipping' && (
+                <Badge
+                  className={cn(
+                    "pointer-events-auto rounded border-none bg-emerald-600 dark:bg-emerald-500 px-2 py-0.5 text-[9.5px] font-bold text-white tracking-wide shadow-sm flex items-center gap-1"
+                  )}
+                >
+                  <Truck className="size-3" />
+                  Free Delivery
+                </Badge>
+              )}
+            </>
           )}
-
-
         </div>
 
         <ProductCardWishlistSlot product={product} />
@@ -223,7 +227,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
               draggable={false}
             >
               <h3
-                className="line-clamp-2 text-[13px] font-medium leading-[1.3] text-foreground/90 @min-[260px]:text-[14px] sm:text-[15px]"
+                className="line-clamp-2 text-[12px] font-medium leading-[1.3] text-foreground/90 @min-[260px]:text-[13px] sm:text-[14px]"
                 draggable={false}
               >
                 {productName}
@@ -235,7 +239,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                 <>
                   <div className="flex flex-col items-start gap-1 sm:gap-1.5 flex-1 min-w-0">
                     <p
-                      className="text-[15px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[16px] sm:text-[18px]"
+                      className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
                       draggable={false}
                     >
                       {formatPrice(sellingPrice)}
@@ -243,12 +247,12 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                     {compareAtPrice ? (
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p
-                          className="text-[11px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[12px] sm:text-[15px]"
+                          className="text-[10px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[11px] sm:text-[13px]"
                           draggable={false}
                         >
                           {formatPrice(compareAtPrice)}
                         </p>
-                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1 py-0 text-[10px] font-medium text-success tracking-normal border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[12px] sm:h-[24px]">
+                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1 py-0 text-[9.5px] font-medium text-success tracking-normal border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11px] sm:h-[24px]">
                           Save {formatPrice(compareAtPrice - sellingPrice)}
                         </Badge>
                       </div>
