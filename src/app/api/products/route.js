@@ -117,6 +117,7 @@ export async function POST(req) {
             featuredPriority,
             vendors,
             packOptions,
+            tags,
             primaryTag,
             bulletPoints,
             specifications,
