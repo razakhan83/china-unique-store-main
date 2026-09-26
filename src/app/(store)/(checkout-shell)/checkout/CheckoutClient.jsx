@@ -601,6 +601,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [redirectingToOrder, setRedirectingToOrder] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -1091,7 +1092,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           idempotencyKey: idempotencyKeyRef.current,
         });
 
-        if (result?.success && result.duplicate) {
+        if (result?.success && result.duplicate && !(result.orderRecordId && result.secureToken)) {
           idempotencyKeyRef.current = createIdempotencyKey();
           result = await submitOrderAction({
             ...orderPayload,
@@ -1099,7 +1100,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
           });
         }
 
-        if (!result?.success || !result.orderId || result.duplicate) {
+        if (!result?.success || !result.orderId || (result.duplicate && !(result.orderRecordId && result.secureToken))) {
           setErrors((previous) => ({
             ...previous,
             submit: result?.error || 'Unable to place the order right now.',
@@ -1111,6 +1112,12 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         trackPurchaseEvent({ orderId: result.orderId, cart, total: result.totalAmount || total });
         idempotencyKeyRef.current = createIdempotencyKey();
         persistGuestOrder(result);
+        if (result.orderRecordId && result.secureToken) {
+          setRedirectingToOrder(true);
+          clearCart();
+          router.replace(`/orders/${result.orderRecordId}?token=${encodeURIComponent(result.secureToken)}`);
+          return;
+        }
         setOrderState(result);
         clearCart();
       } catch (error) {
@@ -1129,7 +1136,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   // ─── Loading / empty states ────────────────────────────────────────────────
 
-  if (!isInitialized && !orderState.orderId) {
+  if (redirectingToOrder || (!isInitialized && !orderState.orderId)) {
     return <CheckoutPageSkeleton />;
   }
 

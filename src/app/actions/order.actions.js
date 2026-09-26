@@ -182,6 +182,8 @@ export async function submitOrderAction(input) {
         return {
           success: true,
           orderId: existing.orderId,
+          orderRecordId: String(existing._id),
+          secureToken: existing.secureToken || '',
           totalAmount: existing.totalAmount,
           whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent([
             '*New Order from China Unique Store*',
@@ -278,6 +280,8 @@ export async function submitOrderAction(input) {
           return {
             success: true,
             orderId: existing.orderId,
+            orderRecordId: String(existing._id),
+            secureToken: existing.secureToken || '',
             totalAmount: existing.totalAmount,
             duplicate: true,
           };
@@ -461,6 +465,7 @@ export async function submitOrderAction(input) {
     return {
       success: true,
       orderId: order.orderId,
+      orderRecordId: String(order._id),
       secureToken: order.secureToken,
       totalAmount: pricing.total,
       items: normalizedItems.map(item => ({

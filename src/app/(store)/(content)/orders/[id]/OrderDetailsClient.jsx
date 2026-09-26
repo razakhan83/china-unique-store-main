@@ -265,6 +265,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
         <div className="flex flex-col gap-4 md:gap-6 md:col-span-1">
           
           {/* Courier & Tracking Card */}
+          <div id="shipment-tracking" className="scroll-mt-24">
           <Card className="border-sky-200 dark:border-sky-900 bg-gradient-to-b from-sky-50/50 to-transparent">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -328,6 +329,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
               })()}
             </CardContent>
           </Card>
+          </div>
 
           {/* Summary Card */}
           <Card>

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Home, Truck } from 'lucide-react';
 import Link from 'next/link';
 
 import { authOptions } from '@/lib/auth';
@@ -142,8 +142,15 @@ async function SingleOrderContent({ params, searchParams }) {
             <p className="mt-2 text-muted-foreground">Manage your shipment and download your invoice below.</p>
           </div>
           
-          <div className="flex items-center gap-3">
-             <Button variant="outline" render={<Link href="/" />} nativeButton={false}>Continue Shopping</Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <Button render={<Link href="#shipment-tracking" />} nativeButton={false} className="h-11">
+              <Truck className="size-4" />
+              Track order
+            </Button>
+            <Button variant="outline" render={<Link href="/" />} nativeButton={false} className="h-11">
+              <Home className="size-4" />
+              Home
+            </Button>
           </div>
         </div>
 
