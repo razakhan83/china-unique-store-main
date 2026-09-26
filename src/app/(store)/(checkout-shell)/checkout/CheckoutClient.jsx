@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Check,
@@ -787,30 +787,64 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     setHasTrackedCheckoutView(true);
   }, [cart, hasTrackedCheckoutView, total]);
 
-  // Capture abandoned cart snapshot for admin follow-up
+  const abandonedSnapshotRef = useRef(null);
+  const lastAbandonedPayloadRef = useRef('');
+  abandonedSnapshotRef.current = {
+    phone: formData.phone,
+    name: formData.fullName,
+    email: formData.email,
+    city: formData.city,
+    address: formData.address,
+    landmark: formData.landmark,
+    items: cart,
+    totalAmount: pricing.total,
+  };
+
+  const syncAbandonedCart = useCallback(() => {
+    const snapshot = abandonedSnapshotRef.current;
+    if (!snapshot || !Array.isArray(snapshot.items) || snapshot.items.length === 0) return;
+
+    const phone = String(snapshot.phone || '').replace(/\s+/g, '');
+    if (!/^03\d{9}$/.test(phone)) return;
+
+    const payload = {
+      phone,
+      name: snapshot.name,
+      email: snapshot.email,
+      city: snapshot.city,
+      address: snapshot.address,
+      landmark: snapshot.landmark,
+      items: snapshot.items,
+      totalAmount: snapshot.totalAmount,
+    };
+    const serialized = JSON.stringify(payload);
+    if (serialized === lastAbandonedPayloadRef.current) return;
+    lastAbandonedPayloadRef.current = serialized;
+
+    fetch('/api/cart/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: serialized,
+      keepalive: true,
+    }).catch(() => {
+      if (lastAbandonedPayloadRef.current === serialized) {
+        lastAbandonedPayloadRef.current = '';
+      }
+    });
+  }, []);
+
   useEffect(() => {
-    const phone = formData.phone?.trim();
-    if (!phone || phone.length < 8 || !cart || cart.length === 0) return;
-
-    const timer = setTimeout(() => {
-      fetch('/api/cart/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone,
-          name: formData.fullName,
-          email: formData.email,
-          city: formData.city,
-          address: formData.address,
-          landmark: formData.landmark,
-          items: cart,
-          totalAmount: pricing.total,
-        }),
-      }).catch(() => {});
-    }, 1500);
-
+    const phone = String(formData.phone || '').replace(/\s+/g, '');
+    if (!/^03\d{9}$/.test(phone) || cart.length === 0) return undefined;
+    const timer = setTimeout(syncAbandonedCart, 400);
     return () => clearTimeout(timer);
-  }, [formData.phone, formData.fullName, formData.email, formData.city, formData.address, formData.landmark, cart, pricing.total]);
+  }, [formData.phone, cart.length, syncAbandonedCart]);
+
+  useEffect(() => {
+    const onPageHide = () => syncAbandonedCart();
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [syncAbandonedCart]);
 
   const debounceTimersRef = useRef({});
 
@@ -895,6 +929,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       clearTimeout(debounceTimersRef.current[name]);
     }
     validateFieldOnBlurOrDebounce(name, value);
+    if (name === 'address') syncAbandonedCart();
   }
 
   function validateForm() {
@@ -907,7 +942,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       missingFields.push('Full Name');
     } else if (!isCheckoutName(cleanName)) {
       nextErrors.fullName = 'Please enter a valid name (letters only, up to 30 characters).';
-      missingFields.push('Valid Name (Letters only, max 20 chars)');
+      missingFields.push('Valid Name (Letters only, up to 30 characters)');
     }
     
     const cleanPhone = formData.phone.replace(/\s+/g, '');
