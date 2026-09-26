@@ -13,6 +13,11 @@ const nextConfig = {
       revalidate: 60 * 60 * 24 * 365,
       expire: 60 * 60 * 24 * 365 * 2,
     },
+    adminDashboard: {
+      stale: 60,
+      revalidate: 60,
+      expire: 60 * 5,
+    },
   },
   reactCompiler: true,
 

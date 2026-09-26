@@ -2487,6 +2487,10 @@ export async function getCustomerOtherOrders(phone, currentOrderId) {
 }
 
 export async function getAdminDashboardData() {
+  'use cache';
+  cacheLife('adminDashboard');
+  cacheTag('admin-dashboard');
+
   await mongooseConnect();
 
   const startOfToday = new Date();
@@ -2717,6 +2721,10 @@ export async function getAdminDashboardData() {
 }
 
 export async function getAdminChartData(period = 'monthly') {
+  'use cache';
+  cacheLife('adminDashboard');
+  cacheTag('admin-dashboard');
+
   await mongooseConnect();
 
   const now = new Date();
