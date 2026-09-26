@@ -117,7 +117,7 @@ function FloatingLabelInput({ label, id, value, className, wrapperClassName, isV
         value={value}
         {...props}
         className={cn(
-          'h-12 text-[15px] md:text-sm rounded-xl transition-all duration-150',
+          'h-12 text-base rounded-xl transition-[border-color,background-color,color] duration-150',
           className,
           hasValue ? 'pt-5 pb-1' : '',
           isValid ? 'border-emerald-500/80 pr-10 focus-visible:border-emerald-600 focus-visible:ring-emerald-500/15' : ''
@@ -153,7 +153,7 @@ function FloatingLabelTextarea({ label, id, value, className, wrapperClassName, 
         rows={rows}
         {...props}
         className={cn(
-          'min-h-[4.5rem] text-[15px] md:text-sm resize-none rounded-xl shadow-none transition-all duration-150',
+          'min-h-[4.5rem] text-base resize-none rounded-xl shadow-none transition-[border-color,background-color,color] duration-150',
           className,
           hasValue ? 'pt-5 pb-1.5' : 'pt-3.5',
           isValid ? 'border-emerald-500/80 pr-10 focus-visible:border-emerald-600 focus-visible:ring-emerald-500/15' : ''
@@ -436,7 +436,7 @@ function OrderSummaryContent({
                 setCouponCodeInput(e.target.value.toUpperCase());
                 setCouponError('');
               }}
-              className={cn('flex-1', couponError && 'border-destructive')}
+              className={cn('flex-1 text-base', couponError && 'border-destructive')}
             />
             <Button
               type="submit"
@@ -1395,7 +1395,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                       )}
                       triggerClassName="translate-y-0 scale-100 transition-none hover:bg-transparent active:translate-y-0 active:scale-100 data-[pressed]:translate-y-0 data-[pressed]:scale-100"
                       className={cn(
-                        'h-12 text-[15px] md:text-sm rounded-xl border border-slate-300 dark:border-border/80 bg-card shadow-none transition-colors duration-150',
+                        'h-12 text-base rounded-xl border border-slate-300 dark:border-border/80 bg-card shadow-none transition-colors duration-150',
                         'hover:border-slate-400 dark:hover:border-border',
                         'focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15',
                         '[&_[data-slot=input-group-control]]:shadow-none [&_[data-slot=input-group-control]]:ring-0',
