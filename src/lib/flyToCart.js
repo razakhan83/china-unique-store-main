@@ -81,8 +81,9 @@ export function flyToCart({ sourceEl, imageSrc = '' } = {}) {
     flyer.appendChild(img);
   } else {
     // Clean shopping bag fallback icon
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#064e3b';
     flyer.innerHTML = `
-      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#015347;color:#fff;">
+      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${primary};color:#fff;">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
           <path d="M3 6h18"></path>

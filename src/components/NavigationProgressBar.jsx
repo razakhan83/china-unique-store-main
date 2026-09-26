@@ -98,7 +98,7 @@ function NavigationProgressBarInner() {
       className="pointer-events-none fixed left-0 right-0 top-0 z-[99999] h-[2.5px] overflow-hidden bg-transparent"
     >
       <div
-        className="h-full bg-emerald-500 shadow-[0_0_12px_#10b981,0_0_4px_#064e3b] transition-all ease-out"
+        className="h-full bg-primary shadow-[0_0_12px_var(--color-primary)] transition-[width] ease-out"
         style={{
           width: `${progress}%`,
           transitionDuration: state === 'completing' ? '180ms' : '220ms',

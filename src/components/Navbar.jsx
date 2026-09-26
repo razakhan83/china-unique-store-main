@@ -439,7 +439,7 @@ function NavbarContent({
   const mobileMenuButtonClass =
     'min-h-10 rounded-xl px-2.5 py-2 text-sidebar-foreground transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground data-[active=true]:text-sidebar-primary-foreground active:scale-[0.99]';
   const navActionButtonClass =
-    'nav-icon-button relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground transition-[background-color,color,border-color] duration-200 ease-out hover:border-[#E3FCEF] hover:bg-[#E3FCEF] hover:text-[#015347]';
+    'nav-icon-button relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground transition-[background-color,color,border-color] duration-200 ease-out hover:border-primary/20 hover:bg-primary/10 hover:text-primary';
   const announcementItems = normalizeAnnouncementItems(announcementBarMessages, announcementBarText);
   const isHomePage = pathname === '/';
   const showAnnouncementBar = isHomePage && announcementBarEnabled && announcementItems.length > 0;
@@ -513,7 +513,7 @@ function NavbarContent({
                   'nav-cart-button overflow-visible rounded-full transition-transform duration-300',
                   navActionButtonClass,
                   isCartBumping && 'animate-cart-bump',
-                  'hover:!bg-[#E3FCEF] hover:!text-[#015347] hover:!border-[#E3FCEF] hover:!shadow-[0_8px_25px_rgba(227,252,239,0.9)]'
+                  'hover:!bg-primary/10 hover:!text-primary hover:!border-primary/20'
                 )}
                 aria-label="Open cart"
                 title="Cart"
@@ -525,14 +525,14 @@ function NavbarContent({
                 {isCartInitialized ? (
                   cartCount > 0 ? (
                     <span className={cn(
-                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-xs font-bold leading-none text-white tabular-nums transition-transform duration-200",
+                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums transition-transform duration-200",
                       isCartBumping && "scale-125"
                     )}>
                       {cartCount}
                     </span>
                   ) : null
                 ) : (
-                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-xs font-bold leading-none text-white tabular-nums">
+                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums">
                     <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
                   </span>
                 )}
@@ -556,8 +556,8 @@ function NavbarContent({
                 <Link 
                   href="/" 
                   className={cn(
-                    "inline-flex relative z-50 items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
-                    pathname === '/' ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                    "inline-flex relative z-50 items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                    pathname === '/' ? "font-bold text-primary" : "font-semibold text-foreground/85"
                   )}
                 >
                   <Home className="size-3.5" strokeWidth={pathname === '/' ? 2.5 : 2.2} /> Home
@@ -578,8 +578,8 @@ function NavbarContent({
                         router.push('/categories');
                       }}
                       className={cn(
-                        "group/button flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out outline-none select-none hover:bg-[#E3FCEF] hover:text-[#015347] cursor-pointer",
-                        pathname?.startsWith('/categories') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                        "group/button flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out outline-none select-none hover:bg-primary/10 hover:text-primary cursor-pointer",
+                        pathname?.startsWith('/categories') ? "font-bold text-primary" : "font-semibold text-foreground/85"
                       )}
                     >
                       <LayoutGrid className="size-3.5 transition-transform duration-200 ease-out group-hover/button:scale-105" strokeWidth={pathname?.startsWith('/categories') ? 2.5 : 2.2} /> Categories
@@ -613,8 +613,8 @@ function NavbarContent({
                 <Link 
                   href="/products" 
                   className={cn(
-                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
-                    pathname === '/products' ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                    pathname === '/products' ? "font-bold text-primary" : "font-semibold text-foreground/85"
                   )}
                 >
                   <ShoppingBag className="size-3.5" strokeWidth={pathname === '/products' ? 2.5 : 2.2} /> All Products
@@ -625,8 +625,8 @@ function NavbarContent({
                   <Link 
                     href="/orders" 
                     className={cn(
-                      "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
-                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                      "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                      pathname?.startsWith('/orders') ? "font-bold text-primary" : "font-semibold text-foreground/85"
                     )}
                   >
                     <Package className="size-3.5" strokeWidth={pathname?.startsWith('/orders') ? 2.5 : 2.2} /> My Orders
@@ -635,8 +635,8 @@ function NavbarContent({
                   <Link 
                     href="/orders" 
                     className={cn(
-                      "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
-                      pathname?.startsWith('/orders') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                      "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                      pathname?.startsWith('/orders') ? "font-bold text-primary" : "font-semibold text-foreground/85"
                     )}
                   >
                     <MapPin className="size-3.5" strokeWidth={pathname?.startsWith('/orders') ? 2.5 : 2.2} /> Track Order
@@ -647,8 +647,8 @@ function NavbarContent({
                 <Link 
                   href="/wishlist" 
                   className={cn(
-                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
-                    pathname?.startsWith('/wishlist') ? "font-bold text-[#015347]" : "font-semibold text-foreground/85"
+                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                    pathname?.startsWith('/wishlist') ? "font-bold text-primary" : "font-semibold text-foreground/85"
                   )}
                 >
                   <Heart className="size-3.5" strokeWidth={pathname?.startsWith('/wishlist') ? 2.5 : 2.2} /> Wishlist
@@ -658,7 +658,7 @@ function NavbarContent({
                 <Link 
                   href="/products?price=under300" 
                   className={cn(
-                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
+                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
                     "font-semibold text-foreground/85"
                   )}
                 >
@@ -669,9 +669,9 @@ function NavbarContent({
                 <Link 
                   href="/contact" 
                   className={cn(
-                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-[#E3FCEF] hover:text-[#015347]",
+                    "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
                     pathname === '/contact' || pathname === '/about-us' || pathname === '/faq'
-                      ? "font-bold text-[#015347]" 
+                      ? "font-bold text-primary" 
                       : "font-semibold text-foreground/85"
                   )}
                 >
@@ -800,26 +800,26 @@ export function NavbarStaticShell({
         <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
             <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
-              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <Home className="size-4" strokeWidth={2.2} /> Home
               </Link>
-              <Link href="/categories" className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/categories" className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <LayoutGrid className="size-4" strokeWidth={2.2} /> Categories
                 <ChevronDown className="size-3.5" />
               </Link>
-              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <ShoppingBag className="size-4" strokeWidth={2.2} /> All Products
               </Link>
-              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <MapPin className="size-4" strokeWidth={2.2} /> Track Order
               </Link>
-              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <Heart className="size-4" strokeWidth={2.2} /> Wishlist
               </Link>
-              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <Tag className="size-4" strokeWidth={2.2} /> Dollar Store
               </Link>
-              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
+              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
                 <Phone className="size-4" strokeWidth={2.2} /> Contact Us
               </Link>
             </div>
