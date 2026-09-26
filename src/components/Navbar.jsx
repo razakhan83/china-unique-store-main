@@ -461,7 +461,7 @@ function NavbarContent({
       ) : null}
 
       <div className="relative z-50">
-          <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+          <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
             <div className="flex items-center gap-4 lg:gap-8 shrink-0">
               <Button variant="ghost" size="icon" onClick={() => isSidebarOpen ? setIsSidebarOpen(false) : handleSidebarOpen()} aria-label={isSidebarOpen ? "Close menu" : "Open menu"} className="md:hidden relative">
                 <span className="relative flex size-6 items-center justify-center">
@@ -525,14 +525,14 @@ function NavbarContent({
                 {isCartInitialized ? (
                   cartCount > 0 ? (
                     <span className={cn(
-                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white transition-transform duration-200",
+                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-xs font-bold leading-none text-white tabular-nums transition-transform duration-200",
                       isCartBumping && "scale-125"
                     )}>
                       {cartCount}
                     </span>
                   ) : null
                 ) : (
-                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-[11px] font-bold leading-none text-white">
+                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-[#015347] text-xs font-bold leading-none text-white tabular-nums">
                     <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
                   </span>
                 )}
@@ -550,7 +550,7 @@ function NavbarContent({
 
           {/* Top Secondary Navbar (now below header) */}
           <div className="hidden md:flex relative z-40 bg-muted/30 py-1.5 border-y border-border/50">
-            <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[13px] font-semibold text-foreground/85">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 sm:px-6 xl:px-10 text-[13px] font-semibold text-foreground/85">
               <div className="flex flex-wrap items-center justify-center gap-1.5 xl:gap-2.5">
                 {/* Home Link */}
                 <Link 
@@ -747,7 +747,7 @@ export function NavbarStaticShell({
         </div>
       ) : null}
       <div className="relative z-50">
-        <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
+        <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
           <div className="flex items-center gap-4 lg:gap-8 shrink-0">
             <StoreLogo
               storeName={storeName}
@@ -798,7 +798,7 @@ export function NavbarStaticShell({
         </header>
 
         <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
-          <div className="mx-auto flex w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
             <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
               <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-[#E3FCEF] hover:text-[#015347]">
                 <Home className="size-4" strokeWidth={2.2} /> Home

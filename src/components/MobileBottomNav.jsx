@@ -54,7 +54,7 @@ function MobileNavButton({
       </span>
       <span
         className={cn(
-          'text-[10px] font-medium transition-colors duration-200',
+          'text-xs font-medium transition-colors duration-200',
           active ? 'text-primary font-bold' : 'text-muted-foreground'
         )}
       >

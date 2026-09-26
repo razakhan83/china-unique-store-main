@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function OrderDetailLoading() {
   return (
     <main className="min-h-screen bg-background pb-20 pt-8 md:pt-12">
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">

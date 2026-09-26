@@ -1220,7 +1220,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     <div className={cn(submitting && 'pointer-events-none')}>
       {/* ── TOP NAV BAR ── */}
       <div className="sticky top-0 z-50 w-full bg-background border-b border-border/40 px-4 py-4 lg:px-8 flex items-center shadow-sm">
-        <div className="w-full max-w-[1130px] mx-auto relative flex items-center justify-between">
+        <div className="w-full max-w-7xl mx-auto relative flex items-center justify-between">
           <button 
             onClick={() => router.back()} 
             className="inline-flex items-center gap-1.5 text-[0.95rem] font-medium text-foreground/90 hover:text-foreground hover:-translate-x-1 transition-all duration-200 ease-out z-10"

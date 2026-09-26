@@ -358,7 +358,7 @@ export default function OrderDetailsClient({ order, invoiceBranding }) {
 
               <div className="flex items-center justify-between font-medium">
                 <span>Total</span>
-                <span className="text-lg">Rs. {currentOrder.totalAmount.toLocaleString('en-PK')}</span>
+                <span className="text-lg tabular-nums">Rs. {currentOrder.totalAmount.toLocaleString('en-PK')}</span>
               </div>
             </CardContent>
           </Card>

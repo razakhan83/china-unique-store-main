@@ -28,7 +28,7 @@ export default function SingleOrderPage({ params, searchParams }) {
 function SingleOrderSkeleton() {
   return (
     <main className="min-h-screen bg-background pb-20 pt-12">
-      <div className="container mx-auto max-w-6xl px-4 animate-pulse">
+      <div className="container mx-auto max-w-7xl px-4 animate-pulse">
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -128,7 +128,7 @@ async function SingleOrderContent({ params, searchParams }) {
 
   return (
     <main className="min-h-screen bg-background pb-20 pt-12">
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto max-w-7xl px-4">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link 

@@ -35,7 +35,7 @@ export default function OrdersPage() {
 function OrdersPageSkeleton() {
   return (
     <main className="min-h-screen bg-white pb-16 pt-8">
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto max-w-7xl px-4">
         <div className="flex flex-col lg:flex-row gap-8 items-start w-full animate-pulse">
           {/* Left Column (Main Content) */}
           <div className="w-full lg:flex-1 flex flex-col min-w-0">
@@ -205,7 +205,7 @@ async function OrdersContent() {
 
   return (
     <main className="min-h-screen bg-white pb-16 pt-8">
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto max-w-7xl px-4">
         <div className="mb-8 hidden">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">My Orders</h1>
           <p className="mt-2 text-muted-foreground">Track and manage your previous orders.</p>

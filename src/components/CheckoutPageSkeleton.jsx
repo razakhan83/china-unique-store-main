@@ -16,7 +16,7 @@ export default function CheckoutPageSkeleton() {
         <Skeleton className="h-4 w-20 rounded-full bg-muted-foreground/20" />
       </div>
 
-      <div className={cn(styles.checkoutShell, "max-w-[1440px] mx-auto")}>
+      <div className={cn(styles.checkoutShell, "max-w-7xl mx-auto")}>
         {/* ── LEFT PANEL (Forms) ── */}
         <div className={cn(styles.leftPanel, "bg-background xl:pr-12")}>
           <div className="pt-6 lg:pt-10 pb-24 w-full max-w-xl mx-auto xl:mr-0 xl:ml-auto px-4 lg:px-0">
