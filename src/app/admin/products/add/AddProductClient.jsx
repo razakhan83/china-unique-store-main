@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import DiscountConfigFields from "@/components/admin/DiscountConfigFields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,6 +65,8 @@ export default function AddProduct() {
   const [Price, setPrice] = useState("");
   const [compareAtPrice, setCompareAtPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
+  const [discountType, setDiscountType] = useState("no-time");
+  const [discountEndsAt, setDiscountEndsAt] = useState("");
   const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
   const [enablePackOptions, setEnablePackOptions] = useState(false);
   const [stockQuantity, setStockQuantity] = useState("1");
@@ -360,6 +363,8 @@ export default function AddProduct() {
           Price: Number(Price),
           compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,
+          discountType: Number(discountPercentage) > 0 ? discountType : "none",
+          discountEndsAt: discountType === "time-based" && discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
           stockQuantity: Math.max(0, Number(stockQuantity) || 0),
           StockStatus: stockStatus,
           Images: finalImages,
@@ -583,19 +588,15 @@ export default function AddProduct() {
             </div>
           </div>
 
-          <div>
-            <Label className="mb-2">Discount Percentage (%)</Label>
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={discountPercentage}
-              onChange={(e) => setDiscountPercentage(e.target.value)}
-              className="h-11 px-4"
-              placeholder="e.g. 25"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">Set a discount percentage to automatically apply a discount. The original price will become the compare-at price.</p>
-          </div>
+          <DiscountConfigFields
+            discountPercentage={discountPercentage}
+            onDiscountPercentageChange={setDiscountPercentage}
+            discountType={discountType}
+            onDiscountTypeChange={setDiscountType}
+            discountEndsAt={discountEndsAt}
+            onDiscountEndsAtChange={setDiscountEndsAt}
+            price={Price}
+          />
 
           <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
             <div className="flex items-center justify-between mb-4">

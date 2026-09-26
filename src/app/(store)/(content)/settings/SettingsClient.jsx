@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import SettingsFormSkeleton from '@/components/SettingsFormSkeleton';
 import { 
   User, 
   Mail, 
@@ -125,11 +126,7 @@ export default function SettingsClient() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    );
+    return <SettingsFormSkeleton />;
   }
 
   return (

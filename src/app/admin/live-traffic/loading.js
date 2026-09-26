@@ -40,10 +40,7 @@ export default function LiveTrafficSkeleton() {
           <Skeleton className="h-7 w-16 rounded-lg" />
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="size-8 rounded-full border-2 border-emerald-500/30 border-t-emerald-600 animate-spin" />
-            <span className="text-[11px] font-mono text-muted-foreground">Loading Live World Radar...</span>
-          </div>
+          <Skeleton className="h-[70%] w-[80%] rounded-2xl" />
         </div>
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <Skeleton className="h-3 w-48 rounded" />

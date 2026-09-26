@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProductDetailLoading() {
   return (
-    <div className="product-detail-shell min-h-screen bg-background">
+    <div className="product-detail-shell min-h-[100dvh] bg-background">
       {/* Top Header / Breadcrumb */}
       <div className="container mx-auto max-w-7xl px-4 pb-0 pt-1 md:pt-7">
         <div className="flex items-center justify-between md:hidden">
@@ -89,27 +89,6 @@ export default function ProductDetailLoading() {
         </div>
       </div>
 
-      {/* You May Also Like Section - mirrors RelatedProductsSection structure */}
-      <div className="border-t border-border bg-primary/5 py-8 md:py-12">
-        <div className="container mx-auto max-w-7xl px-4">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="space-y-1">
-              <Skeleton className="h-3 w-20 rounded" />
-              <Skeleton className="h-6 w-44 rounded-lg" />
-            </div>
-            <Skeleton className="h-7 w-20 rounded-lg" />
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="space-y-2.5 rounded-2xl border border-border/60 bg-card p-2.5">
-                <Skeleton className="aspect-square w-full rounded-xl" />
-                <Skeleton className="h-4 w-3/4 rounded" />
-                <Skeleton className="h-5 w-1/2 rounded" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

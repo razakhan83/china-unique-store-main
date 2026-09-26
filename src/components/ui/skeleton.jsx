@@ -37,7 +37,7 @@ function Skeleton({ className, animate, variant, ...props }) {
       {...props}
     >
       {isAnimated && resolvedVariant === "shimmer" && (
-        <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent bg-[length:400%_100%]" />
+        <div className="pointer-events-none absolute inset-y-0 w-1/2 animate-[shimmer-slide_1.4s_linear_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent will-change-transform" />
       )}
     </div>
   );

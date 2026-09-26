@@ -74,7 +74,7 @@ export default function CategoriesClientPage({ initialCategories = [] }) {
             <p className="mt-1 text-sm text-muted-foreground">Try searching with a different term or clear the search.</p>
           </div>
         ) : (
-          <div className="my-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-6 lg:gap-8">
+          <div className="my-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 md:gap-8 lg:gap-10">
             {filteredCategories.map((cat, index) => (
               <div key={cat._id} className="flex justify-center">
                 <CategoryPillCard category={cat} index={cat.index ?? index} />

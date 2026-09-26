@@ -13,6 +13,7 @@ import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
 import Review from '@/models/Review';
+import { activeDiscountMongoFilter, isStorefrontDiscountVisible, limitedTimeOfferMongoFilter, resolveDiscountType } from '@/lib/discount';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import {
@@ -84,6 +85,8 @@ const PRODUCT_CARD_PROJECTION = [
   'discountPercentage',
   'isDiscounted',
   'discountedPrice',
+  'discountType',
+  'discountEndsAt',
   'isNewArrival',
   'isBestSelling',
   'isFeatured',
@@ -239,9 +242,11 @@ function toProductCardItem(product) {
     featuredPriority: Number(product.featuredPriority || 0),
     averageRating: Number(product.averageRating || 0),
     reviewCount: Number(product.reviewCount || 0),
-    discountPercentage: Number(product.discountPercentage || 0),
-    isDiscounted: product.isDiscounted === true,
-    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    discountPercentage: isStorefrontDiscountVisible(product) ? Number(product.discountPercentage || 0) : 0,
+    isDiscounted: isStorefrontDiscountVisible(product),
+    discountedPrice: isStorefrontDiscountVisible(product) && product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    discountType: resolveDiscountType(product),
+    discountEndsAt: product.discountEndsAt ? new Date(product.discountEndsAt).toISOString() : null,
     tags: Array.isArray(product.tags) ? product.tags : [],
     primaryTag: product.primaryTag || '',
   };
@@ -276,8 +281,10 @@ function toProductDetailView(product) {
       ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
       : [],
     discountPercentage: Number(product.discountPercentage || 0),
-    isDiscounted: product.isDiscounted === true,
+    isDiscounted: isStorefrontDiscountVisible(product),
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
+    discountType: resolveDiscountType(product),
+    discountEndsAt: product.discountEndsAt ? new Date(product.discountEndsAt).toISOString() : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
     tags: Array.isArray(product.tags) ? product.tags : [],
     primaryTag: product.primaryTag || '',
@@ -480,7 +487,7 @@ function toOrderSummaryRow(order) {
 
 async function getLiveProductsRaw() {
   'use cache';
-  cacheLife('hours');
+  cacheLife('foreverish');
   cacheTag('products', 'categories');
 
   return measureDataAccess('getLiveProductsRaw', async () => {
@@ -577,6 +584,9 @@ async function getSettingsRaw() {
         customPages: mergeCustomPages(settings.customPages),
         guestModeEnabled: settings.guestModeEnabled !== false,
         enableSecondaryNoc: settings.enableSecondaryNoc === true,
+        limitedOfferProductIds: Array.isArray(settings.limitedOfferProductIds)
+          ? settings.limitedOfferProductIds.map((id) => String(id)).filter(Boolean).slice(0, 10)
+          : [],
       };
     });
   } catch (error) {
@@ -941,7 +951,7 @@ async function getProductsForHomeCollectionSectionsRaw(collectionKeys = [], limi
     const requestedLimit = Math.max(1, Number(limitByCollection.get('special-offers') || 8));
     const products = await Product.find({
       showOnStore: true,
-      isDiscounted: true,
+      ...activeDiscountMongoFilter(),
     })
       .select(PRODUCT_CARD_PROJECTION)
       .populate(PRODUCT_CATEGORY_POPULATE)
@@ -949,7 +959,7 @@ async function getProductsForHomeCollectionSectionsRaw(collectionKeys = [], limi
       .limit(Math.min(24, requestedLimit))
       .lean();
 
-    results.set('special-offers', products.map((p) => toProductCardItem(serializeProduct(p))));
+    results.set('special-offers', products.map((p) => toProductCardItem(serializeProduct(p))).filter((product) => product.isDiscounted));
   }
 
   // 5. TOP RATED
@@ -1085,7 +1095,7 @@ export async function getHomeSections() {
       let label = category?.label || 'Special Offers';
       if (category.id === 'special-offers') {
         const discountedProducts = products
-          .filter((product) => product.isDiscounted === true)
+          .filter((product) => isStorefrontDiscountVisible(product))
           .sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
             const dateB = new Date(b.createdAt || 0).getTime();
@@ -1188,6 +1198,34 @@ export async function getAdminHomePageBuilderData() {
   };
 }
 
+async function getLimitedOfferCards() {
+  const settings = await getSettingsRaw();
+  const ids = Array.isArray(settings.limitedOfferProductIds)
+    ? settings.limitedOfferProductIds.map((id) => String(id)).filter(Boolean).slice(0, 10)
+    : [];
+  const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+  if (objectIds.length === 0) return [];
+
+  await mongooseConnect();
+  const products = await Product.find({
+    _id: { $in: objectIds },
+    showOnStore: true,
+    discountType: 'time-based',
+    discountEndsAt: { $ne: null },
+  })
+    .select(PRODUCT_CARD_PROJECTION)
+    .populate(PRODUCT_CATEGORY_POPULATE)
+    .lean();
+
+  const byId = new Map(products.map((product) => [String(product._id), product]));
+
+  return ids
+    .map((id) => byId.get(String(id)))
+    .filter(Boolean)
+    .map((product) => toProductCardItem(serializeProduct(product)))
+    .filter((product) => product.isDiscounted);
+}
+
 export async function getStorefrontHomePage() {
   try {
     const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
@@ -1215,6 +1253,10 @@ export async function getStorefrontHomePage() {
       collectionSections.map((section) => section.collectionKey),
       collectionLimitMap,
     );
+    const hasLimitedOffers = homePage.sections.some(
+      (section) => section.isEnabled !== false && section.type === 'LimitedTimeOffers',
+    );
+    const limitedOfferProducts = hasLimitedOffers ? await getLimitedOfferCards() : [];
     const productsByCategoryId = new Map();
 
     for (const product of categoryProducts) {
@@ -1337,6 +1379,19 @@ export async function getStorefrontHomePage() {
           };
         }
 
+        if (section.type === 'LimitedTimeOffers') {
+          const products = limitedOfferProducts.slice(0, 10);
+          if (products.length === 0) return null;
+
+          return {
+            ...section,
+            title: section.title || 'Limited Time Offers',
+            description: section.description || '',
+            products,
+            viewAllHref: '/products?category=special-offers',
+          };
+        }
+
         if (section.type === 'ProductCollection') {
           const collectionKey = HOME_PAGE_PRODUCT_COLLECTIONS.includes(section.collectionKey)
             ? section.collectionKey
@@ -1446,7 +1501,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   } else if (safeCategory === 'best-selling') {
     query.isBestSelling = true;
   } else if (safeCategory === 'special-offers') {
-    query.isDiscounted = true;
+    query.$and = [...(query.$and || []), activeDiscountMongoFilter()];
   } else if (safeCategory && safeCategory !== 'all') {
     const categories = await getCategoriesRaw();
     const matchedCategory = categories.find(
@@ -1487,6 +1542,10 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     }
   }
 
+  if (safeSort === 'limited-time') {
+    query.$and = [...(query.$and || []), limitedTimeOfferMongoFilter()];
+  }
+
   if (safeSearch) {
     const searchRegex = new RegExp(escapeRegex(safeSearch), 'i');
     const matchingCategories = await Category.find(
@@ -1512,6 +1571,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
     if (safeSort === 'best-selling') return { isBestSelling: -1, createdAt: -1 };
     if (safeSort === 'featured') return { isFeatured: -1, featuredPriority: -1, createdAt: -1 };
     if (safeSort === 'deals') return { isDiscounted: -1, discountPercentage: -1, createdAt: -1 };
+    if (safeSort === 'limited-time') return { discountEndsAt: 1, createdAt: -1 };
     if (safeSort === 'az') return { Name: 1, createdAt: -1 };
     if (safeSort === 'za') return { Name: -1, createdAt: -1 };
     return { createdAt: -1 };
@@ -1670,7 +1730,7 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
   const additionalImages = product.Images?.slice(1).map((image) => image.url).filter(Boolean) || [];
   const categoryNames = getProductCategoryNames(product);
   const basePrice = Number(product.Price || 0);
-  const salePrice = product.isDiscounted === true && product.discountedPrice != null
+  const salePrice = isStorefrontDiscountVisible(product) && product.discountedPrice != null
     ? Number(product.discountedPrice)
     : null;
 
@@ -1692,7 +1752,7 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
 
 export async function getProductBySlug(slug) {
   'use cache';
-  cacheLife('hours');
+  cacheLife('foreverish');
 
   const safeSlug = String(slug || '').trim();
   if (!safeSlug) return null;
@@ -1792,7 +1852,7 @@ export async function getProductBySlug(slug) {
 
 export async function getProductPrerenderParams(limit = 1) {
   'use cache';
-  cacheLife('hours');
+  cacheLife('foreverish');
   cacheTag('products');
 
   const safeLimit = Math.max(1, Number(limit) || 1);
@@ -1832,7 +1892,7 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
 
 export async function getCatalogFeed(siteUrlOverride = '') {
   'use cache';
-  cacheLife('hours');
+  cacheLife('foreverish');
   cacheTag('products', 'settings', 'categories');
 
   try {

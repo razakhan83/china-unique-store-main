@@ -6,6 +6,8 @@ import { ArrowLeft, Check, CloudUpload, Image as ImageIcon, Loader2, Plus, PlusC
 import { toast } from 'sonner';
 import Link from 'next/link';
 import ProductCard from "@/components/ProductCard";
+import DiscountConfigFields from '@/components/admin/DiscountConfigFields';
+import { resolveDiscountType, toDateTimeLocalValue } from '@/lib/discount';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,6 +56,8 @@ export default function EditProduct({ id }) {
   const [Price, setPrice] = useState('');
   const [compareAtPrice, setCompareAtPrice] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState('');
+  const [discountType, setDiscountType] = useState('no-time');
+  const [discountEndsAt, setDiscountEndsAt] = useState('');
   const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
   const [enablePackOptions, setEnablePackOptions] = useState(false);
   const [Categories, setCategories] = useState([]); // array of selected category ids
@@ -148,6 +152,9 @@ export default function EditProduct({ id }) {
           setPrice(p.Price || '');
           setCompareAtPrice(p.compareAtPrice ?? '');
           setDiscountPercentage(p.discountPercentage || '');
+          const loadedDiscountType = resolveDiscountType(p);
+          setDiscountType(loadedDiscountType === 'none' ? 'no-time' : loadedDiscountType);
+          setDiscountEndsAt(toDateTimeLocalValue(p.discountEndsAt));
           setCategories(getProductCategories(p).map((category) => category._id || category.id));
           setVendorAssignments(
             Array.isArray(p.vendors)
@@ -383,6 +390,8 @@ export default function EditProduct({ id }) {
           Price: Number(Price),
           compareAtPrice: compareAtPrice === '' ? null : Number(compareAtPrice),
           discountPercentage: Number(discountPercentage) || 0,
+          discountType: Number(discountPercentage) > 0 ? discountType : 'none',
+          discountEndsAt: discountType === 'time-based' && discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
           Images: finalImages,
           Category: Categories,
           vendors: vendorAssignments,
@@ -608,19 +617,15 @@ export default function EditProduct({ id }) {
             </div>
           </div>
           
-          <div>
-              <Label className="mb-2">Discount Percentage (%)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={discountPercentage}
-                onChange={(e) => setDiscountPercentage(e.target.value)}
-                className="h-11 px-4"
-                placeholder="e.g. 25"
-              />
-              <p className="text-xs text-muted-foreground mt-1.5">Set a discount percentage to automatically apply a discount. The original price will become the compare-at price.</p>
-          </div>
+          <DiscountConfigFields
+            discountPercentage={discountPercentage}
+            onDiscountPercentageChange={setDiscountPercentage}
+            discountType={discountType}
+            onDiscountTypeChange={setDiscountType}
+            discountEndsAt={discountEndsAt}
+            onDiscountEndsAtChange={setDiscountEndsAt}
+            price={Price}
+          />
 
           <div>
             <div className="mb-2 flex items-center justify-between">

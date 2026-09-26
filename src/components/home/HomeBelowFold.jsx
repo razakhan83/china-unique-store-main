@@ -16,9 +16,11 @@ export default async function HomeBelowFold() {
         <AnimatedStats />
       </div>
 
-      <div id="store-marquee-wrapper">
+      <div id="store-marquee-wrapper" data-store-reveal>
         <Suspense fallback={<div className="h-[700px] w-full bg-background" />}>
-          <TiltedProductMarquee />
+          <div className="store-fade">
+            <TiltedProductMarquee />
+          </div>
         </Suspense>
       </div>
 

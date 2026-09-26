@@ -35,6 +35,7 @@ import {
   Store,
   Tag,
   Tags,
+  Timer,
   Truck,
   Users,
   Activity,
@@ -96,6 +97,7 @@ const customersNavItems = [
 // 5. Marketing
 const marketingNavItems = [
   { href: '/admin/marketing/featured', label: 'Featured (Ads)', icon: Sparkles, match: (pathname) => pathname.startsWith('/admin/marketing/featured') },
+  { href: '/admin/marketing/limited-offers', label: 'Limited Time Offers', icon: Timer, match: (pathname) => pathname.startsWith('/admin/marketing/limited-offers') },
   { href: '/admin/marketing/campaigns', label: 'Special Offers', icon: Tag, match: (pathname) => pathname.startsWith('/admin/marketing/campaigns') },
   { href: '/admin/marketing/coupons', label: 'Coupon Codes', icon: Tags, match: (pathname) => pathname.startsWith('/admin/marketing/coupons') },
   { href: '/admin/marketing/social', label: 'Social & Tracking', icon: Globe, match: (pathname) => pathname.startsWith('/admin/marketing/social') },

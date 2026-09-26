@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Loader2, ShoppingBag, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, ShoppingBag, DollarSign, Calendar } from 'lucide-react';
 
 const formatPrice = (val) => `PKR ${Number(val || 0).toLocaleString('en-PK')}`;
 
@@ -114,8 +114,16 @@ export default function DashboardChart({ initialData = [], initialPeriod = 'mont
       {/* Chart Canvas */}
       <div className="relative flex-1 min-h-[210px] w-full pt-1">
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-xs z-10 rounded-lg">
-            <Loader2 className="size-5 animate-spin text-emerald-600" />
+          <div className="absolute inset-0 z-10 rounded-lg bg-card" aria-hidden="true">
+            <div className="flex h-full items-end gap-2 px-4 pb-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex-1 animate-pulse rounded-t-md bg-muted"
+                  style={{ height: `${30 + (index % 4) * 16}%` }}
+                />
+              ))}
+            </div>
           </div>
         )}
         {!isLoading && data.length === 0 && (

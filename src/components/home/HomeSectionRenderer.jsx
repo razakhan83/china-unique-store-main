@@ -68,6 +68,18 @@ export default function HomeSectionRenderer({ sections = [] }) {
           );
         }
 
+        if (section.type === 'LimitedTimeOffers') {
+          if (!section.products?.length) return null;
+          return (
+            <HomeProductGridSection
+              key={section.id}
+              title={section.title || 'Limited Time Offers'}
+              products={section.products}
+              viewAllHref={section.viewAllHref || '/products?category=special-offers'}
+            />
+          );
+        }
+
         if (section.type === 'ProductGridByCategory' || section.type === 'ProductCollection') {
           const priorityCount = !hasHero && section.id === firstProductSectionId ? 2 : 0;
           return (

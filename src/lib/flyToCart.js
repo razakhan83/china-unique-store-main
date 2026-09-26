@@ -1,155 +1,175 @@
 /**
- * Lightweight, GPU-accelerated Fly-to-Cart animation
- * Uses pure Web Animations API (WAAPI) with zero external dependencies.
+ * One short flight from the product image to the cart icon.
+ * Transform and opacity only. No rotation, and no flight until the cart is on screen.
  */
 
-export function flyToCart({ sourceEl, imageSrc = '' } = {}) {
+const FLIGHT_MS = 460;
+const TARGET_WAIT_MS = 320;
+
+let activeFlyer = null;
+let activeAnimation = null;
+
+function cartTarget() {
+  return (
+    document.querySelector('#nav-cart-button') ||
+    document.querySelector('[data-cart-target]') ||
+    document.querySelector('.nav-cart-button')
+  );
+}
+
+function isOnScreen(rect) {
+  return rect.width > 0 && rect.height > 0 && rect.bottom > 8 && rect.top < window.innerHeight - 8;
+}
+
+function waitForCartTarget() {
+  return new Promise((resolve) => {
+    const started = performance.now();
+
+    function tick() {
+      const target = cartTarget();
+      if (target && isOnScreen(target.getBoundingClientRect())) {
+        resolve(target);
+        return;
+      }
+      if (performance.now() - started >= TARGET_WAIT_MS) {
+        resolve(null);
+        return;
+      }
+      window.requestAnimationFrame(tick);
+    }
+
+    window.requestAnimationFrame(tick);
+  });
+}
+
+function visibleProductImage(sourceEl) {
+  const root = sourceEl.closest('article, li, a') || sourceEl.parentElement;
+  const image = root?.querySelector?.('img');
+  if (!image) return null;
+  if (!isOnScreen(image.getBoundingClientRect())) return null;
+  return image;
+}
+
+function removeFlyer(flyer) {
+  if (flyer?.parentNode) {
+    flyer.parentNode.removeChild(flyer);
+  }
+  if (activeFlyer === flyer) {
+    activeFlyer = null;
+    activeAnimation = null;
+  }
+}
+
+function clearActiveFlight() {
+  const flyer = activeFlyer;
+  const animation = activeAnimation;
+  activeFlyer = null;
+  activeAnimation = null;
+  if (animation) animation.cancel();
+  removeFlyer(flyer);
+}
+
+function pointOnArc(t, start, control, end) {
+  const inverse = 1 - t;
+  return inverse * inverse * start + 2 * inverse * t * control + t * t * end;
+}
+
+function buildFrames(startX, startY, targetX, targetY) {
+  const controlX = (startX + targetX) / 2;
+  const controlY = Math.min(startY, targetY) - Math.min(72, Math.hypot(targetX - startX, targetY - startY) * 0.18);
+  const frames = [];
+
+  for (let step = 0; step <= 8; step += 1) {
+    const progress = step / 8;
+    const eased = 1 - (1 - progress) ** 3;
+    const x = pointOnArc(eased, startX, controlX, targetX);
+    const y = pointOnArc(eased, startY, controlY, targetY);
+    const scale = 1 - eased * 0.62;
+    const opacity = progress < 0.72 ? 1 : 1 - (progress - 0.72) / 0.28;
+
+    frames.push({
+      transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
+      opacity,
+    });
+  }
+
+  return frames;
+}
+
+export async function flyToCart({ sourceEl, imageSrc = '' } = {}) {
   if (typeof window === 'undefined' || !sourceEl) return;
 
-  // Immediately notify navbar to reveal if hidden on scroll
   window.dispatchEvent(new CustomEvent('reveal-navbar'));
 
-  // Respect accessibility preference
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if (reducedMotion) {
     window.dispatchEvent(new CustomEvent('cart-item-landed'));
     return;
   }
 
-  const targetEl =
-    document.querySelector('#nav-cart-button') ||
-    document.querySelector('[data-cart-target]') ||
-    document.querySelector('.nav-cart-button');
-
   const sourceRect = sourceEl.getBoundingClientRect();
-
-  // If source is not visible on screen, fallback immediately
   if (sourceRect.width === 0 && sourceRect.height === 0) {
     window.dispatchEvent(new CustomEvent('cart-item-landed'));
     return;
   }
 
-  // Create flying clone element
-  const flyer = document.createElement('div');
-  const size = 64; // Clearly visible 64px badge
-
-  // Calculate start center
-  const startX = sourceRect.left + sourceRect.width / 2 - size / 2;
-  const startY = sourceRect.top + sourceRect.height / 2 - size / 2;
-
-  // Calculate target position (even if navbar is currently animating into view)
-  let targetX;
-  let targetY;
-
-  if (targetEl) {
-    const targetRect = targetEl.getBoundingClientRect();
-    targetX = targetRect.left + targetRect.width / 2 - size / 2;
-    // If navbar was hidden (top < 0), land at top header position (~20px from top)
-    targetY = Math.max(targetRect.top + targetRect.height / 2 - size / 2, 16);
-  } else {
-    // Default fallback to top-right corner of viewport
-    targetX = window.innerWidth - 56 - size / 2;
-    targetY = 24;
+  const target = await waitForCartTarget();
+  if (!target || !sourceEl.isConnected) {
+    window.dispatchEvent(new CustomEvent('cart-item-landed'));
+    return;
   }
 
-  // Parabolic lift calculation
-  const midX = (startX + targetX) / 2;
-  const horizontalDistance = Math.abs(startX - targetX);
-  const liftHeight = Math.min(Math.max(horizontalDistance * 0.35, 60), 160);
-  const midY = Math.min(startY, targetY) - liftHeight;
+  clearActiveFlight();
 
+  const productImage = visibleProductImage(sourceEl);
+  const origin = productImage ? productImage.getBoundingClientRect() : sourceRect;
+  const size = 56;
+  const startX = origin.left + origin.width / 2 - size / 2;
+  const startY = origin.top + origin.height / 2 - size / 2;
+  const targetRect = target.getBoundingClientRect();
+  const targetX = targetRect.left + targetRect.width / 2 - size / 2;
+  const targetY = targetRect.top + targetRect.height / 2 - size / 2;
+
+  const flyer = document.createElement('div');
   flyer.style.position = 'fixed';
-  flyer.style.top = '0px';
-  flyer.style.left = '0px';
+  flyer.style.top = '0';
+  flyer.style.left = '0';
   flyer.style.width = `${size}px`;
   flyer.style.height = `${size}px`;
-  flyer.style.borderRadius = '16px';
+  flyer.style.borderRadius = '12px';
   flyer.style.overflow = 'hidden';
   flyer.style.pointerEvents = 'none';
-  flyer.style.zIndex = '999999';
-  flyer.style.backgroundColor = '#ffffff';
-  flyer.style.border = '2px solid #ffffff';
-  flyer.style.boxShadow = '0 12px 32px -4px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08)';
-  flyer.style.willChange = 'transform, opacity';
+  flyer.style.zIndex = '80';
+  flyer.style.backgroundColor = '#fff';
+  flyer.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.16)';
 
-  if (imageSrc) {
-    const img = document.createElement('img');
-    img.src = imageSrc;
-    img.alt = '';
-    img.style.width = '100%';
-    img.style.height = '100%';
-    img.style.objectFit = 'cover';
-    flyer.appendChild(img);
-  } else {
-    // Clean shopping bag fallback icon
-    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#064e3b';
-    flyer.innerHTML = `
-      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${primary};color:#fff;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
-          <path d="M3 6h18"></path>
-          <path d="M16 10a4 4 0 0 1-8 0"></path>
-        </svg>
-      </div>
-    `;
+  const picture = productImage ? productImage.cloneNode(false) : document.createElement('img');
+  const src = productImage?.currentSrc || productImage?.src || imageSrc;
+  if (src) {
+    picture.src = src;
+    picture.alt = '';
+    picture.style.width = '100%';
+    picture.style.height = '100%';
+    picture.style.objectFit = 'cover';
+    flyer.appendChild(picture);
   }
 
   document.body.appendChild(flyer);
+  activeFlyer = flyer;
 
-  // Smooth, clearly visible 950ms flight duration
-  const duration = 950;
-
-  const animation = flyer.animate(
-    [
-      {
-        transform: `translate3d(${startX}px, ${startY}px, 0) scale(1) rotate(0deg)`,
-        opacity: 1,
-      },
-      {
-        transform: `translate3d(${startX + (midX - startX) * 0.3}px, ${startY - 45}px, 0) scale(1.12) rotate(-5deg)`,
-        opacity: 1,
-        offset: 0.2,
-      },
-      {
-        transform: `translate3d(${midX}px, ${midY}px, 0) scale(0.85) rotate(3deg)`,
-        opacity: 0.96,
-        offset: 0.55,
-      },
-      {
-        transform: `translate3d(${targetX + (midX - targetX) * 0.1}px, ${targetY + 12}px, 0) scale(0.42) rotate(-2deg)`,
-        opacity: 0.8,
-        offset: 0.85,
-      },
-      {
-        transform: `translate3d(${targetX}px, ${targetY}px, 0) scale(0.12) rotate(8deg)`,
-        opacity: 0,
-        offset: 1,
-      },
-    ],
-    {
-      duration,
-      easing: 'cubic-bezier(0.25, 0.9, 0.3, 1)',
-      fill: 'forwards',
-    }
-  );
+  const animation = flyer.animate(buildFrames(startX, startY, targetX, targetY), {
+    duration: FLIGHT_MS,
+    easing: 'linear',
+    fill: 'forwards',
+  });
+  activeAnimation = animation;
 
   animation.onfinish = () => {
-    try {
-      if (flyer.parentNode) {
-        flyer.parentNode.removeChild(flyer);
-      }
-    } catch {
-      // Ignored
-    }
+    removeFlyer(flyer);
     window.dispatchEvent(new CustomEvent('cart-item-landed'));
   };
 
   animation.oncancel = () => {
-    try {
-      if (flyer.parentNode) {
-        flyer.parentNode.removeChild(flyer);
-      }
-    } catch {
-      // Ignored
-    }
+    removeFlyer(flyer);
   };
 }

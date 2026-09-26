@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 import { getProductTagById } from '@/lib/productTags';
 import { flyToCart } from '@/lib/flyToCart';
+import FlashSaleTimer, { useFlashSaleActive } from '@/components/FlashSaleTimer';
 import { useActionLock } from '@/hooks/useActionLock';
 
 export function ProductSocialActions({ product, className = '' }) {
@@ -198,13 +199,16 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             const productToAdd = selectedPack ? {
                 ...product,
                 Price: selectedPack.price,
-                discountedPrice: finalPackPrice,
-                discountPercentage: product.isDiscounted ? product.discountPercentage : 0,
-                isDiscounted: Boolean(product.isDiscounted),
+                discountedPrice: discountOn ? finalPackPrice : null,
+                discountPercentage: discountOn ? product.discountPercentage : 0,
+                isDiscounted: discountOn,
                 packLabel: selectedPack.label,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             } : {
                 ...product,
+                discountedPrice: discountOn ? product.discountedPrice : null,
+                discountPercentage: discountOn ? product.discountPercentage : 0,
+                isDiscounted: discountOn,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 
@@ -229,13 +233,16 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             const productToAdd = selectedPack ? {
                 ...product,
                 Price: selectedPack.price,
-                discountedPrice: finalPackPrice,
-                discountPercentage: product.isDiscounted ? product.discountPercentage : 0,
-                isDiscounted: Boolean(product.isDiscounted),
+                discountedPrice: discountOn ? finalPackPrice : null,
+                discountPercentage: discountOn ? product.discountPercentage : 0,
+                isDiscounted: discountOn,
                 packLabel: selectedPack.label,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             } : {
                 ...product,
+                discountedPrice: discountOn ? product.discountedPrice : null,
+                discountPercentage: discountOn ? product.discountPercentage : 0,
+                isDiscounted: discountOn,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 
@@ -308,25 +315,31 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     };
 
     const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
+    const flashLive = useFlashSaleActive(product.discountType === 'time-based' ? product.discountEndsAt : null);
+    const discountOn = product.discountType === 'time-based'
+        ? flashLive
+        : Boolean(product.isDiscounted && product.discountPercentage > 0);
 
     const getPackDiscountedPrice = (packPrice) => {
-        if (product.isDiscounted && product.discountPercentage > 0) {
+        if (discountOn && product.discountPercentage > 0) {
             return Math.round(packPrice * (1 - product.discountPercentage / 100));
         }
         return packPrice;
     };
 
-    const displayPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : basePrice;
+    const listPrice = Number(product.Price || product.price || basePrice || 0);
+    const salePrice = product.discountedPrice != null ? Number(product.discountedPrice) : basePrice;
+    const displayPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : (discountOn ? salePrice : listPrice);
     const displayComparePrice = (() => {
         if (!compareAtPrice) {
             // If no compare price is set globally but pack option is discounted, show original pack price as compare price
-            if (selectedPack && product.isDiscounted && product.discountPercentage > 0) {
+            if (selectedPack && discountOn && product.discountPercentage > 0) {
                 return selectedPack.price > displayPrice ? selectedPack.price : null;
             }
             return null;
         }
         
-        if (!selectedPack) return compareAtPrice > basePrice ? compareAtPrice : null;
+        if (!selectedPack) return discountOn && compareAtPrice > displayPrice ? compareAtPrice : null;
         
         const match = selectedPack.label.match(/\d+/);
         const quantity = match ? parseInt(match[0], 10) : 1;
@@ -339,6 +352,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         <>
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                {product.discountType === 'time-based' && discountOn ? (
+                    <FlashSaleTimer targetDate={product.discountEndsAt} variant="full" />
+                ) : null}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
                         {formatPrice(displayPrice)}
@@ -358,6 +375,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         <BadgeCheck className="size-4" />
                         <span>COD Available</span>
                     </div>
+                </div>
                 </div>
 
                 {Array.isArray(product.tags) && product.tags.filter(tagId => tagId !== product.primaryTag).length > 0 && (

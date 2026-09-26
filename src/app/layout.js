@@ -6,7 +6,6 @@ import { getMetadataBase } from "@/lib/siteUrl";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE_DEFAULT } from "@/lib/siteSeo";
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import NavigationProgressBar from "@/components/NavigationProgressBar";
 import VisitorTracker from "@/components/VisitorTracker";
 
 
@@ -147,14 +146,13 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="en" className="bg-background" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" className="bg-background" suppressHydrationWarning>
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
         <AuthProvider>
-          <NavigationProgressBar />
           {children}
           <Suspense fallback={null}>
             <VisitorTracker />

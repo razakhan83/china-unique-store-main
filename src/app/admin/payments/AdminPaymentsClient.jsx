@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { CreditCard, Search, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -113,12 +114,13 @@ export default function AdminPaymentsClient({ initialPayments = [] }) {
             </thead>
             <tbody className="divide-y divide-zinc-200 text-zinc-700">
               {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-zinc-400">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    Loading payments history...
-                  </td>
-                </tr>
+                Array.from({ length: 6 }).map((_, index) => (
+                  <tr key={index}>
+                    <td colSpan={7} className="px-4 py-3">
+                      <Skeleton className="h-8 w-full rounded-md" />
+                    </td>
+                  </tr>
+                ))
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-zinc-400">

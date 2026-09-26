@@ -587,7 +587,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [hasHydratedCachedProfile, setHasHydratedCachedProfile] = useState(false);
   const [hasCachedProfile, setHasCachedProfile] = useState(false);
-  const [isHydratingProfile, setIsHydratingProfile] = useState(false);
   const [saveInfo, setSaveInfo] = useState(true);
   const [mobileOrderOpen, setMobileOrderOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -601,7 +600,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [redirectingToOrder, setRedirectingToOrder] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -660,11 +658,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     const syncData = async () => {
       if (status !== 'authenticated' || !session?.user) return;
 
-      const shouldShowLoader = !hasCachedProfile;
-      if (shouldShowLoader) {
-        setIsHydratingProfile(true);
-      }
-
       const profileRequest = fetch('/api/user/settings', { cache: 'no-store' })
         .then(async (res) => (res.ok ? safeReadJson(res) : null))
         .then((settingsRes) => {
@@ -699,9 +692,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       } finally {
         if (isMounted) {
           setHasAutoFilled(true);
-          if (shouldShowLoader) {
-            setIsHydratingProfile(false);
-          }
         }
       }
     };
@@ -1112,12 +1102,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         trackPurchaseEvent({ orderId: result.orderId, cart, total: result.totalAmount || total });
         idempotencyKeyRef.current = createIdempotencyKey();
         persistGuestOrder(result);
-        if (result.orderRecordId && result.secureToken) {
-          setRedirectingToOrder(true);
-          clearCart();
-          router.replace(`/orders/${result.orderRecordId}?token=${encodeURIComponent(result.secureToken)}`);
-          return;
-        }
         setOrderState(result);
         clearCart();
       } catch (error) {
@@ -1136,7 +1120,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   // ─── Loading / empty states ────────────────────────────────────────────────
 
-  if (redirectingToOrder || (!isInitialized && !orderState.orderId)) {
+  if (!isInitialized && !orderState.orderId) {
     return <CheckoutPageSkeleton />;
   }
 
@@ -1168,19 +1152,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         </Empty>
       </section>
     );
-  }
-
-  const shouldShowCentralCheckoutLoader =
-    !orderState.orderId &&
-    isInitialized &&
-    cart.length > 0 &&
-    hasHydratedCachedProfile &&
-    status === 'authenticated' &&
-    !hasCachedProfile &&
-    (isHydratingProfile || !hasAutoFilled);
-
-  if (shouldShowCentralCheckoutLoader) {
-    return <CheckoutPageSkeleton />;
   }
 
   if (orderState.orderId) {

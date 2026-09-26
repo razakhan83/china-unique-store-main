@@ -20,7 +20,9 @@ export const metadata = {
 export default function SingleOrderPage({ params, searchParams }) {
   return (
     <Suspense fallback={<SingleOrderSkeleton />}>
-      <SingleOrderContent params={params} searchParams={searchParams} />
+      <div className="store-fade">
+        <SingleOrderContent params={params} searchParams={searchParams} />
+      </div>
     </Suspense>
   );
 }

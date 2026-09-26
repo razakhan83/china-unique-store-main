@@ -10,6 +10,7 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { getProductTagById } from '@/lib/productTags';
 import { cn } from '@/lib/utils';
 import ProductWishlistButton from '@/components/ProductWishlistButton';
+import { useFlashSaleActive } from '@/components/FlashSaleTimer';
 
 export default function ProductGallery({ images, primaryTag, product }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -86,20 +87,22 @@ export default function ProductGallery({ images, primaryTag, product }) {
   };
 
   const mainTag = primaryTag ? getProductTagById(primaryTag) : null;
-  const discountLabel = product?.isDiscounted && product?.discountPercentage > 0
-    ? `${product.discountPercentage}% OFF`
-    : null;
+  const flashLive = useFlashSaleActive(product?.discountType === 'time-based' ? product.discountEndsAt : null);
+  const discountOn = product?.discountType === 'time-based'
+    ? flashLive
+    : Boolean(product?.isDiscounted && product?.discountPercentage > 0);
+  const discountLabel = discountOn ? `${product.discountPercentage}% OFF` : null;
 
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#ffffff' }}>
         
         {discountLabel ? (
-          <div className="absolute left-3 top-3 z-20 pointer-events-auto flex flex-col items-center justify-center w-10 h-10 md:w-11 md:h-11 text-white drop-shadow-md">
+          <div className="absolute left-3 top-3 z-20 pointer-events-auto flex flex-col items-center justify-center w-10 h-10 md:w-16 md:h-16 text-white drop-shadow-md">
             <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
             <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
-              <span className="text-[11px] md:text-[12px] font-bold mt-[1px]">{product.discountPercentage}%</span>
-              <span className="text-[7.5px] md:text-[8px] font-extrabold mt-[0.5px]">OFF</span>
+              <span className="text-[11px] md:text-lg font-bold mt-[1px] tabular-nums">{product.discountPercentage}%</span>
+              <span className="text-[7.5px] md:text-xs font-extrabold mt-[0.5px]">OFF</span>
             </div>
           </div>
         ) : (

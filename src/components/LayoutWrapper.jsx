@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { BadgeCheck, ChevronRight, MapPin, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
 
@@ -12,6 +13,7 @@ import { normalizeSocialUrl } from '@/lib/social';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import WebsiteFeedbackButton from '@/components/WebsiteFeedbackButton';
 import FooterNewsletter from '@/components/FooterNewsletter';
+import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 
 const TRUST_BADGES = [
   { icon: ShieldCheck, title: 'Secure Payment', sub: '100% encrypted checkout' },
@@ -38,6 +40,9 @@ export default function LayoutWrapper({ children, categories, settings }) {
   return (
     <>
       <div className="flex min-h-screen flex-col bg-background">
+        <Suspense fallback={null}>
+          <ProductPageScrollReset />
+        </Suspense>
         <Navbar
           categories={categories}
           storeName={settings.storeName}
@@ -49,7 +54,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           announcementBarMessages={settings.announcementBarMessages}
         />
 
-        <main className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
+        <main id="store-main" className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
 
         <ConditionalLayoutElements>
           <footer id="store-footer" className="border-t border-border bg-card pt-12 text-foreground shadow-[0_-1px_0_color-mix(in_oklab,var(--color-border)_72%,white)]">

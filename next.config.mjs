@@ -24,8 +24,8 @@ const nextConfig = {
   experimental: {
     appNewScrollHandler: true,
     staleTimes: {
-      dynamic: 30,
-      static: 180,
+      dynamic: 180,
+      static: 600,
     },
     optimizePackageImports: [
       'lucide-react',

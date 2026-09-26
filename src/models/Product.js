@@ -222,6 +222,15 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             default: null,
         },
+        discountType: {
+            type: String,
+            enum: ['none', 'no-time', 'time-based'],
+            default: 'none',
+        },
+        discountEndsAt: {
+            type: Date,
+            default: null,
+        },
         isNewArrival: {
             type: Boolean,
             default: false,
@@ -273,6 +282,7 @@ ProductSchema.index({ showOnStore: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, Category: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, slug: 1 });
 ProductSchema.index({ showOnStore: 1, isDiscounted: 1, createdAt: -1 });
+ProductSchema.index({ showOnStore: 1, discountType: 1, discountEndsAt: 1 });
 ProductSchema.index({ showOnStore: 1, isNewArrival: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isBestSelling: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, isFeatured: 1, featuredPriority: -1, createdAt: -1 });
@@ -301,7 +311,9 @@ if (
         !cachedProduct.schema.path('primaryTag') ||
         !cachedProduct.schema.path('isFeatured') ||
         !cachedProduct.schema.path('isFreeDelivery') ||
-        !cachedProduct.schema.path('featuredPriority')
+        !cachedProduct.schema.path('featuredPriority') ||
+        !cachedProduct.schema.path('discountType') ||
+        !cachedProduct.schema.path('discountEndsAt')
     )
 ) {
     delete mongoose.models.Product;

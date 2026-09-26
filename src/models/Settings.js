@@ -235,6 +235,10 @@ const SettingsSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        limitedOfferProductIds: {
+            type: [String],
+            default: [],
+        },
     },
     {
         timestamps: true,
@@ -258,7 +262,8 @@ if (
         !cachedSettings.schema.path('guestModeEnabled') ||
         !cachedSettings.schema.path('bankDepositEnabled') ||
         !cachedSettings.schema.path('bankDepositAccountDetails') ||
-        !cachedSettings.schema.path('enableSecondaryNoc')
+        !cachedSettings.schema.path('enableSecondaryNoc') ||
+        !cachedSettings.schema.path('limitedOfferProductIds')
     )
 ) {
     delete mongoose.models.Settings;

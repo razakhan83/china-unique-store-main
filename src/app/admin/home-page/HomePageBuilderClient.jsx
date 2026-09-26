@@ -44,6 +44,7 @@ import {
   Trophy,
   Sparkles,
   MessageSquareQuote,
+  Timer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -122,6 +123,11 @@ const SECTION_TEMPLATES = [
     collectionKey: 'special-offers',
     label: 'Special Offer Products',
     icon: Tag,
+  },
+  {
+    type: 'LimitedTimeOffers',
+    label: 'Limited Time Offers',
+    icon: Timer,
   },
   {
     type: 'ProductCollection',
@@ -542,7 +548,7 @@ function SortableSectionCard({
         <div className="overflow-hidden">
           <div className="p-4 pt-2">
             <FieldGroup>
-        {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ScrollableBannerCarousel' || section.type === 'ProductCollection') && (
+        {(section.type === 'CategoriesGrid' || section.type === 'ProductGridByCategory' || section.type === 'ProductBanner' || section.type === 'ScrollableBannerCarousel' || section.type === 'ProductCollection' || section.type === 'LimitedTimeOffers') && (
           <Field>
             <FieldLabel>Section Title</FieldLabel>
             <Input
@@ -550,6 +556,21 @@ function SortableSectionCard({
               onChange={(event) => onSectionChange(section.id, { title: event.target.value })}
               placeholder="Optional heading shown on the storefront"
             />
+          </Field>
+        )}
+
+        {section.type === 'LimitedTimeOffers' && (
+          <Field>
+            <FieldLabel>Supporting Copy</FieldLabel>
+            <Textarea
+              value={section.description || ''}
+              onChange={(event) => onSectionChange(section.id, { description: event.target.value })}
+              placeholder="Optional short line under the heading"
+              rows={2}
+            />
+            <FieldDescription>
+              Products come from Marketing → Limited Time Offers. Add 8 to 10 flash-sale products there.
+            </FieldDescription>
           </Field>
         )}
 
@@ -1332,6 +1353,9 @@ export default function HomePageBuilderClient({ initialSections, availableCatego
   );
 
   function isTemplateAlreadyUsed(template) {
+    if (template.type === 'LimitedTimeOffers') {
+      return sections.some((section) => section.type === 'LimitedTimeOffers');
+    }
     if (template.type !== 'ProductCollection') return false;
     return uniqueCollectionKeys.has(template.collectionKey);
   }

@@ -27,7 +27,9 @@ export const metadata = {
 export default function OrdersPage() {
   return (
     <Suspense fallback={<OrdersPageSkeleton />}>
-      <OrdersContent />
+      <div className="store-fade">
+        <OrdersContent />
+      </div>
     </Suspense>
   );
 }

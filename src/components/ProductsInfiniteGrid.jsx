@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, Loader2, SearchX } from 'lucide-react';
+import { CheckCircle2, SearchX } from 'lucide-react';
 
 import ProductCard from '@/components/ProductCard';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
@@ -192,12 +192,7 @@ export default function ProductsInfiniteGrid({
 
       {/* Loading indicator / End of catalog message */}
       <div className="my-8 flex w-full items-center justify-center">
-        {isLoading ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
-            <Loader2 className="size-4 animate-spin text-primary" />
-            <span>Loading more products...</span>
-          </div>
-        ) : !hasMore && products.length > 0 ? (
+        {!isLoading && !hasMore && products.length > 0 ? (
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-5 py-2.5 text-xs font-medium text-muted-foreground">
             <CheckCircle2 className="size-4 text-primary" />
             <span>You&apos;ve viewed all {products.length} products</span>

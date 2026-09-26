@@ -9,7 +9,6 @@ import ProductDescription from '@/components/ProductDescription';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductGallery from '@/components/ProductGallery';
 import ProductViewTracking from '@/components/ProductViewTracking';
-import ProductPageScrollReset from '@/components/ProductPageScrollReset';
 import ProductMetaTags from './ProductMetaTags';
 import ProductReviews from '@/components/ProductReviews';
 import MobileBackButton from '@/components/MobileBackButton';
@@ -361,14 +360,10 @@ export default async function ProductPage({ params }) {
 
   const { product, settings } = pageData;
   const primaryCategory = getProductCategories(product)[0];
-  const reviewSummary = await getProductReviewSummarySafe(product._id);
-  const jsonLd = getProductJsonLd({ product, reviewSummary });
-  const isOutOfStock = product.StockStatus === 'Out of Stock' || product.showOnStore === false;
+  const jsonLd = getProductJsonLd({ product, reviewSummary: null });
 
   return (
-    <div className="product-detail-shell min-h-screen bg-background">
-      <ProductPageScrollReset />
-
+    <div className="product-detail-shell min-h-[100dvh] bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
@@ -385,19 +380,28 @@ export default async function ProductPage({ params }) {
         <ProductHeroSection
           product={product}
           settings={settings}
-          reviewSummary={reviewSummary}
           categoryLabel={primaryCategory?.name || ''}
         />
 
-        <ProductTabsWrapper product={product} reviewSummary={reviewSummary} />
+        <div data-store-reveal>
+        <Suspense fallback={<ProductTabsWrapper product={product} reviewSummary={EMPTY_REVIEW_SUMMARY} />}>
+          <div className="store-fade">
+            <ProductTabsWithReviews product={product} />
+          </div>
+        </Suspense>
+        </div>
       </div>
 
+      <div data-store-reveal>
       <Suspense fallback={<RelatedProductsSkeleton />}>
+        <div className="store-fade">
         <RelatedProductsSection
           primaryCategory={primaryCategory}
           excludeSlug={product.slug}
         />
+        </div>
       </Suspense>
+      </div>
     </div>
   );
 }
@@ -445,7 +449,31 @@ function ProductBreadcrumb({ product, primaryCategory }) {
   );
 }
 
-function ProductHeroSection({ product, settings, reviewSummary, categoryLabel }) {
+async function ProductRatingSummary({ productId }) {
+  const reviewSummary = await getProductReviewSummarySafe(productId);
+
+  if (!reviewSummary.reviewCount) return null;
+
+  return (
+    <a href="#product-reviews" className="group -mt-1 flex w-fit items-center gap-2">
+      <div className="flex items-center text-amber-400">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
+        ))}
+      </div>
+      <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
+        ({reviewSummary.reviewCount} {reviewSummary.reviewCount === 1 ? 'review' : 'reviews'})
+      </span>
+    </a>
+  );
+}
+
+async function ProductTabsWithReviews({ product }) {
+  const reviewSummary = await getProductReviewSummarySafe(product._id);
+  return <ProductTabsWrapper product={product} reviewSummary={reviewSummary} />;
+}
+
+function ProductHeroSection({ product, settings, categoryLabel }) {
   const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
   const compareAtPrice = getVisibleCompareAtPrice(product);
@@ -482,21 +510,9 @@ function ProductHeroSection({ product, settings, reviewSummary, categoryLabel })
                 <ProductSocialActions product={product} className="mt-0.5 shrink-0 md:hidden" />
               </div>
 
-              {reviewSummary.reviewCount > 0 && (
-                <a 
-                  href="#product-reviews"
-                  className="group -mt-1 flex w-fit items-center gap-2"
-                >
-                   <div className="flex items-center text-amber-400">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`size-4 ${i < Math.round(reviewSummary.averageRating || 0) ? 'fill-current' : 'text-muted-foreground/30'}`} />
-                      ))}
-                   </div>
-                   <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
-                     ({reviewSummary.reviewCount} {reviewSummary.reviewCount === 1 ? 'review' : 'reviews'})
-                   </span>
-                </a>
-              )}
+              <Suspense fallback={null}>
+                <ProductRatingSummary productId={product._id} />
+              </Suspense>
             </div>
 
             {(product.bulletPoints?.length > 0 || product.specifications?.length > 0) && (

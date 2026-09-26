@@ -12,9 +12,11 @@ export const metadata = {
 
 export default function SettingsPage() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" data-store-reveal>
       <Suspense fallback={null}>
-        <SettingsContent />
+        <div className="store-fade">
+          <SettingsContent />
+        </div>
       </Suspense>
     </main>
   );

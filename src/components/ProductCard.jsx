@@ -10,6 +10,7 @@ import { CLOUDINARY_IMAGE_PRESETS, optimizeCloudinaryUrl } from "@/lib/cloudinar
 import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { getProductTagById } from "@/lib/productTags";
+import FlashSaleTimer, { FlashSaleCardBadge, FlashSaleCardPrice } from "@/components/FlashSaleTimer";
 
 const formatPrice = (raw) => {
   let cleanNumbers = String(raw).replace(/[^\d.]/g, "");
@@ -83,7 +84,8 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
 
-  const discountLabel = getDiscountBadge(product);
+  const isFlashSale = product.discountType === "time-based" && product.discountEndsAt && product.isDiscounted;
+  const discountLabel = isFlashSale ? null : getDiscountBadge(product);
   const featureBadge = getFeatureBadge(product);
   const reviewCount = Number(product.reviewCount || 0);
   const averageRating = Number(product.averageRating || 0);
@@ -103,12 +105,14 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
     >
       <div className="relative">
         <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1.5">
-          {discountLabel ? (
-            <div className="relative flex flex-col items-center justify-center w-8 h-8 text-white drop-shadow-md">
+          {isFlashSale ? (
+            <FlashSaleCardBadge percentage={product.discountPercentage} endsAt={product.discountEndsAt} />
+          ) : discountLabel ? (
+            <div className="relative flex flex-col items-center justify-center w-8 h-8 md:w-16 md:h-16 text-white drop-shadow-md">
               <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
               <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
-                <span className="text-[9px] font-bold mt-[1px]">{product.discountPercentage}%</span>
-                <span className="text-[6px] font-extrabold mt-[0.5px]">OFF</span>
+                <span className="text-[9px] md:text-base font-bold mt-[1px] tabular-nums">{product.discountPercentage}%</span>
+                <span className="text-[6px] md:text-xs font-extrabold mt-[0.5px]">OFF</span>
               </div>
             </div>
           ) : (
@@ -208,6 +212,12 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
             </div>
           )}
 
+          {isFlashSale && !isUnavailable ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center px-2">
+              <FlashSaleTimer targetDate={product.discountEndsAt} variant="overlay" />
+            </div>
+          ) : null}
+
           {isUnavailable && (
             <div className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none">
               <div className="rounded-md border border-destructive/20 bg-destructive/5 text-destructive px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur-md">
@@ -237,6 +247,13 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
             <div className="mt-auto flex flex-row items-center justify-between gap-3 pt-3 sm:pt-4">
               {!isPreviewMode && (
                 <>
+                  {isFlashSale ? (
+                    <FlashSaleCardPrice
+                      basePrice={productPrice}
+                      salePrice={sellingPrice}
+                      endsAt={product.discountEndsAt}
+                    />
+                  ) : (
                   <div className="flex flex-col items-start gap-1 sm:gap-1.5 flex-1 min-w-0">
                     <p
                       className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
@@ -258,6 +275,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                       </div>
                     ) : null}
                   </div>
+                  )}
                   <div className="shrink-0">
                     <ProductCardAddToCartButton product={product} isOutOfStock={isUnavailable} mode="icon" />
                   </div>

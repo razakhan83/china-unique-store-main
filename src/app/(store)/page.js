@@ -26,9 +26,13 @@ export default async function HomePage() {
   return (
     <>
       <HomeSectionRenderer sections={sections} />
-      <Suspense fallback={<div className="h-48 w-full bg-background" aria-hidden="true" />}>
-        <HomeBelowFold />
-      </Suspense>
+      <div data-store-reveal>
+        <Suspense fallback={null}>
+          <div className="store-fade">
+            <HomeBelowFold />
+          </div>
+        </Suspense>
+      </div>
     </>
   );
 }

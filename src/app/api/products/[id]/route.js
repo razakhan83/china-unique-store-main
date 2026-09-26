@@ -12,6 +12,7 @@ import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
+import { normalizeDiscountInput } from '@/lib/discount';
 
 function triggerProductRevalidations(product, previousSlug = null) {
     revalidateTag('products');
@@ -194,10 +195,20 @@ export async function PUT(request, { params }) {
             existingProduct.featuredPriority = Number(body.featuredPriority) || 0;
         }
 
-        // Discount fields
-        const discountPct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
-        existingProduct.discountPercentage = discountPct;
-        existingProduct.isDiscounted = discountPct > 0;
+        const discountInput = normalizeDiscountInput({
+            price: existingProduct.Price,
+            discountPercentage: body.discountPercentage,
+            discountType: body.discountType,
+            discountEndsAt: body.discountEndsAt,
+        });
+        if (discountInput.error) {
+            return NextResponse.json({ success: false, message: discountInput.error }, { status: 400 });
+        }
+        existingProduct.discountPercentage = discountInput.discountPercentage;
+        existingProduct.isDiscounted = discountInput.isDiscounted;
+        existingProduct.discountedPrice = discountInput.discountedPrice;
+        existingProduct.discountType = discountInput.discountType;
+        existingProduct.discountEndsAt = discountInput.discountEndsAt;
 
         await existingProduct.save();
         await existingProduct.populate({ path: 'Category', select: 'name slug bgColor' });
@@ -335,21 +346,30 @@ export async function PATCH(request, { params }) {
             });
         }
 
-        const pct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
-
-        // We need the current price to compute discountedPrice
         const existing = await Product.findOne(query).select('Price slug Name').lean();
         if (!existing) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        const discountedPrice = pct > 0
-            ? Math.round(Number(existing.Price) * (1 - pct / 100))
-            : null;
+        const discountInput = normalizeDiscountInput({
+            price: existing.Price,
+            discountPercentage: body.discountPercentage,
+            discountType: body.discountType,
+            discountEndsAt: body.discountEndsAt,
+        });
+        if (discountInput.error) {
+            return NextResponse.json({ success: false, message: discountInput.error }, { status: 400 });
+        }
 
         const updatedProduct = await Product.findOneAndUpdate(
             query,
-            { $set: { discountPercentage: pct, isDiscounted: pct > 0, discountedPrice } },
+            { $set: {
+                discountPercentage: discountInput.discountPercentage,
+                isDiscounted: discountInput.isDiscounted,
+                discountedPrice: discountInput.discountedPrice,
+                discountType: discountInput.discountType,
+                discountEndsAt: discountInput.discountEndsAt,
+            } },
             { new: true, runValidators: false, strict: false }
         ).lean();
 

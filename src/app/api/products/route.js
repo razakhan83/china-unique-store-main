@@ -11,6 +11,7 @@ import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 import { formatSeoKeywords } from '@/lib/seoKeywords';
 import { buildProductVendorSnapshots, normalizeVendorSnapshot } from '@/lib/vendors';
+import { normalizeDiscountInput } from '@/lib/discount';
 
 // Utility for formatting a string to a unique URL-friendly slug
 const slugify = (text) => {
@@ -156,7 +157,15 @@ export async function POST(req) {
             ? null
             : Number(compareAtPrice);
         const normalizedStockQuantity = Math.max(0, Number(stockQuantity) || 0);
-        const normalizedDiscountPercentage = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
+        const discountInput = normalizeDiscountInput({
+            price: normalizedPrice,
+            discountPercentage,
+            discountType: body.discountType,
+            discountEndsAt: body.discountEndsAt,
+        });
+        if (discountInput.error) {
+            return NextResponse.json({ success: false, message: discountInput.error }, { status: 400 });
+        }
         const stockStatus = StockStatus === 'Out of Stock'
             ? 'Out of Stock'
             : StockStatus === 'In Stock'
@@ -164,10 +173,6 @@ export async function POST(req) {
                 : normalizedStockQuantity > 0
                     ? 'In Stock'
                     : 'Out of Stock';
-        const discountedPrice = normalizedDiscountPercentage > 0
-            ? Math.round(normalizedPrice * (1 - normalizedDiscountPercentage / 100))
-            : null;
-
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(Images));
         const normalizedVendors = await buildProductVendorSnapshots(vendors);
 
@@ -194,9 +199,11 @@ export async function POST(req) {
             slug: uniqueSlug, // Ensure slug is saved
             vendors: normalizedVendors,
             showOnStore: showOnStore !== false && showOnStore !== 'false',
-            discountPercentage: normalizedDiscountPercentage,
-            isDiscounted: normalizedDiscountPercentage > 0,
-            discountedPrice,
+            discountPercentage: discountInput.discountPercentage,
+            isDiscounted: discountInput.isDiscounted,
+            discountedPrice: discountInput.discountedPrice,
+            discountType: discountInput.discountType,
+            discountEndsAt: discountInput.discountEndsAt,
             isNewArrival: isNewArrival === true || isNewArrival === 'true',
             isBestSelling: isBestSelling === true || isBestSelling === 'true',
             isFeatured: isFeatured === true || isFeatured === 'true',

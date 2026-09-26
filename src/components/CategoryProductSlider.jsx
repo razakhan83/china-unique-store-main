@@ -306,7 +306,7 @@ export default function CategoryProductSlider({ categoryLabel, children, viewAll
           {slides.map((slide, idx) => (
             <CarouselItem
               key={`product-slide-${idx}`}
-              className="pl-3 md:pl-4 basis-[50%] md:basis-[33.33%] lg:basis-[25%]"
+              className="pl-3 md:pl-4 basis-[50%] md:basis-[33.33%] lg:basis-[28%] xl:basis-[25%]"
             >
               <div className="h-full min-w-0 pb-1">{slide}</div>
             </CarouselItem>

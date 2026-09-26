@@ -15,6 +15,7 @@ export const HOME_PAGE_SECTION_TYPES = [
   'ScrollableBannerCarousel',
   'ProductGridByCategory',
   'ProductCollection',
+  'LimitedTimeOffers',
   'VideoCatalog',
   'CustomerReviews',
 ];
@@ -139,6 +140,10 @@ export function normalizeHomePageSection(section, index = 0) {
       categoryId: cleanText(section?.categoryId),
       productLimit: Math.min(24, Math.max(1, safeNumber(section?.productLimit, 8))),
     };
+  }
+
+  if (type === 'LimitedTimeOffers') {
+    return baseSection;
   }
 
   if (type === 'ProductCollection') {

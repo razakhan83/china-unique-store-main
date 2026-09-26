@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Minus, RotateCcw, MapPin, Loader2, Sun, Moon } from 'lucide-react';
+import { Plus, Minus, RotateCcw, MapPin, Sun, Moon } from 'lucide-react';
 
 const GEO_URL = '/countries-110m.json';
 
@@ -171,10 +171,7 @@ export default function LiveVisitorMap({ visitors = [] }) {
       {/* Interactive SVG World Map */}
       <div className="w-full h-[290px] sm:h-[400px] md:h-[500px] flex items-center justify-center cursor-grab active:cursor-grabbing rounded-xl overflow-hidden transition-colors duration-300" style={{ backgroundColor: styles.oceanBg }}>
         {!geoData ? (
-          <div className="flex flex-col items-center justify-center gap-2.5 text-muted-foreground">
-            <Loader2 className="size-6 sm:size-7 animate-spin text-emerald-500" />
-            <span className="text-xs font-mono">Loading World Map Geometries...</span>
-          </div>
+          <div className="h-[70%] w-[80%] animate-pulse rounded-2xl bg-muted/70" aria-hidden="true" />
         ) : (
           <ComposableMap
             projection="geoEqualEarth"

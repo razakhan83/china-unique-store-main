@@ -5,6 +5,7 @@ import Vendor from '@/models/Vendor';
 import mongooseConnect from '@/lib/mongooseConnect';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
 import { normalizeProductImages } from '@/lib/productImages';
+import { getActiveSellingPrice, isDiscountActive } from '@/lib/discount';
 
 function toCleanId(value = '') {
   return String(value || '').trim();
@@ -27,8 +28,8 @@ function resolveCheckoutUnitPrice(product, packLabel = '') {
     }
   }
 
-  if (product.isDiscounted === true && product.discountedPrice != null) {
-    return Math.max(0, toSafeNumber(product.discountedPrice));
+  if (isDiscountActive(product)) {
+    return Math.max(0, toSafeNumber(getActiveSellingPrice(product)));
   }
 
   return Math.max(0, toSafeNumber(product.Price));
@@ -92,7 +93,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
       ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
     ],
   })
-    .select('slug Name Price discountedPrice isDiscounted isFreeDelivery vendors Images packOptions')
+    .select('slug Name Price discountedPrice isDiscounted discountPercentage discountType discountEndsAt isFreeDelivery vendors Images packOptions')
     .lean();
   const productMap = buildProductLookupMap(products);
 

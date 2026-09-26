@@ -78,8 +78,9 @@ export default async function ProductsPage({ searchParams }) {
               categories={categories} 
               activeCategory={resolvedSearchParams.category || 'all'} 
             />
-            <div className="w-full min-w-0 flex-1">
+            <div className="w-full min-w-0 flex-1" data-store-reveal>
               <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsGridSkeleton />}>
+                <div className="store-fade">
                 <ProductsResultsContent 
                   productsPromise={productsPromise} 
                   layout={resolvedSearchParams.layout || 'grid4'} 
@@ -88,6 +89,7 @@ export default async function ProductsPage({ searchParams }) {
                   sort={resolvedSearchParams.sort || 'newest'}
                   price={resolvedSearchParams.price || 'all'}
                 />
+                </div>
               </Suspense>
             </div>
           </div>
