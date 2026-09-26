@@ -70,7 +70,7 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
       onClick={handleToggle}
       disabled={isSubmitting || isLoading}
       className={cn(
-        "group/wishlist absolute right-2.5 top-2.5 z-10 flex size-8 md:size-9 items-center justify-center rounded-full border border-border/60 bg-background p-0 text-foreground shadow-xs outline-none transition-all duration-300 ease-out hover:scale-[1.1] hover:-translate-y-0.5 active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-ring/50 md:hover:border-red-500 md:hover:bg-red-50 md:hover:text-red-500 md:hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)] after:absolute after:-inset-2 after:content-['']",
+        "group/wishlist absolute right-2.5 top-2.5 z-10 flex size-8 md:size-9 items-center justify-center rounded-full border border-border/60 bg-background p-0 text-foreground shadow-xs outline-none transition-[background-color,color,border-color,opacity] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring/50 md:hover:border-red-500 md:hover:bg-red-50 md:hover:text-red-500 after:absolute after:-inset-2 after:content-['']",
         active
           ? 'border-red-500/30 bg-background text-red-500 opacity-100'
           : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100',
@@ -81,13 +81,13 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
       <span className="relative block size-4 md:size-4.5">
         <Heart
           className={cn(
-            'absolute inset-0 size-4 md:size-4.5 transition-all duration-300 ease-out md:group-hover/wishlist:text-red-500',
+            'absolute inset-0 size-4 md:size-4.5 transition-[opacity,transform,color] duration-200 ease-out md:group-hover/wishlist:text-red-500',
             active ? 'scale-75 opacity-0' : 'scale-100 opacity-100'
           )}
         />
         <Heart
           className={cn(
-            'absolute inset-0 size-4 md:size-4.5 fill-red-500 stroke-red-500 transition-all duration-300 ease-out',
+            'absolute inset-0 size-4 md:size-4.5 fill-red-500 stroke-red-500 transition-[opacity,transform] duration-200 ease-out',
             active ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
           )}
         />

@@ -89,12 +89,12 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
             const productSlug = product.slug || product._id || product.id;
             router.push(`/products/${productSlug}`);
           }}
-          className="inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 outline-none transition-all duration-300 ease-out hover:bg-slate-200 hover:text-slate-900 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50 shadow-sm"
+          className="inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 outline-none transition-[background-color,color] duration-200 ease-out hover:bg-slate-200 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-ring/50 shadow-sm"
           aria-label="Notify Me"
           title="Notify Me When In Stock"
         >
           <span className="relative block size-4 sm:size-5">
-            <BellRing className="absolute inset-0 size-4 sm:size-5 transition-all duration-300 ease-out" />
+            <BellRing className="absolute inset-0 size-4 sm:size-5" />
           </span>
         </button>
       );
@@ -108,7 +108,7 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
         data-state={animationState}
         aria-busy={isBusy}
         className={cn(
-          "inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] focus-visible:ring-2 focus-visible:ring-ring/50",
+          "inline-flex shrink-0 size-8 sm:size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-[background-color,color] duration-200 ease-out hover:bg-emerald-200 hover:text-emerald-800 focus-visible:ring-2 focus-visible:ring-ring/50",
           (isBusy || isLoading) && "pointer-events-none opacity-60"
         )}
         aria-label="Add to cart"
@@ -117,7 +117,7 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
           {isLoading ? (
             <Spinner className="absolute inset-0 size-4 sm:size-5" />
           ) : (
-            <ShoppingCart className="absolute inset-0 size-4 sm:size-5 transition-all duration-300 ease-out" />
+            <ShoppingCart className="absolute inset-0 size-4 sm:size-5" />
           )}
         </span>
       </button>
@@ -149,10 +149,10 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
       data-state={animationState}
       aria-busy={isBusy}
       className={cn(
-        "group w-full rounded-lg font-semibold transition-all duration-300 ease-out h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-[13px] border border-solid shadow-sm relative overflow-hidden",
+        "group w-full rounded-lg font-semibold transition-[background-color,color] duration-200 ease-out h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-[13px] border border-solid shadow-sm relative overflow-hidden",
         isOutOfStock
           ? "cursor-not-allowed text-muted-foreground/80 bg-[#f3f4f6] border-transparent"
-          : "bg-primary text-white border-transparent hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(1,83,71,0.3)] hover:-translate-y-0.5 active:scale-[0.98]"
+          : "bg-primary text-white border-transparent hover:bg-primary/90"
       )}
       aria-label={isOutOfStock ? "Out of Stock" : "Buy Now"}
     >
@@ -162,7 +162,7 @@ export default function ProductCardAddToCartButtonClient({ product, isOutOfStock
         ) : null}
         <span>{isOutOfStock ? "Out of Stock" : "Buy Now"}</span>
         {!isOutOfStock && !isLoading && (
-          <ShoppingCart className="absolute left-full ml-1.5 size-3.5 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
+          <ShoppingCart className="ml-1.5 size-3.5" />
         )}
       </span>
     </Button>

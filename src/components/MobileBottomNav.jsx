@@ -42,14 +42,14 @@ function MobileNavButton({
     <div className="relative flex flex-col items-center gap-1 justify-center w-full h-full">
       <span
         className={cn(
-          'transition-transform duration-300 ease-out flex items-center justify-center',
-          active ? 'scale-110 text-primary' : 'scale-100 text-muted-foreground'
+          'flex items-center justify-center transition-colors duration-200',
+          active ? 'text-primary' : 'text-muted-foreground'
         )}
       >
         {iconSwap ? (
           iconSwap
         ) : (
-          <Icon className={cn('w-6 h-6 transition-all duration-300', active ? 'stroke-[2.2]' : 'stroke-[1.5]')} />
+          <Icon className={cn('w-6 h-6', active ? 'stroke-[2.2]' : 'stroke-[1.5]')} />
         )}
       </span>
       <span

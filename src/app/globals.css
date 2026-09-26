@@ -1020,6 +1020,15 @@ body:has(#checkout-root) .store-deferred-chrome {
     opacity: 1 !important;
     transform: none !important;
   }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Product Detail Page Mobile Sticky Bar dynamic positioning */
