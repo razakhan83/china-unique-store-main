@@ -1490,16 +1490,18 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
               <div className={styles.paymentOptions}>
 
-                {/* Credit card — coming soon */}
-                <div className={cn(styles.paymentOption, styles.paymentOptionDisabled, "relative overflow-hidden")}>
-                  <div className="absolute top-0 right-0 bg-primary/10 border-l border-b border-primary/15 text-primary text-[0.55rem] sm:text-[0.6rem] font-bold px-2 py-0.5 rounded-bl-md uppercase tracking-wider z-10">
-                    Coming soon
-                  </div>
+                {/* Credit card is visible, but it is not a payment method until a gateway exists. */}
+                <div
+                  className={cn(styles.paymentOption, styles.paymentOptionDisabled, 'relative overflow-hidden')}
+                  aria-disabled="true"
+                >
                   <div className={styles.paymentOptionHeader}>
                     <div className={styles.paymentOptionLeft}>
-                      <div className={styles.radioCircle} />
                       <CreditCard className="size-4 text-muted-foreground shrink-0" aria-hidden />
                       <span className={styles.paymentOptionLabel}>Credit card</span>
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        Coming soon
+                      </span>
                     </div>
                     <div className={styles.paymentCardLogos}>
                       <Image src="/VISA-logo.png" alt="Visa" width={36} height={24} className={styles.paymentCardLogo} style={{ width: 'auto' }} />
@@ -1640,7 +1642,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
               aria-busy={submitting}
             >
               {submitting && <Loader2 className="size-4 animate-spin" />}
-              {submitting ? 'Placing order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+              {submitting ? 'Placing order…' : 'Complete order'}
             </button>
 
             {/* Footer links */}
@@ -1686,7 +1688,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
             aria-busy={submitting}
           >
             {submitting && <Loader2 className="size-4 animate-spin" />}
-            {submitting ? 'Placing order…' : paymentMethod === 'card' ? 'Pay now' : 'Complete order'}
+            {submitting ? 'Placing order…' : 'Complete order'}
           </button>
         </div>
       </div>

@@ -302,8 +302,9 @@
 }
 
 .paymentOptionDisabled {
-  opacity: 0.45;
+  opacity: 0.72;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .paymentCardLogos {
