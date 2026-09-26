@@ -83,6 +83,21 @@ const SEARCH_RESULTS_LIMIT = 24;
 const CHECKOUT_PROFILE_STORAGE_KEY = 'china_unique_items_checkout_profile_v1';
 const CHECKOUT_SUCCESS_STORAGE_KEY = 'china_unique_items_checkout_success_v1';
 
+const CHECKOUT_NAME_MAX = 30;
+const CHECKOUT_ADDRESS_MIN = 5;
+const CHECKOUT_ADDRESS_MAX = 250;
+const CHECKOUT_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]*$/;
+
+function isCheckoutName(value) {
+  const clean = String(value || '').trim();
+  return clean.length >= 2 && clean.length <= CHECKOUT_NAME_MAX && CHECKOUT_NAME_PATTERN.test(clean);
+}
+
+function isCheckoutAddress(value) {
+  const length = String(value || '').trim().length;
+  return length >= CHECKOUT_ADDRESS_MIN && length <= CHECKOUT_ADDRESS_MAX;
+}
+
 function createIdempotencyKey() {
   return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -799,20 +814,14 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
 
   const debounceTimersRef = useRef({});
 
-  const isNameValid = useMemo(() => {
-    const clean = formData.fullName.trim();
-    return /^[a-zA-Z\s]{2,20}$/.test(clean);
-  }, [formData.fullName]);
+  const isNameValid = useMemo(() => isCheckoutName(formData.fullName), [formData.fullName]);
 
   const isPhoneValid = useMemo(() => {
     const clean = formData.phone.replace(/\s+/g, '');
     return /^03\d{9}$/.test(clean);
   }, [formData.phone]);
 
-  const isAddressValid = useMemo(() => {
-    const len = formData.address.trim().length;
-    return len >= 5 && len <= 100;
-  }, [formData.address]);
+  const isAddressValid = useMemo(() => isCheckoutAddress(formData.address), [formData.address]);
 
   const isCityValid = useMemo(() => Boolean(formData.city.trim()), [formData.city]);
 
@@ -825,12 +834,12 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     if (fieldName === 'fullName') {
       if (/\d/.test(val)) {
         setErrors((prev) => ({ ...prev, fullName: 'Numbers are not allowed in name.' }));
-      } else if (!/^[A-Za-z\s]+$/.test(val)) {
+      } else if (!CHECKOUT_NAME_PATTERN.test(val)) {
         setErrors((prev) => ({ ...prev, fullName: 'Please use letters only (A-Z).' }));
       } else if (val.length < 2) {
         setErrors((prev) => ({ ...prev, fullName: 'Name must be at least 2 characters.' }));
-      } else if (val.length > 20) {
-        setErrors((prev) => ({ ...prev, fullName: 'Name must not exceed 20 characters.' }));
+      } else if (val.length > CHECKOUT_NAME_MAX) {
+        setErrors((prev) => ({ ...prev, fullName: 'Name must not exceed 30 characters.' }));
       } else {
         setErrors((prev) => ({ ...prev, fullName: '' }));
       }
@@ -850,8 +859,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     if (fieldName === 'address') {
       if (val.length < 5) {
         setErrors((prev) => ({ ...prev, address: 'Please enter complete address (at least 5 characters).' }));
-      } else if (val.length > 100) {
-        setErrors((prev) => ({ ...prev, address: 'Address must not exceed 100 characters.' }));
+      } else if (val.length > CHECKOUT_ADDRESS_MAX) {
+        setErrors((prev) => ({ ...prev, address: 'Address must not exceed 250 characters.' }));
       } else {
         setErrors((prev) => ({ ...prev, address: '' }));
       }
@@ -863,11 +872,11 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     setFormData((previous) => ({ ...previous, [name]: value }));
 
     // Instant clear if input becomes valid
-    if (name === 'fullName' && /^[a-zA-Z\s]{2,20}$/.test(value.trim())) {
+    if (name === 'fullName' && isCheckoutName(value)) {
       setErrors((prev) => ({ ...prev, fullName: '' }));
     } else if (name === 'phone' && /^03\d{9}$/.test(value.replace(/\s+/g, ''))) {
       setErrors((prev) => ({ ...prev, phone: '' }));
-    } else if (name === 'address' && value.trim().length >= 5 && value.trim().length <= 100) {
+    } else if (name === 'address' && isCheckoutAddress(value)) {
       setErrors((prev) => ({ ...prev, address: '' }));
     }
 
@@ -896,8 +905,8 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     if (!cleanName) {
       nextErrors.fullName = 'Full Name is required.';
       missingFields.push('Full Name');
-    } else if (!/^[a-zA-Z\s]{2,20}$/.test(cleanName)) {
-      nextErrors.fullName = 'Please enter a valid name (letters only, max 20 chars).';
+    } else if (!isCheckoutName(cleanName)) {
+      nextErrors.fullName = 'Please enter a valid name (letters only, up to 30 characters).';
       missingFields.push('Valid Name (Letters only, max 20 chars)');
     }
     
@@ -915,7 +924,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
       nextErrors.address = 'Complete Address is required.';
       missingFields.push('Complete Address');
     } else if (cleanAddress.length < 5 || cleanAddress.length > 100) {
-      nextErrors.address = 'Address must be between 5 and 100 characters.';
+      nextErrors.address = 'Address must be between 5 and 250 characters.';
       missingFields.push('Complete Address (within 100 chars)');
     }
 
@@ -1308,6 +1317,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                       spellCheck={false}
                       aria-label="Full name"
                       label="Full name"
+                      maxLength={CHECKOUT_NAME_MAX}
                       value={formData.fullName}
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -1344,6 +1354,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     autoComplete="street-address"
                     aria-label="Complete address"
                     label="Complete address"
+                    maxLength={CHECKOUT_ADDRESS_MAX}
                     rows={2}
                     value={formData.address}
                     onChange={handleChange}

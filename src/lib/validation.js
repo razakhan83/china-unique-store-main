@@ -21,11 +21,24 @@ export const orderItemSchema = z.object({
   vendor: z.string().max(300).optional(),
 });
 
+const checkoutNameSchema = z
+  .string()
+  .trim()
+  .min(2, 'Name must be at least 2 characters')
+  .max(30, 'Name must not exceed 30 characters')
+  .regex(/^[A-Za-z][A-Za-z .'-]*$/, 'Please use letters only (A-Z).');
+
+const checkoutAddressSchema = z
+  .string()
+  .trim()
+  .min(5, 'Please enter a complete address (at least 5 characters).')
+  .max(250, 'Address must not exceed 250 characters');
+
 export const submitOrderSchema = z.object({
   idempotencyKey: z.string().trim().max(100).optional().or(z.literal('')),
-  customerName: nameSchema.min(1, 'Name is required'),
+  customerName: checkoutNameSchema,
   customerPhone: phoneSchema.min(10, 'Valid phone number is required'),
-  customerAddress: addressSchema.min(1, 'Address is required'),
+  customerAddress: checkoutAddressSchema,
   customerCity: citySchema.min(1, 'City is required'),
   landmark: landmarkSchema,
   customerEmail: emailSchema,
