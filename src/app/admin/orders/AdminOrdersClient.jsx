@@ -470,7 +470,6 @@ export default function AdminOrdersClient({
         });
 
         setSelectedOrders([]);
-        router.refresh();
       } else {
         toast.error(data.error || 'Failed to book parcels with NOC Express');
       }
@@ -557,7 +556,6 @@ export default function AdminOrdersClient({
 
         if (data.changedCount > 0) {
           toast.success(`Updated ${data.changedCount} order status${data.changedCount === 1 ? '' : 'es'} successfully.`);
-          router.refresh();
         } else {
           toast.info('Already up to date - No new status changes found.');
         }
@@ -596,9 +594,28 @@ export default function AdminOrdersClient({
           })
             .then(safeReadJson)
             .then((data) => {
-              if (data?.success && Array.isArray(data.results) && data.changedCount > 0) {
-                router.refresh();
-              }
+              if (!data?.success || !Array.isArray(data.results) || !(data.changedCount > 0)) return;
+              const resultMap = new Map();
+              data.results.forEach((entry) => {
+                if (!entry?.nocStatus) return;
+                resultMap.set(String(entry._id), entry);
+                if (entry.orderId) resultMap.set(String(entry.orderId), entry);
+              });
+              setOrders((previous) => previous.map((order) => {
+                const found = resultMap.get(String(order._id)) || (order.orderId ? resultMap.get(String(order.orderId)) : null);
+                if (!found) return order;
+                return {
+                  ...order,
+                  courierName: found.courierName || order.courierName,
+                  nocParcelNo: found.nocParcelNo || order.nocParcelNo,
+                  nocThirdPartyNo: found.nocThirdPartyNo !== undefined ? found.nocThirdPartyNo : order.nocThirdPartyNo,
+                  nocStatus: found.nocStatus,
+                  nocStatusTime: found.nocStatusTime,
+                  nocRemarks: found.nocRemarks,
+                  nocLastTrackedAt: found.nocLastTrackedAt,
+                  nocTrackingEvents: found.nocTrackingEvents || order.nocTrackingEvents,
+                };
+              }));
             })
             .catch(() => {});
         }
@@ -606,7 +623,7 @@ export default function AdminOrdersClient({
     } catch (e) {
       // ignore
     }
-  }, [orders, router]);
+  }, [orders]);
 
   const handlePrintSelectedNocSlips = () => {
     const selectedSet = new Set(selectedOrders.map((id) => String(id)));
@@ -703,7 +720,6 @@ export default function AdminOrdersClient({
 
           if (data.changedCount > 0) {
             toast.success(`Updated ${data.changedCount} order status${data.changedCount === 1 ? '' : 'es'} successfully.`);
-            router.refresh();
           } else {
             toast.info('Already up to date - No new status changes found.');
           }
@@ -743,7 +759,6 @@ export default function AdminOrdersClient({
         setSelectedOrders([]);
         setBulkDeleteConfirmOpen(false);
         toast.success(res.message || `Moved ${deletedObjs.length || selectedOrders.length} order(s) to Trash.`);
-        router.refresh();
       } else {
         toast.error(res.error || 'Failed to move selected orders to Trash.');
       }
@@ -1162,7 +1177,6 @@ export default function AdminOrdersClient({
           createdAt: new Date().toISOString(),
         }, ...prev]);
         setDeleteConfirm(null);
-        router.refresh();
       } else {
         toast.error(res.error || 'Failed to delete order.');
       }
@@ -1275,7 +1289,6 @@ export default function AdminOrdersClient({
 
       setSelectedOrders([]);
       setBulkStatus('');
-      router.refresh();
       return true;
     } finally {
       setIsBulkUpdating(false);
@@ -1785,7 +1798,6 @@ export default function AdminOrdersClient({
       setOrders((prev) => prev.map((order) => (
         order._id === id ? { ...order, isDraft: false, status: normalizeOrderStatus(quickStatus), trackingNumber: quickTracking, courierName: editingOrder?.courierName || '' } : order
       )));
-      router.refresh();
     } else {
       toast.error(res.error || 'Failed to update order');
     }
@@ -1825,7 +1837,6 @@ export default function AdminOrdersClient({
             }
           : order
       )));
-      router.refresh();
     } else {
       toast.error(res.error || 'Failed to update order');
     }
@@ -1917,7 +1928,6 @@ export default function AdminOrdersClient({
       resetDraftComposer();
       setStatusFilter(DRAFT_TAB_ID);
       navigate({ status: DRAFT_TAB_ID, page: null });
-      router.refresh();
     } finally {
       setIsCreatingDraft(false);
     }

@@ -424,7 +424,6 @@ export default function AdminProductsClient({
         setProducts((previous) => previous.filter((product) => product._id !== deleteModal.product._id));
         toast.success(`Product "${deleteModal.product.Name}" deleted.`);
         setDeleteModal({ open: false, product: null, isBulk: false });
-        router.refresh();
       } catch (error) {
         toast.error(error.message || "Could not delete the product.");
       } finally {
@@ -496,7 +495,6 @@ export default function AdminProductsClient({
           ),
         );
         toast.success(`"${product.Name}" is now ${json.data?.StockStatus || newStockStatus}.`);
-        router.refresh();
       } catch (error) {
         toast.error(error.message || "Could not update stock status.");
       } finally {
@@ -527,8 +525,20 @@ export default function AdminProductsClient({
         }
         
         toast.success(json.message);
+        setProducts((previous) => {
+          if (action === 'delete') {
+            return previous.filter((entry) => !selectedProducts.includes(entry._id));
+          }
+          return previous.map((entry) => {
+            if (!selectedProducts.includes(entry._id)) return entry;
+            if (action === 'live') return { ...entry, showOnStore: true };
+            if (action === 'hidden') return { ...entry, showOnStore: false };
+            if (action === 'in-stock') return { ...entry, StockStatus: 'In Stock' };
+            if (action === 'out-of-stock') return { ...entry, StockStatus: 'Out of Stock' };
+            return entry;
+          });
+        });
         setSelectedProducts([]);
-        router.refresh();
       } catch (error) {
         toast.error(error.message);
       } finally {
@@ -573,7 +583,6 @@ export default function AdminProductsClient({
       );
       toast.success(`Stock updated for "${product.Name}".`);
       setStockModal({ open: false, product: null });
-      router.refresh();
     } catch (error) {
       toast.error(error.message || "Could not update stock quantity.");
     } finally {
