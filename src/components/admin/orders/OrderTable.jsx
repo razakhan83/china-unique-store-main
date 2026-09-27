@@ -12,6 +12,16 @@ import { Calendar, Search, X, PackageCheck, Printer, Download, Truck, RotateCcw,
 import Image from 'next/image';
 import Link from 'next/link';
 
+// Pure utility functions (co-located here to avoid prop-drilling)
+const getCodAmount = (order) => {
+  if (order?.manualCodAmount != null && order.manualCodAmount !== '') {
+    return Number(order.manualCodAmount);
+  }
+  return Number(order?.totalAmount || 0);
+};
+
+const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString('en-PK')}`;
+
 export function OrderTable(props) {
   const {
     // Props will be passed in bulk
@@ -31,7 +41,7 @@ export function OrderTable(props) {
     showNocColumns, enableSecondaryNoc, handleSelectAll, isAllPaginatedSelected, handleSelectOne,
     formatSmartTimeAgo, formatDate, formatTime, formatFullDateTime, getOrderOriginInfo, isNewOrder,
     getNocStatusBadgeClass, handleQuickUpdate, setEditingOrder, setIsEditModalOpen, setQuickActionOrder,
-    setQuickStatus, setQuickTracking, setIsQuickUpdating, handleConfirmBulkDelete, formatPrice, OrderQuickViewDialog, OrdersMobilePendingSkeleton, handleOpenEditModal, handleDeleteOrder, setNocTrackingOrder, normalizeOrderStatus, initialSearchQuery
+    setQuickStatus, setQuickTracking, setIsQuickUpdating, handleConfirmBulkDelete, OrderQuickViewDialog, OrdersMobilePendingSkeleton, handleOpenEditModal, handleDeleteOrder, setNocTrackingOrder, normalizeOrderStatus, initialSearchQuery
   } = p;
 
   return (
