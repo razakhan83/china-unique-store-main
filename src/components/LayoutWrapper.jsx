@@ -57,7 +57,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
         <main id="store-main" className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
 
         <ConditionalLayoutElements>
-          <footer id="store-footer" className="border-t border-border/60 bg-muted/30 pt-12 text-foreground">
+          <footer id="store-footer" className="border-t border-border/60 bg-muted/70 pt-12 text-foreground">
             <div className="container mx-auto max-w-7xl px-4">
 
               {/* ── Newsletter Subscription Banner (Only on Home Page) ── */}

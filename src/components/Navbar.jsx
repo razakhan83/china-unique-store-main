@@ -310,11 +310,14 @@ function NavbarContent({
         }
         scrollAnchorYRef.current = currentScrollY;
       } else if (!(isSearchOpen || isSidebarOpen || isAccountDrawerOpen || isCartOpen)) {
-        if (!isNavbarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80) {
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        const isNearOrPastBottom = currentScrollY >= maxScroll - 20;
+
+        if (!isNavbarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80 && !isNearOrPastBottom) {
           isNavbarHiddenRef.current = true;
           setIsNavbarHidden(true);
           scrollAnchorYRef.current = currentScrollY;
-        } else if (isNavbarHiddenRef.current && distanceFromAnchor < -12 && delta < 0) {
+        } else if (isNavbarHiddenRef.current && distanceFromAnchor < -12 && delta < 0 && !isNearOrPastBottom) {
           isNavbarHiddenRef.current = false;
           setIsNavbarHidden(false);
           scrollAnchorYRef.current = currentScrollY;

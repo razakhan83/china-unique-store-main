@@ -73,10 +73,10 @@ export default function MobileMenuContent({
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === '/'}
-                className={`gap-3.5 rounded-xl px-3 py-2 h-10 transition-all duration-200 active:scale-[0.98] text-foreground ${
+                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/'
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                    : 'bg-muted/40 hover:bg-muted font-medium'
+                    ? 'text-primary font-bold'
+                    : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
                 render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
               >
@@ -88,10 +88,10 @@ export default function MobileMenuContent({
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === '/products'}
-                className={`gap-3.5 rounded-xl px-3 py-2 h-10 transition-all duration-200 active:scale-[0.98] text-foreground ${
+                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/products'
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                    : 'bg-muted/40 hover:bg-muted font-medium'
+                    ? 'text-primary font-bold'
+                    : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
                 render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
               >
@@ -102,7 +102,7 @@ export default function MobileMenuContent({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="gap-3.5 rounded-xl px-3 py-2 h-10 transition-all duration-200 active:scale-[0.98] text-foreground bg-muted/40 hover:bg-muted font-medium"
+                className="gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] hover:text-primary font-medium text-muted-foreground"
                 render={<Link href="/products?price=under300" onClick={() => setIsSidebarOpen(false)} />}
               >
                 <Tag className="size-4 shrink-0" />
@@ -113,10 +113,10 @@ export default function MobileMenuContent({
             <SidebarMenuItem className="flex items-center">
               <MyOrdersButton
                 isMobile
-                className={`gap-3.5 rounded-xl px-3 py-2 h-10 w-full transition-all duration-200 active:scale-[0.98] text-foreground ${
+                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto w-full transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname.startsWith('/orders')
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                    : 'bg-muted/40 hover:bg-muted font-medium'
+                    ? 'text-primary font-bold'
+                    : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
               />
             </SidebarMenuItem>
@@ -124,10 +124,10 @@ export default function MobileMenuContent({
             <SidebarMenuItem className="flex items-center">
               <MyWishlistButton
                 isMobile
-                className={`gap-3.5 rounded-xl px-3 py-2 h-10 w-full transition-all duration-200 active:scale-[0.98] text-foreground ${
+                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto w-full transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname.startsWith('/wishlist')
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                    : 'bg-muted/40 hover:bg-muted font-medium'
+                    ? 'text-primary font-bold'
+                    : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
               />
             </SidebarMenuItem>
@@ -135,10 +135,10 @@ export default function MobileMenuContent({
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === '/contact'}
-                className={`gap-3.5 rounded-xl px-3 py-2 h-10 transition-all duration-200 active:scale-[0.98] text-foreground ${
+                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/contact'
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                    : 'bg-muted/40 hover:bg-muted font-medium'
+                    ? 'text-primary font-bold'
+                    : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
                 render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
               >
@@ -160,10 +160,10 @@ export default function MobileMenuContent({
                 <SidebarMenuButton
                   isActive={activeCategory === category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`gap-3.5 rounded-xl px-3 py-2 h-10 transition-all duration-200 active:scale-[0.98] text-foreground ${
+                  className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                     activeCategory === category.id
-                      ? 'bg-primary/10 text-primary font-bold shadow-xs'
-                      : 'bg-muted/40 hover:bg-muted font-medium'
+                      ? 'text-primary font-bold'
+                      : 'hover:text-primary font-medium text-muted-foreground'
                   }`}
                 >
                   <Tag className="size-4 shrink-0 text-muted-foreground" />
