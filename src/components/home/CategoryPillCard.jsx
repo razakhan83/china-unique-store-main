@@ -70,7 +70,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
       {/* Main Container - Compact Solid Rounded Box */}
       <div
         className={cn(
-          'relative flex items-center justify-center w-[64%] md:w-[70%] lg:w-[72%] aspect-square mx-auto rounded-[1rem] md:rounded-[1.15rem] overflow-visible',
+          'relative flex items-center justify-center w-[75%] md:w-[85%] aspect-square mx-auto rounded-[1rem] md:rounded-[1.2rem] overflow-visible',
           'border-0 shadow-none transition-transform duration-300 ease-out group-hover:scale-[1.04]'
         )}
         style={{

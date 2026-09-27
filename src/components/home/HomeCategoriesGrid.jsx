@@ -149,7 +149,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
             {displayedCategories.map((category, index) => (
               <CarouselItem
                 key={`${category._id || category.id}-${index}`}
-                className="pl-3 md:pl-4 basis-[42%] sm:basis-[28%] md:basis-[20%] lg:basis-[16.666%] xl:basis-[12.5%]"
+                className="pl-3 md:pl-4 basis-[42%] sm:basis-[28%] md:basis-[20%]"
               >
                 <div className="h-full min-w-0">
                   <CategoryPillCard category={category} index={index} />
