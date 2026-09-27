@@ -1,88 +1,13 @@
 const fs = require('fs');
 const file = 'src/app/admin/orders/AdminOrdersClient.jsx';
 let content = fs.readFileSync(file, 'utf8');
-const orderExportContent = `
-export async function generateCourierSheetExcel({ ordersToExport, PAKISTAN_CITIES, getCodAmount }) {
-  const ExcelJS = (await import('exceljs')).default;
-  const workbook = new ExcelJS.Workbook();
-  const mainSheet = workbook.addWorksheet('Sheet1');
 
-  PAKISTAN_CITIES.forEach((city, index) => {
-    mainSheet.getCell(index + 1, 20).value = city;
-  });
-  mainSheet.getColumn(20).hidden = true;
-
-  const headers = [
-    'ConsigneeName', 'ConsigneeAddress', 'ConsigneeEmail', 'ConsigneeCellNo',
-    'ConsigneeCity', 'ItemType', 'Quantity', 'CODAmount', 'Weight', 'SpecialInstruction'
-  ];
-
-  mainSheet.getRow(1).values = headers;
-  mainSheet.getRow(1).font = { bold: true };
-
-  ordersToExport.forEach((order, index) => {
-    let codAmount = 0;
-    if (order.manualCodAmount !== undefined && order.manualCodAmount !== null && order.manualCodAmount !== '') {
-      codAmount = Number(order.manualCodAmount);
-    } else if (order.paymentStatus === 'Online') {
-      codAmount = 0;
-    } else {
-      codAmount = getCodAmount(order);
-    }
-
-    const cleanAddress = [order.customerAddress, order.landmark]
-      .filter(Boolean)
-      .join(' - ')
-      .replace(/[, \\n\\r]+/g, ' ')
-      .trim();
-
-    let city = (order.customerCity || '').trim();
-    const exactMatch = PAKISTAN_CITIES.find((entry) => entry.trim().toLowerCase() === city.toLowerCase());
-    city = exactMatch || 'KARACHI';
-
-    const row = mainSheet.getRow(index + 2);
-    const email = (order.customerEmail || 'customer@store.com').trim();
-
-    row.values = [
-      order.customerName, cleanAddress, email, order.customerPhone, city,
-      order.itemType || 'Mix', String(order.orderQuantity || 1), codAmount,
-      order.weight ?? 2, order.notes || ''
-    ];
-
-    row.getCell(5).dataValidation = {
-      type: 'list',
-      allowBlank: true,
-      formulae: [\`$T$1:$T$\${PAKISTAN_CITIES.length}\`],
-      showDropDown: true,
-    };
-  });
-
-  mainSheet.columns.forEach((column, index) => {
-    if (index < 10) column.width = 20;
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  return blob;
-}
-
-export function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-`;
-fs.mkdirSync('src/lib/export', { recursive: true });
-fs.writeFileSync('src/lib/export/orderExportUtils.js', orderExportContent);
-console.log('Created orderExportUtils.js');
-
-const generateCourierSheetRegex = /const handleGenerateCourierSheet = async \(\) => \{[\s\S]*?setPendingWorkflowAction\(''\);\n\s*\}\n\s*\};/;
-const generateCourierReplacement = `const handleGenerateCourierSheet = async () => {
+// Replacements object
+const replacements = [
+  {
+    start: 'const handleGenerateCourierSheet = async () => {',
+    end: 'const handleGenerateSourcingSlip = async',
+    newCode: `const handleGenerateCourierSheet = async () => {
     const isDraftContext = statusFilter === DRAFT_TAB_ID;
     let ordersToExport = [];
     
@@ -100,7 +25,7 @@ const generateCourierReplacement = `const handleGenerateCourierSheet = async () 
     setPendingWorkflowAction('courier');
 
     try {
-      const { generateCourierSheetExcel, downloadBlob } = await import('@/lib/export/orderExportUtils');
+      const { generateCourierSheetExcel, downloadBlob } = await import('@/lib/export/orderExcelExport');
       const blob = await generateCourierSheetExcel({ ordersToExport, PAKISTAN_CITIES, getCodAmount });
       downloadBlob(blob, \`Courier_Sheet_\${new Date().toISOString().slice(0, 10)}.xlsx\`);
 
@@ -111,8 +36,116 @@ const generateCourierReplacement = `const handleGenerateCourierSheet = async () 
     } finally {
       setPendingWorkflowAction('');
     }
-  };`;
+  };
 
-content = content.replace(generateCourierSheetRegex, generateCourierReplacement);
+  `
+  },
+  {
+    start: 'const handleGenerateSourcingSlip = async',
+    end: 'const handlePrintSourcingSlip = async',
+    newCode: `const handleGenerateSourcingSlip = async ({ moveToNextStep = true } = {}) => {
+    const ordersToExport = validateSelectedOrders('Order Confirmed', 'Generate Sourcing Slip');
+    if (!ordersToExport) return;
+
+    setPendingWorkflowAction(moveToNextStep ? 'sourcing-move' : 'sourcing-download');
+
+    try {
+      const { generateSourcingSlipPdf } = await import('@/lib/export/orderPdfExport');
+      const { sourcingRows, imageLookup, grandTotalCost } = await collectSourcingSlipData(ordersToExport);
+      
+      const doc = await generateSourcingSlipPdf({ sourcingRows, imageLookup, grandTotalCost, sanitizePdfText });
+
+      if (moveToNextStep) {
+        const statusMoved = await moveSelectedOrdersToStatus('In Process', {
+          allowedCurrentStatuses: ['Order Confirmed'],
+          logReason: 'Sourcing slip generated. Status moved from Order Confirmed to In Process.',
+        });
+
+        if (!statusMoved) return;
+      }
+
+      doc.save(\`Sourcing_Slip_\${new Date().toISOString().slice(0, 10)}.pdf\`);
+    } finally {
+      setPendingWorkflowAction('');
+    }
+  };
+
+  `
+  },
+  {
+    start: 'const handleGeneratePackingSlip = async',
+    end: 'const handlePrintPackingSlip = async',
+    newCode: `const handleGeneratePackingSlip = async ({ moveToNextStep = true } = {}) => {
+    const selectedRecords = validateSelectedOrders('In Process', 'Generate Packing Slip');
+    if (!selectedRecords) return;
+
+    setPendingWorkflowAction(moveToNextStep ? 'packing-move' : 'packing-download');
+
+    try {
+      const { generatePackingSlipPdf } = await import('@/lib/export/orderPdfExport');
+      const doc = await generatePackingSlipPdf({ selectedRecords, sanitizePdfText });
+
+      if (moveToNextStep) {
+        const statusMoved = await moveSelectedOrdersToStatus('Packed', {
+          allowedCurrentStatuses: ['In Process'],
+          logReason: 'Packing slip generated. Status moved from In Process to Packed.',
+        });
+
+        if (!statusMoved) return;
+      }
+
+      doc.save(\`Packing_Slips_\${new Date().toISOString().slice(0, 10)}.pdf\`);
+    } finally {
+      setPendingWorkflowAction('');
+    }
+  };
+
+  `
+  },
+  {
+    start: 'const handleExportMonthlySales = async (format) => {',
+    end: 'const handleQuickUpdate = async (id) => {',
+    newCode: `const handleExportMonthlySales = async (format) => {
+    // Filter orders by the selected date range for monthly report
+    const reportOrders = orders;
+    if (reportOrders.length === 0) {
+      toast.error('No orders found in the current filtered range for report.');
+      return;
+    }
+
+    const totalRevenue = reportOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const statusCounts = reportOrders.reduce((acc, o) => {
+      acc[o.status] = (acc[o.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    if (format === 'excel') {
+      const { generateMonthlySalesExcel, downloadBlob } = await import('@/lib/export/orderExcelExport');
+      const blob = await generateMonthlySalesExcel({ reportOrders, startDate, endDate, totalRevenue, statusCounts });
+      downloadBlob(blob, \`Monthly_Sales_Report_\${new Date().toISOString().slice(0, 7)}.xlsx\`);
+    } else {
+      const { generateMonthlySalesPdf } = await import('@/lib/export/orderPdfExport');
+      const doc = await generateMonthlySalesPdf({ reportOrders, startDate, endDate, totalRevenue, statusCounts });
+      doc.save(\`Monthly_Sales_Report_\${new Date().toISOString().slice(0, 7)}.pdf\`);
+    }
+  };
+
+  `
+  }
+];
+
+let successCount = 0;
+
+for (const rep of replacements) {
+  const startIdx = content.indexOf(rep.start);
+  const endIdx = content.indexOf(rep.end, startIdx);
+  if (startIdx !== -1 && endIdx !== -1) {
+    content = content.substring(0, startIdx) + rep.newCode + content.substring(endIdx);
+    successCount++;
+  } else {
+    console.error('Failed to find slice:', rep.start.substring(0, 30));
+  }
+}
+
 fs.writeFileSync(file, content);
-console.log('Refactored handleGenerateCourierSheet');
+console.log('Successfully replaced ' + successCount + ' sections.');

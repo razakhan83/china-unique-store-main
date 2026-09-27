@@ -73,3 +73,39 @@ export function downloadBlob(blob, filename) {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+export async function generateMonthlySalesExcel({ reportOrders, startDate, endDate, totalRevenue, statusCounts }) {
+  const ExcelJS = (await import('exceljs')).default;
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Monthly Sales');
+  
+  sheet.addRow(['Monthly Sales Report']);
+  sheet.addRow([`Period: ${startDate || 'All'} to ${endDate || 'All'}`]);
+  sheet.addRow([]);
+  sheet.addRow(['Summary']);
+  sheet.addRow(['Total Orders', reportOrders.length]);
+  sheet.addRow(['Total Revenue', totalRevenue]);
+  sheet.addRow([]);
+  sheet.addRow(['Status Breakdown']);
+  Object.entries(statusCounts).forEach(([status, count]) => {
+    sheet.addRow([status, count]);
+  });
+  sheet.addRow([]);
+  sheet.addRow(['Order Details']);
+  sheet.addRow(['Date', 'Order ID', 'Customer', 'City', 'Amount', 'Status']);
+  
+  reportOrders.forEach(o => {
+    sheet.addRow([
+      new Date(o.createdAt).toLocaleDateString(),
+      o.orderId,
+      o.customerName,
+      o.customerCity,
+      o.totalAmount,
+      o.status
+    ]);
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  return blob;
+}
