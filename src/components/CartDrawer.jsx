@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Minus, Plus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -54,6 +54,100 @@ const formatPrice = (raw) => {
 
 const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
 const EXIT_ANIMATION_MS = 180;
+
+const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
+  const primaryImage = getPrimaryProductImage(item);
+  const primaryImageSrc = primaryImage?.url
+    ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.cartItem)
+    : '';
+  const itemTotal = formatPrice(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price) * item.quantity;
+
+  return (
+    <div className="min-h-0">
+      <Card
+        size="sm"
+        className="gap-0 border border-border/50 bg-card hover:border-border/80 py-0 shadow-none transition-[background-color,border-color] duration-150"
+      >
+        <CardContent className="px-2.5 py-2">
+          <div className="flex items-stretch gap-2.5">
+            <div className="relative size-[4.5rem] shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-muted outline outline-1 outline-black/5 md:size-[4.75rem] flex items-center justify-center">
+              {primaryImageSrc ? (
+                <Image
+                  src={primaryImageSrc}
+                  alt={item.Name || item.name || 'product'}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                  {...getBlurPlaceholderProps(primaryImage?.blurDataURL)}
+                />
+              ) : (
+                <ShoppingBag className="size-5 text-muted-foreground/40" />
+              )}
+            </div>
+            <div className="flex min-w-0 flex-1 items-stretch justify-between gap-2">
+              <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                <div className="min-w-0">
+                  <CardTitle className="line-clamp-2 text-[0.85rem] leading-[1.05rem] [text-wrap:pretty]">
+                    {item.Name || item.name}
+                  </CardTitle>
+                  <p className="mt-0.5 text-[0.88rem] font-medium leading-none text-primary tabular-nums">
+                    {formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}
+                  </p>
+                </div>
+                <div className="inline-flex h-8 sm:h-7 items-stretch gap-1 self-start">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Decrease quantity"
+                    onClick={() => updateQuantity(item, item.quantity - 1)}
+                    className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
+                  >
+                    <Minus />
+                  </Button>
+                  <span className="inline-flex h-full w-8 sm:w-7 items-center justify-center px-0 text-[0.84rem] font-semibold leading-none tabular-nums">
+                    {item.quantity}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Increase quantity"
+                    onClick={() => updateQuantity(item, item.quantity + 1)}
+                    className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex min-h-full flex-col items-end justify-between py-0.5 text-right">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => scheduleRemove(item)}
+                  className="relative size-8 sm:size-7 rounded-[var(--radius-lg)] text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-950/30 transition-[transform,color,background-color] duration-150 active:scale-[0.96] [&_svg]:size-3.5 after:absolute after:-inset-1.5 after:content-['']"
+                  aria-label="Remove item"
+                >
+                  <Trash2 />
+                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <p className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground/90">
+                    Total
+                  </p>
+                  <p className="text-[0.92rem] font-semibold leading-none text-foreground tabular-nums">
+                    Rs.&nbsp;{itemTotal.toLocaleString('en-PK')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+CartItemRow.displayName = 'CartItemRow';
 
 export default function CartDrawer({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
   const pathname = usePathname();
@@ -123,102 +217,17 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                   </div>
                   <SidebarGroupContent>
                     <div ref={animationParent} className="flex flex-col gap-2">
-                      {cart.map((item, index) => {
-                        const primaryImage = getPrimaryProductImage(item);
-                        const primaryImageSrc = primaryImage?.url
-                          ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.cartItem)
-                          : '';
-                        const itemTotal = formatPrice(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price) * item.quantity;
-
-                        return (
+                      {cart.map((item, index) => (
                           <div
                             key={item.id || item.slug || item._id || item.Name || item.name || index}
                           >
-                            <div className="min-h-0">
-                              <Card
-                                size="sm"
-                                className="gap-0 border border-border/50 bg-card hover:border-border/80 py-0 shadow-none transition-[background-color,border-color] duration-150"
-                              >
-                                <CardContent className="px-2.5 py-2">
-                                  <div className="flex items-stretch gap-2.5">
-                                    <div className="relative size-[4.5rem] shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-muted outline outline-1 outline-black/5 md:size-[4.75rem] flex items-center justify-center">
-                                      {primaryImageSrc ? (
-                                        <Image
-                                          src={primaryImageSrc}
-                                          alt={item.Name || item.name || 'product'}
-                                          fill
-                                          sizes="64px"
-                                          className="object-cover"
-                                          {...getBlurPlaceholderProps(primaryImage?.blurDataURL)}
-                                        />
-                                      ) : (
-                                        <ShoppingBag className="size-5 text-muted-foreground/40" />
-                                      )}
-                                    </div>
-                                    <div className="flex min-w-0 flex-1 items-stretch justify-between gap-2">
-                                      <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-                                        <div className="min-w-0">
-                                          <CardTitle className="line-clamp-2 text-[0.85rem] leading-[1.05rem] [text-wrap:pretty]">
-                                            {item.Name || item.name}
-                                          </CardTitle>
-                                          <p className="mt-0.5 text-[0.88rem] font-medium leading-none text-primary tabular-nums">
-                                            {formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}
-                                          </p>
-                                        </div>
-                                        <div className="inline-flex h-8 sm:h-7 items-stretch gap-1 self-start">
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon-xs"
-                                            aria-label="Decrease quantity"
-                                            onClick={() => updateQuantity(item, item.quantity - 1)}
-                                            className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
-                                          >
-                                            <Minus />
-                                          </Button>
-                                          <span className="inline-flex h-full w-8 sm:w-7 items-center justify-center px-0 text-[0.84rem] font-semibold leading-none tabular-nums">
-                                            {item.quantity}
-                                          </span>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon-xs"
-                                            aria-label="Increase quantity"
-                                            onClick={() => updateQuantity(item, item.quantity + 1)}
-                                            className="relative h-full min-h-0 w-8 sm:w-7 rounded-[var(--radius-md)] bg-muted/70 px-0 text-muted-foreground transition-[transform,color,background-color] duration-150 hover:bg-muted hover:text-foreground active:scale-[0.96] after:absolute after:-inset-1 after:content-['']"
-                                          >
-                                            <Plus />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                      <div className="flex min-h-full flex-col items-end justify-between py-0.5 text-right">
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon-sm"
-                                          onClick={() => scheduleRemove(item)}
-                                          className="relative size-8 sm:size-7 rounded-[var(--radius-lg)] text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-950/30 transition-[transform,color,background-color] duration-150 active:scale-[0.96] [&_svg]:size-3.5 after:absolute after:-inset-1.5 after:content-['']"
-                                          aria-label="Remove item"
-                                        >
-                                          <Trash2 />
-                                        </Button>
-                                        <div className="flex flex-col items-end gap-1">
-                                          <p className="text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground/90">
-                                            Total
-                                          </p>
-                                          <p className="text-[0.92rem] font-semibold leading-none text-foreground tabular-nums">
-                                            Rs.&nbsp;{itemTotal.toLocaleString('en-PK')}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
+                            <CartItemRow 
+                              item={item}
+                              updateQuantity={updateQuantity}
+                              scheduleRemove={scheduleRemove}
+                            />
                           </div>
-                        );
-                      })}
+                      ))}
                     </div>
                   </SidebarGroupContent>
                 </SidebarGroup>

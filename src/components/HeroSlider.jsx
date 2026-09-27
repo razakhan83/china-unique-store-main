@@ -264,8 +264,8 @@ export default function HeroSlider({ slides = [] }) {
                 className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
               >
                 <span
-                  className={`h-1.5 rounded-full shadow-md transition-all duration-300 origin-center pointer-events-none block ${
-                    safeActiveIndex === index ? 'w-6 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                  className={`h-1.5 w-1.5 rounded-full shadow-md transition-[transform,background-color] duration-300 pointer-events-none block ${
+                    safeActiveIndex === index ? 'bg-white scale-x-[4]' : 'bg-white/55 hover:bg-white/80'
                   }`}
                 />
               </button>

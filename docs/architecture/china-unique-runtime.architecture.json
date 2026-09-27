@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "China Unique full runtime architecture",
+    "locale": "en",
+    "quality_profile": "standard",
+    "repository": {
+      "url": "https://github.com/razakhan83/China-Unique-Items-Orignal",
+      "provider": "github",
+      "revision": "21aa9b1c58addd8ab99707d7c4510bc8cd1db1f0"
+    },
+    "views": [
+      {
+        "id": "store-path",
+        "label": "Store request path",
+        "focus": ["customers", "storefront", "app", "mongodb"],
+        "note": "RSC browse plus submitOrderAction into MongoDB."
+      },
+      {
+        "id": "identity",
+        "label": "Identity",
+        "focus": ["googleIdp", "nextauth", "storefront", "admin", "proxy", "app"],
+        "note": "Google OAuth and credentials JWTs; proxy gates /admin."
+      },
+      {
+        "id": "media-realtime",
+        "label": "Media and presence",
+        "focus": ["storefront", "app", "cloudinary", "pusher"],
+        "note": "App signs uploads; the browser hits Cloudinary CDN and Pusher."
+      },
+      {
+        "id": "growth",
+        "label": "Mail, ads, chat, AI",
+        "focus": ["storefront", "app", "resend", "ads", "whatsapp", "gemini"],
+        "note": "Resend and CAPI on the server; pixels and wa.me from the browser."
+      },
+      {
+        "id": "fulfillment",
+        "label": "Fulfillment",
+        "focus": ["admin", "proxy", "app", "noc", "mongodb"],
+        "note": "Admin JWT path into NOC book/track."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "customers",
+      "type": "external",
+      "label": "Customers",
+      "sublabel": "Browser",
+      "pos": [40, 248],
+      "size": [128, 60]
+    },
+    {
+      "id": "googleIdp",
+      "type": "external",
+      "label": "Google Identity",
+      "sublabel": "OAuth 2.0",
+      "pos": [40, 148],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/lib/auth.js", "line": 11, "label": "GoogleProvider" }
+      ]
+    },
+    {
+      "id": "storefront",
+      "type": "frontend",
+      "label": "Storefront",
+      "sublabel": "App Router (store)",
+      "brand": "next-js",
+      "pos": [220, 248],
+      "size": [156, 60],
+      "sources": [
+        { "path": "src/app/(store)/layout.js", "label": "store layout" },
+        { "path": "src/context/CartContext.jsx", "label": "cart" }
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "frontend",
+      "label": "Admin console",
+      "sublabel": "/admin",
+      "pos": [220, 428],
+      "size": [156, 60],
+      "sources": [
+        { "path": "src/app/admin/layout.js", "label": "admin UI" },
+        { "path": "src/lib/requireAdmin.js", "label": "requireAdmin" }
+      ]
+    },
+    {
+      "id": "cloudinary",
+      "type": "cloud",
+      "label": "Cloudinary",
+      "sublabel": "sign + CDN",
+      "brand": "cloudinary",
+      "pos": [220, 48],
+      "size": [156, 60],
+      "sources": [
+        { "path": "src/app/api/cloudinary-sign/route.js", "label": "sign" },
+        { "path": "src/lib/cloudinaryImage.js", "label": "URLs" }
+      ]
+    },
+    {
+      "id": "nextauth",
+      "type": "security",
+      "label": "NextAuth",
+      "sublabel": "Google + credentials",
+      "tag": "JWT",
+      "pos": [456, 48],
+      "size": [168, 60],
+      "sources": [
+        { "path": "src/lib/auth.js", "line": 9, "label": "authOptions" },
+        { "path": "src/app/api/auth/[...nextauth]/route.js", "label": "route" }
+      ]
+    },
+    {
+      "id": "proxy",
+      "type": "security",
+      "label": "Edge proxy",
+      "sublabel": "src/proxy.js",
+      "tag": "rate limit",
+      "pos": [456, 428],
+      "size": [168, 60],
+      "sources": [
+        { "path": "src/proxy.js", "line": 14, "label": "proxy()" },
+        { "path": "src/lib/rateLimit.js", "label": "rate limit" }
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "App runtime",
+      "sublabel": "RSC · actions · /api",
+      "brand": "next-js",
+      "pos": [456, 240],
+      "size": [168, 72],
+      "sources": [
+        { "path": "src/app/actions/order.actions.js", "line": 153, "label": "submitOrder" },
+        { "path": "src/lib/data.js", "label": "store reads" }
+      ]
+    },
+    {
+      "id": "mongodb",
+      "type": "database",
+      "label": "MongoDB",
+      "sublabel": "Mongoose",
+      "brand": "mongodb",
+      "pos": [712, 248],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/lib/mongooseConnect.js", "label": "connect" },
+        { "path": "src/models/Order.js", "label": "Order" }
+      ]
+    },
+    {
+      "id": "pusher",
+      "type": "messagebus",
+      "label": "Pusher",
+      "sublabel": "presence",
+      "pos": [712, 48],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/hooks/use-visitor-tracker.js", "label": "client" },
+        { "path": "src/app/api/pusher/auth/route.js", "label": "auth" }
+      ]
+    },
+    {
+      "id": "ads",
+      "type": "external",
+      "label": "Meta / TikTok",
+      "sublabel": "pixel + CAPI",
+      "pos": [956, 48],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/app/(store)/layout.js", "line": 25, "label": "pixels" },
+        { "path": "src/lib/trackingServer.js", "line": 185, "label": "CAPI" }
+      ]
+    },
+    {
+      "id": "gemini",
+      "type": "external",
+      "label": "Google Gemini",
+      "sublabel": "admin SEO",
+      "brand": "google-gemini",
+      "pos": [956, 148],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/app/api/admin/generate-seo/route.js", "line": 188, "label": "GEMINI_API_KEY" }
+      ]
+    },
+    {
+      "id": "whatsapp",
+      "type": "external",
+      "label": "WhatsApp",
+      "sublabel": "wa.me links",
+      "brand": "whatsapp",
+      "pos": [40, 428],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/lib/whatsapp.js", "label": "wa.me" }
+      ]
+    },
+    {
+      "id": "resend",
+      "type": "external",
+      "label": "Resend",
+      "sublabel": "order email",
+      "pos": [712, 428],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/app/actions/order.actions.js", "line": 22, "label": "Resend" },
+        { "path": "src/lib/emailTemplates.js", "label": "templates" }
+      ]
+    },
+    {
+      "id": "noc",
+      "type": "external",
+      "label": "NOC Express",
+      "sublabel": "shipnoc API",
+      "pos": [956, 338],
+      "size": [148, 60],
+      "sources": [
+        { "path": "src/lib/nocCourier.js", "label": "courier" },
+        { "path": "src/app/api/admin/courier/book/route.js", "label": "book" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Browser",
+      "wraps": ["storefront", "admin"]
+    },
+    {
+      "kind": "region",
+      "label": "Trusted Next.js server",
+      "wraps": ["nextauth", "app", "proxy"]
+    },
+    {
+      "kind": "region",
+      "label": "Data plane",
+      "wraps": ["mongodb"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "customers-storefront",
+      "from": "customers",
+      "to": "storefront",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "storefront-app",
+      "from": "storefront",
+      "to": "app",
+      "label": "RSC / actions",
+      "variant": "emphasis",
+      "labelDy": -39
+    },
+    {
+      "id": "storefront-nextauth",
+      "from": "storefront",
+      "to": "nextauth",
+      "label": "session",
+      "variant": "security"
+    },
+    {
+      "id": "google-nextauth",
+      "from": "googleIdp",
+      "to": "nextauth",
+      "label": "OAuth",
+      "variant": "security"
+    },
+    {
+      "id": "admin-proxy",
+      "from": "admin",
+      "to": "proxy",
+      "label": "/admin",
+      "variant": "security"
+    },
+    {
+      "id": "proxy-app",
+      "from": "proxy",
+      "to": "app",
+      "label": "admin JWT",
+      "variant": "security"
+    },
+    {
+      "id": "app-mongodb",
+      "from": "app",
+      "to": "mongodb",
+      "label": "Mongoose",
+      "variant": "emphasis"
+    },
+    {
+      "id": "storefront-cloudinary",
+      "from": "storefront",
+      "to": "cloudinary",
+      "label": "CDN / upload",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "app-cloudinary",
+      "from": "app",
+      "to": "cloudinary",
+      "label": "sign"
+    },
+    {
+      "id": "app-pusher",
+      "from": "app",
+      "to": "pusher",
+      "label": "channel auth",
+      "variant": "dashed"
+    },
+    {
+      "id": "storefront-whatsapp",
+      "from": "storefront",
+      "to": "whatsapp",
+      "label": "wa.me",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "app-resend",
+      "from": "app",
+      "to": "resend",
+      "label": "after() email",
+      "variant": "dashed"
+    },
+    {
+      "id": "app-gemini",
+      "from": "app",
+      "to": "gemini",
+      "label": "admin SEO",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "app-ads",
+      "from": "app",
+      "to": "ads",
+      "label": "CAPI",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "app-noc",
+      "from": "app",
+      "to": "noc",
+      "label": "book / track",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [880, 348]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Inside the app and MongoDB",
+      "items": [
+        "Actions + ~66 /api routes; feeds, sitemap, invoice PDF, abandoned-cart recovery",
+        "Collections: User Product Category Order Invoice Payment Coupon Settings Review Vendor AbandonedCart DailyTraffic Counter and related"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Host, payments, leftover SW",
+      "items": [
+        "VERCEL serverless mongoose pool; Cloudinary CDN not Vercel image optimizer; proxy rate-limits write APIs",
+        "COD / bank / JazzCash / EasyPaisa — no Stripe; public/sw.js only unregisters old caches"
+      ]
+    }
+  ]
+}

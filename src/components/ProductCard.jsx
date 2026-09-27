@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,7 +62,7 @@ function getFeatureBadge(product) {
 import { getProductCategories } from "@/lib/productCategories";
 import { getCategoryColor } from "@/lib/categoryColors";
 
-export default function ProductCard({ product, className = "", imageBg, isPreviewMode = false, priority = false }) {
+const ProductCard = memo(function ProductCard({ product, className = "", imageBg, isPreviewMode = false, priority = false }) {
   const categories = getProductCategories(product);
   const primaryCategory = categories[0];
   const primaryCategoryName = primaryCategory?.name || primaryCategory?.label || "";
@@ -284,4 +285,6 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
       </CardContent>
     </Card>
   );
-}
+});
+
+export default ProductCard;

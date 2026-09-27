@@ -29,6 +29,8 @@ export default function ProductsInfiniteGrid({
   const sentinelRef = useRef(null);
   const loadingLockRef = useRef(false);
 
+  const seenIdsRef = useRef(new Set());
+
   // Sync state if server props change (e.g. user selects category or searches)
   useEffect(() => {
     setProducts(initialProducts);
@@ -36,6 +38,7 @@ export default function ProductsInfiniteGrid({
     setHasMore(initialHasMore);
     setIsLoading(false);
     loadingLockRef.current = false;
+    seenIdsRef.current = new Set(initialProducts.map((p) => String(p._id || p.id || p.slug)));
   }, [category, search, sort, price, initialProducts, initialHasMore]);
 
   // Load next chunk
@@ -59,9 +62,12 @@ export default function ProductsInfiniteGrid({
 
       if (response?.success && Array.isArray(response.items) && response.items.length > 0) {
         setProducts((prev) => {
-          // Avoid duplicate product ids if any overlap
-          const existingIds = new Set(prev.map((p) => String(p._id || p.id || p.slug)));
-          const uniqueNew = response.items.filter((p) => !existingIds.has(String(p._id || p.id || p.slug)));
+          const uniqueNew = response.items.filter((p) => {
+            const id = String(p._id || p.id || p.slug);
+            if (seenIdsRef.current.has(id)) return false;
+            seenIdsRef.current.add(id);
+            return true;
+          });
           return [...prev, ...uniqueNew];
         });
         setPage(nextPage);

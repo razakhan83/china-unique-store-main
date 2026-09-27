@@ -234,7 +234,7 @@ export default function ProductsPageHeader({
     <div>
       <div
         className={cn(
-          "products-page-bar fixed inset-x-0 top-[56px] z-30 border-b border-border/50 bg-background/86 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform md:hidden",
+          "products-page-bar fixed inset-x-0 top-[56px] z-30 border-b border-border/50 bg-background/95 transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] will-change-transform md:hidden",
           isProductsBarHidden ? "-translate-y-[56px]" : "translate-y-0"
         )}
       >

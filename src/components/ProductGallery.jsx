@@ -108,7 +108,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
           mainTag && (
             <div className="absolute left-3 top-3 z-20 pointer-events-auto">
               <div 
-                className={`flex items-center justify-center rounded-full p-2 shadow-sm backdrop-blur-md border border-white/20 ${mainTag.bgColor} ${mainTag.color}`}
+                className={`flex items-center justify-center rounded-full p-2 shadow-sm border border-white/20 bg-background/95 ${mainTag.bgColor} ${mainTag.color}`}
                 title={mainTag.label}
               >
                 <mainTag.icon className="size-5 drop-shadow-sm" />
@@ -179,12 +179,12 @@ export default function ProductGallery({ images, primaryTag, product }) {
         {normalizedImages.length > 0 && (
           <Dialog>
             <DialogTrigger 
-              className="absolute bottom-3 right-3 z-20 pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/70 backdrop-blur-md shadow-sm border border-white/40 text-foreground hover:bg-white hover:scale-105 hover:bg-white hover:scale-105 active:scale-95 transition-all md:bottom-4 md:right-4 md:size-9"
+              className="absolute bottom-3 right-3 z-20 pointer-events-auto flex size-8 items-center justify-center rounded-full bg-white/95 shadow-sm border border-border/40 text-foreground hover:bg-white hover:scale-105 active:scale-95 transition-all md:bottom-4 md:right-4 md:size-9"
               title="View Full Size"
             >
               <Maximize2 className="size-4" />
             </DialogTrigger>
-            <DialogContent className="max-w-[100vw] h-[100dvh] sm:max-w-4xl sm:h-[90vh] p-0 bg-black border-none shadow-none [&>button]:text-black [&>button]:bg-black/10 [&>button]:hover:bg-black/20 [&>button]:backdrop-blur-md [&>button]:size-10 [&>button]:top-4 [&>button]:right-4 z-[510]">
+            <DialogContent className="max-w-[100vw] h-[100dvh] sm:max-w-4xl sm:h-[90vh] p-0 bg-black border-none shadow-none [&>button]:text-black [&>button]:bg-white/80 [&>button]:hover:bg-white [&>button]:size-10 [&>button]:top-4 [&>button]:right-4 z-[510]">
               <div className="relative size-full flex items-center justify-center rounded-none overflow-hidden bg-white">
                 <img
                   src={optimizeCloudinaryUrl(normalizedImages[selectedIndex]?.url || normalizedImages[selectedIndex], CLOUDINARY_IMAGE_PRESETS.productModal)}

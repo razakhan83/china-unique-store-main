@@ -59,15 +59,26 @@ function timeLabel(remaining) {
 }
 
 export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
-  const [remaining, setRemaining] = useState(null);
+  const [totalSeconds, setTotalSeconds] = useState(null);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const tick = () => {
-      const next = getRemaining(targetDate);
-      setRemaining(next);
+      const end = new Date(targetDate).getTime();
+      if (!targetDate || Number.isNaN(end)) {
+        setTotalSeconds(null);
+        setChecked(true);
+        return false;
+      }
+      const diff = end - Date.now();
+      if (diff <= 0) {
+        setTotalSeconds(null);
+        setChecked(true);
+        return false;
+      }
+      setTotalSeconds(Math.floor(diff / 1000));
       setChecked(true);
-      return next;
+      return true;
     };
 
     if (!tick()) return undefined;
@@ -78,6 +89,13 @@ export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
 
     return () => clearInterval(timer);
   }, [targetDate]);
+
+  const remaining = totalSeconds != null ? {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  } : null;
 
   if (!remaining) {
     if (variant === 'full' && !checked) {

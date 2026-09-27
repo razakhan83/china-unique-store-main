@@ -193,6 +193,31 @@ function AnnouncementMarquee({ items = [] }) {
   );
 }
 
+function CartBadge({ isCartBumping }) {
+  const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
+
+  if (!isCartInitialized) {
+    return (
+      <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums">
+        <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
+      </span>
+    );
+  }
+
+  if (cartCount > 0) {
+    return (
+      <span className={cn(
+        "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums transition-transform duration-200",
+        isCartBumping && "scale-125"
+      )}>
+        {cartCount}
+      </span>
+    );
+  }
+
+  return null;
+}
+
 function NavbarContent({
   categories,
   storeName = 'China Unique Store',
@@ -206,7 +231,6 @@ function NavbarContent({
   const router = useRouter();
   const pathname = usePathname();
 
-  const { cartCount = 0, isInitialized: isCartInitialized = false } = useCartItems() || {};
   const { activeCategory = 'all', isSidebarOpen = false, isCartOpen = false } = useCartUi() || {};
   const {
     setActiveCategory = () => {},
@@ -248,6 +272,18 @@ function NavbarContent({
 
   const closeCategoriesTimeoutRef = useRef(null);
   const isNavbarHiddenRef = useRef(false);
+  const maxScrollRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateMaxScroll = () => {
+      maxScrollRef.current = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    };
+    updateMaxScroll();
+    const observer = new ResizeObserver(updateMaxScroll);
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, []);
   const lastScrollYRef = useRef(0);
   const scrollAnchorYRef = useRef(0);
 
@@ -310,7 +346,7 @@ function NavbarContent({
         }
         scrollAnchorYRef.current = currentScrollY;
       } else if (!(isSearchOpen || isSidebarOpen || isAccountDrawerOpen || isCartOpen)) {
-        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        const maxScroll = maxScrollRef.current;
         const isNearOrPastBottom = currentScrollY >= maxScroll - 20;
 
         if (!isNavbarHiddenRef.current && distanceFromAnchor > 56 && delta > 0 && currentScrollY > 80 && !isNearOrPastBottom) {
@@ -525,20 +561,7 @@ function NavbarContent({
                   <ShoppingBag strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-[opacity,transform] duration-200', isCartOpen ? 'opacity-0 scale-50 rotate-90' : 'opacity-100 scale-100 rotate-0')} />
                   <X strokeWidth={1.5} className={cn('absolute inset-0 size-full transition-[opacity,transform] duration-200', isCartOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90')} />
                 </span>
-                {isCartInitialized ? (
-                  cartCount > 0 ? (
-                    <span className={cn(
-                      "absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums transition-transform duration-200",
-                      isCartBumping && "scale-125"
-                    )}>
-                      {cartCount}
-                    </span>
-                  ) : null
-                ) : (
-                  <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold leading-none text-primary-foreground tabular-nums">
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/70" />
-                  </span>
-                )}
+                <CartBadge isCartBumping={isCartBumping} />
               </Button>
 
 

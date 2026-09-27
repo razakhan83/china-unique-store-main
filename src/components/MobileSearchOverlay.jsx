@@ -108,7 +108,7 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-md animate-in fade-in-0 duration-300 md:hidden" style={{ zIndex: 300 }} onClick={() => onOpenChange(false)} />
+      <div className="fixed inset-0 bg-background/95 animate-in fade-in-0 duration-300 md:hidden" style={{ zIndex: 300 }} onClick={() => onOpenChange(false)} />
       <div className="fixed inset-0 bg-background w-full h-[100dvh] flex flex-col animate-in slide-in-from-bottom-[100%] duration-300 ease-out focus:outline-none md:hidden" style={{ zIndex: 300 }}>
           <div className="flex items-center gap-3 p-3 border-b border-border/40 bg-background sticky top-0 z-10 shrink-0">
             <form onSubmit={handleSearchSubmit} className="flex-1 relative flex items-center">
