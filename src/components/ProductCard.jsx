@@ -108,13 +108,9 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
           {isFlashSale ? (
             <FlashSaleCardBadge percentage={product.discountPercentage} endsAt={product.discountEndsAt} />
           ) : discountLabel ? (
-            <div className="relative flex flex-col items-center justify-center w-8 h-8 md:w-16 md:h-16 text-white drop-shadow-md">
-              <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
-              <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
-                <span className="text-[9px] md:text-base font-bold mt-[1px] tabular-nums">{product.discountPercentage}%</span>
-                <span className="text-[6px] md:text-xs font-extrabold mt-[0.5px]">OFF</span>
-              </div>
-            </div>
+            <Badge className="pointer-events-auto rounded bg-destructive text-destructive-foreground px-2 py-0.5 text-[10.5px] sm:text-[11.5px] font-bold tracking-wide shadow-sm border-none">
+              {product.discountPercentage}% OFF
+            </Badge>
           ) : (
             <>
               {ratingLabel ? (
@@ -269,7 +265,7 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                         >
                           {formatPrice(compareAtPrice)}
                         </p>
-                        <Badge className="pointer-events-auto w-fit rounded bg-success/10 px-1 py-0 text-[9.5px] font-medium text-success tracking-normal border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11px] sm:h-[24px]">
+                        <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
                           Save {formatPrice(compareAtPrice - sellingPrice)}
                         </Badge>
                       </div>

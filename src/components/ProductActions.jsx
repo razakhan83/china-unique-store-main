@@ -361,11 +361,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                         {formatPrice(displayPrice)}
                     </span>
                     {displayComparePrice ? (
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground line-through">
+                        <div className="flex items-center gap-2.5">
+                            <span className="text-[15px] font-medium text-muted-foreground line-through">
                                 {formatPrice(displayComparePrice)}
                             </span>
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 shadow-none font-bold tracking-wide text-xs">
+                            <Badge className="rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive tracking-tight border-none shadow-none hover:bg-destructive/15 transition-colors">
                                 Save {formatPrice(displayComparePrice - displayPrice)}
                             </Badge>
                         </div>
