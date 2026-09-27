@@ -89,21 +89,28 @@ export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
   const spoken = `Offer ends in ${timeLabel(remaining)}`;
 
   if (variant === 'full') {
-    const parts = timeParts(remaining);
+    const parts = [
+      remaining.days > 0 ? { val: pad(remaining.days), lbl: 'd' } : null,
+      { val: pad(remaining.hours), lbl: 'h' },
+      { val: pad(remaining.minutes), lbl: 'm' },
+      { val: pad(remaining.seconds), lbl: 's' }
+    ].filter(Boolean);
 
     return (
-      <div className="flex items-center gap-2.5" aria-label={spoken}>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Ends in
+      <div className="flex flex-wrap items-center gap-2.5" aria-label={spoken}>
+        <span className="text-[11.5px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+          Ends in:
         </span>
-        <span className="inline-flex items-baseline gap-1 rounded-md bg-muted px-2 py-1 text-[15px] font-semibold leading-none tabular-nums tracking-tight text-foreground">
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
           {parts.map((part, index) => (
-            <span key={`${index}-${part}`} className="inline-flex items-baseline gap-1">
-              {index > 0 ? <span className="font-medium text-muted-foreground/45" aria-hidden="true">:</span> : null}
-              {part}
-            </span>
+            <div key={`${index}-${part.lbl}`} className="flex items-center gap-1.5">
+              {index > 0 ? <span className="text-muted-foreground/40 font-bold mb-[2px]">:</span> : null}
+              <span className="inline-flex h-[26px] min-w-[26px] items-baseline justify-center gap-0.5 rounded md:rounded-md bg-destructive/10 px-1.5 py-0.5 text-[13px] font-bold tabular-nums text-destructive shadow-none border border-destructive/20">
+                {part.val}<span className="text-[9px] font-bold uppercase text-destructive/70">{part.lbl}</span>
+              </span>
+            </div>
           ))}
-        </span>
+        </div>
       </div>
     );
   }
@@ -136,13 +143,9 @@ export function FlashSaleCardBadge({ percentage, endsAt }) {
   if (!active) return null;
 
   return (
-    <div className="relative flex h-8 w-8 flex-col items-center justify-center text-white drop-shadow-md md:h-16 md:w-16">
-      <BadgeIcon className="absolute inset-0 size-full fill-current text-red-600" strokeWidth={0} />
-      <div className="relative z-10 mt-[1px] flex flex-col items-center justify-center leading-none">
-        <span className="mt-[1px] text-[9px] font-bold tabular-nums md:text-base">{percentage}%</span>
-        <span className="mt-[0.5px] text-[6px] font-extrabold md:text-xs">OFF</span>
-      </div>
-    </div>
+    <Badge className="pointer-events-auto rounded bg-destructive text-destructive-foreground px-2 py-0.5 text-[10.5px] sm:text-[11.5px] font-bold tracking-wide shadow-sm border-none">
+      {percentage}% OFF
+    </Badge>
   );
 }
 

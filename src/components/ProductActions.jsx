@@ -378,6 +378,32 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 </div>
                 </div>
 
+                {packOptions.length > 1 && (
+                    <div className="space-y-2 mt-2">
+                        <span className="text-xs sm:text-[13px] font-semibold text-muted-foreground">Select Option:</span>
+                        <div className="flex flex-wrap gap-2.5">
+                            {packOptions.map((pack, idx) => {
+                                const isSelected = selectedPack?.label === pack.label;
+                                return (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => setSelectedPack(pack)}
+                                        className={cn(
+                                            "flex h-9 min-w-[70px] items-center justify-center whitespace-nowrap rounded-lg px-4 text-xs sm:text-[13.5px] font-bold transition-all duration-200 active:scale-[0.96] outline-none cursor-pointer border shadow-xs",
+                                            isSelected
+                                                ? "bg-foreground text-background border-foreground shadow-sm ring-1 ring-foreground ring-offset-1"
+                                                : "bg-card text-foreground/80 border-border hover:border-foreground/50 hover:text-foreground hover:bg-muted/30"
+                                        )}
+                                    >
+                                        {pack.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {Array.isArray(product.tags) && product.tags.filter(tagId => tagId !== product.primaryTag).length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                         {product.tags.filter(tagId => tagId !== product.primaryTag).map(tagId => {
@@ -399,31 +425,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 )}
             </div>
 
-            {packOptions.length > 1 && (
-                <div className="space-y-2.5">
-                    <span className="text-xs sm:text-sm font-semibold text-foreground">Pack Options</span>
-                    <div className="flex flex-wrap gap-2">
-                        {packOptions.map((pack, idx) => {
-                            const isSelected = selectedPack?.label === pack.label;
-                            return (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => setSelectedPack(pack)}
-                                    className={cn(
-                                        "flex h-8 min-w-[62px] items-center justify-center whitespace-nowrap rounded-lg px-3 text-xs sm:text-[13px] font-semibold transition-all duration-200 active:scale-[0.96] outline-none cursor-pointer",
-                                        isSelected
-                                            ? "bg-foreground text-background border border-foreground shadow-sm"
-                                            : "border border-border bg-card text-foreground/75 hover:border-foreground/40 hover:text-foreground hover:bg-muted/50 font-medium"
-                                    )}
-                                >
-                                    {pack.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+
 
             <div className="space-y-4 pt-2">
                 {!isOutOfStock ? (
