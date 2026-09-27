@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import CategoryPillCard from '@/components/home/CategoryPillCard';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
@@ -91,14 +90,14 @@ function CarouselDots({ slideCount = 8 }) {
           type="button"
           aria-label={`Go to category ${idx + 1}`}
           onClick={() => handleGoTo(idx)}
-          className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
+          className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none rounded-full"
         >
           <span
             className={cn(
               'rounded-full transition-all duration-300 ease-out pointer-events-none block',
               idx === selectedIndex
-                ? 'w-4 h-1.5 bg-primary'
-                : 'size-1.5 bg-primary/25 hover:bg-primary/50'
+                ? 'w-6 h-1.5 bg-slate-900'
+                : 'size-1.5 bg-zinc-200 hover:bg-zinc-300'
             )}
           />
         </button>
@@ -112,8 +111,7 @@ export default function HomeCategoriesGrid({ title = 'Shop by Category', categor
   if (displayedCategories.length === 0) return null;
 
   return (
-    <section className="relative border-b border-border bg-card/70 py-6 md:py-8">
-      <SectionDoodleBackground categoryLabel={title} />
+    <section className="relative border-b border-border bg-zinc-50 py-6 md:py-8">
       <div className="relative z-10 mx-auto max-w-7xl px-4">
         <Carousel
           opts={{
