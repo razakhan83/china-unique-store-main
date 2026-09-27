@@ -6,6 +6,7 @@ import { Loader2, RadioTower, Save, ShieldCheck, Store, Trash2, UserPlus } from 
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -136,9 +137,9 @@ function AdminAccessSection() {
                       <ShieldCheck className="size-4 shrink-0 text-foreground" />
                       <span className="truncate text-sm font-medium text-foreground">{email}</span>
                     </div>
-                    <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                    <Badge variant="secondary" className="shrink-0 rounded-full px-2.5 py-1 text-xs">
                       Protected
-                    </span>
+                    </Badge>
                   </li>
                 ))}
               </ul>

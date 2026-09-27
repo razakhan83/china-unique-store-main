@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -1333,16 +1334,20 @@ export default function OrderDetailView({
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-foreground">Order Status</label>
-                <select
+                <Select
                   value={editFormData.status}
-                  onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-hidden focus:border-foreground"
+                  onValueChange={(value) => setEditFormData({ ...editFormData, status: value })}
                 >
-                  <option value="Draft">Draft</option>
-                  <option value="Order Confirmed">Order Confirmed</option>
-                  <option value="In Process">In Process</option>
-                  <option value="Packed">Packed</option>
-                </select>
+                  <SelectTrigger className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-foreground shadow-none">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Order Confirmed">Order Confirmed</SelectItem>
+                    <SelectItem value="In Process">In Process</SelectItem>
+                    <SelectItem value="Packed">Packed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="sm:col-span-2 space-y-1">
@@ -1380,14 +1385,18 @@ export default function OrderDetailView({
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-foreground">Order Origin / Type</label>
-                <select
+                <Select
                   value={editFormData.orderType}
-                  onChange={(e) => setEditFormData({ ...editFormData, orderType: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-hidden focus:border-foreground"
+                  onValueChange={(value) => setEditFormData({ ...editFormData, orderType: value })}
                 >
-                  <option value="Online">Online (Website)</option>
-                  <option value="Admin">Admin (Manual / Custom)</option>
-                </select>
+                  <SelectTrigger className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-foreground shadow-none">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Online">Online (Website)</SelectItem>
+                    <SelectItem value="Admin">Admin (Manual / Custom)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">
@@ -1758,17 +1767,21 @@ export default function OrderDetailView({
                   placeholder="e.g. 16216206417422 or TCS/Leopard CN"
                   className="flex-1 h-9 px-3 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
-                <select
+                <Select
                   value={manualCourierPartner}
-                  onChange={(e) => setManualCourierPartner(e.target.value)}
-                  className="h-9 px-2.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none"
+                  onValueChange={setManualCourierPartner}
                 >
-                  <option value="NOC Express">NOC Express</option>
-                  <option value="Leopard">Leopard</option>
-                  <option value="TCS">TCS</option>
-                  <option value="Trax">Trax</option>
-                  <option value="Call Courier">Call Courier</option>
-                </select>
+                  <SelectTrigger className="h-9 px-2.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none w-[130px] shadow-none">
+                    <SelectValue placeholder="Partner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NOC Express">NOC Express</SelectItem>
+                    <SelectItem value="Leopard">Leopard</SelectItem>
+                    <SelectItem value="TCS">TCS</SelectItem>
+                    <SelectItem value="Trax">Trax</SelectItem>
+                    <SelectItem value="Call Courier">Call Courier</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   type="submit"
                   size="sm"

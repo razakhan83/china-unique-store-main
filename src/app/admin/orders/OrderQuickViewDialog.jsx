@@ -7,6 +7,7 @@ import { Camera, Eye, MapPin, Package, Phone, User, ExternalLink, Check, Copy, T
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -202,12 +203,12 @@ export default function OrderQuickViewDialog({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className={cn('rounded-full border px-3 py-0.5 text-xs font-bold', statusClass)}>
+                <Badge variant="outline" className={cn('rounded-full px-3 py-0.5 text-xs font-bold', statusClass)}>
                   {statusLabel}
-                </span>
-                <span className="rounded-full border px-3 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
+                </Badge>
+                <Badge variant="secondary" className="rounded-full px-3 py-0.5 text-xs font-semibold">
                   {order?.paymentStatus || 'COD'}
-                </span>
+                </Badge>
               </div>
             </div>
 

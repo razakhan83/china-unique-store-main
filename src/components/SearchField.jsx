@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function SearchField({
   value,
@@ -107,14 +108,15 @@ export default function SearchField({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((category) => (
-                    <button
+                    <Button
                       key={category.id || category.slug || category.label}
                       type="button"
+                      variant="outline"
                       onClick={() => category.onSelect?.(category)}
-                      className="rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                      className="h-auto rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                     >
                       {category.label || category.name}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -129,14 +131,15 @@ export default function SearchField({
                 <ul className="divide-y divide-border/70 rounded-lg border border-border/50 overflow-hidden">
                   {trending.map((product, index) => (
                     <li key={`${product._id || product.id || "trend"}-${index}`}>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => product.onSelect?.(product)}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-muted"
+                        className="flex w-full h-auto items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-muted rounded-none font-normal"
                       >
                         <span className="truncate text-sm font-medium">{product.Name || product.name}</span>
                         <ArrowRight className="size-4 text-muted-foreground" />
-                      </button>
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -178,10 +181,11 @@ export default function SearchField({
 
                 return (
                 <li key={`${product._id || product.id || "result"}-${index}`}>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => product.onSelect?.(product)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-muted"
+                    className="flex w-full h-auto items-center gap-3 px-4 py-3 text-left transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-muted rounded-none font-normal"
                   >
                     <div className="relative size-12 overflow-hidden rounded-xl border border-border/80 bg-muted shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]">
                       {primaryImageSrc ? (
@@ -202,7 +206,7 @@ export default function SearchField({
                       </p>
                     </div>
                     <ArrowRight className="size-4 text-muted-foreground" />
-                  </button>
+                    </Button>
                 </li>
                 );
               })}

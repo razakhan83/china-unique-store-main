@@ -51,13 +51,15 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                     style={{ willChange: 'transform, opacity' }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <button
+                    <Button
+                        variant="secondary"
+                        size="icon"
                         onClick={onClose}
                         aria-label="Close dialog"
-                        className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-xl bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+                        className="absolute right-4 top-4 z-10 rounded-xl bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer shadow-none"
                     >
                         <X className="size-4.5" />
-                    </button>
+                    </Button>
 
                     <div className="flex flex-col md:flex-row">
                         <div className="relative aspect-square w-full overflow-hidden bg-muted group md:min-h-[300px] md:w-1/2 md:aspect-auto">
@@ -119,13 +121,14 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                                     rel="noopener noreferrer"
                                     className="flex-1"
                                 >
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="outline"
                                         className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/60 text-foreground font-semibold text-sm transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-none"
                                     >
                                         <WhatsAppIcon className="size-4.5 text-[#25D366] shrink-0" />
                                         <span>WhatsApp</span>
-                                    </button>
+                                    </Button>
                                 </a>
                             </div>
                         </div>

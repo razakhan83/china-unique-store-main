@@ -14,6 +14,7 @@ import ProductWishlistButton from '@/components/ProductWishlistButton';
 import { useFlashSaleActive } from '@/components/FlashSaleTimer';
 
 export default function ProductGallery({ images, primaryTag, product }) {
+  const flashLive = useFlashSaleActive(product?.discountType === 'time-based' ? product.discountEndsAt : null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mainApi, setMainApi] = useState();
   const [thumbsApi, setThumbsApi] = useState();
@@ -88,7 +89,6 @@ export default function ProductGallery({ images, primaryTag, product }) {
   };
 
   const mainTag = primaryTag ? getProductTagById(primaryTag) : null;
-  const flashLive = useFlashSaleActive(product?.discountType === 'time-based' ? product.discountEndsAt : null);
   const discountOn = product?.discountType === 'time-based'
     ? flashLive
     : Boolean(product?.isDiscounted && product?.discountPercentage > 0);
@@ -139,10 +139,13 @@ export default function ProductGallery({ images, primaryTag, product }) {
               return (
                 <CarouselItem key={index} className="h-full basis-full pl-0">
                   <div className="relative h-full min-h-0 w-full bg-white rounded-2xl overflow-hidden flex items-center justify-center">
-                    <img
+                    <Image
                       src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryMain)}
                       alt={`${productName} - View ${index + 1}`}
-                      className="w-full h-full object-contain transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
+                      priority={index === 0}
                     />
                   </div>
                 </CarouselItem>
@@ -186,10 +189,14 @@ export default function ProductGallery({ images, primaryTag, product }) {
             </DialogTrigger>
             <DialogContent className="max-w-[100vw] h-[100dvh] sm:max-w-4xl sm:h-[90vh] p-0 bg-black border-none shadow-none [&>button]:text-black [&>button]:bg-white/80 [&>button]:hover:bg-white [&>button]:size-10 [&>button]:top-4 [&>button]:right-4 z-[510]">
               <div className="relative size-full flex items-center justify-center rounded-none overflow-hidden bg-white">
-                <img
+                <Image
                   src={optimizeCloudinaryUrl(normalizedImages[selectedIndex]?.url || normalizedImages[selectedIndex], CLOUDINARY_IMAGE_PRESETS.productModal)}
                   alt="Full view"
-                  className="w-full h-full object-contain" draggable={false} />
+                  fill
+                  sizes="100vw"
+                  className="object-contain" 
+                  draggable={false} 
+                />
               </div>
             </DialogContent>
           </Dialog>
@@ -220,11 +227,12 @@ export default function ProductGallery({ images, primaryTag, product }) {
                   }`}
                 >
                   <div className="absolute inset-0 bg-white" />
-                  <img
+                  <Image
                     src={optimizeCloudinaryUrl(image.url, CLOUDINARY_IMAGE_PRESETS.productGalleryThumb)}
                     alt={`${product?.Name || product?.name || 'Product'} thumbnail ${index + 1}`}
-                    loading="lazy"
-                    className="relative w-full h-full object-contain"
+                    fill
+                    sizes="(max-width: 768px) 33vw, 20vw"
+                    className="object-contain"
                   />
                 </button>
               </CarouselItem>

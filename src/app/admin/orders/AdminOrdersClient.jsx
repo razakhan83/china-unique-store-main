@@ -3809,7 +3809,9 @@ export default function AdminOrdersClient({
                             >
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                 {primaryImage?.url ? (
-                                  <img src={primaryImage.url} alt={product.Name} className="size-9 rounded-md object-cover border shrink-0 bg-background" />
+                                  <div className="relative size-9 shrink-0">
+                                    <Image src={primaryImage.url} alt={product.Name} fill sizes="36px" className="rounded-md object-cover border bg-background" />
+                                  </div>
                                 ) : (
                                   <div className="size-9 rounded-md bg-muted flex items-center justify-center shrink-0 text-xs">📦</div>
                                 )}
@@ -3850,7 +3852,9 @@ export default function AdminOrdersClient({
                       <div key={idx} className="flex items-center justify-between gap-3 py-2.5">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           {item.image ? (
-                            <img src={item.image} alt={item.name || 'Product'} className="size-10 rounded-lg object-cover border shrink-0 bg-background" />
+                            <div className="relative size-10 shrink-0">
+                              <Image src={item.image} alt={item.name || 'Product'} fill sizes="40px" className="rounded-lg object-cover border bg-background" />
+                            </div>
                           ) : (
                             <div className="size-10 rounded-lg bg-muted flex items-center justify-center shrink-0 text-sm">📦</div>
                           )}

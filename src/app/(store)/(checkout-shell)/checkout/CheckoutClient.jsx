@@ -32,6 +32,7 @@ import AuthModal from '@/components/AuthModal';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import StoreLogo from '@/components/StoreLogo';
 import CheckoutPageSkeleton from '@/components/CheckoutPageSkeleton';
@@ -1477,9 +1478,9 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                     <div className={styles.paymentOptionLeft}>
                       <CreditCard className="size-4 text-muted-foreground shrink-0" aria-hidden />
                       <span className={styles.paymentOptionLabel}>Credit card</span>
-                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                      <Badge variant="secondary" className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/20">
                         Coming soon
-                      </span>
+                      </Badge>
                     </div>
                     <div className={styles.paymentCardLogos}>
                       <Image src="/VISA-logo.png" alt="Visa" width={36} height={24} className={styles.paymentCardLogo} style={{ width: 'auto' }} />
