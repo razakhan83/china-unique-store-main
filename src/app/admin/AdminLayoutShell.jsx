@@ -333,7 +333,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-3 bg-white px-2.5 py-2.5 text-foreground md:px-3 md:py-3 overflow-y-auto">
+    <div className="flex h-full flex-col gap-3 bg-white px-2.5 py-2.5 text-foreground md:px-3 md:py-3 overflow-y-auto" suppressHydrationWarning>
       <div className={cn('flex items-center gap-2 px-0.5 py-0.5', desktopSidebarCollapsed && 'justify-center')}>
         <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/45">
           <PanelsTopLeft className="size-3.5 text-foreground" />
@@ -475,8 +475,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   );
 
   return (
-    <div className="admin-theme min-h-screen">
-      <div className="admin-shell-grid">
+    <div className="admin-theme min-h-screen" suppressHydrationWarning>
+      <div className="admin-shell-grid" suppressHydrationWarning>
         <aside
           className="admin-shell-sidebar hidden shrink-0 md:block"
           data-collapsed={desktopSidebarCollapsed ? 'true' : 'false'}
