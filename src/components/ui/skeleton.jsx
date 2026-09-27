@@ -24,22 +24,17 @@ function useSkeletonContext() {
 function Skeleton({ className, animate, variant, ...props }) {
   const context = useContext(SkeletonContext);
   const isAnimated = animate !== undefined ? animate : (context?.animate ?? true);
-  const resolvedVariant = variant || context?.variant || "shimmer";
 
   return (
     <div
       aria-hidden="true"
       className={cn(
-        "relative overflow-hidden rounded-md bg-muted",
-        resolvedVariant === "pulse" && isAnimated && "animate-pulse",
+        "relative overflow-hidden rounded-md bg-muted/50",
+        isAnimated && "animate-pulse duration-1000",
         className
       )}
       {...props}
-    >
-      {isAnimated && resolvedVariant === "shimmer" && (
-        <div className="pointer-events-none absolute inset-y-0 w-1/2 animate-[shimmer-slide_1.4s_linear_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent will-change-transform" />
-      )}
-    </div>
+    />
   );
 }
 

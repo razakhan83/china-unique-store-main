@@ -98,12 +98,10 @@ export default function ProductGallery({ images, primaryTag, product }) {
       <div className="surface-card relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor: '#ffffff' }}>
         
         {discountLabel ? (
-          <div className="absolute left-3 top-3 z-20 pointer-events-auto flex flex-col items-center justify-center w-10 h-10 md:w-16 md:h-16 text-white drop-shadow-md">
-            <BadgeIcon className="absolute inset-0 size-full text-red-600 fill-current" strokeWidth={0} />
-            <div className="relative flex flex-col items-center justify-center leading-none z-10 mt-[1px]">
-              <span className="text-[11px] md:text-lg font-bold mt-[1px] tabular-nums">{product.discountPercentage}%</span>
-              <span className="text-[7.5px] md:text-xs font-extrabold mt-[0.5px]">OFF</span>
-            </div>
+          <div className="absolute left-3 top-3 z-20 pointer-events-auto">
+            <Badge className="pointer-events-auto rounded bg-destructive text-destructive-foreground px-2.5 py-1 text-[11px] sm:text-xs font-bold tracking-wide shadow-sm border-none">
+              {product.discountPercentage}% OFF
+            </Badge>
           </div>
         ) : (
           mainTag && (
