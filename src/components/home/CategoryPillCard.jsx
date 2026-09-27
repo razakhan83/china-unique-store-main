@@ -70,7 +70,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
       {/* Main Container - Compact Solid Rounded Box */}
       <div
         className={cn(
-          'relative flex items-center justify-center w-[64%] md:w-[78%] lg:w-[84%] aspect-square mx-auto rounded-xl md:rounded-2xl overflow-visible',
+          'relative flex items-center justify-center w-[64%] md:w-[70%] lg:w-[72%] aspect-square mx-auto rounded-[1rem] md:rounded-[1.15rem] overflow-visible',
           'border-0 shadow-none transition-transform duration-300 ease-out group-hover:scale-[1.04]'
         )}
         style={{
@@ -125,7 +125,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
       </div>
 
       {/* Category Name Label */}
-      <span className="mt-2 mb-1 line-clamp-2 text-[13px] md:text-base lg:text-lg font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
+      <span className="mt-2.5 mb-1 line-clamp-2 text-[12.5px] md:text-[13.5px] lg:text-[14px] font-semibold leading-[1.15] tracking-tight text-foreground transition-colors group-hover:text-primary">
         {category.name || category.label}
       </span>
     </Link>
