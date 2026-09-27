@@ -105,8 +105,8 @@ export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
           {parts.map((part, index) => (
             <div key={`${index}-${part.lbl}`} className="flex items-center gap-1.5">
               {index > 0 ? <span className="text-muted-foreground/40 font-bold mb-[2px]">:</span> : null}
-              <span className="inline-flex h-[26px] min-w-[26px] items-baseline justify-center gap-0.5 rounded md:rounded-md bg-destructive/10 px-1.5 py-0.5 text-[13px] font-bold tabular-nums text-destructive shadow-none border border-destructive/20">
-                {part.val}<span className="text-[9px] font-bold uppercase text-destructive/70">{part.lbl}</span>
+              <span className="inline-flex h-[26px] min-w-[26px] items-baseline justify-center gap-0.5 rounded md:rounded-md bg-muted px-1.5 py-0.5 text-[13px] font-bold tabular-nums text-foreground shadow-none border border-border">
+                {part.val}<span className="text-[9px] font-bold uppercase text-muted-foreground">{part.lbl}</span>
               </span>
             </div>
           ))}
@@ -118,10 +118,10 @@ export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
   if (variant === 'overlay') {
     return (
       <span
-        className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-semibold leading-none tabular-nums text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06),0_6px_16px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-md"
+        className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-background/95 px-2.5 py-1 text-[11px] font-semibold leading-none tabular-nums text-foreground shadow-sm ring-1 ring-border/50 backdrop-blur-md"
         aria-label={spoken}
       >
-        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-red-600">Ends</span>
+        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Ends</span>
         <span>{timeLabel(remaining)}</span>
       </span>
     );
