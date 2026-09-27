@@ -147,6 +147,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
+      <head suppressHydrationWarning />
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <script
           type="application/ld+json"
