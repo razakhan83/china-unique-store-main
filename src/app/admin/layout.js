@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }) {
   const sessionUser = session?.user?.isAdmin ? session.user : null;
 
   return (
-    <div className={geistMono.variable}>
+    <div className={geistMono.variable} suppressHydrationWarning>
       <AdminLayoutShell sessionUser={sessionUser}>{children}</AdminLayoutShell>
     </div>
   );

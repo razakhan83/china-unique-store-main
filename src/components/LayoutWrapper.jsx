@@ -39,7 +39,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col bg-background" suppressHydrationWarning>
         <Suspense fallback={null}>
           <ProductPageScrollReset />
         </Suspense>
