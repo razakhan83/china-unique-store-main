@@ -36,7 +36,7 @@ export default function EditProductClient({ id }) {
   const handleSubmit = async (payload) => {
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await fetch(`/api/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

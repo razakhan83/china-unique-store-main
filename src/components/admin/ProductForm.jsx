@@ -113,14 +113,15 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
       setOgPreviewFit(loadedFit);
       setPrice(initialData.Price ? initialData.Price.toString() : '');
       setCompareAtPrice(initialData.compareAtPrice ? initialData.compareAtPrice.toString() : '');
-      setDiscountPercentage(initialData.discountPercentage || '');
+      setDiscountPercentage(initialData.discountPercentage != null ? initialData.discountPercentage : '');
       setDiscountType(initialData.discountType || 'no-time');
       setDiscountEndsAt(initialData.discountEndsAt ? new Date(initialData.discountEndsAt).toISOString().slice(0, 16) : '');
       setPackOptions(initialData.packOptions || [{ label: "1 pcs", price: "" }]);
       setEnablePackOptions(initialData.enablePackOptions || false);
       
-      const catIds = Array.isArray(initialData.Categories) 
-        ? initialData.Categories.map(c => typeof c === 'object' ? c._id : c) 
+      const sourceCategories = initialData.Category || initialData.Categories;
+      const catIds = Array.isArray(sourceCategories)
+        ? sourceCategories.map(c => typeof c === 'object' ? String(c._id) : String(c))
         : [];
       setCategories(catIds);
 
@@ -197,8 +198,10 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
   }, []);
 
   useEffect(() => {
-    resetForm();
-  }, [resetForm]);
+    if (!initialData) {
+      resetForm();
+    }
+  }, [resetForm, initialData]);
 
   useEffect(() => {
     const fetchDependencies = async () => {
@@ -367,85 +370,85 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
     .filter(Boolean);
   const seoCategoryLabel = selectedCategoryNames.join(", ");
 
+  const localSubmitLockRef = useRef(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (saving) return;
+    if (saving || localSubmitLockRef.current) return;
 
     if (!Name.trim() || !Price || Categories.length === 0 || images.length === 0) {
       toast.error("Name, Price, Category and at least one Image are required.");
       return;
     }
 
-    
-    const finalImages = [];
+    localSubmitLockRef.current = true;
 
+    const finalImages = [];
     try {
       for (const img of images) {
-        const uploaded = await uploadImageDataUrl(
-          img.url,
-          "china_unique_items_products"
-        );
-        finalImages.push(uploaded);
+        if (img.publicId || (img.url && !img.url.startsWith('data:'))) {
+          finalImages.push(img);
+        } else {
+          const uploaded = await uploadImageDataUrl(
+            img.url,
+            "china_unique_items_products"
+          );
+          finalImages.push(uploaded);
+        }
       }
     } catch (err) {
       console.error("Image upload error:", err);
       toast.error(err?.message ? `Image upload failed: ${err.message}` : "Image upload failed");
-      
+      localSubmitLockRef.current = false;
       return;
     }
 
     try {
       const sanitizedDescription = sanitizeRichTextHtml(Description);
-      const res = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          Name: Name.trim(),
-          Description: sanitizedDescription,
-          bulletPoints: bulletPoints.filter(bp => bp.trim() !== ""),
-          specifications: specifications.filter(spec => spec.name.trim() !== "" || spec.value.trim() !== ""),
-          seoTitle,
-          seoDescription,
-          seoKeywords,
-          seoCanonicalUrl,
-          seoOgTitle,
-          seoOgDescription,
-          seoOgImage: seoOgImage.startsWith('data:') ? '' : seoOgImage,
-          seoOgImageRatio,
-          seoOgImageFit: ogPreviewFit,
-          Price: Number(Price),
-          compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
-          discountPercentage: Number(discountPercentage) || 0,
-          discountType: Number(discountPercentage) > 0 ? discountType : "none",
-          discountEndsAt: discountType === "time-based" && discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
-          stockQuantity: Math.max(0, Number(stockQuantity) || 0),
-          StockStatus: stockStatus,
-          Images: finalImages,
-          Category: Categories,
-          vendors: vendorAssignments,
-          packOptions: enablePackOptions ? packOptions.filter(p => p.label && p.price) : [],
-          showOnStore,
-          isNewArrival,
-          isBestSelling,
-          isFeatured,
-          isFreeDelivery,
-          featuredPriority: Number(featuredPriority) || 0,
-          tags,
-          primaryTag,
-        }),
-      });
-      const data = await res.json();
+      const payload = {
+        Name: Name.trim(),
+        Description: sanitizedDescription,
+        bulletPoints: bulletPoints.filter(bp => bp.trim() !== ""),
+        specifications: specifications.filter(spec => spec.name.trim() !== "" || spec.value.trim() !== ""),
+        seoTitle,
+        seoDescription,
+        seoKeywords,
+        seoCanonicalUrl,
+        seoOgTitle,
+        seoOgDescription,
+        seoOgImage: seoOgImage.startsWith('data:') ? '' : seoOgImage,
+        seoOgImageRatio,
+        seoOgImageFit: ogPreviewFit,
+        Price: Number(Price),
+        compareAtPrice: compareAtPrice === "" ? null : Number(compareAtPrice),
+        discountPercentage: Number(discountPercentage) || 0,
+        discountType: Number(discountPercentage) > 0 ? discountType : "none",
+        discountEndsAt: discountType === "time-based" && discountEndsAt ? new Date(discountEndsAt).toISOString() : null,
+        stockQuantity: Math.max(0, Number(stockQuantity) || 0),
+        StockStatus: stockStatus,
+        Images: finalImages,
+        Category: Categories,
+        vendors: vendorAssignments,
+        packOptions: enablePackOptions ? packOptions.filter(p => p.label && p.price) : [],
+        showOnStore,
+        isNewArrival,
+        isBestSelling,
+        isFeatured,
+        isFreeDelivery,
+        featuredPriority: Number(featuredPriority) || 0,
+        tags,
+        primaryTag,
+      };
 
-      if (res.ok && data.success) {
-        toast.success("Product added successfully!");
-        setTimeout(() => router.back(), 1500);
+      if (onSubmit) {
+        await onSubmit(payload);
       } else {
-        toast.error(data.message || data.error || "Failed to create product");
+        console.error('onSubmit prop is missing!');
       }
-    } catch {
-      toast.error("Network error while saving.");
+    } catch (error) {
+      toast.error("Error preparing product data.");
     } finally {
-      
+      localSubmitLockRef.current = false;
     }
   };
 
