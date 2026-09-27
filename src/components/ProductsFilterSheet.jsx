@@ -87,7 +87,7 @@ export default function ProductsFilterSheet({ activeCategory = 'all', currentSor
         ) : null}
       </SheetTrigger>
 
-      <SheetContent side="bottom" className="rounded-t-2xl px-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-0 md:side-right md:rounded-l-2xl md:rounded-t-none">
+      <SheetContent overlayClassName="!z-[400]" side="bottom" className="!z-[400] rounded-t-2xl px-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-0 md:side-right md:rounded-l-2xl md:rounded-t-none">
         <SheetHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-3.5 pr-14">
           <SheetTitle className="text-base font-bold flex items-center gap-2">
             Filter Products
