@@ -34,8 +34,8 @@ export default function EditProductClient({ id }) {
   }, [id, router]);
 
   const handleSubmit = async (payload) => {
+    setSaving(true);
     try {
-      setSaving(true);
       const res = await fetch(`/api/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -51,6 +51,7 @@ export default function EditProductClient({ id }) {
       router.push("/admin/products");
     } catch (err) {
       toast.error(err.message || "Something went wrong.");
+    } finally {
       setSaving(false);
     }
   };

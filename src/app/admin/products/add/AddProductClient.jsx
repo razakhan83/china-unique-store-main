@@ -9,8 +9,8 @@ export default function AddProductClient() {
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (payload) => {
+    setSaving(true);
     try {
-      setSaving(true);
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,6 +26,7 @@ export default function AddProductClient() {
       router.push("/admin/products");
     } catch (err) {
       toast.error(err.message || "Something went wrong.");
+    } finally {
       setSaving(false);
     }
   };
