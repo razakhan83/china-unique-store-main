@@ -1,6 +1,6 @@
+'use client';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
 import { OrderTable } from '@/components/admin/orders/OrderTable';
-'use client';
 
 import Image from 'next/image';
 import { useEffect, useMemo, useState, useTransition, useCallback, useRef } from 'react';
@@ -12,7 +12,6 @@ import { AlertTriangle, Calendar, Eye, Receipt, RotateCcw, Search, Trash2, X, Do
 import AppPagination from '@/components/AppPagination';
 import { useOrderManagement } from '@/hooks/useOrderManagement';
 import { Badge } from '@/components/ui/badge';
-import { useOrderManagement } from '@/hooks/useOrderManagement';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
