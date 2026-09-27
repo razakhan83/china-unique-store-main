@@ -265,9 +265,11 @@ export default function ProductCard({ product, className = "", imageBg, isPrevie
                         >
                           {formatPrice(compareAtPrice)}
                         </p>
-                        <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
-                          Save {formatPrice(compareAtPrice - sellingPrice)}
-                        </Badge>
+                        {Boolean(product.isDiscounted && product.discountPercentage > 0) && (
+                          <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
+                            Save {formatPrice(compareAtPrice - sellingPrice)}
+                          </Badge>
+                        )}
                       </div>
                     ) : null}
                   </div>

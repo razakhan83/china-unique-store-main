@@ -365,7 +365,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             <span className="text-[15px] font-medium text-muted-foreground line-through">
                                 {formatPrice(displayComparePrice)}
                             </span>
-                            <Badge className="rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive tracking-tight border-none shadow-none hover:bg-destructive/15 transition-colors">
+                            <Badge className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 tracking-tight border-none shadow-none hover:bg-emerald-500/15 transition-colors">
                                 Save {formatPrice(displayComparePrice - displayPrice)}
                             </Badge>
                         </div>
