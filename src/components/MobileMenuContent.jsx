@@ -72,7 +72,6 @@ export default function MobileMenuContent({
           <SidebarMenu className="gap-1.5">
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === '/'}
                 className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/'
                     ? 'text-primary font-bold'
@@ -87,7 +86,6 @@ export default function MobileMenuContent({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === '/products'}
                 className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/products'
                     ? 'text-primary font-bold'
@@ -134,7 +132,6 @@ export default function MobileMenuContent({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === '/contact'}
                 className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                   pathname === '/contact'
                     ? 'text-primary font-bold'
@@ -158,7 +155,6 @@ export default function MobileMenuContent({
             {categories.map((category) => (
               <SidebarMenuItem key={category.id}>
                 <SidebarMenuButton
-                  isActive={activeCategory === category.id}
                   onClick={() => handleCategoryClick(category.id)}
                   className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
                     activeCategory === category.id
