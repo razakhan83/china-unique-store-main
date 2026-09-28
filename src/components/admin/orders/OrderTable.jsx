@@ -98,6 +98,8 @@ export function OrderTable(props) {
     return 'border-slate-200 bg-slate-100 text-slate-800';
   }
 
+  const getOrderDisplayStatus = (order) => (order?.isDraft ? 'Draft' : normalizeOrderStatus(order?.status));
+
   return (
     <>
       {/* ── Desktop Table ── */}
