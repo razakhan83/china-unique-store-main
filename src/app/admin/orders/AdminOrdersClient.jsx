@@ -551,6 +551,8 @@ export default function AdminOrdersClient({
                 nocRemarks: found.nocRemarks,
                 nocLastTrackedAt: found.nocLastTrackedAt,
                 nocTrackingEvents: found.nocTrackingEvents || o.nocTrackingEvents,
+                status: found.status || o.status,
+                paymentStatus: found.paymentStatus || o.paymentStatus,
               };
             }
             return o;

@@ -315,6 +315,8 @@ export async function POST(request) {
               nocRemarks: remarks,
               nocLastTrackedAt: now,
               nocTrackingEvents: order.nocTrackingEvents || [],
+              status: order.status,
+              paymentStatus: order.paymentStatus,
             };
           } else if (portalInfo?.status && !portalInfo.status.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
             // Dashboard row fallback when GetParcelTracking returned no detail array
@@ -399,6 +401,8 @@ export async function POST(request) {
               effectiveTrackingNumber,
               nocLastTrackedAt: now,
               nocTrackingEvents: order.nocTrackingEvents || [],
+              status: order.status,
+              paymentStatus: order.paymentStatus,
             };
           }
 
@@ -414,6 +418,8 @@ export async function POST(request) {
             nocParcelNo: order.nocParcelNo || trackingNumber,
             nocThirdPartyNo: order.nocThirdPartyNo || '',
             nocLastTrackedAt: now,
+            status: order.status,
+            paymentStatus: order.paymentStatus,
           };
         } catch (itemErr) {
           console.error(`[Sync Status] Tracking failed for ${order.orderId}:`, itemErr);
