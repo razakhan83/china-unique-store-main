@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Calendar, Search, X, PackageCheck, Printer, Download, Truck, RotateCcw, Trash2, Zap, Upload, AlertTriangle, UserCog, Globe, Check, Edit, FileText, Send, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 // Pure utility constants & functions (co-located to avoid prop-drilling)
 const statusVariant = {
