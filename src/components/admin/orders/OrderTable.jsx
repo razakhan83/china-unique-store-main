@@ -12,7 +12,37 @@ import { Calendar, Search, X, PackageCheck, Printer, Download, Truck, RotateCcw,
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Pure utility functions (co-located here to avoid prop-drilling)
+// Pure utility constants & functions (co-located to avoid prop-drilling)
+const statusVariant = {
+  'Order Confirmed': 'primary',
+  'In Process': 'secondary',
+  Packed: 'secondary',
+  Shipped: 'secondary',
+  'Out For Delivery': 'secondary',
+  Delivered: 'secondary',
+  Returned: 'outline',
+};
+
+const CITY_COLOR_PALETTE = [
+  'bg-sky-100 text-sky-800 border-sky-200',
+  'bg-violet-100 text-violet-800 border-violet-200',
+  'bg-amber-100 text-amber-800 border-amber-200',
+  'bg-emerald-100 text-emerald-800 border-emerald-200',
+  'bg-rose-100 text-rose-800 border-rose-200',
+  'bg-orange-100 text-orange-800 border-orange-200',
+  'bg-teal-100 text-teal-800 border-teal-200',
+  'bg-pink-100 text-pink-800 border-pink-200',
+];
+
+function getCityColorClass(city) {
+  if (!city) return 'bg-slate-100 text-slate-600 border-slate-200';
+  let hash = 0;
+  for (let i = 0; i < city.length; i++) {
+    hash = city.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return CITY_COLOR_PALETTE[Math.abs(hash) % CITY_COLOR_PALETTE.length];
+}
+
 const getCodAmount = (order) => {
   if (order?.manualCodAmount != null && order.manualCodAmount !== '') {
     return Number(order.manualCodAmount);
@@ -21,6 +51,20 @@ const getCodAmount = (order) => {
 };
 
 const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString('en-PK')}`;
+
+function getEffectiveNocStatusTime(order) {
+  if (!order) return null;
+  const currentStatus = (order.nocStatus || '').trim().toUpperCase();
+  if (currentStatus && Array.isArray(order.nocTrackingEvents) && order.nocTrackingEvents.length > 0) {
+    const matchingEvent = order.nocTrackingEvents.find(
+      (e) => (e.status || '').trim().toUpperCase() === currentStatus
+    );
+    if (matchingEvent && (matchingEvent.dateTime || matchingEvent.timestamp)) {
+      return matchingEvent.dateTime || matchingEvent.timestamp;
+    }
+  }
+  return order.nocStatusTime || order.courierBookingDate || null;
+}
 
 export function OrderTable(props) {
   const {
@@ -43,6 +87,15 @@ export function OrderTable(props) {
     getNocStatusBadgeClass, handleQuickUpdate, setEditingOrder, setIsEditModalOpen, setQuickActionOrder,
     setQuickStatus, setQuickTracking, setIsQuickUpdating, handleConfirmBulkDelete, OrderQuickViewDialog, OrdersMobilePendingSkeleton, handleOpenEditModal, handleDeleteOrder, setNocTrackingOrder, normalizeOrderStatus, initialSearchQuery
   } = p;
+
+  function getStatusBadgeClass(status) {
+    const normalizedStatus = normalizeOrderStatus(status).toLowerCase();
+    if (normalizedStatus === 'order confirmed') return 'border-sky-200 bg-sky-100 text-sky-800';
+    if (normalizedStatus === 'delivered') return 'border-emerald-200 bg-emerald-100 text-emerald-800';
+    if (normalizedStatus.includes('issue') || normalizedStatus.includes('return')) return 'border-red-200 bg-red-100 text-red-800';
+    if (['in process', 'packed', 'shipped', 'out for delivery'].includes(normalizedStatus)) return 'border-amber-200 bg-amber-100 text-amber-800';
+    return 'border-slate-200 bg-slate-100 text-slate-800';
+  }
 
   return (
     <>
