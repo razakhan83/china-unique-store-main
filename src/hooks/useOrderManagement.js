@@ -129,7 +129,7 @@ export function useOrderManagement({
       const records = getSelectedOrdersData();
 
       if (records.length === 0) {
-        toast.error(\`Select at least one \${isDraftContext ? 'draft ' : ''}order to \${actionName.toLowerCase()}.\`);
+        toast.error(`Select at least one ${isDraftContext ? 'draft ' : ''}order to ${actionName.toLowerCase()}.`);
         return null;
       }
 
@@ -139,7 +139,7 @@ export function useOrderManagement({
         );
         if (invalidOrders.length > 0) {
           toast.error(
-            \`All selected orders must be in "\${requiredStatus}" status to \${actionName.toLowerCase()}.\nFound \${invalidOrders.length} order(s) with a different status.\`
+            `All selected orders must be in "${requiredStatus}" status to ${actionName.toLowerCase()}.\nFound ${invalidOrders.length} order(s) with a different status.`
           );
           return null;
         }

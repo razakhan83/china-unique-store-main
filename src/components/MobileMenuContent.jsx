@@ -71,41 +71,44 @@ export default function MobileMenuContent({
         >
           <SidebarMenu className="gap-1.5">
             <SidebarMenuItem>
-              <SidebarMenuButton
-                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
+              <Link
+                href="/"
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex w-full items-center gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] ${
                   pathname === '/'
                     ? 'text-primary font-bold'
                     : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
-                render={<Link href="/" onClick={() => setIsSidebarOpen(false)} />}
               >
                 <Store className="size-4 shrink-0" />
                 <span className="text-[13px] sm:text-sm tracking-tight">Home</span>
-              </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <SidebarMenuButton
-                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
+              <Link
+                href="/products"
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex w-full items-center gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] ${
                   pathname === '/products'
                     ? 'text-primary font-bold'
                     : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
-                render={<Link href="/products" onClick={() => setIsSidebarOpen(false)} />}
               >
                 <LayoutGrid className="size-4 shrink-0" />
                 <span className="text-[13px] sm:text-sm tracking-tight">All Products</span>
-              </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <SidebarMenuButton
-                className="gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] hover:text-primary font-medium text-muted-foreground"
-                render={<Link href="/products?price=under300" onClick={() => setIsSidebarOpen(false)} />}
+              <Link
+                href="/products?price=under300"
+                onClick={() => setIsSidebarOpen(false)}
+                className="flex w-full items-center gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] hover:text-primary font-medium text-muted-foreground"
               >
                 <Tag className="size-4 shrink-0" />
                 <span className="text-[13px] sm:text-sm tracking-tight">Dollar Store</span>
-              </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
 
             <SidebarMenuItem className="flex items-center">
@@ -131,17 +134,18 @@ export default function MobileMenuContent({
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <SidebarMenuButton
-                className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
+              <Link
+                href="/contact"
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex w-full items-center gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] ${
                   pathname === '/contact'
                     ? 'text-primary font-bold'
                     : 'hover:text-primary font-medium text-muted-foreground'
                 }`}
-                render={<Link href="/contact" onClick={() => setIsSidebarOpen(false)} />}
               >
                 <Phone className="size-4 shrink-0" />
                 <span className="text-[13px] sm:text-sm tracking-tight">Contact Us</span>
-              </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </TabsContent>
@@ -154,9 +158,9 @@ export default function MobileMenuContent({
           <SidebarMenu className="gap-1.5">
             {categories.map((category) => (
               <SidebarMenuItem key={category.id}>
-                <SidebarMenuButton
+                <button
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] text-foreground ${
+                  className={`flex w-full items-center gap-3.5 rounded-none border-b border-border/50 px-2 py-3.5 h-auto transition-all duration-200 active:scale-[0.98] ${
                     activeCategory === category.id
                       ? 'text-primary font-bold'
                       : 'hover:text-primary font-medium text-muted-foreground'
@@ -164,7 +168,7 @@ export default function MobileMenuContent({
                 >
                   <Tag className="size-4 shrink-0 text-muted-foreground" />
                   <span className="text-[13px] sm:text-sm tracking-tight">{category.label}</span>
-                </SidebarMenuButton>
+                </button>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>

@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import mongoose from 'mongoose';
@@ -18,15 +18,23 @@ function triggerProductRevalidations(product, previousSlug = null) {
     revalidateTag('products');
     if (previousSlug) {
         revalidateTag(`product-${previousSlug}`);
+        revalidatePath(`/products/${previousSlug}`);
     }
     if (product?.slug) {
         revalidateTag(`product-${product.slug}`);
+        revalidatePath(`/products/${product.slug}`);
     }
     if (product?._id) {
         revalidateTag(`product-${product._id.toString()}`);
+        revalidatePath(`/products/${product._id.toString()}`);
     }
     revalidateTag('admin-dashboard');
     revalidateTag('home-sections');
+    
+    // Also revalidate generic paths just in case
+    revalidatePath('/admin/products');
+    revalidatePath('/products');
+    revalidatePath('/');
 }
 
 export function resolveProductQuery(id) {

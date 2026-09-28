@@ -161,8 +161,10 @@ export async function POST(request) {
             if (portalInfo?.status && !portalInfo.status.match(/\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
               const portalUpper = portalInfo.status.toUpperCase();
               const rawUpper = (rawStatus || '').toUpperCase();
+              const isPortalFinal = portalUpper.includes('DELIVER') || portalUpper.includes('RETURN') || portalUpper.includes('REJECT') || portalUpper.includes('REFUS');
+              const isRawFinal = rawUpper.includes('DELIVER') && !rawUpper.includes('OUT FOR');
               if (
-                (!rawStatus || rawUpper.includes('BOOK') || rawUpper.includes('RECEIVED AT OFFICE')) &&
+                (!rawStatus || rawUpper.includes('BOOK') || rawUpper.includes('RECEIVED AT OFFICE') || (isPortalFinal && !isRawFinal)) &&
                 (portalUpper.includes('TRANSIT') || portalUpper.includes('OUT FOR') || portalUpper.includes('DELIVER') || portalUpper.includes('RETURN') || portalUpper.includes('RUNSHEET') || portalUpper.includes('DISPATCH'))
               ) {
                 rawStatus = portalInfo.status;
