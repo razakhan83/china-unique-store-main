@@ -67,11 +67,11 @@ export const metadata = {
     locale: 'en_PK',
     images: [
       {
-        url: 'https://www.chinauniquestore.com/opengraph-image.png',
-        secureUrl: 'https://www.chinauniquestore.com/opengraph-image.png',
+        url: 'https://www.chinauniquestore.com/og%20image%20new%20.jpg',
+        secureUrl: 'https://www.chinauniquestore.com/og%20image%20new%20.jpg',
         width: 1200,
         height: 630,
-        type: 'image/png',
+        type: 'image/jpeg',
         alt: socialPreviewAlt,
       },
     ],
@@ -82,7 +82,7 @@ export const metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: 'https://www.chinauniquestore.com/opengraph-image.png',
+        url: 'https://www.chinauniquestore.com/og%20image%20new%20.jpg',
         width: 1200,
         height: 630,
         alt: socialPreviewAlt,

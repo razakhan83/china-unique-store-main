@@ -1,9 +1,9 @@
 export const SITE_NAME = 'China Unique Store';
 
-export const SITE_TITLE_DEFAULT = 'China Unique Store';
+export const SITE_TITLE_DEFAULT = 'China Unique Store | Trending Products & Smart Gadgets';
 
 export const SITE_DESCRIPTION =
-  'Shop premium kitchenware, home decor, gadgets, and lifestyle essentials in Pakistan. Fast nationwide delivery with Cash on Delivery.';
+  'Shop the coolest unique products and trending items in Pakistan.';
 
 const TITLE_SUFFIX_PATTERN = /\s*[|–—-]\s*China Unique(?: Store)?\s*$/i;
 
