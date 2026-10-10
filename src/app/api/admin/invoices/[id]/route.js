@@ -4,7 +4,7 @@ import { getInvoiceByIdAction, updateInvoiceAction, deleteInvoiceAction } from '
 
 export async function GET(request, { params }) {
   try {
-    const auth = await requireApiAdmin();
+    const auth = await requireApiAdmin({ requireRealAdmin: true });
     if (auth.error) return auth.error;
 
     const { id } = await params;

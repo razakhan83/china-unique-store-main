@@ -18,6 +18,7 @@ import { getProductTagById } from '@/lib/productTags';
 import { flyToCart } from '@/lib/flyToCart';
 import FlashSaleTimer, { useFlashSaleActive } from '@/components/FlashSaleTimer';
 import { useActionLock } from '@/hooks/useActionLock';
+import { formatPrice } from '@/lib/pricing';
 
 export function ProductSocialActions({ product, className = '' }) {
     const handleShare = async () => {
@@ -314,7 +315,6 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         }
     };
 
-    const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
     const flashLive = useFlashSaleActive(product.discountType === 'time-based' ? product.discountEndsAt : null);
     const discountOn = product.discountType === 'time-based'
         ? flashLive

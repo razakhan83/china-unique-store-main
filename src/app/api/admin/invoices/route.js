@@ -4,7 +4,7 @@ import { getInvoicesAction, createInvoiceAction } from '@/app/actions/invoice.ac
 
 export async function GET(request) {
   try {
-    const auth = await requireApiAdmin();
+    const auth = await requireApiAdmin({ requireRealAdmin: true });
     if (auth.error) return auth.error;
 
     const { searchParams } = new URL(request.url);

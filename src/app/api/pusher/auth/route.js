@@ -33,7 +33,18 @@ export async function POST(request) {
     const presenceUserId = 'usr_' + crypto.randomBytes(8).toString('hex');
 
     const url = new URL(request.url);
-    const role = url.searchParams.get('role') || 'visitor';
+    const requestedRole = url.searchParams.get('role') || 'visitor';
+
+    let role = requestedRole;
+    if (role === 'admin') {
+      const { getServerSession } = await import('next-auth');
+      const { authOptions } = await import('@/lib/auth');
+      const session = await getServerSession(authOptions);
+      if (!session || !session.user?.isAdmin || session.user?.isDemo) {
+        return NextResponse.json({ error: 'Unauthorized admin channel access' }, { status: 401 });
+      }
+    }
+
     const lat = parseFloat(url.searchParams.get('lat') || '');
     const lng = parseFloat(url.searchParams.get('lng') || '');
     const city = url.searchParams.get('city') || 'Global Visitor';

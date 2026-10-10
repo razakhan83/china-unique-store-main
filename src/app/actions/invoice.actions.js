@@ -14,13 +14,13 @@ import Product from '@/models/Product';
 import ManualCustomer from '@/models/ManualCustomer';
 import { normalizePhone } from '@/lib/admin';
 
-async function assertAdmin(isMutation = true) {
+async function assertAdmin(isMutation = true, requireRealAdmin = false) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.isAdmin) {
     throw new Error('Unauthorized access');
   }
-  if (isMutation && session.user?.isDemo) {
-    throw new Error('Demo Mode: Actions are disabled. You have read-only access.');
+  if ((isMutation || requireRealAdmin) && session.user?.isDemo) {
+    throw new Error('Demo Mode: Access to real customer data is restricted.');
   }
   return session;
 }
@@ -67,7 +67,7 @@ export async function getNextPaymentNumberAction() {
 }
 
 export async function getCustomerPreviousBalanceAction(phone) {
-  await assertAdmin(false);
+  await assertAdmin(false, true);
   if (!phone) return { previousBalance: 0, unpaidCount: 0 };
   await mongooseConnect();
 

@@ -46,13 +46,8 @@ import { getPrimaryProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { buildCartWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
+import { formatPrice, getSellingPrice } from '@/lib/pricing';
 
-const formatPrice = (raw) => {
-  const clean = String(raw).replace(/[^\d.]/g, '');
-  return clean ? Number(clean) : 0;
-};
-
-const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
 const EXIT_ANIMATION_MS = 180;
 
 const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
@@ -60,7 +55,8 @@ const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
   const primaryImageSrc = primaryImage?.url
     ? optimizeCloudinaryUrl(primaryImage.url, CLOUDINARY_IMAGE_PRESETS.cartItem)
     : '';
-  const itemTotal = formatPrice(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price) * item.quantity;
+  const itemPrice = getSellingPrice(item);
+  const itemTotal = itemPrice * item.quantity;
 
   return (
     <div className="min-h-0">
@@ -91,7 +87,7 @@ const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
                     {item.Name || item.name}
                   </CardTitle>
                   <p className="mt-0.5 text-[0.88rem] font-medium leading-none text-primary tabular-nums">
-                    {formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}
+                    {formatPrice(itemPrice)}
                   </p>
                 </div>
                 <div className="inline-flex h-8 sm:h-7 items-stretch gap-1 self-start">
@@ -159,8 +155,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
   const [animationParent] = useAutoAnimate();
 
   const subtotal = cart.reduce((total, item) => {
-    const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
-    return total + itemPrice * item.quantity;
+    return total + getSellingPrice(item) * item.quantity;
   }, 0);
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -267,7 +262,7 @@ export default function CartDrawer({ whatsappNumber = '', storeName = 'China Uni
                 <CardHeader className="flex flex-row items-center justify-between gap-3 px-3.5 py-2.5 md:px-4 md:py-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Subtotal</CardTitle>
                   <p className="text-lg font-bold text-foreground tabular-nums">
-                    Rs.&nbsp;{subtotal.toLocaleString('en-PK')}
+                    {formatPrice(subtotal)}
                   </p>
                 </CardHeader>
               </Card>

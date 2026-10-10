@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -33,10 +34,17 @@ export const authOptions = {
         if (
           credentials.email &&
           credentials.password &&
-          isAdminEmail(credentials.email) &&
-          credentials.password === process.env.ADMIN_PASSWORD
+          isAdminEmail(credentials.email)
         ) {
-          return { id: "1", name: "Raza Admin", email: normalizeEmail(credentials.email) };
+          const passwordHash = process.env.ADMIN_PASSWORD_HASH;
+          if (!passwordHash) {
+            console.error("ADMIN_PASSWORD_HASH environment variable is not configured. Authentication rejected.");
+            return null;
+          }
+          const isValid = await bcrypt.compare(credentials.password, passwordHash);
+          if (isValid) {
+            return { id: "1", name: "Raza Admin", email: normalizeEmail(credentials.email) };
+          }
         }
         return null;
       }

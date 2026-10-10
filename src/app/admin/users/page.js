@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function AdminUsersPage({ searchParams }) {
-  await requireAdmin();
+  await requireAdmin({ requireRealAdmin: true });
 
   const params = await searchParams;
   const search = String(params?.search || '').trim();

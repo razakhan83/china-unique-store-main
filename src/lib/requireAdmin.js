@@ -9,14 +9,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 export const DEMO_MODE_MESSAGE = 'Demo Mode: Actions are disabled. You have read-only access.';
+export const DEMO_PII_RESTRICTED_MESSAGE = 'Demo Mode: Access to real customer data is restricted.';
 
 export const getAdminSession = cache(async () => getServerSession(authOptions));
 
-export async function requireAdmin() {
+export async function requireAdmin({ requireRealAdmin = false } = {}) {
   const session = await getAdminSession();
 
   if (!session || !session.user?.isAdmin) {
     redirect('/admin/login');
+  }
+
+  if (requireRealAdmin && session.user?.isDemo) {
+    redirect('/admin');
   }
 
   return session;
@@ -31,7 +36,7 @@ export async function requireMutationAccess() {
 }
 
 /** JSON 401/403 for Route Handlers — never redirect (redirects become 500 in API catch blocks). */
-export async function requireApiAdmin({ mutation = false } = {}) {
+export async function requireApiAdmin({ mutation = false, requireRealAdmin = false } = {}) {
   const session = await getAdminSession();
 
   if (!session || !session.user?.isAdmin) {
@@ -41,10 +46,16 @@ export async function requireApiAdmin({ mutation = false } = {}) {
     };
   }
 
-  if (mutation && session.user?.isDemo) {
+  if ((mutation || requireRealAdmin) && session.user?.isDemo) {
     return {
       session,
-      error: NextResponse.json({ success: false, error: DEMO_MODE_MESSAGE }, { status: 403 }),
+      error: NextResponse.json(
+        {
+          success: false,
+          error: requireRealAdmin ? DEMO_PII_RESTRICTED_MESSAGE : DEMO_MODE_MESSAGE,
+        },
+        { status: 403 }
+      ),
     };
   }
 

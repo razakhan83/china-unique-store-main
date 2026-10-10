@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Vendor from '@/models/Vendor';
 import { serializeVendor } from '@/lib/vendors';
@@ -17,10 +18,8 @@ async function readJsonSafely(request) {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized Access' }, { status: 401 });
-    }
+    const auth = await requireApiAdmin({ requireRealAdmin: true });
+    if (auth.error) return auth.error;
     await mongooseConnect();
 
     const vendors = await Vendor.find({}).sort({ name: 1, createdAt: -1 }).lean();

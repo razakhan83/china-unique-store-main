@@ -8,7 +8,7 @@ import AdminOrdersSkeleton from './AdminOrdersSkeleton';
 export const instant = false;
 
 export default async function AdminOrdersPage({ searchParams }) {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   const params = await searchParams;
   const search = String(params?.search || '').trim();
@@ -30,6 +30,16 @@ export default async function AdminOrdersPage({ searchParams }) {
     getAdminTrashOrders(),
     getStoreSettings(),
   ]);
+
+  if (session?.user?.isDemo && Array.isArray(orders?.items)) {
+    orders.items = orders.items.map((order, idx) => ({
+      ...order,
+      customerName: `Demo Customer ${idx + 1}`,
+      customerPhone: '0300-XXXXXXX',
+      customerEmail: 'demo@chinauniquestore.com',
+      shippingAddress: 'Demo Street Address, Karachi',
+    }));
+  }
 
   return (
     <AdminOrdersClient

@@ -5,7 +5,7 @@ import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function GET(req) {
   try {
-    const { error } = await requireApiAdmin();
+    const { error } = await requireApiAdmin({ requireRealAdmin: true });
     if (error) return error;
 
     await mongooseConnect();

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, ShoppingCart } from 'lucide-react';
 
 import { trackAddToCartEvent } from '@/lib/clientTracking';
+import { getSellingPrice } from '@/lib/pricing';
 
 const CART_STORAGE_KEY = 'china_unique_items_cart_v2';
 
@@ -24,11 +25,10 @@ function normalizeCartItem(item) {
   const basePrice = Number(item.Price || item.price || 0);
   const discountPercentage = Math.max(0, Number(item.discountPercentage || 0));
   const isDiscounted = item.isDiscounted === true;
-  const discountedPrice = item.discountedPrice != null
-    ? Number(item.discountedPrice)
-    : isDiscounted && discountPercentage > 0
-      ? Math.round(basePrice * (1 - discountPercentage / 100))
-      : null;
+  const sellingPrice = getSellingPrice(item);
+  const discountedPrice = sellingPrice < basePrice
+    ? sellingPrice
+    : (item.discountedPrice != null ? Number(item.discountedPrice) : null);
 
   const packLabel = item.packLabel || '';
   const originalName = item.originalName || item.Name || item.name || 'Untitled Product';
@@ -172,7 +172,7 @@ function CartProviderContent({ children }) {
             productId: catalogProductId,
             name: normalized.Name,
             category: Array.isArray(normalized.Category) ? normalized.Category.join(', ') : '',
-            value: normalized.discountedPrice ?? normalized.Price,
+            value: getSellingPrice(normalized),
             quantity: normalized.quantity,
           });
         } catch (error) {

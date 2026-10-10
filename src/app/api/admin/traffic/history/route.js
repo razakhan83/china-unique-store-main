@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import mongooseConnect from '@/lib/mongooseConnect';
 import DailyTraffic from '@/models/DailyTraffic';
+import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function GET() {
   try {
+    const auth = await requireApiAdmin();
+    if (auth.error) return auth.error;
+
     await mongooseConnect();
 
     const now = new Date();

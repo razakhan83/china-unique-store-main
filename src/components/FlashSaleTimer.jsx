@@ -152,9 +152,8 @@ export default function FlashSaleTimer({ targetDate, variant = 'compact' }) {
   );
 }
 
-function formatRupee(raw) {
-  return `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
-}
+import { formatPrice } from '@/lib/pricing';
+const formatRupee = formatPrice;
 
 export function FlashSaleCardBadge({ percentage, endsAt }) {
   const active = useFlashSaleActive(endsAt);

@@ -33,8 +33,8 @@ function renderFeedItem(product, siteUrl) {
   const rawDescription = product.Description || product.shortDescription || product.Name || '';
   const description = stripHtml(rawDescription);
   
-  // Absolute product URL
-  const link = `${siteUrl}/product/${product.slug}`;
+  // Absolute product URL (corrected /products/ plural route)
+  const link = `${siteUrl}/products/${product.slug}`;
   
   // Absolute image URL
   const imageLink = product.Images && product.Images.length > 0 

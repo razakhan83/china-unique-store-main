@@ -29,30 +29,7 @@ import { getSiteUrl } from '@/lib/siteUrl';
 import { metadataTitle } from '@/lib/siteSeo';
 import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
 
-const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
-const getSellingPrice = (product) => {
-  const productPrice = Number(product.Price || product.price || 0);
-
-  if (product.isDiscounted && product.discountPercentage > 0) {
-    return product.discountedPrice != null
-      ? Number(product.discountedPrice)
-      : Math.round(productPrice * (1 - product.discountPercentage / 100));
-  }
-
-  return productPrice;
-};
-
-const getVisibleCompareAtPrice = (product) => {
-  const sellingPrice = getSellingPrice(product);
-  
-  if (product.isDiscounted && product.discountPercentage > 0) {
-    const originalPrice = Number(product.Price || product.price || 0);
-    return originalPrice > sellingPrice ? originalPrice : null;
-  }
-
-  const compareAtPrice = Number(product.compareAtPrice ?? 0);
-  return compareAtPrice > sellingPrice ? compareAtPrice : null;
-};
+import { formatPrice, getSellingPrice, getComparePrice } from '@/lib/pricing';
 const siteUrl = getSiteUrl();
 const PRODUCT_PRERENDER_LIMIT = 48;
 const EMPTY_REVIEW_SUMMARY = {
@@ -105,7 +82,7 @@ function getShareDescription(product) {
   const sellingPrice = getSellingPrice(product);
   const plainDescription = product.seoDescription?.trim() || stripHtmlTags(product.Description);
   if (sellingPrice > 0) {
-    return `Price: Rs. ${sellingPrice.toLocaleString('en-PK')}. ${plainDescription || 'Buy online from China Unique Store.'}`;
+    return `Price: ${formatPrice(sellingPrice)}. ${plainDescription || 'Buy online from China Unique Store.'}`;
   }
   return getProductDescription(product);
 }
@@ -476,7 +453,7 @@ async function ProductTabsWithReviews({ product }) {
 function ProductHeroSection({ product, settings, categoryLabel }) {
   const price = getSellingPrice(product);
   const availability = product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock';
-  const compareAtPrice = getVisibleCompareAtPrice(product);
+  const compareAtPrice = getComparePrice(product);
 
   return (
     <>

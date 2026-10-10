@@ -14,8 +14,9 @@ export function useVisitorTracker() {
       return;
     }
 
-    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY || '0bba93dfa3f84352ac50';
-    if (!pusherKey) {
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    if (!pusherKey || !cluster) {
       return; // Silent fail if Pusher keys not configured
     }
 
@@ -68,7 +69,6 @@ export function useVisitorTracker() {
         const lng = geo?.lng ?? 67.0;
         const city = encodeURIComponent(geo?.city || 'Karachi');
         const country = encodeURIComponent(geo?.country || 'Pakistan');
-        const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2';
 
         // Dynamic import to keep pusher-js out of the initial critical JS bundle
         const { default: PusherClient } = await import('pusher-js');

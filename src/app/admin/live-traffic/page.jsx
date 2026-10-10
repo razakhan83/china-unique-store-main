@@ -83,10 +83,11 @@ export default function LiveTrafficPage() {
   }, [fetchTrafficHistory]);
 
   useEffect(() => {
-    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY || '0bba93dfa3f84352ac50';
-    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2';
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
 
-    if (!pusherKey) {
+    if (!pusherKey || !cluster) {
+      setConnectionStatus('disconnected');
       return;
     }
 

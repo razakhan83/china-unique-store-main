@@ -11,17 +11,12 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
 import { X, ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { formatPrice, getSellingPrice, getComparePrice } from '@/lib/pricing';
 
 export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = 'China Unique Store' }) {
     const { addToCart } = useCartActions();
 
     if (!product) return null;
-
-    const formatPrice = (raw) => {
-        let cleanNumbers = String(raw).replace(/[^\d.]/g, '');
-        if (!cleanNumbers) return 'Rs. 0';
-        return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
-    };
 
     const categories = getProductCategoryNames(product);
     const primaryImage = getPrimaryProductImage(product);
@@ -95,8 +90,15 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                             <h2 className="mb-2 text-xl font-bold leading-tight text-foreground sm:text-2xl">
                                 {product.Name || product.name}
                             </h2>
-                            <div className="mb-3 text-2xl font-extrabold tracking-tight text-primary tabular-nums">
-                                {formatPrice(product.Price || product.price)}
+                            <div className="mb-3 flex items-center gap-3">
+                                <span className="text-2xl font-extrabold tracking-tight text-primary tabular-nums">
+                                    {formatPrice(getSellingPrice(product))}
+                                </span>
+                                {getComparePrice(product) ? (
+                                    <span className="text-sm font-medium text-muted-foreground line-through tabular-nums">
+                                        {formatPrice(getComparePrice(product))}
+                                    </span>
+                                ) : null}
                             </div>
                             <p className="mb-5 text-sm leading-relaxed text-muted-foreground line-clamp-4">
                                 {product.Description || product.description || "Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind."}

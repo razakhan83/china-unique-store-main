@@ -7,6 +7,7 @@ const nextConfig = {
   compress: true,
   staticPageGenerationTimeout: 120,
   cacheComponents: true,
+  partialPrefetching: true,
   cacheLife: {
     foreverish: {
       stale: 60 * 60 * 24 * 30,
@@ -22,7 +23,7 @@ const nextConfig = {
   reactCompiler: true,
 
   experimental: {
-    appNewScrollHandler: true,
+    agentUpgrade: 'latest',
     staleTimes: {
       dynamic: 180,
       static: 600,

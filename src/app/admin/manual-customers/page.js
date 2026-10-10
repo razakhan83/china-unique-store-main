@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 export default async function ManualCustomersPage() {
-  await requireAdmin();
+  await requireAdmin({ requireRealAdmin: true });
   
   return (
     <div className="flex h-full w-full flex-col">

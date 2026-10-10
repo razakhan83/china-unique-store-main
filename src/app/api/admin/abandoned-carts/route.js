@@ -5,7 +5,7 @@ import AbandonedCart from '@/models/AbandonedCart';
 
 export async function GET(req) {
   try {
-    const auth = await requireApiAdmin();
+    const auth = await requireApiAdmin({ requireRealAdmin: true });
     if (auth.error) return auth.error;
 
     const { searchParams } = new URL(req.url);

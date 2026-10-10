@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default async function AdminInvoicesPage() {
-  await requireAdmin();
+  await requireAdmin({ requireRealAdmin: true });
   const initialData = await getInvoicesAction({ page: 1, limit: 20, search: '', status: 'ALL' });
   return <AdminInvoicesClient initialData={initialData} />;
 }

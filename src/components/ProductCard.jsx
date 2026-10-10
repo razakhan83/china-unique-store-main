@@ -12,33 +12,9 @@ import { normalizeProductImages } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { getProductTagById } from "@/lib/productTags";
 import FlashSaleTimer, { FlashSaleCardBadge, FlashSaleCardPrice } from "@/components/FlashSaleTimer";
-
-const formatPrice = (raw) => {
-  let cleanNumbers = String(raw).replace(/[^\d.]/g, "");
-  if (!cleanNumbers) return "Rs. 0";
-  return `Rs. ${Number(cleanNumbers).toLocaleString("en-PK")}`;
-};
-
-function getSellingPrice(product) {
-  const productPrice = Number(product.Price || product.price || 0);
-
-  if (product.isDiscounted && product.discountPercentage > 0) {
-    return product.discountedPrice != null
-      ? Number(product.discountedPrice)
-      : Math.round(productPrice * (1 - product.discountPercentage / 100));
-  }
-
-  return productPrice;
-}
-
-function getVisibleCompareAtPrice(product, sellingPrice) {
-  if (product.isDiscounted && product.discountPercentage > 0) {
-    const originalPrice = Number(product.Price || product.price || 0);
-    return originalPrice > sellingPrice ? originalPrice : null;
-  }
-  const compareAtPrice = Number(product.compareAtPrice ?? 0);
-  return compareAtPrice > sellingPrice ? compareAtPrice : null;
-}
+import { getProductCategories } from "@/lib/productCategories";
+import { getCategoryColor } from "@/lib/categoryColors";
+import { formatPrice, getSellingPrice, getComparePrice } from "@/lib/pricing";
 
 function getDiscountBadge(product) {
   if (product.isDiscounted && product.discountPercentage > 0) {
@@ -59,9 +35,6 @@ function getFeatureBadge(product) {
   return null;
 }
 
-import { getProductCategories } from "@/lib/productCategories";
-import { getCategoryColor } from "@/lib/categoryColors";
-
 const ProductCard = memo(function ProductCard({ product, className = "", imageBg, isPreviewMode = false, priority = false }) {
   const categories = getProductCategories(product);
   const primaryCategory = categories[0];
@@ -81,7 +54,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
     : "";
   const productPrice = product.Price || product.price || 0;
   const sellingPrice = getSellingPrice(product);
-  const compareAtPrice = getVisibleCompareAtPrice(product, sellingPrice);
+  const compareAtPrice = getComparePrice(product);
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
 
@@ -251,12 +224,12 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
                       endsAt={product.discountEndsAt}
                     />
                   ) : (
-                  <div className="flex flex-col items-start gap-1 sm:gap-1.5 flex-1 min-w-0">
+                  <div className="flex flex-col items-start justify-center gap-1 sm:gap-1.5 flex-1 min-w-0 min-h-[36px]">
                     <p
                       className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
                       draggable={false}
                     >
-                      {formatPrice(sellingPrice)}
+                      {sellingPrice > 0 ? formatPrice(sellingPrice) : "Rs 0"}
                     </p>
                     {compareAtPrice ? (
                       <div className="flex items-center gap-1.5 flex-wrap">

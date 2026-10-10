@@ -5,7 +5,7 @@ import Order from '@/models/Order';
 import { requireApiAdmin } from '@/lib/requireAdmin';
 
 export async function GET(request) {
-  const auth = await requireApiAdmin();
+  const auth = await requireApiAdmin({ requireRealAdmin: true });
   if (auth.error) return auth.error;
 
   try {

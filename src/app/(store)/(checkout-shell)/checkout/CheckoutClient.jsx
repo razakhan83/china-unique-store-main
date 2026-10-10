@@ -74,10 +74,10 @@ import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { getPrimaryProductImage } from '@/lib/productImages';
 import { cn } from '@/lib/utils';
 import { calculateCheckoutPricing } from '@/lib/checkoutPricing';
+import { formatPrice, getSellingPrice } from '@/lib/pricing';
 import styles from './CheckoutClient.module.css';
 
-const formatPrice = (raw) => Number(raw || 0);
-const formatPriceLabel = (raw) => `Rs.\u00A0${formatPrice(raw).toLocaleString('en-PK')}`;
+const formatPriceLabel = formatPrice;
 const PRIORITY_CITY_KEYS = ['karachi', 'lahore', 'islamabad', 'hyderabad'];
 const INITIAL_CITY_COUNT = PRIORITY_CITY_KEYS.length;
 const SEARCH_RESULTS_LIMIT = 24;
@@ -323,8 +323,8 @@ function OrderSummaryContent({
       {/* Product list */}
       <div className="flex flex-col divide-y divide-border/50 mb-4">
         {cart.map((item, index) => {
-          const itemPrice = item.discountedPrice != null ? item.discountedPrice : item.Price || item.price;
-          const lineTotal = formatPrice(itemPrice) * item.quantity;
+          const itemPrice = getSellingPrice(item);
+          const lineTotal = itemPrice * item.quantity;
           const imgUrl = getPrimaryProductImage(item)?.url;
 
           return (
@@ -458,18 +458,18 @@ function OrderSummaryContent({
       <div className={styles.totalsGrid}>
         <div className={styles.totalRow}>
           <span className={styles.totalLabel}>Subtotal</span>
-          <span className={styles.totalValue}>Rs.&nbsp;{subtotal.toLocaleString('en-PK')}</span>
+          <span className={styles.totalValue}>{formatPrice(subtotal)}</span>
         </div>
         {discountAmount > 0 && (
           <div className={styles.totalRow}>
             <span className={styles.totalLabel}>Discount ({appliedCoupon?.code})</span>
-            <span className={styles.totalValueDiscount}>−Rs.&nbsp;{discountAmount.toLocaleString('en-PK')}</span>
+            <span className={styles.totalValueDiscount}>−{formatPrice(discountAmount)}</span>
           </div>
         )}
         <div className={styles.totalRow}>
           <span className={styles.totalLabel}>Shipping</span>
           <span className={isFreeShipping ? styles.totalValueFree : styles.totalValue}>
-            {isFreeShipping ? 'Free' : `Rs.\u00A0${shipping.toLocaleString('en-PK')}`}
+            {isFreeShipping ? 'Free' : formatPrice(shipping)}
           </span>
         </div>
       </div>
@@ -479,10 +479,7 @@ function OrderSummaryContent({
       {/* Grand total */}
       <div className={styles.grandTotalRow}>
         <span className={styles.grandTotalLabel}>Total</span>
-        <span>
-          <span className={styles.grandTotalCurrency}>PKR</span>
-          <span className={styles.grandTotalValue}>Rs.&nbsp;{total.toLocaleString('en-PK')}</span>
-        </span>
+        <span className={styles.grandTotalValue}>{formatPrice(total)}</span>
       </div>
 
       {/* Cross-sell */}
@@ -516,7 +513,7 @@ function OrderSummaryContent({
             ) : (
               visibleRelated.map((product) => {
                 const img = getPrimaryProductImage(product);
-                const price = product.discountedPrice || product.Price;
+                const price = getSellingPrice(product);
                 return (
                   <div key={product.id} className="flex items-center gap-3.5 bg-background border border-border/60 rounded-md p-2.5 shadow-sm">
                     <div className={styles.summaryProductThumbWrapper} style={{ transform: 'none', margin: 0 }}>
@@ -526,7 +523,7 @@ function OrderSummaryContent({
                     </div>
                     <div className="flex flex-col min-w-0 flex-1 justify-center">
                       <span className="text-[13px] font-semibold text-foreground/90 line-clamp-1">{product.Name}</span>
-                      <span className="text-[13px] text-muted-foreground font-medium mt-0.5">Rs.&nbsp;{price.toLocaleString('en-PK')}</span>
+                      <span className="text-[13px] text-muted-foreground font-medium mt-0.5">{formatPrice(price)}</span>
                     </div>
                     <button
                       onClick={(e) => {
@@ -740,8 +737,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const subtotal = useMemo(
     () =>
       cart.reduce((total, item) => {
-        const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
-        return total + itemPrice * item.quantity;
+        return total + getSellingPrice(item) * item.quantity;
       }, 0),
     [cart]
   );
@@ -1238,7 +1234,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
               aria-hidden
             />
           </span>
-          <span className={styles.mobileOrderSummaryTotal}>Rs.&nbsp;{total.toLocaleString('en-PK')}</span>
+          <span className={styles.mobileOrderSummaryTotal}>{formatPrice(total)}</span>
         </button>
 
         {mobileOrderOpen && (
@@ -1650,7 +1646,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
         <div className={styles.mobileCheckoutInner}>
           <div className={styles.mobileAmount}>
             <span className={styles.mobileAmountLabel}>Total</span>
-            <strong>Rs.&nbsp;{total.toLocaleString('en-PK')}</strong>
+            <strong>{formatPrice(total)}</strong>
           </div>
           <button
             id="place-order-mobile"
@@ -1704,7 +1700,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
                   {itemToRemove.Name || itemToRemove.name}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Qty: {itemToRemove.quantity} · {formatPriceLabel((itemToRemove.discountedPrice != null ? itemToRemove.discountedPrice : itemToRemove.Price || itemToRemove.price) * itemToRemove.quantity)}
+                  Qty: {itemToRemove.quantity} · {formatPrice(getSellingPrice(itemToRemove) * itemToRemove.quantity)}
                 </p>
               </div>
             </div>
