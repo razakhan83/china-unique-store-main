@@ -154,7 +154,8 @@ function CartProviderContent({ children }) {
         setIsCartOpen(false);
         setIsSidebarOpen(true);
       },
-      async addToCart(product, qtyToAdd = 1) {
+      async addToCart(product, qtyToAdd = 1, options = {}) {
+        const { silent = false } = options;
         const normalized = normalizeCartItem({ ...product, quantity: qtyToAdd });
         if (!normalized.id) {
           toast.error('This item could not be added to the cart.');
@@ -179,27 +180,29 @@ function CartProviderContent({ children }) {
           console.error('Failed to track add to cart event', error);
         }
 
-        const toastId = toast(
+        if (!silent) {
+          const toastId = toast(
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <CheckCircle2 className="size-4 text-emerald-500" />
-                    <span>Added to your cart</span>
-                </div>
-                <button 
-                    type="button" 
-                    onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} 
-                    className="text-[13px] font-bold text-primary hover:text-primary/80 transition-colors shrink-0 uppercase tracking-wide"
-                >
-                    View Cart
-                </button>
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <CheckCircle2 className="size-4 text-emerald-500" />
+                <span>Added to your cart</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => { setIsSidebarOpen(false); setIsCartOpen(true); toast.dismiss(toastId); }} 
+                className="text-[13px] font-bold text-primary hover:text-primary/80 transition-colors shrink-0 uppercase tracking-wide"
+              >
+                View Cart
+              </button>
             </div>,
             { 
-                position: 'bottom-center', 
-                duration: 3500,
-                className: 'mb-[72px] lg:mb-6 mx-auto rounded-full border border-border/60 shadow-lg !p-3 !px-4 !max-w-max !w-auto bg-background/95 backdrop-blur-md',
-                style: { width: 'auto', minWidth: '0' }
+              position: 'bottom-center', 
+              duration: 3500,
+              className: 'mb-[72px] lg:mb-6 mx-auto rounded-full border border-border/60 shadow-lg !p-3 !px-4 !max-w-max !w-auto bg-background/95 backdrop-blur-md',
+              style: { width: 'auto', minWidth: '0' }
             }
-        );
+          );
+        }
 
         return { success: true, item: normalized };
       },

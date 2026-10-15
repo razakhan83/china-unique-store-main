@@ -129,7 +129,7 @@ export function ProductWhatsAppTextLink({ product, whatsappNumber = '', storeNam
 }
 
 export default function ProductActions({ product, whatsappNumber = '', storeName = 'China Unique Store', basePrice = 0, compareAtPrice = null }) {
-    const { addToCart } = useCartActions();
+    const { addToCart, setIsCartOpen, setIsSidebarOpen } = useCartActions();
     const router = useRouter();
     const packOptions = Array.isArray(product?.packOptions) ? product.packOptions : [];
     const [selectedPack, setSelectedPack] = useState(packOptions.length > 0 ? packOptions[0] : null);
@@ -144,6 +144,10 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         email: '',
     });
     const [isBottomNavHidden, setIsBottomNavHidden] = useState(false);
+
+    useEffect(() => {
+        router.prefetch('/checkout');
+    }, [router]);
 
     useEffect(() => {
         const updateFromAttr = () => {
@@ -247,8 +251,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 
-            const result = await addToCart(productToAdd, quantity);
+            const result = await addToCart(productToAdd, quantity, { silent: true });
             if (result?.success) {
+                toast.dismiss();
+                setIsCartOpen?.(false);
+                setIsSidebarOpen?.(false);
                 router.push('/checkout');
             }
         } catch (error) {
@@ -480,6 +487,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             </button>
                             <Button
                                 onClick={handleBuyNow}
+                                onMouseEnter={() => router.prefetch('/checkout')}
                                 disabled={buyLock.isPending || isOutOfStock}
                                 className={cn(
                                     "buy-now-button h-12 w-full rounded-xl active:scale-[0.98] font-medium text-[15px] transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90",
