@@ -106,7 +106,7 @@ export async function GET() {
         await mongooseConnect();
 
         // Find or create the singleton settings document
-        let settings = await Settings.findOne({ singletonKey: SINGLETON_KEY }).lean();
+        let settings = await Settings.findOne({ singletonKey: SINGLETON_KEY }).sort({ updatedAt: -1 }).lean();
 
         if (!settings) {
             settings = await Settings.create({ singletonKey: SINGLETON_KEY });

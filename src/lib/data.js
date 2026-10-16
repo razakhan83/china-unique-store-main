@@ -537,7 +537,7 @@ async function getSettingsRaw() {
     return await measureDataAccess('getSettingsRaw', async () => {
       await mongooseConnect();
 
-      let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+      let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).sort({ updatedAt: -1 }).lean();
       if (!settings) {
         settings = await Settings.create({ singletonKey: SETTINGS_KEY });
         settings = settings.toObject();
@@ -2844,7 +2844,7 @@ export async function getAdminChartData(period = 'monthly') {
 export async function getAdminSettings() {
   await mongooseConnect();
 
-  let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+  let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).sort({ updatedAt: -1 }).lean();
   if (!settings) {
     settings = await Settings.create({ singletonKey: SETTINGS_KEY });
     settings = settings.toObject();
