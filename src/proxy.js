@@ -49,10 +49,10 @@ export async function proxy(request) {
   // 2. Admin Route Protection
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const normalizedEmail = normalizeEmail(token?.email);
-  const isAdmin = Boolean(token?.isAdmin) || isAdminEmail(normalizedEmail);
+  const isRealAdmin = !token?.isDemo && (Boolean(token?.isAdmin) || isAdminEmail(normalizedEmail));
 
   if (pathname.startsWith("/api/admin")) {
-    if (!token || !isAdmin) {
+    if (!token || !isRealAdmin) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -62,7 +62,7 @@ export async function proxy(request) {
   }
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
-    if (!token || !isAdmin) {
+    if (!token || !isRealAdmin) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }

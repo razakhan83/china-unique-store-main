@@ -202,60 +202,14 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     };
   }, []);
 
-  // Global Frontend Interceptor for Demo Mode
   useEffect(() => {
-    if (!sessionUser?.isDemo) return;
-
-    const showDemoAlert = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toast.error("Demo Mode: Actions are disabled. You have read-only access.", {
-        id: "demo-lock-toast"
-      });
-    };
-
-    const handleAction = (e) => {
-      const target = e.target.closest('button, input[type="submit"], input[type="button"], [role="menuitem"]');
-      if (!target) return;
-      
-      // Allow navigation links disguised as buttons
-      if (target.closest('a')) return;
-      
-      // Explicitly allowed buttons (e.g., sidebar toggles, theme toggles, dropdown triggers)
-      if (target.hasAttribute('data-demo-allow') || target.hasAttribute('aria-haspopup') || target.hasAttribute('aria-expanded')) return;
-      
-      // Allow common navigation menu items
-      if (target.getAttribute('role') === 'menuitem' && (target.textContent?.toLowerCase().includes('logout') || target.textContent?.toLowerCase().includes('back'))) {
-         return;
-      }
-
-      const text = target.textContent?.toLowerCase() || '';
-      const isMutation = 
-        target.type === 'submit' ||
-        target.getAttribute('role') === 'menuitem' ||
-        ['save', 'delete', 'update', 'add ', 'create ', 'submit', 'remove', 'confirm', 'apply'].some(k => text.includes(k));
-
-      if (isMutation) {
-        showDemoAlert(e);
-      }
-    };
-
-    const handleSubmit = (e) => {
-      // Allow search forms to submit by checking if it's a GET method or has a specific class
-      if (e.target.method?.toLowerCase() === 'get' || e.target.querySelector('input[type="search"]')) return;
-      showDemoAlert(e);
-    };
-
-    window.addEventListener('click', handleAction, true);
-    window.addEventListener('submit', handleSubmit, true);
-
-    return () => {
-      window.removeEventListener('click', handleAction, true);
-      window.removeEventListener('submit', handleSubmit, true);
-    };
-  }, [sessionUser?.isDemo]);
+    if (pathname !== '/admin/login' && !sessionUser?.isAdmin) {
+      router.replace('/admin/login');
+    }
+  }, [pathname, sessionUser, router]);
 
   if (pathname === '/admin/login') return <>{children}</>;
+  if (!sessionUser?.isAdmin) return null;
 
   function toggleDesktopSidebar() {
     setDesktopSidebarCollapsed((current) => !current);

@@ -13,7 +13,6 @@ export const metadata = {
 
 export default async function AdminLoginPage() {
   const settings = await getStoreSettings();
-  const guestModeEnabled = settings?.guestModeEnabled !== false;
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col items-center justify-center bg-background p-0 sm:p-4 lg:p-8 overflow-hidden">
@@ -81,7 +80,7 @@ export default async function AdminLoginPage() {
                 <div className="h-12 sm:h-14 lg:h-14 w-full animate-pulse rounded-md bg-muted/80 mt-2 sm:mt-4 lg:mt-4" />
               </div>
             }>
-              <AdminLoginFormClient guestModeEnabled={guestModeEnabled} />
+              <AdminLoginFormClient />
             </Suspense>
 
             <p className="mt-3 sm:mt-8 lg:mt-10 text-center text-[9px] sm:text-[11px] font-medium text-foreground/70 lg:text-sm">

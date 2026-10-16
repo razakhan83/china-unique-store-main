@@ -11,7 +11,7 @@ import { FieldGroup, Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
-export default function AdminLoginFormClient({ guestModeEnabled }) {
+export default function AdminLoginFormClient() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get('callbackUrl') || '/admin';
   const [isLoading, setIsLoading] = useState(false);
@@ -77,17 +77,6 @@ export default function AdminLoginFormClient({ guestModeEnabled }) {
 
       <div className="flex flex-col gap-3 sm:gap-4">
         <GoogleSignInButton callbackUrl={callbackUrl} className="h-10 sm:h-12 text-xs sm:text-base" />
-
-        {guestModeEnabled && (
-          <Button 
-            type="button"
-            variant="outline" 
-            className="h-10 sm:h-12 w-full text-xs sm:text-base font-semibold bg-muted/50" 
-            onClick={() => signIn('credentials', { isGuest: 'true', callbackUrl })}
-          >
-            Explore as Guest
-          </Button>
-        )}
       </div>
     </form>
   );

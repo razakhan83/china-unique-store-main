@@ -229,7 +229,7 @@ const SettingsSchema = new mongoose.Schema(
         },
         guestModeEnabled: {
             type: Boolean,
-            default: true,
+            default: false,
         },
         enableSecondaryNoc: {
             type: Boolean,

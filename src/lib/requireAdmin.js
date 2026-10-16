@@ -13,49 +13,28 @@ export const DEMO_PII_RESTRICTED_MESSAGE = 'Demo Mode: Access to real customer d
 
 export const getAdminSession = cache(async () => getServerSession(authOptions));
 
-export async function requireAdmin({ requireRealAdmin = false } = {}) {
+export async function requireAdmin() {
   const session = await getAdminSession();
 
-  if (!session || !session.user?.isAdmin) {
+  if (!session || !session.user?.isAdmin || session.user?.isDemo) {
     redirect('/admin/login');
-  }
-
-  if (requireRealAdmin && session.user?.isDemo) {
-    redirect('/admin');
   }
 
   return session;
 }
 
 export async function requireMutationAccess() {
-  const session = await requireAdmin();
-  if (session.user?.isDemo) {
-    throw new Error(DEMO_MODE_MESSAGE);
-  }
-  return session;
+  return requireAdmin();
 }
 
-/** JSON 401/403 for Route Handlers — never redirect (redirects become 500 in API catch blocks). */
-export async function requireApiAdmin({ mutation = false, requireRealAdmin = false } = {}) {
+/** JSON 401 for Route Handlers — never redirect (redirects become 500 in API catch blocks). */
+export async function requireApiAdmin() {
   const session = await getAdminSession();
 
-  if (!session || !session.user?.isAdmin) {
+  if (!session || !session.user?.isAdmin || session.user?.isDemo) {
     return {
       session: null,
       error: NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 }),
-    };
-  }
-
-  if ((mutation || requireRealAdmin) && session.user?.isDemo) {
-    return {
-      session,
-      error: NextResponse.json(
-        {
-          success: false,
-          error: requireRealAdmin ? DEMO_PII_RESTRICTED_MESSAGE : DEMO_MODE_MESSAGE,
-        },
-        { status: 403 }
-      ),
     };
   }
 

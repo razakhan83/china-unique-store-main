@@ -571,7 +571,7 @@ async function getSettingsRaw() {
         bankDepositAccountDetails: settings.bankDepositAccountDetails || '',
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
         customPages: mergeCustomPages(settings.customPages),
-        guestModeEnabled: settings.guestModeEnabled !== false,
+        guestModeEnabled: false,
         enableSecondaryNoc: settings.enableSecondaryNoc === true,
         limitedOfferProductIds: Array.isArray(settings.limitedOfferProductIds)
           ? settings.limitedOfferProductIds.map((id) => String(id)).filter(Boolean).slice(0, 10)
