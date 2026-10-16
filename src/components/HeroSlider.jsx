@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
+import { useAutoplayInView } from '@/hooks/useAutoplayInView';
 
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
@@ -148,6 +149,7 @@ export default function HeroSlider({ slides = [] }) {
   );
 
   function handleTouchStart(event) {
+    handlePointerInteraction();
     const touch = event.touches?.[0];
     if (!touch) return;
     touchStartXRef.current = touch.clientX;
@@ -169,36 +171,19 @@ export default function HeroSlider({ slides = [] }) {
   }
 
   const containerRef = useRef(null);
-  const isInViewportRef = useRef(true);
 
-  useEffect(() => {
-    if (resolvedSlides.length <= 1) return;
+  const advanceHero = useCallback(() => {
+    setActiveIndex((current) => (current + 1) % resolvedSlides.length);
+  }, [resolvedSlides.length]);
 
-    const el = containerRef.current;
-    let observer = null;
-
-    if (typeof IntersectionObserver !== 'undefined' && el) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
-          isInViewportRef.current = Boolean(entry && entry.isIntersecting);
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(el);
-    }
-
-    const autoplayTimer = window.setTimeout(() => {
-      if (isInViewportRef.current && typeof document !== 'undefined' && !document.hidden) {
-        setActiveIndex((current) => (current + 1) % resolvedSlides.length);
-      }
-    }, HERO_AUTOPLAY_DELAY_MS);
-
-    return () => {
-      window.clearTimeout(autoplayTimer);
-      if (observer) observer.disconnect();
-    };
-  }, [resolvedSlides.length, safeActiveIndex]);
+  const { handlePointerInteraction } = useAutoplayInView({
+    containerRef,
+    onAdvance: advanceHero,
+    intervalMs: HERO_AUTOPLAY_DELAY_MS,
+    idleResumeMs: 10000,
+    enabled: resolvedSlides.length > 1,
+    pauseOnHover: true,
+  });
 
   if (resolvedSlides.length === 0) return null;
 

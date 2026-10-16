@@ -152,6 +152,24 @@ function normalizeAnnouncementItems(messages = [], announcementText = '') {
 }
 
 function AnnouncementMarquee({ items = [] }) {
+  const containerRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPaused(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
   if (items.length === 0) return null;
 
   const totalCharacters = items.reduce((count, item) => count + item.length, 0);
@@ -166,10 +184,14 @@ function AnnouncementMarquee({ items = [] }) {
 
   return (
     <div
+      ref={containerRef}
       className="announcement-marquee mask-edge"
       style={{ '--announcement-marquee-duration': `${durationSeconds}s` }}
     >
-      <div className="announcement-marquee__track">
+      <div 
+        className="announcement-marquee__track"
+        style={{ animationPlayState: isPaused ? 'paused' : undefined }}
+      >
         {[0, 1].map((copyIndex) => (
           <div
             key={copyIndex}

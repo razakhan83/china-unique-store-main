@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, BadgeCheck, Star } from 'lucide-react';
 import {
   Carousel,
@@ -9,6 +9,7 @@ import {
   useCarousel,
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { useAutoplayInView } from '@/hooks/useAutoplayInView';
 
 function TestimonialCarouselArrows() {
   const { scrollPrev, scrollNext, canGoToPrev, canGoToNext } = useCarousel();
@@ -110,142 +111,38 @@ export default function HomeTestimonialsCarousel({
   description = '',
 }) {
   const [emblaApi, setEmblaApi] = useState(null);
-  const isInViewportRef = useRef(false);
-  const isHoveredRef = useRef(false);
-  const isTouchPausedRef = useRef(false);
-  const autoplayTimerRef = useRef(null);
-  const resumeTimerRef = useRef(null);
   const wrapperRef = useRef(null);
 
   const reviewCount = Array.isArray(reviews) ? reviews.length : 0;
   const isInteractive = reviewCount > 1;
 
+  const advance = useCallback(() => {
+    if (!emblaApi) return;
+    if (typeof emblaApi.scrollNext === 'function') {
+      emblaApi.scrollNext();
+    } else if (typeof emblaApi.goToNext === 'function') {
+      emblaApi.goToNext();
+    }
+  }, [emblaApi]);
+
+  const { handlePointerInteraction } = useAutoplayInView({
+    containerRef: wrapperRef,
+    onAdvance: advance,
+    intervalMs: 8000,
+    idleResumeMs: 10000,
+    enabled: Boolean(emblaApi && isInteractive),
+    pauseOnHover: true,
+  });
+
   useEffect(() => {
-    if (!emblaApi || !isInteractive) return;
-
-    const stopAutoplay = () => {
-      if (autoplayTimerRef.current) {
-        clearInterval(autoplayTimerRef.current);
-        autoplayTimerRef.current = null;
-      }
-    };
-
-    const clearResumeTimer = () => {
-      if (resumeTimerRef.current) {
-        clearTimeout(resumeTimerRef.current);
-        resumeTimerRef.current = null;
-      }
-    };
-
-    const advance = () => {
-      if (!emblaApi) return;
-      if (typeof emblaApi.scrollNext === 'function') {
-        emblaApi.scrollNext();
-      } else if (typeof emblaApi.goToNext === 'function') {
-        emblaApi.goToNext();
-      }
-    };
-
-    // Evaluates all play conditions: viewport, hover, touch pause, tab visibility
-    const updateAutoplayState = () => {
-      const isDocumentVisible = typeof document !== 'undefined' ? !document.hidden : true;
-      const shouldPlay =
-        isInViewportRef.current &&
-        !isHoveredRef.current &&
-        !isTouchPausedRef.current &&
-        isDocumentVisible;
-
-      if (shouldPlay) {
-        if (!autoplayTimerRef.current) {
-          autoplayTimerRef.current = setInterval(advance, 8000);
-        }
-      } else {
-        stopAutoplay();
-      }
-    };
-
-    // Called on touch/pointer interaction — pauses and resumes after 10s idle
-    const onPointerDown = () => {
-      isTouchPausedRef.current = true;
-      stopAutoplay();
-      clearResumeTimer();
-      resumeTimerRef.current = setTimeout(() => {
-        isTouchPausedRef.current = false;
-        updateAutoplayState();
-      }, 10000);
-    };
-
-    // Desktop hover pause
-    const el = wrapperRef.current;
-    const onMouseEnter = () => {
-      isHoveredRef.current = true;
-      stopAutoplay();
-    };
-
-    const onMouseLeave = () => {
-      isHoveredRef.current = false;
-      updateAutoplayState();
-    };
-
-    // Tab visibility pause
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        stopAutoplay();
-        clearResumeTimer();
-      } else {
-        updateAutoplayState();
-      }
-    };
-
-    // IntersectionObserver: auto play only when in view
-    let observer = null;
-    if (typeof IntersectionObserver !== 'undefined' && el) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
-          const isVisible = Boolean(entry && entry.isIntersecting);
-          isInViewportRef.current = isVisible;
-
-          if (!isVisible) {
-            isTouchPausedRef.current = false;
-            clearResumeTimer();
-            stopAutoplay();
-          } else {
-            updateAutoplayState();
-          }
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(el);
-    } else {
-      isInViewportRef.current = true;
-      updateAutoplayState();
-    }
-
-    emblaApi.on('pointerDown', onPointerDown);
-    document.addEventListener('visibilitychange', onVisibilityChange, { passive: true });
-
-    if (el) {
-      el.addEventListener('mouseenter', onMouseEnter, { passive: true });
-      el.addEventListener('mouseleave', onMouseLeave, { passive: true });
-    }
-
+    if (!emblaApi) return;
+    emblaApi.on('pointerDown', handlePointerInteraction);
     return () => {
-      stopAutoplay();
-      clearResumeTimer();
-      if (emblaApi && typeof emblaApi.off === 'function') {
-        emblaApi.off('pointerDown', onPointerDown);
-      }
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      if (observer) {
-        observer.disconnect();
-      }
-      if (el) {
-        el.removeEventListener('mouseenter', onMouseEnter);
-        el.removeEventListener('mouseleave', onMouseLeave);
+      if (typeof emblaApi.off === 'function') {
+        emblaApi.off('pointerDown', handlePointerInteraction);
       }
     };
-  }, [emblaApi, isInteractive]);
+  }, [emblaApi, handlePointerInteraction]);
 
   if (reviewCount === 0) {
     return null;
