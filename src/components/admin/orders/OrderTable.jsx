@@ -51,7 +51,7 @@ const getCodAmount = (order) => {
   return Number(order?.totalAmount || 0);
 };
 
-const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString('en-PK')}`;
+const formatPrice = (price) => `Rs ${Number(price || 0).toLocaleString('en-PK')}`;
 
 function getEffectiveNocStatusTime(order) {
   if (!order) return null;
@@ -287,11 +287,11 @@ export function OrderTable(props) {
                           <td className="px-2.5 py-2 text-right whitespace-nowrap">
                             <div className="flex flex-col items-end whitespace-nowrap">
                               <span className="text-[13px] font-bold tabular-nums text-foreground whitespace-nowrap">
-                                {formatPrice(getCodAmount(order))}
+                                {formatPrice(order.totalAmount)}
                               </span>
-                              {order.manualCodAmount ? (
+                              {order.manualCodAmount && Number(order.manualCodAmount) !== Number(order.totalAmount) ? (
                                 <span className="text-[10px] tabular-nums font-medium text-muted-foreground whitespace-nowrap">
-                                  Tot: {formatPrice(order.totalAmount)}
+                                  COD: {formatPrice(order.manualCodAmount)}
                                 </span>
                               ) : null}
                             </div>
@@ -558,11 +558,11 @@ export function OrderTable(props) {
                     <div className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 text-[12.5px]">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">
-                          COD: <strong className="text-foreground font-bold">{formatPrice(getCodAmount(order))}</strong>
+                          <strong className="text-foreground font-bold">{formatPrice(order.totalAmount)}</strong>
                         </span>
-                        <span className="text-muted-foreground/40">•</span>
+                        {order.manualCodAmount && Number(order.manualCodAmount) !== Number(order.totalAmount) ? <span className="text-muted-foreground/40">•</span> : null}
                         <span className="text-muted-foreground">
-                          Total: <span className="font-medium text-foreground">{formatPrice(order.totalAmount)}</span>
+                          {order.manualCodAmount && Number(order.manualCodAmount) !== Number(order.totalAmount) ? `COD: ${formatPrice(order.manualCodAmount)}` : ''}
                         </span>
                       </div>
                     </div>

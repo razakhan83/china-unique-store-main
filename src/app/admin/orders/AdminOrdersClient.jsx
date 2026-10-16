@@ -154,8 +154,8 @@ const getCodAmount = (order) => {
   return Number(order?.totalAmount || 0);
 };
 
-const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
-const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { timeZone: 'Asia/Karachi', year: 'numeric', month: 'short', day: 'numeric' });
+const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', hour12: true });
 const formatWeight = (weight) => `${Number(weight || 0).toFixed(1)} kg`;
 
 const isNewOrder = (dateStr) => {

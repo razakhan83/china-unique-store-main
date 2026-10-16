@@ -47,6 +47,7 @@ function getDashboardStatusBadgeClass(status) {
 
 function formatAdminTimestamp(value) {
   return new Intl.DateTimeFormat('en-PK', {
+    timeZone: 'Asia/Karachi',
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));

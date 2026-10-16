@@ -130,6 +130,7 @@ export function formatFullDateTime(input) {
   if (!d) return typeof input === 'string' ? input : '—';
   
   return d.toLocaleString('en-PK', {
+    timeZone: 'Asia/Karachi',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -143,6 +144,7 @@ export function formatFullDate(input) {
   const d = parseDateSafe(input);
   if (!d) return '—';
   return d.toLocaleDateString('en-PK', {
+    timeZone: 'Asia/Karachi',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -153,6 +155,7 @@ export function formatFullTime(input) {
   const d = parseDateSafe(input);
   if (!d) return '—';
   return d.toLocaleTimeString('en-PK', {
+    timeZone: 'Asia/Karachi',
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,

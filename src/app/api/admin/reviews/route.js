@@ -121,10 +121,24 @@ export async function PATCH(req) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
   try {
-    const auth = await requireApiAdmin({ mutation: true });
+    const auth = await requireApiAdmin({ mutation: true, requireRealAdmin: true });
     if (auth.error) return auth.error;
+
+    let body = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+
+    if (body?.confirm !== 'DELETE_ALL') {
+      return NextResponse.json(
+        { success: false, error: 'Confirmation required. Pass { confirm: "DELETE_ALL" } to proceed.' },
+        { status: 400 }
+      );
+    }
 
     await mongooseConnect();
     const Product = (await import('@/models/Product')).default;

@@ -53,10 +53,10 @@ export function getStatusBadgeClass(status, isDraft = false) {
   return 'border-slate-200 bg-slate-100 text-slate-800';
 }
 
-const formatPrice = (price) => `PKR ${Number(price || 0).toLocaleString('en-PK')}`;
+const formatPrice = (price) => `Rs ${Number(price || 0).toLocaleString('en-PK')}`;
 const formatDate = (dateStr) =>
   dateStr
-    ? new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })
+    ? new Date(dateStr).toLocaleDateString('en-PK', { timeZone: 'Asia/Karachi', year: 'numeric', month: 'short', day: 'numeric' })
     : '—';
 
 function getStatusLabel(order) {
@@ -312,7 +312,7 @@ export default function OrderQuickViewDialog({
                 <div className="flex items-center justify-between text-muted-foreground">
                   <span>Delivery Charges:</span>
                   <span className="font-medium text-foreground">
-                    {order?.shippingAmount != null ? formatPrice(order.shippingAmount) : 'PKR 0'}
+                    {order?.shippingAmount != null ? formatPrice(order.shippingAmount) : 'Rs 0'}
                   </span>
                 </div>
                 {order?.discountAmount > 0 && (
