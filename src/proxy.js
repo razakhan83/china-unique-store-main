@@ -8,13 +8,15 @@ const RATE_LIMITED_PATHS = [
   "/api/feedback",
   "/api/cart/sync",
   "/api/tracking",
+  "/api/courier/track",
+  "/api/geo",
   "/api/auth/callback/credentials",
 ];
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
-  // 1. Rate Limiting for sensitive public APIs (20 requests / minute)
+  // 1. Rate Limiting for sensitive public APIs
   const isRateLimitedPath = RATE_LIMITED_PATHS.some((path) => pathname.startsWith(path));
   if (isRateLimitedPath) {
     const ip =
@@ -22,7 +24,9 @@ export async function proxy(request) {
       request.headers.get("x-real-ip") ||
       "anonymous";
 
-    const { allowed, remaining, resetInSeconds } = checkRateLimit(ip, { limit: 20, windowMs: 60000 });
+    const pathKey = pathname.split("/")[2] || "api";
+    const limit = pathname.startsWith("/api/geo") ? 40 : 20;
+    const { allowed, remaining, resetInSeconds } = checkRateLimit(`${pathKey}_${ip}`, { limit, windowMs: 60000 });
 
     if (!allowed) {
       return NextResponse.json(
@@ -34,7 +38,7 @@ export async function proxy(request) {
           status: 429,
           headers: {
             "Retry-After": String(resetInSeconds),
-            "X-RateLimit-Limit": "20",
+            "X-RateLimit-Limit": String(limit),
             "X-RateLimit-Remaining": String(remaining),
           },
         }
@@ -74,6 +78,8 @@ export const config = {
     "/api/feedback/:path*",
     "/api/cart/sync/:path*",
     "/api/tracking/:path*",
+    "/api/courier/track/:path*",
+    "/api/geo/:path*",
     "/api/admin/:path*",
     "/api/auth/callback/credentials",
   ],

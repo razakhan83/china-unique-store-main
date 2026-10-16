@@ -3,6 +3,12 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { trackNocParcel, fetchNocPortalDashboard } from '@/lib/nocCourier';
 import { parseDateSafe } from '@/lib/timeAgo';
+import { checkRateLimit } from '@/lib/rateLimit';
+
+// In-memory fallback cache for raw tracking numbers not linked to an order in DB
+const memoryTrackingCache = new Map();
+const MEMORY_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes TTL
+const MEMORY_CACHE_MAX = 1000;
 
 export async function GET(request) {
   try {
@@ -10,6 +16,26 @@ export async function GET(request) {
     const trackingNumber = searchParams.get('trackingNumber') || searchParams.get('parcelNo');
     const orderId = searchParams.get('orderId');
     const portalKeyParam = searchParams.get('portalKey');
+    const forceRefresh = searchParams.get('force') === 'true';
+
+    // 1. Rate Limiting per IP (20 requests / minute)
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (request.headers.get('x-real-ip') || 'anonymous');
+    const rateLimit = checkRateLimit(`courier_track_${clientIp}`, { limit: 20, windowMs: 60000 });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many tracking requests. Please slow down and try again shortly.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.resetInSeconds),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': String(rateLimit.remaining),
+          },
+        }
+      );
+    }
 
     let order = null;
 
@@ -25,16 +51,66 @@ export async function GET(request) {
         $or: [
           { trackingNumber },
           { nocParcelNo: trackingNumber },
-          { nocThirdPartyNo: trackingNumber }
+          { nocThirdPartyNo: trackingNumber },
         ],
-        isDeleted: { $ne: true }
+        isDeleted: { $ne: true },
       });
     }
 
     const targetParcelNo = order?.nocParcelNo || order?.trackingNumber || trackingNumber;
     const targetPortalKey = portalKeyParam || order?.nocAccountId || 'portal_1';
 
-    // If order has no 3rd party CN, courier is generic, or parcelNo is missing, attempt live portal resolution
+    // 2. Cache Check via nocLastTrackedAt (10-minute TTL)
+    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    const isFresh = order?.nocLastTrackedAt && (Date.now() - new Date(order.nocLastTrackedAt).getTime() < TEN_MINUTES_MS);
+    const hasCachedEvents = Array.isArray(order?.nocTrackingEvents) && order.nocTrackingEvents.length > 0;
+    const isTerminal = ['Delivered', 'Cancelled', 'Returned'].includes(order?.status);
+
+    if (!forceRefresh && order && ((isFresh && hasCachedEvents) || (isTerminal && hasCachedEvents))) {
+      const has3rdParty =
+        order?.nocThirdPartyNo &&
+        String(order.nocThirdPartyNo).trim() !== '' &&
+        String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' &&
+        String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
+      const effectiveTrackingNumber = has3rdParty
+        ? String(order.nocThirdPartyNo).trim()
+        : (order?.nocParcelNo || targetParcelNo);
+      const effectiveCourierName = order?.courierName || 'NOC';
+
+      return NextResponse.json({
+        success: true,
+        orderId: order?.orderId || null,
+        courierName: effectiveCourierName,
+        trackingNumber: effectiveTrackingNumber,
+        parcelNo: order?.nocParcelNo || targetParcelNo,
+        thirdPartyNo: has3rdParty ? String(order.nocThirdPartyNo).trim() : '',
+        nocLabelUrl: order?.nocLabelUrl || '',
+        orderStatus: order?.status || 'Shipped',
+        nocStatus: order?.nocStatus || '',
+        nocStatusTime: order?.nocStatusTime || '',
+        orderType: order?.orderType || (order?.isDraft ? 'Admin' : 'Online'),
+        sourceTag: order?.sourceTag || '',
+        customerCity: order?.customerCity || '',
+        fetchError: null,
+        events: order.nocTrackingEvents,
+        cached: true,
+      });
+    }
+
+    // Check memory cache for non-order tracking lookups
+    const memoryCacheKey = (targetParcelNo || trackingNumber || '').trim();
+    if (!forceRefresh && !order && memoryCacheKey && memoryTrackingCache.has(memoryCacheKey)) {
+      const cached = memoryTrackingCache.get(memoryCacheKey);
+      if (Date.now() - cached.timestamp < MEMORY_CACHE_TTL_MS) {
+        return NextResponse.json({
+          ...cached.data,
+          cached: true,
+        });
+      }
+      memoryTrackingCache.delete(memoryCacheKey);
+    }
+
+    // 3. Live Portal Resolution (only when cache is expired or bypassed)
     if (order) {
       try {
         const portalRows = await fetchNocPortalDashboard(targetPortalKey);
@@ -67,7 +143,15 @@ export async function GET(request) {
       order?.nocThirdPartyNo,
       order?.trackingNumber,
       trackingNumber,
-    ].filter((n) => n && typeof n === 'string' && n.trim() !== '' && n.trim() !== '—' && n.trim() !== 'N/A' && !n.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/));
+    ].filter(
+      (n) =>
+        n &&
+        typeof n === 'string' &&
+        n.trim() !== '' &&
+        n.trim() !== '—' &&
+        n.trim() !== 'N/A' &&
+        !n.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)
+    );
 
     const uniqueCandidates = [...new Set(candidateNumbers.map((n) => n.trim()))];
 
@@ -114,7 +198,7 @@ export async function GET(request) {
 
       // If order.nocStatus is INTRANSIT or advanced and not yet present in detail events, prepend it
       if (order?.nocStatus && !order.nocStatus.match(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/)) {
-        const hasMatchingEvent = events.some(e => e.status.toUpperCase() === order.nocStatus.toUpperCase());
+        const hasMatchingEvent = events.some((e) => e.status.toUpperCase() === order.nocStatus.toUpperCase());
         if (!hasMatchingEvent) {
           events.unshift({
             status: order.nocStatus,
@@ -188,11 +272,30 @@ export async function GET(request) {
         .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
 
-    const has3rdParty = order?.nocThirdPartyNo && String(order.nocThirdPartyNo).trim() !== '' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' && String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
-    const effectiveTrackingNumber = has3rdParty ? String(order.nocThirdPartyNo).trim() : (order?.nocParcelNo || targetParcelNo);
+    // 4. Persist cache to Order in DB with nocLastTrackedAt
+    if (order) {
+      order.nocLastTrackedAt = new Date();
+      if (events.length > 0) {
+        order.nocTrackingEvents = events;
+      }
+      try {
+        await order.save();
+      } catch (saveErr) {
+        console.warn('Failed to update order tracking cache:', saveErr?.message);
+      }
+    }
+
+    const has3rdParty =
+      order?.nocThirdPartyNo &&
+      String(order.nocThirdPartyNo).trim() !== '' &&
+      String(order.nocThirdPartyNo).trim().toUpperCase() !== 'N/A' &&
+      String(order.nocThirdPartyNo).trim().toUpperCase() !== 'NA';
+    const effectiveTrackingNumber = has3rdParty
+      ? String(order.nocThirdPartyNo).trim()
+      : (order?.nocParcelNo || targetParcelNo);
     const effectiveCourierName = order?.courierName || 'NOC';
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       orderId: order?.orderId || null,
       courierName: effectiveCourierName,
@@ -209,7 +312,19 @@ export async function GET(request) {
       fetchError,
       events,
       rawResponse: trackingResult,
-    });
+      cached: false,
+    };
+
+    // If no order in DB, cache in memory
+    if (!order && memoryCacheKey) {
+      if (memoryTrackingCache.size >= MEMORY_CACHE_MAX) {
+        const firstKey = memoryTrackingCache.keys().next().value;
+        memoryTrackingCache.delete(firstKey);
+      }
+      memoryTrackingCache.set(memoryCacheKey, { data: responsePayload, timestamp: Date.now() });
+    }
+
+    return NextResponse.json(responsePayload);
   } catch (error) {
     if (error?.digest?.startsWith('NEXT_')) {
       throw error;
