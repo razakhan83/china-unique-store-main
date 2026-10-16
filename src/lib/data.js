@@ -341,24 +341,24 @@ function buildCustomerAggregationPipeline({ search = '', skip = 0, limit = 12 } 
   const safeSearch = String(search || '').trim();
   const searchRegex = safeSearch ? new RegExp(escapeRegex(safeSearch), 'i') : null;
 
-  const pipeline = [];
+  const matchConditions = {
+    isDeleted: { $ne: true },
+    isDraft: { $ne: true },
+  };
 
   if (searchRegex) {
-    pipeline.push({
-      $match: {
-        $or: [
-          { customerName: searchRegex },
-          { customerEmail: searchRegex },
-          { customerPhone: searchRegex },
-          { customerCity: searchRegex },
-          { customerAddress: searchRegex },
-          { orderId: searchRegex },
-        ],
-      },
-    });
+    matchConditions.$or = [
+      { customerName: searchRegex },
+      { customerEmail: searchRegex },
+      { customerPhone: searchRegex },
+      { customerCity: searchRegex },
+      { customerAddress: searchRegex },
+      { orderId: searchRegex },
+    ];
   }
 
-  pipeline.push(
+  const pipeline = [
+    { $match: matchConditions },
     { $sort: { createdAt: -1 } },
     {
       $group: {
@@ -420,7 +420,7 @@ function buildCustomerAggregationPipeline({ search = '', skip = 0, limit = 12 } 
         ],
       },
     },
-  );
+  ];
 
   return pipeline;
 }
@@ -2303,13 +2303,58 @@ export async function getAdminUsersPage({
     User.countDocuments({ disabled: true }),
   ]);
 
+  const emails = items.map((u) => u.email).filter(Boolean);
+  const phones = items.map((u) => u.phone).filter(Boolean);
+  const userIds = items.map((u) => u._id.toString());
+
+  const orderStats = (emails.length > 0 || phones.length > 0 || userIds.length > 0)
+    ? await Order.aggregate([
+        {
+          $match: {
+            isDeleted: { $ne: true },
+            isDraft: { $ne: true },
+            $or: [
+              ...(emails.length > 0 ? [{ customerEmail: { $in: emails } }] : []),
+              ...(phones.length > 0 ? [{ customerPhone: { $in: phones } }] : []),
+              { userId: { $in: userIds } },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $ne: [{ $ifNull: ['$customerEmail', ''] }, ''] },
+                '$customerEmail',
+                { $ifNull: ['$customerPhone', { $toString: '$userId' }] },
+              ],
+            },
+            ordersCount: { $sum: 1 },
+            totalSpent: { $sum: '$totalAmount' },
+          },
+        },
+      ])
+    : [];
+
+  const statsMap = new Map();
+  orderStats.forEach((s) => {
+    if (s._id) statsMap.set(String(s._id).toLowerCase(), s);
+  });
+
   return {
-    items: items.map((user) => ({
-      ...user,
-      _id: user._id.toString(),
-      createdAt: user.createdAt?.toISOString(),
-      updatedAt: user.updatedAt?.toISOString(),
-    })),
+    items: items.map((user) => {
+      const emailKey = user.email ? String(user.email).toLowerCase() : '';
+      const phoneKey = user.phone ? String(user.phone).toLowerCase() : '';
+      const stat = statsMap.get(emailKey) || statsMap.get(phoneKey) || statsMap.get(user._id.toString());
+      return {
+        ...user,
+        _id: user._id.toString(),
+        ordersCount: Number(stat?.ordersCount || 0),
+        totalSpent: Number(stat?.totalSpent || 0),
+        createdAt: user.createdAt?.toISOString(),
+        updatedAt: user.updatedAt?.toISOString(),
+      };
+    }),
     total,
     page: safePage,
     limit: safeLimit,
@@ -2520,10 +2565,6 @@ export async function getCustomerOtherOrders(phone, currentOrderId) {
 }
 
 export async function getAdminDashboardData() {
-  'use cache';
-  cacheLife('adminDashboard');
-  cacheTag('admin-dashboard');
-
   await mongooseConnect();
 
   const startOfToday = new Date();
@@ -2555,6 +2596,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
               },
             },
             {
@@ -2574,6 +2616,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
               },
             },
             {
@@ -2599,6 +2642,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
               },
             },
             { $sort: { createdAt: -1 } },
@@ -2608,6 +2652,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
                 status: { $in: ['Order Confirmed', 'Confirmed', 'Pending'] },
                 createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
               },
@@ -2618,6 +2663,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
               },
             },
             { $unwind: '$items' },
@@ -2642,6 +2688,7 @@ export async function getAdminDashboardData() {
             {
               $match: {
                 isDraft: { $ne: true },
+                isDeleted: { $ne: true },
               },
             },
             {
@@ -2754,10 +2801,6 @@ export async function getAdminDashboardData() {
 }
 
 export async function getAdminChartData(period = 'monthly') {
-  'use cache';
-  cacheLife('adminDashboard');
-  cacheTag('admin-dashboard');
-
   await mongooseConnect();
 
   const now = new Date();
@@ -2799,6 +2842,8 @@ export async function getAdminChartData(period = 'monthly') {
   const results = await Order.aggregate([
     {
       $match: {
+        isDraft: { $ne: true },
+        isDeleted: { $ne: true },
         createdAt: { $gte: startDate, $lte: now },
       },
     },

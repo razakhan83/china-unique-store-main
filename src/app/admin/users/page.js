@@ -13,7 +13,7 @@ export default async function AdminUsersPage({ searchParams }) {
   const params = await searchParams;
   const search = String(params?.search || '').trim();
   const status = String(params?.status || 'all').trim() || 'all';
-  const type = String(params?.type || 'registered').trim() || 'registered';
+  const type = String(params?.type || 'customers').trim() || 'customers';
   const page = Math.max(1, Number(params?.page) || 1);
   const result = await getAdminUsersPage({ search, status, type, page, limit: 12 });
 

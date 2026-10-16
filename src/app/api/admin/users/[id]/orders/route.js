@@ -20,12 +20,24 @@ export async function GET(req, context) {
     const decodedId = decodeURIComponent(id);
 
     await mongooseConnect();
+    const User = (await import('@/models/User')).default;
+
+    const matchConditions = [];
+    matchConditions.push({ customerEmail: decodedId });
+    matchConditions.push({ customerPhone: decodedId });
+
+    if (/^[0-9a-fA-F]{24}$/.test(decodedId)) {
+      matchConditions.push({ userId: decodedId });
+      const user = await User.findById(decodedId).lean();
+      if (user) {
+        if (user.email) matchConditions.push({ customerEmail: user.email });
+        if (user.phone) matchConditions.push({ customerPhone: user.phone });
+      }
+    }
 
     const orders = await Order.find({
-      $or: [
-        { customerEmail: decodedId },
-        { customerPhone: decodedId }
-      ]
+      isDeleted: { $ne: true },
+      $or: matchConditions,
     }).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json({

@@ -21,7 +21,7 @@ const statsConfig = [
   { title: 'Total Orders', icon: ShoppingBag, key: 'totalOrders' },
   { title: 'Total Revenue', icon: CircleDollarSign, key: 'totalRevenue' },
   { title: 'Total Products', icon: Box, key: 'totalProducts' },
-  { title: 'Customers', icon: Users, key: 'totalCustomers' },
+  { title: 'Total Customers', icon: Users, key: 'totalCustomers' },
 ];
 
 const orderStatusCards = [
@@ -141,9 +141,9 @@ async function DashboardContent({ session }) {
 
   const stats = [
     { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} order confirmed` },
-    { value: `Rs. ${summary.totalRevenue.toLocaleString('en-PK')}`, change: 'All-time' },
-    { value: `${summary.totalProducts}`, change: `${summary.liveProducts} live` },
-    { value: `${summary.totalCustomers}`, change: 'Total reach' },
+    { value: `Rs. ${summary.totalRevenue.toLocaleString('en-PK')}`, change: 'All-time sales' },
+    { value: `${summary.totalProducts}`, change: `${summary.liveProducts} live in store` },
+    { value: `${summary.totalCustomers}`, change: 'Verified Store Buyers' },
   ];
 
   return (
@@ -193,6 +193,11 @@ async function DashboardContent({ session }) {
                   <h3 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums">
                     {stats[index].value}
                   </h3>
+                  {stats[index].change && (
+                    <p className="mt-1 text-[11px] text-muted-foreground font-medium line-clamp-1">
+                      {stats[index].change}
+                    </p>
+                  )}
                 </div>
                 <div className="flex size-6 sm:size-8 items-center justify-center rounded-md bg-muted/50 text-foreground shrink-0 ml-2">
                   <Icon className="size-3.5 sm:size-4 text-muted-foreground" />

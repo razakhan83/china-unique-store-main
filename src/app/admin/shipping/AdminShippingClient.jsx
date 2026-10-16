@@ -102,8 +102,8 @@ export default function AdminShippingClient({ initialSettings }) {
               <Truck className="size-5" />
             </div>
             <div>
-              <CardTitle className="text-lg">Delivery Rates</CardTitle>
-              <CardDescription>Specify charges for Karachi and other cities.</CardDescription>
+              <CardTitle className="text-lg">Delivery Rates (Storefront & Admin)</CardTitle>
+              <CardDescription>Single source of truth used for Cart, Checkout, and Order Booking.</CardDescription>
             </div>
           </div>
         </CardHeader>

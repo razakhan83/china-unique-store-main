@@ -418,6 +418,26 @@ export default function OrderDetailView({
     }
   };
 
+  const [isReconcilingCod, setIsReconcilingCod] = useState(false);
+  const isCodMismatch = order.manualCodAmount != null && Number(order.manualCodAmount) !== Number(order.totalAmount);
+
+  const handleReconcileCod = async () => {
+    setIsReconcilingCod(true);
+    try {
+      const res = await updateOrderAction(order._id, { manualCodAmount: Number(order.totalAmount || 0) });
+      if (res.success) {
+        toast.success(`COD amount reconciled to Rs. ${Number(order.totalAmount || 0).toLocaleString('en-PK')}`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Failed to reconcile COD amount');
+      }
+    } catch (err) {
+      toast.error('Failed to reconcile COD amount');
+    } finally {
+      setIsReconcilingCod(false);
+    }
+  };
+
   // Print Invoice Popup
   const handlePrintInvoice = () => {
     const printWindow = openPrintWindow(`Invoice - ${order.orderId}`);
@@ -432,8 +452,8 @@ export default function OrderDetailView({
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">${idx + 1}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-          <strong>${escapeHtml(item.name || 'Product')}</strong>
-          ${item.productId ? `<div style="font-size: 12px; color: #64748b;">ID: ${escapeHtml(item.productId)}</div>` : ''}
+          <strong>${escapeHtml(item.name === 'Unknown item' || !item.name ? 'Custom Item' : (item.name || 'Product'))}</strong>
+          ${item.productId && item.productId !== 'unknown-default' ? `<div style="font-size: 12px; color: #64748b;">ID: ${escapeHtml(item.productId)}</div>` : ''}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; text-align: center;">${item.quantity || 1}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; text-align: right;">${formatPrintCurrency(item.price)}</td>
@@ -898,11 +918,17 @@ export default function OrderDetailView({
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <h4 className="text-base font-bold text-foreground leading-snug">
-                              {item.name || 'Product'}
+                              {item.name === 'Unknown item' || !item.name
+                                ? (order.notes ? `Custom Order (${order.notes.slice(0, 30)})` : 'Custom Item')
+                                : item.name}
                             </h4>
-                            {item.productId && (
+                            {item.productId && item.productId !== 'unknown-default' ? (
                               <span className="text-xs text-muted-foreground font-mono mt-0.5 block">
                                 ID: {item.productId}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border mt-0.5 inline-block">
+                                Custom Admin Item
                               </span>
                             )}
                           </div>
@@ -994,6 +1020,24 @@ export default function OrderDetailView({
                   Rs. {Number(order.manualCodAmount ?? order.totalAmount ?? 0).toLocaleString('en-PK')}
                 </span>
               </div>
+
+              {isCodMismatch && (
+                <div className="mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="text-xs text-amber-800 dark:text-amber-200">
+                    <span className="font-bold">⚠️ Reconciliation Notice:</span> COD amount (Rs. {Number(order.manualCodAmount).toLocaleString('en-PK')}) differs from order total (Rs. {Number(order.totalAmount).toLocaleString('en-PK')}).
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleReconcileCod}
+                    disabled={isReconcilingCod}
+                    className="h-7 text-xs font-semibold px-2.5 bg-background border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 shrink-0 cursor-pointer"
+                  >
+                    {isReconcilingCod ? 'Reconciling...' : 'Reconcile to Total'}
+                  </Button>
+                </div>
+              )}
             </div>
           </section>
 

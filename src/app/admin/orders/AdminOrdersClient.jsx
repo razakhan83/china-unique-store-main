@@ -376,7 +376,7 @@ export default function AdminOrdersClient({
   const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
   const searchTimeoutRef = useRef(null);
   const hasAutoSyncedRef = useRef(false);
-  const defaultUnknownItem = { productId: 'unknown-default', isCustom: true, name: 'Unknown item', price: 100, quantity: 1 };
+  const defaultUnknownItem = null;
   const [draftForm, setDraftForm] = useState({
     customerName: '',
     customerPhone: '',
@@ -391,7 +391,7 @@ export default function AdminOrdersClient({
     customItemName: '',
     customItemPrice: '',
   });
-  const [draftItems, setDraftItems] = useState([defaultUnknownItem]);
+  const [draftItems, setDraftItems] = useState([]);
   const [createLinkedInvoice, setCreateLinkedInvoice] = useState(true); // default ON
   
   // Modals & Popovers State
@@ -1051,7 +1051,7 @@ export default function AdminOrdersClient({
       customItemName: '',
       customItemPrice: '',
     });
-    setDraftItems([{ productId: 'unknown-default', isCustom: true, name: 'Unknown item', price: 100, quantity: 1 }]);
+    setDraftItems([]);
     setCreateSourceOpen(false);
     setProductPickerOpen(false);
     setCitySuggestionsOpen(false);
@@ -1590,6 +1590,18 @@ export default function AdminOrdersClient({
       return;
     }
 
+    const hasInvalidItem = draftItems.some(
+      (item) => item.productId === 'unknown-default' || !item.name || item.name === 'Unknown item' || Number(item.price || 0) <= 0
+    );
+    if (hasInvalidItem) {
+      toast.error('Please specify a valid product name and price for all items.');
+      return;
+    }
+
+    const effectiveCodAmount = (draftForm.manualCodAmount !== undefined && draftForm.manualCodAmount !== '')
+      ? Number(draftForm.manualCodAmount)
+      : draftTotalAmount;
+
     setIsCreatingDraft(true);
     try {
       const result = await createDraftOrderAction({
@@ -1602,7 +1614,7 @@ export default function AdminOrdersClient({
         itemType: draftForm.itemType,
         weight: draftForm.weight,
         notes: draftForm.notes,
-        manualCodAmount: draftForm.manualCodAmount,
+        manualCodAmount: effectiveCodAmount,
         createLinkedInvoice,
         items: draftItems.map((item) => ({
           productId: item.productId,

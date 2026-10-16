@@ -825,6 +825,9 @@ export async function updateOrderAction(id, updates) {
       const subtotal = validatedData.items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0);
       order.totalAmount = Math.max(0, subtotal - (Number(order.discountAmount) || 0) + (Number(order.shippingAmount) || 0));
       order.orderQuantity = validatedData.items.reduce((s, i) => s + Number(i.quantity || 1), 0);
+      if (validatedData.manualCodAmount === undefined) {
+        order.manualCodAmount = order.totalAmount;
+      }
     }
 
     if (validatedData.weight !== undefined) order.weight = validatedData.weight;
@@ -832,7 +835,9 @@ export async function updateOrderAction(id, updates) {
     if (validatedData.orderQuantity !== undefined) order.orderQuantity = validatedData.orderQuantity;
 
     if (validatedData.manualCodAmount !== undefined) {
-      order.manualCodAmount = validatedData.manualCodAmount === '' ? undefined : validatedData.manualCodAmount;
+      order.manualCodAmount = (validatedData.manualCodAmount === '' || validatedData.manualCodAmount == null)
+        ? order.totalAmount
+        : Math.max(0, Number(validatedData.manualCodAmount));
     }
 
     await order.save();
