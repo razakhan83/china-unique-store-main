@@ -92,18 +92,36 @@ function HeroSlideImage({ slide, isPriority }) {
   const mobileOptimized = optimizeCloudinaryUrl(mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile);
 
   return (
-    <picture className="relative block h-full w-full">
-      <source media="(min-width: 768px)" srcSet={desktopOptimized} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={mobileOptimized}
-        alt={slide.alt}
-        fetchPriority={isPriority ? 'high' : 'auto'}
-        loading={isPriority ? 'eager' : 'lazy'}
-        decoding="async"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-    </picture>
+    <>
+      <div className="relative h-full w-full block md:hidden">
+        <Image
+          src={mobileOptimized}
+          alt={slide.alt}
+          fill
+          sizes="100vw"
+          priority={isPriority}
+          fetchPriority={isPriority ? 'high' : 'auto'}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="object-cover"
+          quality={80}
+          {...getBlurPlaceholderProps(slide.images.mobileBlur)}
+        />
+      </div>
+      <div className="relative h-full w-full hidden md:block">
+        <Image
+          src={desktopOptimized}
+          alt={slide.alt}
+          fill
+          sizes="100vw"
+          priority={isPriority}
+          fetchPriority={isPriority ? 'high' : 'auto'}
+          loading={isPriority ? 'eager' : 'lazy'}
+          className="object-cover"
+          quality={80}
+          {...getBlurPlaceholderProps(slide.images.desktopBlur)}
+        />
+      </div>
+    </>
   );
 }
 
@@ -194,7 +212,9 @@ export default function HeroSlider({ slides = [] }) {
       className="relative w-full overflow-hidden bg-muted/40"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      aria-label="Featured Promotions"
     >
+      <h1 className="sr-only">China Unique Store — Exclusive Online Shopping in Pakistan</h1>
       <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-muted/40 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => {
           const isActive = safeActiveIndex === index;

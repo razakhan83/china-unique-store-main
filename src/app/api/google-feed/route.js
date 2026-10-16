@@ -1,7 +1,6 @@
-import mongooseConnect from '@/lib/mongooseConnect';
-import Product from '@/models/Product';
+import { getCatalogFeed } from '@/lib/data';
+import { getSiteUrl } from '@/lib/siteUrl';
 
-// Helper to safely escape XML characters
 function escapeXml(unsafe) {
   return String(unsafe || '')
     .replace(/&/g, '&amp;')
@@ -11,83 +10,46 @@ function escapeXml(unsafe) {
     .replace(/'/g, '&apos;');
 }
 
-// Helper for CDATA wrapper to prevent XML syntax errors
 function generateCdata(text) {
   const safeText = String(text || '').replace(/]]>/g, ']]]]><![CDATA[>');
   return `<![CDATA[${safeText}]]>`;
 }
 
-// Helper to strip HTML tags for plain text descriptions
-function stripHtml(html) {
-  return String(html || '').replace(/<[^>]*>?/gm, '').trim();
-}
+function renderFeedItem(item) {
+  const additionalImages = (item.additionalImageLinks || [])
+    .map((url) => `\n    <g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`)
+    .join('');
 
-function renderFeedItem(product, siteUrl) {
-  // ID or SKU
-  const id = product._id.toString();
-  
-  // Clean product title (max 150 chars)
-  const title = (product.Name || '').substring(0, 150);
-  
-  // Plain text description without HTML tags
-  const rawDescription = product.Description || product.shortDescription || product.Name || '';
-  const description = stripHtml(rawDescription);
-  
-  // Absolute product URL (corrected /products/ plural route)
-  const link = `${siteUrl}/products/${product.slug}`;
-  
-  // Absolute image URL
-  const imageLink = product.Images && product.Images.length > 0 
-    ? product.Images[0].url 
-    : '';
-
-  // Condition
-  const condition = 'new';
-
-  // Availability based on product stock status/quantity
-  const availability = product.StockStatus === 'Out of Stock' || product.stockQuantity <= 0 
-    ? 'out_of_stock' 
-    : 'in_stock';
-
-  // Price format: Number followed by currency code
-  const price = `${product.Price} PKR`;
+  const availability = item.availability === 'in stock' ? 'in_stock' : 'out_of_stock';
 
   return `  <item>
-    <g:id>${escapeXml(id)}</g:id>
-    <g:title>${generateCdata(title)}</g:title>
-    <g:description>${generateCdata(description)}</g:description>
-    <g:link>${escapeXml(link)}</g:link>
-    <g:image_link>${escapeXml(imageLink)}</g:image_link>
-    <g:condition>${condition}</g:condition>
+    <g:id>${escapeXml(item.id)}</g:id>
+    <g:title>${generateCdata(item.title)}</g:title>
+    <g:description>${generateCdata(item.description)}</g:description>
+    <g:link>${escapeXml(item.link)}</g:link>
+    <g:image_link>${escapeXml(item.imageLink)}</g:image_link>${additionalImages}
+    <g:condition>${item.condition || 'new'}</g:condition>
     <g:availability>${availability}</g:availability>
-    <g:price>${price}</g:price>
+    <g:price>${item.price}</g:price>${item.salePrice ? `\n    <g:sale_price>${item.salePrice}</g:sale_price>` : ''}
+    <g:brand>${generateCdata(item.brand)}</g:brand>${item.productType ? `\n    <g:product_type>${generateCdata(item.productType)}</g:product_type>` : ''}
   </item>`;
 }
 
-export async function GET(request) {
+export async function GET() {
   try {
-    // 1. Connect to the database
-    await mongooseConnect();
-    
-    // 2. Fetch all active products
-    const products = await Product.find({ showOnStore: true }).lean();
-    
-    // Determine the base site URL (ensure no trailing slash)
-    const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
-    const siteUrl = rawSiteUrl.replace(/\/$/, '');
+    const siteUrl = getSiteUrl();
+    const feed = await getCatalogFeed(siteUrl);
 
-    // 3. Generate the RSS 2.0 XML feed with the Google Shopping namespace
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
-    <title>Google Merchant Feed</title>
+    <title>${generateCdata(`${feed.storeName} Google Merchant Feed`)}</title>
     <link>${escapeXml(siteUrl)}</link>
-    <description>Product feed for Google Merchant Center</description>
-${products.map(p => renderFeedItem(p, siteUrl)).join('\n')}
+    <description>${generateCdata(`Product feed for Google Merchant Center - ${feed.storeName}`)}</description>
+${feed.items.map(renderFeedItem).join('\n')}
   </channel>
 </rss>`;
 
-    // 4. Set HTTP Response headers properly
     return new Response(xml, {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',

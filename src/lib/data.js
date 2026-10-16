@@ -1882,7 +1882,7 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
 export async function getCatalogFeed(siteUrlOverride = '') {
   'use cache';
   cacheLife('foreverish');
-  cacheTag('products', 'settings', 'categories');
+  cacheTag('products', 'settings', 'categories', 'feeds');
 
   try {
     return await measureDataAccess('getCatalogFeed', async () => {
