@@ -23,38 +23,61 @@ const slugify = (text) => {
         .replace(/-+$/, '');
 };
 
-// GET all products - used by both Public Store and Admin 
+// GET all products - used by both Public Store and Admin
 export async function GET(req) {
     try {
         await mongooseConnect();
 
-        // Support ?search= and ?limit= for invoice product search
+        // Check if requester is an authenticated Admin
+        const session = await getServerSession(authOptions);
+        const isAdmin = !!(session && session.user?.isAdmin);
+
+        // Support ?search=, ?limit=, and ?page= with safe bounds
         const { searchParams } = new URL(req.url);
         const searchQuery = searchParams.get('search') || '';
-        const limit = parseInt(searchParams.get('limit') || '0', 10);
+        const rawLimit = searchParams.get('limit');
+        const rawPage = searchParams.get('page');
+
+        const page = Math.max(1, parseInt(rawPage || '1', 10) || 1);
+        const defaultLimit = 24;
+        const maxLimit = 100;
+        let limit = rawLimit !== null ? parseInt(rawLimit, 10) : defaultLimit;
+        if (isNaN(limit) || limit <= 0) {
+            limit = defaultLimit;
+        } else if (limit > maxLimit) {
+            limit = maxLimit;
+        }
+        const skip = (page - 1) * limit;
 
         let filter = {};
-        if (searchQuery.trim()) {
-            const regex = new RegExp(searchQuery.trim(), 'i');
-            filter = {
-                $or: [
-                    { Name: regex },
-                    { shortDescription: regex },
-                    { tags: regex },
-                    { primaryTag: regex },
-                ],
-            };
+
+        // Non-admin public requests can only see active store products
+        if (!isAdmin) {
+            filter.showOnStore = true;
         }
 
-        let dbQuery = Product.find(filter)
-            .select('Name Description shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
-            .populate({ path: 'Category', select: 'name slug bgColor' })
-            .sort({ createdAt: -1 })
-            .lean();
+        if (searchQuery.trim()) {
+            const escaped = searchQuery.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escaped, 'i');
+            filter.$or = [
+                { Name: regex },
+                { shortDescription: regex },
+                { tags: regex },
+                { primaryTag: regex },
+            ];
+        }
 
-        if (limit > 0) dbQuery = dbQuery.limit(limit);
-
-        const products = await dbQuery;
+        // Omit heavy markdown 'Description' to avoid massive payload transfer; shortDescription is preserved
+        const [products, total] = await Promise.all([
+            Product.find(filter)
+                .select('Name shortDescription seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling packOptions tags primaryTag')
+                .populate({ path: 'Category', select: 'name slug bgColor' })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Product.countDocuments(filter),
+        ]);
 
         // Format objectId to string securely
         const safeProducts = products.map((p) => {
@@ -69,7 +92,17 @@ export async function GET(req) {
             };
         });
 
-        return NextResponse.json({ success: true, data: safeProducts });
+        return NextResponse.json({
+            success: true,
+            data: safeProducts,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasMore: skip + products.length < total,
+            },
+        });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }

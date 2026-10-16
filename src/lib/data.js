@@ -502,17 +502,6 @@ async function getLiveProductsRaw() {
   });
 }
 
-async function getAllProductsRaw() {
-  await mongooseConnect();
-
-  const products = await Product.find({})
-    .select(PRODUCT_ADMIN_PROJECTION)
-    .populate(PRODUCT_CATEGORY_POPULATE)
-    .sort({ createdAt: -1 })
-    .lean();
-  return products.map(serializeProduct);
-}
-
 async function getSettingsRaw() {
   const defaultSettings = {
     _id: 'default',
@@ -1927,17 +1916,6 @@ export async function getCatalogFeed(siteUrlOverride = '') {
   }
 }
 
-export async function getAdminProducts() {
-  await mongooseConnect();
-  const products = await Product.find({})
-    .select(PRODUCT_ADMIN_PROJECTION)
-    .populate(PRODUCT_CATEGORY_POPULATE)
-    .sort({ createdAt: -1 })
-    .lean();
-  const serializedProducts = products.map(serializeProduct);
-  return serializedProducts.map(toAdminProductRow);
-}
-
 export async function getAdminProductCategoryOptions() {
   const categories = await getCategoriesRaw();
 
@@ -1963,6 +1941,7 @@ export async function getAdminOrderProductCatalog() {
     ].join(' '))
     .populate(PRODUCT_CATEGORY_POPULATE)
     .sort({ createdAt: -1 })
+    .limit(200)
     .lean();
 
   return products.map((product) => {
@@ -1980,12 +1959,6 @@ export async function getAdminOrderProductCatalog() {
       Images: serialized.Images,
     };
   });
-}
-
-export async function getOrdersList() {
-  await mongooseConnect();
-  const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
-  return orders.map(toOrderSummaryRow);
 }
 
 export async function getAdminProductsPage({
@@ -2453,7 +2426,7 @@ export async function getUserOrders(email) {
     }
   }
 
-  const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find(query).sort({ createdAt: -1 }).limit(100).lean();
   return orders.map(toOrderSummaryRow);
 }
 
