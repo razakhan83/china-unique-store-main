@@ -16,7 +16,6 @@ import {
   Minus,
   Trash2,
   AlertTriangle,
-  RefreshCw,
   ShoppingBag,
   Tag,
   Truck,
@@ -294,29 +293,20 @@ function OrderSummaryContent({
   couponLoading,
   handleApplyCoupon,
   handleRemoveCoupon,
-  relatedProducts = [],
   addToCart,
   handleRequestRemove,
   handleQuantityDecrease,
   handleQuantityIncrease,
-  relatedOffset,
-  isRefreshingRelated,
-  handleRefreshRelated,
 }) {
-  const { subtotal, shipping, total, isFreeShipping, discountAmount } = pricing;
-
-  const availableRelated = relatedProducts
-    ?.filter((p) => !cart.some((item) => String(item.id || item._id) === String(p.id || p._id)));
-
-  const safeOffset = (relatedOffset || 0) % Math.max(1, availableRelated?.length || 1);
-  let visibleRelated = availableRelated?.slice(safeOffset, safeOffset + 3) || [];
-  
-  if (visibleRelated.length < 3 && availableRelated?.length >= 3) {
-    visibleRelated = [
-      ...visibleRelated,
-      ...availableRelated.slice(0, 3 - visibleRelated.length)
-    ];
-  }
+  const {
+    subtotal,
+    shipping,
+    total,
+    isFreeShipping,
+    isCitySelected,
+    isKarachi,
+    discountAmount,
+  } = pricing;
 
   return (
     <>
@@ -467,9 +457,24 @@ function OrderSummaryContent({
           </div>
         )}
         <div className={styles.totalRow}>
-          <span className={styles.totalLabel}>Shipping</span>
+          <div className="flex flex-col">
+            <span className={styles.totalLabel}>Shipping</span>
+            <span className="text-[11px] text-muted-foreground font-normal">
+              {isFreeShipping
+                ? 'Free delivery promotion applied'
+                : isCitySelected
+                ? isKarachi
+                  ? 'Karachi standard delivery'
+                  : 'Delivery outside Karachi'
+                : 'Calculated by city'}
+            </span>
+          </div>
           <span className={isFreeShipping ? styles.totalValueFree : styles.totalValue}>
-            {isFreeShipping ? 'Free' : formatPrice(shipping)}
+            {isFreeShipping
+              ? 'Free'
+              : isCitySelected
+              ? formatPrice(shipping)
+              : <span className="text-xs italic font-normal text-muted-foreground">Select city</span>}
           </span>
         </div>
       </div>
@@ -478,77 +483,21 @@ function OrderSummaryContent({
 
       {/* Grand total */}
       <div className={styles.grandTotalRow}>
-        <span className={styles.grandTotalLabel}>Total</span>
+        <div className="flex flex-col">
+          <span className={styles.grandTotalLabel}>Total</span>
+          {!isCitySelected && !isFreeShipping && (
+            <span className="text-[11px] text-muted-foreground font-normal">
+              Shipping added upon city selection
+            </span>
+          )}
+        </div>
         <span className={styles.grandTotalValue}>{formatPrice(total)}</span>
       </div>
-
-      {/* Cross-sell */}
-      {availableRelated?.length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[0.95rem] font-bold text-foreground">You might also like</h3>
-            <button 
-              onClick={handleRefreshRelated}
-              disabled={isRefreshingRelated || availableRelated.length <= 3}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={cn("size-3.5", isRefreshingRelated && "animate-spin")} />
-              Refresh products
-            </button>
-          </div>
-          <div className="flex flex-col gap-3">
-            {isRefreshingRelated ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3.5 bg-background border border-border/60 rounded-md p-2.5 shadow-sm">
-                  <div className={styles.summaryProductThumbWrapper} style={{ transform: 'none', margin: 0 }}>
-                    <Skeleton className="size-full" />
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1 justify-center gap-2">
-                    <Skeleton className="h-3.5 w-3/4" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                  <Skeleton className="size-8 rounded-full shrink-0 mr-1" />
-                </div>
-              ))
-            ) : (
-              visibleRelated.map((product) => {
-                const img = getPrimaryProductImage(product);
-                const price = getSellingPrice(product);
-                return (
-                  <div key={product.id} className="flex items-center gap-3.5 bg-background border border-border/60 rounded-md p-2.5 shadow-sm">
-                    <div className={styles.summaryProductThumbWrapper} style={{ transform: 'none', margin: 0 }}>
-                      <div className={styles.summaryProductThumb}>
-                        {img && <Image src={img.url} alt={product.Name} fill className="object-cover" />}
-                      </div>
-                    </div>
-                    <div className="flex flex-col min-w-0 flex-1 justify-center">
-                      <span className="text-[13px] font-semibold text-foreground/90 line-clamp-1">{product.Name}</span>
-                      <span className="text-[13px] text-muted-foreground font-medium mt-0.5">{formatPrice(price)}</span>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (addToCart) {
-                          addToCart(product, 1);
-                        }
-                      }}
-                      className="inline-flex shrink-0 size-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 outline-none transition-all duration-300 ease-out hover:bg-emerald-200 hover:text-emerald-800 hover:scale-[1.15] active:scale-[0.85] mr-0.5"
-                      aria-label="Add to cart"
-                    >
-                      <Plus className="size-4" strokeWidth={2.5} />
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 }
 
-export default function CheckoutClient({ settings, relatedProducts = [] }) {
+export default function CheckoutClient({ settings }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { cart, isInitialized } = useCartItems();
@@ -615,17 +564,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
-
-  const [relatedOffset, setRelatedOffset] = useState(0);
-  const [isRefreshingRelated, setIsRefreshingRelated] = useState(false);
-
-  const handleRefreshRelated = () => {
-    setIsRefreshingRelated(true);
-    setTimeout(() => {
-      setRelatedOffset((prev) => prev + 3);
-      setIsRefreshingRelated(false);
-    }, 400); // Small delay to show skeleton
-  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -767,7 +705,7 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     hasFreeDeliveryProduct,
     items: cart,
   });
-  const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi, discountAmount } = pricing;
+  const { shipping, total, isFreeShipping, freeShippingThreshold, isKarachi, isCitySelected, discountAmount } = pricing;
 
   useEffect(() => {
     if (hasTrackedCheckoutView || cart.length === 0) return;
@@ -1178,10 +1116,6 @@ export default function CheckoutClient({ settings, relatedProducts = [] }) {
     handleRequestRemove,
     handleQuantityDecrease,
     handleQuantityIncrease,
-    relatedProducts: relatedProducts.map((p) => ({ ...p, id: p._id || p.id })),
-    relatedOffset,
-    isRefreshingRelated,
-    handleRefreshRelated,
   };
 
   return (
