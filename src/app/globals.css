@@ -201,9 +201,35 @@
     cursor: not-allowed;
   }
 
+  /* Compositor-only tap feedback for all interactive buttons and elements */
+  button:active:not(:disabled),
+  [role="button"]:active:not([aria-disabled="true"]),
+  .tap-feedback:active {
+    transform: scale(0.97);
+    opacity: 0.92;
+    transition: transform 100ms ease, opacity 100ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    button:not(:disabled):hover,
+    [role="button"]:not([aria-disabled="true"]):hover {
+      transition: transform 150ms ease, opacity 150ms ease;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button:active:not(:disabled),
+    [role="button"]:active:not([aria-disabled="true"]),
+    .tap-feedback:active {
+      transform: none !important;
+      opacity: 0.92;
+    }
+  }
+
   img {
     display: block;
     max-width: 100%;
+    transition: opacity 250ms ease-out;
   }
 }
 

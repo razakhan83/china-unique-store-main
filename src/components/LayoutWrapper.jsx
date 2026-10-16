@@ -54,7 +54,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           announcementBarMessages={settings.announcementBarMessages}
         />
 
-        <main id="store-main" className="flex-1 min-h-[80vh] overflow-x-clip">{children}</main>
+        <main id="store-main" className="flex-1 min-h-[80vh] overflow-x-clip store-fade">{children}</main>
 
         <ConditionalLayoutElements>
           <footer id="store-footer" className="border-t border-border/60 bg-muted/70 pt-12 text-foreground">

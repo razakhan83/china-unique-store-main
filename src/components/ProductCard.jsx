@@ -149,7 +149,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
                 loading={priority ? "eager" : "lazy"}
                 decoding="async"
                 className={cn(
-                  "object-cover transition-transform duration-500 ease-out",
+                  "object-cover transition-transform duration-300 ease-out",
                   "md:group-hover:scale-105",
                   isUnavailable && "scale-[1.01] grayscale-[30%] opacity-75",
                   (secondaryImageSrc && !isUnavailable) && "md:group-hover:opacity-0"

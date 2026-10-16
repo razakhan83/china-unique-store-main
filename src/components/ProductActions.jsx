@@ -635,17 +635,30 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                             type="button"
                             onClick={handleAddToCart}
                             disabled={addLock.isPending}
-                            className="h-10 px-3.5 rounded-xl text-xs font-bold border border-border bg-background hover:bg-muted text-foreground transition-all active:scale-[0.97] cursor-pointer"
+                            className="h-10 px-3.5 rounded-xl text-xs font-bold border border-border bg-background hover:bg-muted text-foreground transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5"
                         >
-                            {didJustAdd ? "Added" : "Add to Cart"}
+                            {addLock.isPending ? (
+                                <Spinner className="size-3.5" />
+                            ) : didJustAdd ? (
+                                "Added"
+                            ) : (
+                                "Add to Cart"
+                            )}
                         </button>
                         <Button
                             type="button"
                             onClick={handleBuyNow}
                             disabled={buyLock.isPending}
-                            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all active:scale-[0.97]"
+                            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all active:scale-[0.97] inline-flex items-center justify-center gap-1.5"
                         >
-                            Buy Now
+                            {buyLock.isPending ? (
+                                <>
+                                    <Spinner className="size-3.5 animate-spin text-white" />
+                                    <span>Opening...</span>
+                                </>
+                            ) : (
+                                "Buy Now"
+                            )}
                         </Button>
                     </div>
                 </div>

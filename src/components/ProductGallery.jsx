@@ -144,8 +144,9 @@ export default function ProductGallery({ images, primaryTag, product }) {
                       alt={`${productName} - View ${index + 1}`}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-contain transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
+                      className="object-contain transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] lg:hover:scale-105"
                       priority={index === 0}
+                      {...getBlurPlaceholderProps(image.blurDataURL)}
                     />
                   </div>
                 </CarouselItem>

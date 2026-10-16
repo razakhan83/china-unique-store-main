@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useWishlist } from '@/context/WishlistContext';
@@ -52,8 +52,12 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
           className,
         )}
       >
-        <Heart className={cn('size-4', active && 'fill-destructive stroke-destructive')} />
-        <span className="hidden sm:inline">{active ? 'Saved' : 'Save'}</span>
+        {isSubmitting ? (
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Heart className={cn('size-4', active && 'fill-destructive stroke-destructive')} />
+        )}
+        <span className="hidden sm:inline">{isSubmitting ? 'Saving...' : active ? 'Saved' : 'Save'}</span>
       </button>
     );
   }
@@ -78,20 +82,24 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
         className,
       )}
     >
-      <span className="relative block size-4 md:size-4.5">
-        <Heart
-          className={cn(
-            'absolute inset-0 size-4 md:size-4.5 transition-[opacity,transform,color] duration-200 ease-out md:group-hover/wishlist:text-red-500',
-            active ? 'scale-75 opacity-0' : 'scale-100 opacity-100'
-          )}
-        />
-        <Heart
-          className={cn(
-            'absolute inset-0 size-4 md:size-4.5 fill-red-500 stroke-red-500 transition-[opacity,transform] duration-200 ease-out',
-            active ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
-          )}
-        />
-      </span>
+      {isSubmitting ? (
+        <Loader2 className="size-3.5 md:size-4 animate-spin text-muted-foreground" />
+      ) : (
+        <span className="relative block size-4 md:size-4.5">
+          <Heart
+            className={cn(
+              'absolute inset-0 size-4 md:size-4.5 transition-[opacity,transform,color] duration-200 ease-out md:group-hover/wishlist:text-red-500',
+              active ? 'scale-75 opacity-0' : 'scale-100 opacity-100'
+            )}
+          />
+          <Heart
+            className={cn(
+              'absolute inset-0 size-4 md:size-4.5 fill-red-500 stroke-red-500 transition-[opacity,transform] duration-200 ease-out',
+              active ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
+            )}
+          />
+        </span>
+      )}
     </button>
   );
 }
