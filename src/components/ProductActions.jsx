@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartActions } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import ProductWishlistButton from '@/components/ProductWishlistButton';
 import { cn } from '@/lib/utils';
-import { BellRing, ShoppingCart, Share2, Minus, Plus, BadgeCheck, PackageCheck, Truck } from 'lucide-react';
+import { BellRing, ShoppingCart, Share2, Minus, Plus, BadgeCheck, PackageCheck, Truck, ShieldCheck } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
@@ -144,6 +144,23 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         email: '',
     });
     const [isBottomNavHidden, setIsBottomNavHidden] = useState(false);
+    const mainActionsRef = useRef(null);
+    const [showStickyBar, setShowStickyBar] = useState(false);
+
+    useEffect(() => {
+        const target = mainActionsRef.current;
+        if (!target || typeof IntersectionObserver === 'undefined') return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setShowStickyBar(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+            },
+            { threshold: 0 }
+        );
+
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         router.prefetch('/checkout');
@@ -385,6 +402,48 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 </div>
                 </div>
 
+                {/* Trust Highlights Grid */}
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-border/70 bg-muted/30 p-2.5 text-xs">
+                    <div className="flex items-center gap-2">
+                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <PackageCheck className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-foreground leading-tight truncate">
+                                {isOutOfStock ? "Out of Stock" : "In Stock & Ready"}
+                            </p>
+                            <p className="text-[10.5px] text-muted-foreground leading-tight truncate">Dispatched in 24 hrs</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <Truck className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-foreground leading-tight truncate">2–4 Days Delivery</p>
+                            <p className="text-[10.5px] text-muted-foreground leading-tight truncate">Karachi & Nationwide</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <BadgeCheck className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-foreground leading-tight truncate">Cash on Delivery</p>
+                            <p className="text-[10.5px] text-muted-foreground leading-tight truncate">Pay when received</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                            <ShieldCheck className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-foreground leading-tight truncate">7-Day Replacement</p>
+                            <p className="text-[10.5px] text-muted-foreground leading-tight truncate">Check before paying</p>
+                        </div>
+                    </div>
+                </div>
+
                 {packOptions.length > 1 && (
                     <div className="space-y-2 mt-2">
                         <span className="text-xs sm:text-[13px] font-semibold text-muted-foreground">Select Option:</span>
@@ -458,7 +517,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     </div>
                 ) : null}
 
-                <div className="flex flex-col gap-3">
+                <div ref={mainActionsRef} className="flex flex-col gap-3">
                     {isOutOfStock ? (
                         <Button
                             onClick={() => setNotifyModalOpen(true)}
@@ -556,6 +615,42 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 </form>
             </DialogContent>
         </Dialog>
+        {/* Sticky Mobile Bottom CTA Bar */}
+        {!isOutOfStock && showStickyBar && (
+            <div
+                className={cn(
+                    "fixed left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-3.5 py-2.5 shadow-lg md:hidden transition-all duration-300 ease-out",
+                    isBottomNavHidden
+                        ? "bottom-0 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]"
+                        : "bottom-[calc(env(safe-area-inset-bottom)+var(--mobile-bottom-nav-offset,3.5rem))]"
+                )}
+            >
+                <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-foreground leading-tight">{product.Name}</p>
+                        <p className="text-sm font-bold text-primary tabular-nums leading-tight">{formatPrice(displayPrice)}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            type="button"
+                            onClick={handleAddToCart}
+                            disabled={addLock.isPending}
+                            className="h-10 px-3.5 rounded-xl text-xs font-bold border border-border bg-background hover:bg-muted text-foreground transition-all active:scale-[0.97] cursor-pointer"
+                        >
+                            {didJustAdd ? "Added" : "Add to Cart"}
+                        </button>
+                        <Button
+                            type="button"
+                            onClick={handleBuyNow}
+                            disabled={buyLock.isPending}
+                            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold transition-all active:scale-[0.97]"
+                        >
+                            Buy Now
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 }

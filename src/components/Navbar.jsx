@@ -81,6 +81,10 @@ import { cn } from '@/lib/utils';
 import NavbarSearchPanel from '@/components/NavbarSearchPanel';
 import NavbarDesktopAccountControl from '@/components/NavbarDesktopAccountControl';
 
+const MyWishlistButton = dynamic(() => import('@/components/MyWishlistButton'), {
+  ssr: false,
+});
+
 const AuthModal = dynamic(() => import('@/components/AuthModal'), {
   ssr: false,
   loading: () => null,
@@ -562,6 +566,11 @@ function NavbarContent({
 
             {/* Right Zone: Actions */}
             <div className="flex items-center gap-2 md:gap-4 shrink-0">
+              {/* Desktop Wishlist Button */}
+              <div className="hidden md:flex items-center">
+                <MyWishlistButton iconOnly className={navActionButtonClass} />
+              </div>
+
               {/* Combined Cart Button */}
               <Button
                 id="nav-cart-button"
