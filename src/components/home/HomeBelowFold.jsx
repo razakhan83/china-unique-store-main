@@ -3,17 +3,20 @@ import AnimatedStats from '@/components/AnimatedStats';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import TiltedProductMarquee from '@/components/TiltedProductMarquee';
 import HomeFaqSection from '@/components/HomeFaqSection';
-import { getStoreSettings } from '@/lib/data';
+import { getStoreSettings, getStoreStats } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
 export default async function HomeBelowFold() {
-  const settings = await getStoreSettings();
+  const [settings, stats] = await Promise.all([
+    getStoreSettings(),
+    getStoreStats(),
+  ]);
   const whatsappLink = createWhatsAppUrl(settings.whatsappNumber);
 
   return (
     <>
       <div id="store-animated-stats">
-        <AnimatedStats />
+        <AnimatedStats orderCount={stats?.totalOrders} customerCount={stats?.totalCustomers} />
       </div>
 
       <div id="store-marquee-wrapper" data-store-reveal>

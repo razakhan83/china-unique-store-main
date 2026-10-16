@@ -30,7 +30,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
     { href: facebookUrl, label: 'Facebook', icon: FacebookIcon },
     { href: instagramUrl, label: 'Instagram', icon: InstagramIcon },
     { href: whatsappLink, label: 'WhatsApp', icon: WhatsAppIcon },
-  ];
+  ].filter((link) => Boolean(link.href));
   const quickLinks = Array.isArray(settings.customPages)
     ? settings.customPages.filter((page) => page?.isEnabled !== false && page?.showInFooter !== false)
     : [];
@@ -96,23 +96,22 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   <p className="max-w-sm leading-relaxed text-muted-foreground">
                     {settings.storeDescription || 'A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.'}
                   </p>
-                  <div className="mt-5 flex gap-3">
-                    {socialLinks.map(({ href, label, icon: Icon }) => (
-                      <a
-                        key={label}
-                        href={href || undefined}
-                        target={href ? '_blank' : undefined}
-                        rel={href ? 'noopener noreferrer' : undefined}
-                        aria-label={label}
-                        aria-disabled={!href}
-                        className={`inline-flex size-11 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-muted-foreground transition-[transform,border-color,background-color,color,opacity] duration-300 ${
-                          href ? 'hover:-translate-y-1 hover:border-primary/18 hover:bg-background hover:text-foreground' : 'cursor-not-allowed opacity-45'
-                        }`}
-                      >
-                        <Icon className={label === 'WhatsApp' ? 'size-5' : 'size-4'} />
-                      </a>
-                    ))}
-                  </div>
+                  {socialLinks.length > 0 && (
+                    <div className="mt-5 flex gap-3">
+                      {socialLinks.map(({ href, label, icon: Icon }) => (
+                        <a
+                          key={label}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={label}
+                          className="inline-flex size-11 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-muted-foreground transition-[transform,border-color,background-color,color,opacity] duration-300 hover:-translate-y-1 hover:border-primary/18 hover:bg-background hover:text-foreground"
+                        >
+                          <Icon className={label === 'WhatsApp' ? 'size-5' : 'size-4'} />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Links</h3>

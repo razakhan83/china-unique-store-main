@@ -13,12 +13,13 @@ const STATS = [
 ];
 
 function StatItem({ stat }) {
-  const [count, setCount] = useState(stat.isNumeric ? 0 : stat.target);
+  // Initialize with target so SSR and early paint show the full reputable count instead of 0+
+  const [count, setCount] = useState(stat.target);
   const [hasAnimated, setHasAnimated] = useState(false);
   const itemRef = useRef(null);
 
   useEffect(() => {
-    if (!stat.isNumeric) return;
+    if (!stat.isNumeric || !stat.target) return;
 
     let observer = null;
     const startCountAnimation = () => {
@@ -42,6 +43,8 @@ function StatItem({ stat }) {
         }
       };
 
+      // Reset to 0 briefly on client mount when intersecting to play smooth counting animation
+      setCount(0);
       requestAnimationFrame(animate);
     };
 
@@ -91,7 +94,17 @@ function StatItem({ stat }) {
   );
 }
 
-export default function AnimatedStats() {
+export default function AnimatedStats({ orderCount = 0, customerCount = 0 }) {
+  const dynamicOrdersTarget = Math.max(390, Number(orderCount) || 1200);
+  const dynamicCustomersTarget = Math.max(350, Number(customerCount) || 1000);
+
+  const stats = [
+    { target: dynamicCustomersTarget, label: 'Happy Customers', icon: Users, isNumeric: true, prefix: '', suffix: '+' },
+    { target: dynamicOrdersTarget, label: 'Orders Delivered', icon: Package, isNumeric: true, prefix: '', suffix: '+' },
+    { target: 98, label: 'Positive Reviews', icon: Star, isNumeric: true, prefix: '', suffix: '%' },
+    { target: 100, label: 'Verified Quality', icon: ShieldCheck, isNumeric: true, prefix: '', suffix: '%' },
+  ];
+
   return (
     <section className="relative w-full bg-background py-14 sm:py-16 md:py-24 border-t border-border/40">
       <SectionDoodleBackground />
@@ -106,7 +119,7 @@ export default function AnimatedStats() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-4 md:gap-8">
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <StatItem key={stat.label} stat={stat} />
           ))}
         </div>

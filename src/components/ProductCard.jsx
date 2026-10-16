@@ -64,7 +64,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
   const reviewCount = Number(product.reviewCount || 0);
   const averageRating = Number(product.averageRating || 0);
   const ratingLabel = reviewCount > 0 && averageRating > 0 ? averageRating.toFixed(1) : "";
-  const isUnavailable = product.StockStatus === "Out of Stock" || product.showOnStore === false;
+  const isUnavailable = product.StockStatus === "Out of Stock" || product.showOnStore === false || !sellingPrice || sellingPrice <= 0;
   
   const primaryTag = product.primaryTag ? getProductTagById(product.primaryTag) : null;
 
@@ -224,28 +224,39 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
                       endsAt={product.discountEndsAt}
                     />
                   ) : (
-                  <div className="flex flex-col items-start justify-center gap-1 sm:gap-1.5 flex-1 min-w-0 min-h-[36px]">
-                    <p
-                      className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
-                      draggable={false}
-                    >
-                      {sellingPrice > 0 ? formatPrice(sellingPrice) : "Rs 0"}
-                    </p>
-                    {compareAtPrice ? (
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex flex-col items-start justify-center gap-1 sm:gap-1.5 flex-1 min-w-0 min-h-[40px]">
+                    {sellingPrice > 0 ? (
+                      <>
                         <p
-                          className="text-[10px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[11px] sm:text-[13px]"
+                          className="text-[14px] font-bold leading-none text-foreground tabular-nums @min-[260px]:text-[15px] sm:text-[16px]"
                           draggable={false}
                         >
-                          {formatPrice(compareAtPrice)}
+                          {formatPrice(sellingPrice)}
                         </p>
-                        {Boolean(product.isDiscounted && product.discountPercentage > 0) && (
-                          <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
-                            Save {formatPrice(compareAtPrice - sellingPrice)}
-                          </Badge>
-                        )}
-                      </div>
-                    ) : null}
+                        {compareAtPrice ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p
+                              className="text-[10px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[11px] sm:text-[13px]"
+                              draggable={false}
+                            >
+                              {formatPrice(compareAtPrice)}
+                            </p>
+                            {Boolean(product.isDiscounted && product.discountPercentage > 0) && (
+                              <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
+                                Save {formatPrice(compareAtPrice - sellingPrice)}
+                              </Badge>
+                            )}
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <p
+                        className="text-[12px] font-medium leading-none text-muted-foreground"
+                        draggable={false}
+                      >
+                        Price on request
+                      </p>
+                    )}
                   </div>
                   )}
                   <div className="shrink-0">

@@ -129,3 +129,6 @@ export function getDiscountPercent(product, now = null) {
 
 // Backward-compatible alias for existing callers
 export const getVisibleCompareAtPrice = getComparePrice;
+
+// Checkout order & shipping pricing calculation
+export { calculateCheckoutPricing, normalizeCheckoutCity } from './checkoutPricing';

@@ -24,6 +24,14 @@ export async function generateMetadata({ searchParams }) {
   const params = (await searchParams) || {};
   const category = params.category || 'all';
   const search = params.search || '';
+  const price = params.price || 'all';
+
+  if (price === 'under300' || price === 'under-300' || price === 'dollar-store' || price === 'dollar') {
+    return {
+      title: 'Dollar Store (Under Rs 300)',
+      description: 'Browse budget-friendly kitchenware and daily essentials under Rs 300 at China Unique Store.',
+    };
+  }
 
   if (search) {
     return {
@@ -65,6 +73,7 @@ export default async function ProductsPage({ searchParams }) {
           activeCategory={resolvedSearchParams.category || 'all'}
           searchTerm={resolvedSearchParams.search || ''}
           sort={resolvedSearchParams.sort || 'newest'}
+          price={resolvedSearchParams.price || 'all'}
         />
         <ProductsToolbar
           initialSearch={resolvedSearchParams.search || ''}

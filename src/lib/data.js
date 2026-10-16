@@ -3037,3 +3037,33 @@ export async function getAdminStockRequests({ page = 1, limit = 20, status = 'al
   };
 }
 
+export async function getStoreStats() {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('orders');
+
+  try {
+    await mongooseConnect();
+    const [totalOrders, customersAgg] = await Promise.all([
+      Order.countDocuments().exec(),
+      Order.aggregate([
+        { $group: { _id: '$customerName' } },
+        { $count: 'count' },
+      ]),
+    ]);
+
+    const totalCustomers = customersAgg[0]?.count || 0;
+
+    return {
+      totalOrders: Math.max(0, Number(totalOrders) || 0),
+      totalCustomers: Math.max(0, Number(totalCustomers) || 0),
+    };
+  } catch (error) {
+    console.error('Failed to fetch store stats:', error);
+    return {
+      totalOrders: 0,
+      totalCustomers: 0,
+    };
+  }
+}
+

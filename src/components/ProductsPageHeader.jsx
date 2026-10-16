@@ -32,7 +32,10 @@ function getCategoryPillClassName(isActive) {
   );
 }
 
-function buildTitle(activeCategory, categories, searchTerm) {
+function buildTitle(activeCategory, categories, searchTerm, price = "all") {
+  if (price === "under300" || price === "under-300" || price === "dollar-store" || price === "dollar") {
+    return "Dollar Store (Under Rs 300)";
+  }
   if (activeCategory === "new-arrivals") return "New Arrivals";
   if (activeCategory && activeCategory !== "all") {
     return categories.find((category) => category.id === activeCategory || category.slug === activeCategory || category._id === activeCategory)?.label || "Products";
@@ -61,6 +64,7 @@ export default function ProductsPageHeader({
   activeCategory = "all",
   searchTerm = "",
   sort = "newest",
+  price = "all",
 }) {
   const router = useRouter();
   const categoryNavRef = useRef(null);
@@ -80,7 +84,7 @@ export default function ProductsPageHeader({
       .map(c => ({ ...c, icon: Tag })),
   ];
   const effectiveActiveCategory = pendingCategoryId ?? activeCategory;
-  const pageTitle = buildTitle(activeCategory, categories, searchTerm);
+  const pageTitle = buildTitle(activeCategory, categories, searchTerm, price);
 
   useEffect(() => {
     const nav = categoryNavRef.current;
