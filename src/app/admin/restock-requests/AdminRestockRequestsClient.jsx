@@ -10,9 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
-import { ArrowLeft, ArrowRight, Loader2, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bell, Loader2, RefreshCw, Search } from 'lucide-react';
 import Link from 'next/link';
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
 
 export default function AdminRestockRequestsClient({
   initialRequests,
@@ -113,8 +113,13 @@ export default function AdminRestockRequestsClient({
               <TableBody>
                 {initialRequests.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                      No requests found.
+                    <TableCell colSpan={5} className="p-8">
+                      <AdminEmptyState
+                        icon={Bell}
+                        title="No restock requests"
+                        description={searchValue ? `No restock requests matching "${searchValue}".` : "When customers request out-of-stock items, they will appear here."}
+                        className="border-0 shadow-none p-6"
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

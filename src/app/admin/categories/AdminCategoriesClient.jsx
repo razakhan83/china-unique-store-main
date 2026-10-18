@@ -6,6 +6,7 @@ import {
   Check,
   Eye,
   ImageIcon,
+  LayoutGrid,
   Loader2,
   MoreVertical,
   Package2,
@@ -17,6 +18,7 @@ import {
   GripVertical,
   Sparkles,
 } from "lucide-react";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -910,9 +912,16 @@ export default function AdminCategoriesClient({ initialCategories = null }) {
           ))}
         </div>
       ) : orderedCategories.length === 0 ? (
-        <div className="surface-card rounded-2xl p-12 text-center">
-          <p className="font-medium text-muted-foreground">No categories yet. Add your first category above.</p>
-        </div>
+        <AdminEmptyState
+          icon={LayoutGrid}
+          title="No categories created yet"
+          description="Categories group and organize your products on the homepage, filters, and catalog."
+          action={{
+            label: "Add Category",
+            icon: Plus,
+            onClick: () => setAddModalOpen(true),
+          }}
+        />
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={orderedCategories.map((c) => c._id)} strategy={verticalListSortingStrategy}>

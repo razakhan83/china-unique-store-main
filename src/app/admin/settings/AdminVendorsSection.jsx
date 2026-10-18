@@ -6,6 +6,7 @@ import { Check, Copy, Loader2, MoreHorizontal, MoreVertical, Package, Pencil, Pl
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -532,8 +533,12 @@ export default function AdminVendorsSection() {
                 Loading vendors...
               </div>
             ) : vendors.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                No vendors yet. Add your first one above.
+              <div className="p-4">
+                <AdminEmptyState
+                  icon={Store}
+                  title="No vendors yet"
+                  description="Add your first supplier or vendor above to track contacts and manage wholesale product costs."
+                />
               </div>
             ) : (
               vendors.map((vendor) => {
@@ -773,8 +778,12 @@ export default function AdminVendorsSection() {
 
           <div className="flex flex-col">
             {!activeVendor ? (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                Pick a vendor to inspect linked products.
+              <div className="p-4">
+                <AdminEmptyState
+                  icon={Store}
+                  title="Pick a vendor"
+                  description="Select a vendor from the list to view, assign, or edit their linked catalog products."
+                />
               </div>
             ) : loadingProducts ? (
               <div className="flex items-center justify-center px-4 py-10 text-sm text-muted-foreground">
@@ -782,10 +791,18 @@ export default function AdminVendorsSection() {
                 Loading products...
               </div>
             ) : filteredVendorProducts.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                {productSearch.trim()
-                  ? 'No linked products matched your search.'
-                  : 'No products are linked to this vendor yet.'}
+              <div className="p-4">
+                <AdminEmptyState
+                  icon={Package}
+                  title={productSearch.trim() ? "No matching products found" : "No products linked yet"}
+                  description={
+                    productSearch.trim()
+                      ? `No linked products matched "${productSearch}". Try clearing your search keyword.`
+                      : `Link products from your catalog to ${activeVendor.name} to track wholesale purchase prices.`
+                  }
+                  actionLabel={productSearch.trim() ? "Clear Search" : undefined}
+                  onAction={productSearch.trim() ? () => setProductSearch('') : undefined}
+                />
               </div>
             ) : (
               filteredVendorProducts.map((product) => {

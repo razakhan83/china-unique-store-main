@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import BulkImportModal from "@/components/admin/BulkImportModal";
 import BulkPriceStockDialog from "./BulkPriceStockDialog";
 import AppPagination from "@/components/AppPagination";
@@ -996,8 +997,21 @@ export default function AdminProductsClient({
             <tbody className="divide-y divide-border">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-20 text-center text-sm font-medium text-muted-foreground">
-                    No products found for the selected criteria.
+                  <td colSpan={9} className="p-8">
+                    <AdminEmptyState
+                      icon={Package}
+                      title="No products found"
+                      description={searchTerm ? `No products matching "${searchTerm}". Try another keyword or filter.` : "Get started by adding your first product to the store catalog."}
+                      action={{
+                        label: "Add Product",
+                        icon: Plus,
+                        href: "/admin/products/add",
+                      }}
+                      secondaryAction={searchTerm ? {
+                        label: "Clear Search",
+                        onClick: () => handleSearchSubmit(""),
+                      } : undefined}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -1225,9 +1239,16 @@ export default function AdminProductsClient({
       {/* Mobile Card List - Order Management Style */}
       <div className={cn("md:hidden flex flex-col gap-2.5 transition-opacity", isPending && "opacity-70")}>
         {products.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card px-4 py-12 text-center text-xs text-muted-foreground">
-            No products found.
-          </div>
+          <AdminEmptyState
+            icon={Package}
+            title="No products found"
+            description={searchTerm ? `No products matching "${searchTerm}".` : "Get started by adding your first product."}
+            action={{
+              label: "Add Product",
+              icon: Plus,
+              href: "/admin/products/add",
+            }}
+          />
         ) : (
           products.map((product) => {
             const isSelected = selectedProducts.includes(product._id);

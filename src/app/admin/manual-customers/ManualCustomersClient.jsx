@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
+import AdminErrorState from '@/components/admin/AdminErrorState';
 import { PAKISTAN_CITIES } from '@/lib/cities';
 
 const ALLOWED_CITIES = Array.from(
@@ -53,14 +55,18 @@ export default function ManualCustomersClient() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const [hasError, setHasError] = useState(false);
+
   useEffect(() => {
     fetchCustomers();
   }, [page, search]);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
+    setHasError(false);
     try {
       const res = await fetch(`/api/admin/manual-customers?page=${page}&search=${encodeURIComponent(search)}`);
+      if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       if (data.items) {
         setCustomers(data.items);
@@ -68,6 +74,7 @@ export default function ManualCustomersClient() {
         setTotalPages(data.totalPages);
       }
     } catch (error) {
+      setHasError(true);
       toast.error('Failed to fetch manual customers');
     } finally {
       setIsLoading(false);
@@ -192,10 +199,26 @@ export default function ManualCustomersClient() {
                       <td className="p-4 text-right"><div className="h-7 w-16 bg-muted rounded ml-auto animate-pulse" /></td>
                     </tr>
                   ))
+                ) : hasError ? (
+                  <tr>
+                    <td colSpan={5} className="p-8">
+                      <AdminErrorState
+                        title="Failed to load manual customers"
+                        description="There was a problem loading the customer list. Please check your network connection and retry."
+                        onRetry={fetchCustomers}
+                      />
+                    </td>
+                  </tr>
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="h-32 text-center text-muted-foreground text-xs">
-                      No manual customers found.
+                    <td colSpan={5} className="p-8">
+                      <AdminEmptyState
+                        icon={Users}
+                        title={search ? "No matching customers found" : "No manual customers yet"}
+                        description={search ? `No manual customers match "${search}". Try searching with a different name or phone number.` : "Create and manage off-platform customers for custom manual orders and quick invoicing."}
+                        actionLabel={search ? "Clear Search" : "Add Customer"}
+                        onAction={search ? () => setSearch('') : () => openModal()}
+                      />
                     </td>
                   </tr>
                 ) : (

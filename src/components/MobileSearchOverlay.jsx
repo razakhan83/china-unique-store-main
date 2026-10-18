@@ -97,7 +97,7 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
 
     trackSearchEvent({ searchString: searchTerm.trim() });
     onOpenChange(false);
-    router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
+    router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
   }
 
   function handleProductClick() {

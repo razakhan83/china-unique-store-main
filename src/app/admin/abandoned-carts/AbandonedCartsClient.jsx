@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { cn } from '@/lib/utils';
 
 function formatWhatsAppPhone(phone = '') {
@@ -178,13 +179,17 @@ export default function AbandonedCartsClient({ initialCarts = [] }) {
       {/* Cart List */}
       <div className="grid grid-cols-1 gap-3">
         {filteredCarts.length === 0 ? (
-          <div className="admin-surface rounded-xl p-10 flex flex-col items-center justify-center text-center border border-dashed border-border">
-            <ShoppingBag className="size-10 text-muted-foreground/50 mb-2" />
-            <h4 className="text-sm font-semibold text-foreground">No abandoned carts found</h4>
-            <p className="text-xs text-muted-foreground mt-1">
-              When customers enter their contact info on checkout without completing the order, they will appear here.
-            </p>
-          </div>
+          <AdminEmptyState
+            icon={ShoppingBag}
+            title={search ? "No matching abandoned carts" : "No abandoned carts right now"}
+            description={
+              search
+                ? `No carts match "${search}". Try searching by phone, customer name, or city.`
+                : "When customers enter their contact details on checkout without placing an order, their carts will appear here for recovery."
+            }
+            actionLabel={search ? "Clear Search" : undefined}
+            onAction={search ? () => setSearch('') : undefined}
+          />
         ) : (
           filteredCarts.map((cart) => (
             <div

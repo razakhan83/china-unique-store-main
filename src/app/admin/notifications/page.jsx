@@ -7,9 +7,10 @@ import { Bell, ShoppingCart, MessageSquare, UserPlus, Circle, CheckCircle2, Load
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
+import AdminErrorState from '@/components/admin/AdminErrorState';
 
 const ICON_MAP = {
   order: ShoppingCart,
@@ -91,80 +92,87 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="flex flex-col divide-y divide-border/40">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 sm:p-6">
-                  <Skeleton className="size-10 shrink-0 rounded-xl" />
-                  <div className="flex flex-1 flex-col gap-2">
-                    <Skeleton className="h-4 w-3/4 rounded-md" />
-                    <Skeleton className="h-3 w-1/4 rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : notifications.length > 0 ? (
-            <div className="flex flex-col divide-y divide-border/40">
-              {notifications.map((notification) => {
-                const Icon = ICON_MAP[notification.type] || Bell;
-                const colorClass = COLOR_MAP[notification.type] || 'text-muted-foreground bg-muted';
-
-                return (
-                  <div
-                    key={notification._id}
-                    className={cn(
-                      "group relative flex items-start gap-4 p-4 transition-colors hover:bg-muted/50 sm:p-6",
-                      !notification.isRead && "bg-muted/20"
-                    )}
-                  >
-                    {!notification.isRead && (
-                      <div className="absolute left-2 top-1/2 -translate-y-1/2">
-                        <Circle className="size-2 fill-primary text-primary" />
-                      </div>
-                    )}
-                    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl border", colorClass)}>
-                      <Icon className="size-5" />
+      {error ? (
+        <AdminErrorState
+          title="Failed to load notifications"
+          description="Could not connect to the notifications service. Please try again."
+          onRetry={() => mutate()}
+        />
+      ) : (
+        <Card className="rounded-2xl border-border bg-card shadow-xs">
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex flex-col divide-y divide-border/40">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 sm:p-6">
+                    <Skeleton className="size-10 shrink-0 rounded-xl" />
+                    <div className="flex flex-1 flex-col gap-2">
+                      <Skeleton className="h-4 w-3/4 rounded-md" />
+                      <Skeleton className="h-3 w-1/4 rounded-md" />
                     </div>
-                    <div className="flex flex-1 flex-col gap-1.5">
-                      <Link 
-                        href={notification.link} 
-                        className={cn("text-sm font-semibold leading-tight text-foreground hover:underline", !notification.isRead && "text-foreground")}
-                        onClick={() => markAsRead(notification._id)}
-                      >
-                        {notification.message}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(notification.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {new Date(notification.createdAt).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    {!notification.isRead && (
-                       <Button 
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => markAsRead(notification._id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                        title="Mark as read"
-                       >
-                         <CheckCircle2 className="size-5" />
-                       </Button>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex h-64 flex-col items-center justify-center text-center p-8">
-              <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted/40">
-                <Bell className="size-8 text-muted-foreground/60" />
+                ))}
               </div>
-              <h3 className="text-lg font-medium text-foreground">No notifications</h3>
-              <p className="text-sm text-muted-foreground mt-1">You&apos;re all caught up! New events will appear here.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : notifications.length > 0 ? (
+              <div className="flex flex-col divide-y divide-border/40">
+                {notifications.map((notification) => {
+                  const Icon = ICON_MAP[notification.type] || Bell;
+                  const colorClass = COLOR_MAP[notification.type] || 'text-muted-foreground bg-muted';
+
+                  return (
+                    <div
+                      key={notification._id}
+                      className={cn(
+                        "group relative flex items-start gap-4 p-4 transition-colors hover:bg-muted/50 sm:p-6",
+                        !notification.isRead && "bg-muted/20"
+                      )}
+                    >
+                      {!notification.isRead && (
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                          <Circle className="size-2 fill-primary text-primary" />
+                        </div>
+                      )}
+                      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl border", colorClass)}>
+                        <Icon className="size-5" />
+                      </div>
+                      <div className="flex flex-1 flex-col gap-1.5">
+                        <Link 
+                          href={notification.link} 
+                          className={cn("text-sm font-semibold leading-tight text-foreground hover:underline", !notification.isRead && "text-foreground")}
+                          onClick={() => markAsRead(notification._id)}
+                        >
+                          {notification.message}
+                        </Link>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(notification.createdAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {new Date(notification.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      {!notification.isRead && (
+                         <Button 
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => markAsRead(notification._id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                          title="Mark as read"
+                         >
+                           <CheckCircle2 className="size-5" />
+                         </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <AdminEmptyState
+                icon={Bell}
+                title="No notifications yet"
+                description="You're all caught up! Orders, reviews, and customer activities will show up here."
+                className="border-0 shadow-none p-12"
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

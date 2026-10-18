@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 
 import AppPagination from '@/components/AppPagination';
+import AdminEmptyState from '@/components/admin/AdminEmptyState';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -495,14 +496,20 @@ export default function AdminUsersClient({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="rounded-full bg-muted p-3 text-muted-foreground">
-                      <Search className="size-6" />
-                    </div>
-                    <p className="font-medium">No users found</p>
-                    <p className="text-sm text-muted-foreground">Try adjusting your search terms.</p>
-                  </div>
+                <TableCell colSpan={5} className="p-8">
+                  <AdminEmptyState
+                    icon={UsersIcon}
+                    title={searchQuery || (statusFilter && statusFilter !== 'all') ? "No matching accounts found" : isCustomersView ? "No registered customers yet" : "No users found"}
+                    description={
+                      searchQuery || (statusFilter && statusFilter !== 'all')
+                        ? "Try clearing your filters or search keywords to view other customer accounts."
+                        : isCustomersView
+                          ? "Customer accounts will automatically appear here once users register or place orders."
+                          : "User accounts will appear here once registered."
+                    }
+                    actionLabel={searchQuery || (statusFilter && statusFilter !== 'all') ? "Clear Filters" : undefined}
+                    onAction={searchQuery || (statusFilter && statusFilter !== 'all') ? clearFilters : undefined}
+                  />
                 </TableCell>
               </TableRow>
             )}

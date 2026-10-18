@@ -131,7 +131,7 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'S
     onOpenChange(false);
     setIsFocused(false);
     setSuggestions([]);
-    router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
+    router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
   }
 
   return (
