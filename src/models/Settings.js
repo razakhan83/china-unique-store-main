@@ -89,7 +89,7 @@ const SettingsSchema = new mongoose.Schema(
         // General Info
         storeName: {
             type: String,
-            default: 'China Unique Store',
+            default: () => process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
         },
         supportEmail: {
             type: String,
@@ -134,6 +134,18 @@ const SettingsSchema = new mongoose.Schema(
             default: 100,
             min: 40,
             max: 200,
+        },
+        primaryColor: {
+            type: String,
+            default: '#015347',
+        },
+        accentColor: {
+            type: String,
+            default: '#10b981',
+        },
+        marqueeText: {
+            type: String,
+            default: '',
         },
 
         // WhatsApp
@@ -353,7 +365,10 @@ if (
         !cachedSettings.schema.path('bankDepositEnabled') ||
         !cachedSettings.schema.path('bankDepositAccountDetails') ||
         !cachedSettings.schema.path('enableSecondaryNoc') ||
-        !cachedSettings.schema.path('limitedOfferProductIds')
+        !cachedSettings.schema.path('limitedOfferProductIds') ||
+        !cachedSettings.schema.path('primaryColor') ||
+        !cachedSettings.schema.path('accentColor') ||
+        !cachedSettings.schema.path('marqueeText')
     )
 ) {
     delete mongoose.models.Settings;

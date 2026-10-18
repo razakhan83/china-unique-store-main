@@ -7,6 +7,7 @@ import ProductsToolbar from '@/components/ProductsToolbar';
 import ProductsSidebar from '@/components/ProductsSidebar';
 import { ProductsGridSkeleton } from '@/components/ProductsPageSkeleton';
 import { getProductsList, getStoreCategories } from '@/lib/data';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const PRODUCTS_PAGE_SIZE = 20;
 
@@ -29,27 +30,27 @@ export async function generateMetadata({ searchParams }) {
   if (price === 'under300' || price === 'under-300' || price === 'dollar-store' || price === 'dollar') {
     return {
       title: 'Dollar Store (Under Rs 300)',
-      description: 'Browse budget-friendly kitchenware and daily essentials under Rs 300 at China Unique Store.',
+      description: `Browse budget-friendly essentials under Rs 300 at ${SITE_NAME}.`,
     };
   }
 
   if (search) {
     return {
       title: `Search results for "${search}"`,
-      description: `Browse matching China Unique Store products for "${search}".`,
+      description: `Browse matching products for "${search}" at ${SITE_NAME}.`,
     };
   }
 
   if (category && category !== 'all') {
     return {
       title: category === 'new-arrivals' ? 'New Arrivals' : 'Products',
-      description: 'Browse products by category at China Unique Store.',
+      description: `Browse products by category at ${SITE_NAME}.`,
     };
   }
 
   return {
     title: 'All Products',
-    description: 'Browse the complete China Unique Store catalog.',
+    description: `Browse the complete ${SITE_NAME} catalog.`,
   };
 }
 

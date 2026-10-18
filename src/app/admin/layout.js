@@ -3,6 +3,7 @@ import { Geist_Mono } from 'next/font/google';
 import './admin.css';
 import AdminLayoutShell from './AdminLayoutShell';
 import { getAdminSession } from '@/lib/requireAdmin';
+import { getStoreSettings } from '@/lib/data';
 
 // Geist Mono: admin-only font for code, tables, JSON display
 // Excluded from root layout to avoid loading on store pages
@@ -17,12 +18,15 @@ export const instant = false;
 
 export default async function AdminLayout({ children }) {
   await connection();
-  const session = await getAdminSession();
+  const [session, settings] = await Promise.all([
+    getAdminSession(),
+    getStoreSettings().catch(() => ({})),
+  ]);
   const sessionUser = session?.user?.isAdmin ? session.user : null;
 
   return (
     <div className={geistMono.variable} suppressHydrationWarning>
-      <AdminLayoutShell sessionUser={sessionUser}>{children}</AdminLayoutShell>
+      <AdminLayoutShell sessionUser={sessionUser} settings={settings}>{children}</AdminLayoutShell>
     </div>
   );
 }

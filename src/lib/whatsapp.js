@@ -14,7 +14,7 @@ export function createWhatsAppUrl(number, message = '') {
     : `https://wa.me/${normalizedNumber}`;
 }
 
-export function buildProductWhatsAppMessage({ productName, productUrl, storeName = 'China Unique Store' }) {
+export function buildProductWhatsAppMessage({ productName, productUrl, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
   const lines = [
     `Hi ${storeName}, I'm interested in ${productName || 'this product'}.`,
   ];
@@ -26,7 +26,7 @@ export function buildProductWhatsAppMessage({ productName, productUrl, storeName
   return lines.join('\n');
 }
 
-export function buildCartWhatsAppMessage({ items = [], subtotal = 0, storeName = 'China Unique Store' }) {
+export function buildCartWhatsAppMessage({ items = [], subtotal = 0, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
   const lines = [`*New Order Inquiry from ${storeName}*`, '', '*Items*'];
 
   items.forEach((item, index) => {

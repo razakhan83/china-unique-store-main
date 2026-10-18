@@ -37,9 +37,27 @@ export default function LayoutWrapper({ children, categories, settings }) {
   const hasAnnouncementBar = settings.announcementBarEnabled && 
     (settings.announcementBarText || (Array.isArray(settings.announcementBarMessages) && settings.announcementBarMessages.length > 0));
 
+  const brandStyles = {
+    ...(settings?.primaryColor ? {
+      '--color-primary': settings.primaryColor,
+      '--color-ring': settings.primaryColor,
+      '--color-sidebar-primary': settings.primaryColor,
+    } : {}),
+    ...(settings?.accentColor ? {
+      '--color-accent': settings.accentColor,
+    } : {}),
+  };
+
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-background" suppressHydrationWarning>
+      {settings?.faviconUrl ? (
+        <>
+          <link rel="icon" href={settings.faviconUrl} />
+          <link rel="shortcut icon" href={settings.faviconUrl} />
+          <link rel="apple-touch-icon" href={settings.faviconUrl} />
+        </>
+      ) : null}
+      <div className="flex min-h-screen flex-col bg-background" style={brandStyles} suppressHydrationWarning>
         <Suspense fallback={null}>
           <ProductPageScrollReset />
         </Suspense>
@@ -201,7 +219,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
 
               <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row">
                 <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-center sm:text-left">
-                  <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
+                  <p>&copy; {new Date().getFullYear()} {settings.storeName || 'Store'}. All rights reserved.</p>
                   <span className="hidden sm:inline text-border">·</span>
                   <div className="flex items-center gap-3">
                       <Link href="/terms-of-service" prefetch={false} className="transition-colors hover:text-foreground">

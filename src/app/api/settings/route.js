@@ -58,7 +58,10 @@ function normalizeLogoScalePercent(value, fallback = 100) {
 function serializeSettings(settings) {
     return {
         _id: settings._id.toString(),
-        storeName: settings.storeName || 'China Unique Store',
+        storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+        primaryColor: settings.primaryColor || '#015347',
+        accentColor: settings.accentColor || '#10b981',
+        marqueeText: settings.marqueeText || '',
         supportEmail: settings.supportEmail || '',
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
@@ -184,6 +187,9 @@ export async function PUT(req) {
             'homepageSectionOrder',
             'customPages',
             'enableSecondaryNoc',
+            'primaryColor',
+            'accentColor',
+            'marqueeText',
         ];
 
         const normalizedFaviconSize = body.faviconSizePx !== undefined

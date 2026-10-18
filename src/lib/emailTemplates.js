@@ -8,16 +8,16 @@ const DEFAULT_BASE_URL = getSiteUrl();
 
 const DEFAULT_BRANDING = {
   baseUrl: DEFAULT_BASE_URL,
-  storeName: 'China Unique Store',
-  supportEmail: 'support@chinauniquestore.com',
-  businessAddress: 'China Unique Store HQ, Karachi, Sindh, Pakistan',
+  storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  supportEmail: 'support@store.com',
+  businessAddress: 'Karachi, Pakistan',
   // Matches admin store-setup: lightLogoUrl is the light-colored mark for dark surfaces.
-  lightLogoUrl: '/china-unique-logo-dark.png',
-  darkLogoUrl: '/china-unique-logo-cropped.png',
+  lightLogoUrl: '',
+  darkLogoUrl: '',
   emailLogoScalePercent: 100,
   facebookPageUrl: 'https://www.facebook.com',
   instagramUrl: 'https://www.instagram.com',
-  whatsappNumber: '923001234567',
+  whatsappNumber: '',
 };
 
 const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
@@ -198,8 +198,8 @@ function scaledLogoWidth(branding, baseWidth) {
 function renderBrandLogo(branding, { width, variant = 'header' } = {}) {
   const lightSrc = emailAsset(branding, getLogoForEmailSurface(branding, 'light'), EMAIL_CID.logoLight);
   const darkSrc = emailAsset(branding, getLogoForEmailSurface(branding, 'dark'), EMAIL_CID.logoDark);
-  const storeName = esc(branding.storeName || 'China Unique Store');
-  const storeUrl = branding.baseUrl || 'https://www.chinauniquestore.com';
+  const storeName = esc(branding.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store');
+  const storeUrl = branding.baseUrl || (process.env.NEXT_PUBLIC_SITE_URL || '');
   const logoClass = variant === 'footer' ? 'footer-logo' : 'header-logo';
   const maxWidth = variant === 'footer' ? '48%' : '62%';
   const bottom = variant === 'footer' ? '10px' : '8px';
@@ -598,7 +598,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
 
               <!-- Postal Address -->
               <div style="font-size: 11px; line-height: 1.5; color: #3d6857; margin-bottom: 8px;">
-                ${esc(branding.businessAddress || 'China Unique Store HQ, Karachi, Sindh, Pakistan')}<br/>
+                ${esc(branding.businessAddress || 'Karachi, Pakistan')}<br/>
                 Cash on Delivery Available Across Pakistan
               </div>
 
@@ -799,7 +799,7 @@ export function generateOrderEmailHtml(order, brandingInput = {}) {
           <tr>
             <td align="center" style="padding: 14px 16px; background-color: #E3FCEF;">
               <div style="font-size: 10.5px; font-weight: 700; color: #064e3b;">
-                ${esc(branding.businessAddress || 'China Unique Store HQ, Karachi, Sindh, Pakistan')}
+                ${esc(branding.businessAddress || 'Karachi, Pakistan')}
               </div>
             </td>
           </tr>
@@ -1036,7 +1036,7 @@ export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
 
               <!-- Postal Address -->
               <div style="font-size: 11px; line-height: 1.5; color: #3d6857; margin-bottom: 8px;">
-                ${esc(branding.businessAddress || 'China Unique Store HQ, Karachi, Sindh, Pakistan')}<br/>
+                ${esc(branding.businessAddress || 'Karachi, Pakistan')}<br/>
                 Cash on Delivery Available Across Pakistan
               </div>
 

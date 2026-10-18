@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { PRODUCT_TAGS } from "@/lib/productTags";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getProductSocialShareImage } from "@/lib/cloudinaryImage";
+import { SITE_NAME } from "@/lib/siteSeo";
 
 const selectionChipClass = (selected) =>
   cn(
@@ -551,8 +552,8 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
   const socialPreviewDescription =
     seoOgDescription.trim() ||
     (Price
-      ? `Price: Rs. ${Number(Price).toLocaleString("en-PK")}. ${trimmedSeoDescription || plainDescription || "Buy online from China Unique Store."}`
-      : trimmedSeoDescription || plainDescription || "Buy online from China Unique Store.");
+      ? `Price: Rs. ${Number(Price).toLocaleString("en-PK")}. ${trimmedSeoDescription || plainDescription || `Buy online from ${SITE_NAME}.`}`
+      : trimmedSeoDescription || plainDescription || `Buy online from ${SITE_NAME}.`);
   const socialPreviewImage = getProductSocialShareImage(
     seoOgImage.trim() || images?.[0]?.url || "/opengraph-image.png",
     seoOgImageRatio,
@@ -1562,7 +1563,7 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
                   onClick={() => {
                     const candidateTitle = (trimmedSeoTitle || Name || '').slice(0, 100);
                     const priceText = Price ? `Price: Rs. ${Number(Price).toLocaleString('en-PK')}. ` : '';
-                    const candidateDesc = `${priceText}${trimmedSeoDescription || plainDescription || 'Buy online from China Unique Store. Cash on Delivery all across Pakistan.'}`.slice(0, 350);
+                    const candidateDesc = `${priceText}${trimmedSeoDescription || plainDescription || `Buy online from ${SITE_NAME}. Cash on Delivery available.`}`.slice(0, 350);
                     setSeoOgTitle(candidateTitle);
                     setSeoOgDescription(candidateDesc);
                     if (!seoOgImage && images?.[0]?.url) {
@@ -1805,8 +1806,8 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
                       {socialPreviewDescription}
                     </p>
                     <div className="pt-2 mt-1 border-t border-emerald-800/40 flex items-center justify-between text-[11px] text-emerald-300/80">
-                      <span>chinauniquestore.com</span>
-                      <span className="font-medium text-emerald-400">China Unique Store</span>
+                      <span>{typeof window !== 'undefined' ? window.location.hostname : 'store'}</span>
+                      <span className="font-medium text-emerald-400">{SITE_NAME}</span>
                     </div>
                   </div>
                 </div>

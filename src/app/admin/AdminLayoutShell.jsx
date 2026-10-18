@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { signOut } from 'next-auth/react';
@@ -144,12 +145,6 @@ const compactDesktopNavItems = [
   { href: '/admin/roles/access', label: 'Access', icon: Shield, match: (pathname) => accessNavItems.some(i => i.match(pathname)) },
 ];
 
-const mobileBottomNavItems = [
-  { href: '/admin', label: 'Dashboard', icon: ChartColumn, match: (pathname) => pathname === '/admin' },
-  { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
-  { href: '/admin/products', label: 'Products', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') },
-  { href: '/admin/home-page', label: 'Layout', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
-];
 
 function getOpenSections(pathname) {
   return [
@@ -190,7 +185,7 @@ function getPageMeta(pathname) {
   return { title: 'Dashboard' };
 }
 
-export default function AdminLayoutShell({ children, sessionUser }) {
+export default function AdminLayoutShell({ children, sessionUser, settings }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -199,10 +194,13 @@ export default function AdminLayoutShell({ children, sessionUser }) {
 
   useEffect(() => {
     document.body.classList.add('admin-theme');
+    if (settings?.primaryColor) {
+      document.documentElement.style.setProperty('--color-primary', settings.primaryColor);
+    }
     return () => {
       document.body.classList.remove('admin-theme');
     };
-  }, []);
+  }, [settings?.primaryColor]);
 
   useEffect(() => {
     if (pathname !== '/admin/login' && !sessionUser?.isAdmin) {
@@ -226,7 +224,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'flex min-h-8 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
+          'flex min-h-[44px] md:min-h-8 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
           active
             ? 'bg-[#D0FAE5] text-emerald-950 font-semibold'
             : 'text-foreground/70 hover:bg-muted/70 hover:text-foreground',
@@ -249,7 +247,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
         href={href}
         onClick={() => setSidebarOpen(false)}
         className={cn(
-          'group flex min-h-7 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
+          'group flex min-h-[40px] md:min-h-7 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] transition-[background-color,color,transform] duration-200 active:scale-[0.98]',
           active
             ? 'bg-[#ECFDF5] text-emerald-950 font-semibold'
             : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
@@ -274,7 +272,7 @@ export default function AdminLayoutShell({ children, sessionUser }) {
     return (
       <AccordionTrigger
         className={cn(
-          'min-h-8 rounded-lg border-0 px-2.5 py-1.5 text-[12px] font-medium hover:no-underline transition-colors',
+          'min-h-[44px] md:min-h-8 rounded-lg border-0 px-2.5 py-1.5 text-[12px] font-medium hover:no-underline transition-colors',
           active
             ? 'bg-[#D0FAE5] text-emerald-950 font-semibold'
             : 'bg-transparent text-foreground/70 hover:bg-muted/60 hover:text-foreground'
@@ -290,13 +288,27 @@ export default function AdminLayoutShell({ children, sessionUser }) {
 
   const sidebar = (
     <div className="flex h-full flex-col gap-3 bg-white px-2.5 py-2.5 text-foreground md:px-3 md:py-3 overflow-y-auto" suppressHydrationWarning>
-      <div className={cn('flex items-center gap-2 px-0.5 py-0.5', desktopSidebarCollapsed && 'justify-center')}>
-        <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/45">
-          <PanelsTopLeft className="size-3.5 text-foreground" />
-        </div>
-        <div className={cn('min-w-0', desktopSidebarCollapsed && 'hidden')}>
-          <p className="truncate text-[13px] font-bold tracking-[0.06em] text-foreground">Admin Panel</p>
-          <p className="truncate text-[10px] tracking-wider text-muted-foreground">Store Code: CUS786</p>
+      <div className={cn('flex items-center gap-2.5 px-1 py-1 border-b border-border/60 pb-2.5', desktopSidebarCollapsed && 'justify-center border-b-0 pb-0')}>
+        {settings?.darkLogoUrl || settings?.lightLogoUrl ? (
+          <div className="relative size-8 shrink-0 overflow-hidden rounded-md border border-border/80 bg-white flex items-center justify-center p-0.5">
+            <Image
+              src={settings.darkLogoUrl || settings.lightLogoUrl}
+              alt={settings.storeName || 'Store Logo'}
+              width={32}
+              height={32}
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+        ) : (
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-primary/10 text-primary">
+            <Store className="size-4" />
+          </div>
+        )}
+        <div className={cn('min-w-0 flex-1', desktopSidebarCollapsed && 'hidden')}>
+          <p className="truncate text-[13px] font-bold tracking-tight text-foreground">
+            {settings?.storeName || 'Store Admin'}
+          </p>
+          <p className="truncate text-[10px] tracking-wider font-medium text-muted-foreground">Admin Portal</p>
         </div>
       </div>
 
@@ -431,7 +443,15 @@ export default function AdminLayoutShell({ children, sessionUser }) {
   );
 
   return (
-    <div className="admin-theme min-h-screen" suppressHydrationWarning>
+    <>
+      {settings?.faviconUrl ? (
+        <>
+          <link rel="icon" href={settings.faviconUrl} />
+          <link rel="shortcut icon" href={settings.faviconUrl} />
+          <link rel="apple-touch-icon" href={settings.faviconUrl} />
+        </>
+      ) : null}
+      <div className="admin-theme min-h-screen" suppressHydrationWarning>
       <div className="admin-shell-grid" suppressHydrationWarning>
         <aside
           className="admin-shell-sidebar hidden shrink-0 md:block"
@@ -444,8 +464,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
             <div className="flex min-h-12 items-center justify-between gap-2 px-2.5 py-1.5 sm:px-3 md:min-h-13 md:px-5 xl:px-6">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="admin-touch-target size-9 md:hidden" onClick={() => setSidebarOpen(true)}>
-                  <Menu />
+                <Button variant="ghost" size="icon" className="admin-touch-target min-h-[44px] min-w-[44px] size-11 p-0 md:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open navigation menu">
+                  <Menu className="size-6" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -529,7 +549,8 @@ export default function AdminLayoutShell({ children, sessionUser }) {
           {sidebar}
         </SheetContent>
       </Sheet>
-    </div>
+      </div>
+    </>
   );
 }
 

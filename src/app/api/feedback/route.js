@@ -52,7 +52,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: 'Thank you! Your feedback helps us improve China Unique.',
+      message: 'Thank you! Your feedback helps us improve our store.',
       data: newFeedback,
     });
   } catch (error) {

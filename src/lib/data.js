@@ -520,7 +520,10 @@ async function getLiveProductsRaw() {
 async function getSettingsRaw() {
   const defaultSettings = {
     _id: 'default',
-    storeName: 'China Unique Store',
+    storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+    primaryColor: '#015347',
+    accentColor: '#10b981',
+    marqueeText: '',
     supportEmail: '',
     businessAddress: '',
     lightLogoUrl: '',
@@ -569,7 +572,10 @@ async function getSettingsRaw() {
 
       return {
         _id: settings._id.toString(),
-        storeName: settings.storeName || 'China Unique Store',
+        storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+        primaryColor: settings.primaryColor || '#015347',
+        accentColor: settings.accentColor || '#10b981',
+        marqueeText: settings.marqueeText || '',
         supportEmail: settings.supportEmail || '',
         businessAddress: settings.businessAddress || '',
         lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),
@@ -1986,7 +1992,7 @@ export async function getCatalogFeed(siteUrlOverride = '') {
       console.warn('[BUILD] MongoDB connection failed while building catalog feed, returning an empty feed.');
       return {
         generatedAt: new Date().toISOString(),
-        storeName: 'China Unique Store',
+        storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
         currency: 'PKR',
         items: [],
       };
@@ -3062,7 +3068,10 @@ export async function getAdminSettings() {
 
   return {
     _id: settings._id.toString(),
-    storeName: settings.storeName || 'China Unique Store',
+    storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+    primaryColor: settings.primaryColor || '#015347',
+    accentColor: settings.accentColor || '#10b981',
+    marqueeText: settings.marqueeText || '',
     supportEmail: settings.supportEmail || '',
     businessAddress: settings.businessAddress || '',
     lightLogoUrl: normalizeLogoUrl(settings.lightLogoUrl),

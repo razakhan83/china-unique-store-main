@@ -112,7 +112,7 @@ export default function WebsiteFeedbackModal({ open, onOpenChange }) {
               Website Feedback
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500 mt-1">
-              Help us make China Unique faster, easier, and better for you.
+              Help us make our store faster, easier, and better for you.
             </DialogDescription>
           </div>
         </div>

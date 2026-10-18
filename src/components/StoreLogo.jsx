@@ -7,8 +7,8 @@ import { Store } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-function BrandFallback({ storeName = 'China Unique Store', invert = false, compact = false }) {
-  const title = String(storeName || 'China Unique Store').trim() || 'China Unique Store';
+function BrandFallback({ storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', invert = false, compact = false }) {
+  const title = String(storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store').trim() || 'Store';
   const shortName = title.replace(/\bstore\b/i, '').trim() || title;
   const iconClass = invert ? 'bg-white/10 text-white' : 'bg-primary/10 text-primary';
   const titleClass = invert ? 'text-primary-foreground' : 'text-primary';
@@ -31,7 +31,7 @@ function BrandFallback({ storeName = 'China Unique Store', invert = false, compa
 
 export default function StoreLogo({
   href = '/',
-  storeName = 'China Unique Store',
+  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,

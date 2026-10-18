@@ -246,7 +246,7 @@ function CartBadge({ isCartBumping }) {
 
 function NavbarContent({
   categories,
-  storeName = 'China Unique Store',
+  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,
@@ -802,7 +802,7 @@ function NavbarContent({
 }
 
 export function NavbarStaticShell({
-  storeName = 'China Unique Store',
+  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,
@@ -906,7 +906,7 @@ export function NavbarStaticShell({
 
 export default function Navbar({
   categories = [],
-  storeName = 'China Unique Store',
+  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,

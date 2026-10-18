@@ -7,6 +7,7 @@ import ProductsToolbar from '@/components/ProductsToolbar';
 import ProductsSidebar from '@/components/ProductsSidebar';
 import { ProductsGridSkeleton } from '@/components/ProductsPageSkeleton';
 import { getProductsList, getStoreCategories } from '@/lib/data';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const PRODUCTS_PAGE_SIZE = 20;
 
@@ -26,14 +27,14 @@ export async function generateMetadata({ searchParams }) {
 
   if (query) {
     return {
-      title: `Search results for "${query}" | China Unique Store`,
-      description: `Browse matching products for "${query}" at China Unique Store with best prices and fast shipping across Pakistan.`,
+      title: `Search results for "${query}" | ${SITE_NAME}`,
+      description: `Browse matching products for "${query}" at ${SITE_NAME} with best prices and fast shipping.`,
     };
   }
 
   return {
-    title: 'Search Products | China Unique Store',
-    description: 'Search quality kitchenware, household items, tools, and unique lifestyle essentials at China Unique Store.',
+    title: `Search Products | ${SITE_NAME}`,
+    description: `Search quality kitchenware, household items, tools, and unique lifestyle essentials at ${SITE_NAME}.`,
   };
 }
 

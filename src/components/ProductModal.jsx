@@ -13,7 +13,7 @@ import { X, ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { formatPrice, getSellingPrice, getComparePrice } from '@/lib/pricing';
 
-export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = 'China Unique Store' }) {
+export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
     const { addToCart } = useCartActions();
 
     if (!product) return null;
@@ -101,7 +101,7 @@ export default function ProductModal({ product, onClose, whatsappNumber = '', st
                                 ) : null}
                             </div>
                             <p className="mb-5 text-sm leading-relaxed text-muted-foreground line-clamp-4">
-                                {product.Description || product.description || "Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind."}
+                                {product.Description || product.description || "Discover the perfect addition to your collection. Crafted with quality and elegance in mind."}
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-2.5 mt-auto pt-2">

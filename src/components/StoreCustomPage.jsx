@@ -19,9 +19,9 @@ const PAGE_META = {
 const FULL_FAQ = [
   {
     id: 'f1',
-    question: 'What kind of products does China Unique Store sell?',
+    question: 'What kind of products do you sell?',
     answer:
-      'We sell a wide range of imported goods: kitchen appliances, home décor, personal care gadgets, lighting, storage solutions, baby products, tools, and lifestyle accessories. All products are directly sourced from verified Chinese manufacturers.',
+      'We sell a wide range of kitchen appliances, home décor, personal care gadgets, lighting, storage solutions, baby products, tools, and lifestyle accessories directly from verified manufacturers.',
   },
   {
     id: 'f2',
@@ -141,7 +141,7 @@ function SectionHeading({ children }) {
   );
 }
 
-export default async function StoreCustomPage({ page, storeName = 'China Unique Store', whatsappNumber = '' }) {
+export default async function StoreCustomPage({ page, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', whatsappNumber = '' }) {
   const settings = await getStoreSettings().catch(() => null);
   const phone = resolveStorePhone(whatsappNumber || settings?.whatsappNumber);
   const displayPhone = formatStorePhone(phone);
@@ -186,7 +186,7 @@ export default async function StoreCustomPage({ page, storeName = 'China Unique 
             <div className="shrink-0 flex items-center justify-start sm:justify-end">
               <Image
                 src="/undraw_plants_md5c.svg"
-                alt="About China Unique Store"
+                alt={storeName ? `About ${storeName}` : 'About Us'}
                 width={150}
                 height={115}
                 className="h-auto w-[130px] sm:w-[150px] object-contain opacity-95 select-none"

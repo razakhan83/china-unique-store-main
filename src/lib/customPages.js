@@ -1,16 +1,18 @@
+import { SITE_NAME } from '@/lib/siteSeo';
+
 export const DEFAULT_CUSTOM_PAGES = [
   {
     slug: 'about-us',
     title: 'About Us',
     label: 'About Us',
-    description: 'Learn more about China Unique Store and the standards behind our product selection.',
-    content: `China Unique Store exists to bring thoughtfully selected kitchenware, home decor, and lifestyle pieces to homes across Pakistan.
+    description: `Learn more about ${SITE_NAME} and the standards behind our product selection.`,
+    content: `${SITE_NAME} exists to bring thoughtfully selected kitchenware, home decor, and lifestyle pieces to homes across Pakistan.
 
 We focus on products that feel practical, polished, and reliable in everyday use. Each collection is chosen with close attention to quality, finish, and long-term value.
 
 Our goal is simple: make it easier for customers to discover premium household essentials without the guesswork. From browsing to delivery, we aim to keep the experience clear, dependable, and personal.`,
-    seoTitle: 'About Us | China Unique Store',
-    seoDescription: 'Discover the story, standards, and product philosophy behind China Unique Store.',
+    seoTitle: `About Us | ${SITE_NAME}`,
+    seoDescription: `Discover the story, standards, and product philosophy behind ${SITE_NAME}.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 0,
@@ -19,14 +21,14 @@ Our goal is simple: make it easier for customers to discover premium household e
     slug: 'refund-policy',
     title: 'Refund Policy',
     label: 'Refund Policy',
-    description: 'Understand the return, exchange, and refund terms for orders placed with China Unique Store.',
+    description: `Understand the return, exchange, and refund terms for orders placed with ${SITE_NAME}.`,
     content: `We offer support for damaged, incorrect, or incomplete orders. If something arrives in an unsatisfactory condition, please contact us as soon as possible with your order details and clear photos.
 
 Eligible refund or exchange requests should be made within 7 days of delivery. Items must be unused and returned in their original condition unless the issue was caused during delivery.
 
 Once a request is reviewed and approved, we will guide you through the next steps for replacement, store credit, or refund depending on stock availability and the issue reported.`,
-    seoTitle: 'Refund Policy | China Unique Store',
-    seoDescription: 'Read the refund and exchange policy for China Unique Store orders.',
+    seoTitle: `Refund Policy | ${SITE_NAME}`,
+    seoDescription: `Read the refund and exchange policy for ${SITE_NAME} orders.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 1,
@@ -35,14 +37,14 @@ Once a request is reviewed and approved, we will guide you through the next step
     slug: 'privacy-policy',
     title: 'Privacy Policy',
     label: 'Privacy Policy',
-    description: 'See how customer information is collected, used, and protected on China Unique Store.',
+    description: `See how customer information is collected, used, and protected on ${SITE_NAME}.`,
     content: `We collect the information required to process orders, provide delivery updates, and support customer service. This may include your name, phone number, email address, and shipping information.
 
 Your data is used only for store operations, order communication, service improvement, and essential analytics. We do not sell customer information to outside advertisers.
 
 We take reasonable steps to protect your information through secure services, controlled access, and trusted third-party tools used for payments, messaging, and store operations.`,
-    seoTitle: 'Privacy Policy | China Unique Store',
-    seoDescription: 'Learn how China Unique Store handles and protects customer data.',
+    seoTitle: `Privacy Policy | ${SITE_NAME}`,
+    seoDescription: `Learn how ${SITE_NAME} handles and protects customer data.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 2,
@@ -57,8 +59,8 @@ We take reasonable steps to protect your information through secure services, co
 Shipping charges are calculated according to your delivery city and the rules configured at checkout. Promotional free-shipping thresholds may apply when available.
 
 After dispatch, tracking details are shared when supported by the courier. If you need help with delivery updates, our team can assist through the contact channels listed on the store.`,
-    seoTitle: 'Shipping Policy | China Unique Store',
-    seoDescription: 'Find delivery, dispatch, and shipping charge information for China Unique Store.',
+    seoTitle: `Shipping Policy | ${SITE_NAME}`,
+    seoDescription: `Find delivery, dispatch, and shipping charge information for ${SITE_NAME}.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 3,
@@ -85,8 +87,8 @@ A: Please contact our support team as soon as possible with your order details a
 
 Q: How can I contact your team?
 A: Call or WhatsApp us on our official number listed on the Contact Us page. Our team can help with orders, delivery questions, and general support.`,
-    seoTitle: 'FAQ | China Unique Store',
-    seoDescription: 'Read common questions and answers about shopping with China Unique Store.',
+    seoTitle: `FAQ | ${SITE_NAME}`,
+    seoDescription: `Read common questions and answers about shopping with ${SITE_NAME}.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 4,
@@ -95,16 +97,16 @@ A: Call or WhatsApp us on our official number listed on the Contact Us page. Our
     slug: 'terms-of-service',
     title: 'Terms of Service',
     label: 'Terms of Service',
-    description: 'Read the terms and conditions governing purchases and use of China Unique Store.',
-    content: `Welcome to China Unique Store. By accessing our website, placing an order, or communicating with our store, you agree to the following terms and conditions:
+    description: `Read the terms and conditions governing purchases and use of ${SITE_NAME}.`,
+    content: `Welcome to ${SITE_NAME}. By accessing our website, placing an order, or communicating with our store, you agree to the following terms and conditions:
 
 1. Ordering & Pricing: All prices are listed in Pakistani Rupees (PKR). We reserve the right to correct pricing errors or update product details prior to order confirmation.
 2. Cash on Delivery & Payment: For Cash on Delivery (COD) orders, full payment is required upon parcel receipt. Delivery verification is supported to ensure complete customer peace of mind.
 3. Order Confirmation: Orders are processed promptly upon confirmation. If an item is unavailable or out of stock, our team will notify you promptly.
 4. Returns & Replacements: We provide a 7-day exchange/replacement window for damaged or defective items as detailed in our Refund Policy.
 5. Customer Support: For any questions, order updates, or inquiries, reach out directly via our official WhatsApp and contact channels.`,
-    seoTitle: 'Terms of Service | China Unique Store',
-    seoDescription: 'Terms and conditions for shopping at China Unique Store.',
+    seoTitle: `Terms of Service | ${SITE_NAME}`,
+    seoDescription: `Terms and conditions for shopping at ${SITE_NAME}.`,
     isEnabled: true,
     showInFooter: true,
     sortOrder: 5,

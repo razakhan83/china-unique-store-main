@@ -52,7 +52,7 @@ function scheduleDeferredMount(callback) {
   };
 }
 
-export default function StoreDeferredChrome({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
+export default function StoreDeferredChrome({ whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', hasAnnouncementBar = false }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

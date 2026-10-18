@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Users, Package, Star, ShieldCheck } from 'lucide-react';
 import SectionDoodleBackground from '@/components/home/SectionDoodleBackground';
 import { cn } from '@/lib/utils';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const STATS = [
   { target: 1000, label: 'Happy Customers', icon: Users, isNumeric: true, prefix: '', suffix: '+' },
@@ -94,7 +95,7 @@ function StatItem({ stat }) {
   );
 }
 
-export default function AnimatedStats({ orderCount = 0, customerCount = 0 }) {
+export default function AnimatedStats({ orderCount = 0, customerCount = 0, storeName }) {
   const dynamicOrdersTarget = Math.max(390, Number(orderCount) || 1200);
   const dynamicCustomersTarget = Math.max(350, Number(customerCount) || 1000);
 
@@ -112,7 +113,7 @@ export default function AnimatedStats({ orderCount = 0, customerCount = 0 }) {
         <div className="mb-10 sm:mb-14 md:mb-20 text-center">
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
             Why Choose <br className="block md:hidden" />
-            <span className="text-primary">China Unique Store?</span>
+            <span className="text-primary">{storeName || SITE_NAME}?</span>
           </h2>
           <p className="mt-4 sm:mt-6 text-muted-foreground text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed text-balance">
             Your trusted source for <span className="font-semibold text-primary">premium kitchenware</span> and <span className="font-semibold text-primary">innovative gadgets</span>. We deliver top-notch imported quality with unbeatable value and a seamless shopping experience.

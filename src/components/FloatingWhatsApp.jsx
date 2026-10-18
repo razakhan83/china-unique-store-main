@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 
-export default function FloatingWhatsApp({ whatsappNumber = '', storeName = 'China Unique Store' }) {
+export default function FloatingWhatsApp({ whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
     const pathname = usePathname();
     const whatsappUrl = createWhatsAppUrl(whatsappNumber, `Hello ${storeName}!`);
 

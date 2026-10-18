@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import NotFoundRedirectChecker from '@/components/NotFoundRedirectChecker';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 export const metadata = {
-  title: '404 - Page Not Found | China Unique Store',
+  title: `404 - Page Not Found | ${SITE_NAME}`,
   description: 'The page you were looking for does not exist or has been moved.',
 };
 

@@ -243,7 +243,7 @@ export const generateInvoice = async (order, branding = {}) => {
 
   const paymentMethod = getText(order?.paymentStatus, 'COD');
   const invoiceNumber = getText(order?.orderId, 'Draft');
-  const storeName = getText(branding?.storeName || order?.storeName, 'China Unique Store');
+  const storeName = getText(branding?.storeName || order?.storeName, process.env.NEXT_PUBLIC_STORE_NAME || 'Store');
   const supportEmail = getText(branding?.supportEmail);
   const businessAddress = getText(branding?.businessAddress, 'Business address not available');
   const customerName = getText(order?.customerName, 'Customer');
@@ -255,7 +255,7 @@ export const generateInvoice = async (order, branding = {}) => {
   const notes = getText(order?.notes);
   const baseUrl = getText(
     branding?.baseUrl,
-    typeof window !== 'undefined' ? window.location.origin : 'https://www.chinauniquestore.com',
+    typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || ''),
   );
   const logoUrl = getText(branding?.darkLogoUrl || branding?.lightLogoUrl);
   const invoiceLogoScalePercent = Math.min(200, Math.max(40, getNumber(branding?.invoiceLogoScalePercent, 100)));

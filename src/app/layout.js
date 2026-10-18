@@ -16,7 +16,7 @@ const fontSans = Plus_Jakarta_Sans({
   preload: true,
 });
 
-const socialPreviewAlt = 'China Unique Store social preview image';
+const socialPreviewAlt = `${SITE_NAME} social preview image`;
 
 export const metadata = {
   metadataBase: getMetadataBase(),
@@ -27,18 +27,16 @@ export const metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    'China Unique Store',
-    'China Unique Items',
-    'Kitchenware Pakistan',
-    'Home Decor Pakistan',
+    SITE_NAME,
+    'Kitchenware',
+    'Home Decor',
     'Kitchen Gadgets',
-    'Online Shopping Pakistan',
+    'Online Shopping',
     'Cash on Delivery',
-    'Aam Samaan',
   ],
-  authors: [{ name: 'China Unique Store', url: 'https://www.chinauniquestore.com' }],
-  creator: 'China Unique Store',
-  publisher: 'China Unique Store',
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
   formatDetection: {
     email: false,
     address: false,
@@ -63,7 +61,7 @@ export const metadata = {
     description: SITE_DESCRIPTION,
     type: 'website',
     url: 'https://www.chinauniquestore.com',
-    siteName: 'China Unique Store',
+    siteName: SITE_NAME,
     locale: 'en_PK',
     images: [
       {
@@ -132,7 +130,7 @@ export default function RootLayout({ children }) {
         '@type': 'WebSite',
         '@id': `${siteUrl}/#website`,
         url: siteUrl,
-        name: 'China Unique Store',
+        name: SITE_NAME,
         publisher: {
           '@id': `${siteUrl}/#organization`,
         },

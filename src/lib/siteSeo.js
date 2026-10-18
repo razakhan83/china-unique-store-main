@@ -1,11 +1,12 @@
-export const SITE_NAME = 'China Unique Store';
+export const SITE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Store';
 
-export const SITE_TITLE_DEFAULT = 'China Unique Store | Trending Products & Smart Gadgets';
+export const SITE_TITLE_DEFAULT = `${SITE_NAME} | Trending Products & Smart Gadgets`;
 
 export const SITE_DESCRIPTION =
-  'Shop the coolest unique products and trending items in Pakistan.';
+  'Shop the coolest unique products and trending items.';
 
-const TITLE_SUFFIX_PATTERN = /\s*[|–—-]\s*China Unique(?: Store)?\s*$/i;
+const escapedSiteName = (process.env.NEXT_PUBLIC_STORE_NAME || 'China Unique').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const TITLE_SUFFIX_PATTERN = new RegExp(`\\s*[|–—-]\\s*(?:${escapedSiteName}|China Unique)(?: Store)?\\s*$`, 'i');
 
 export function metadataTitle(value = '') {
   return String(value || '')

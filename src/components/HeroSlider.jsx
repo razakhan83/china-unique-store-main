@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
 import { useAutoplayInView } from '@/hooks/useAutoplayInView';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const HERO_AUTOPLAY_DELAY_MS = 5000;
 const HERO_SWIPE_THRESHOLD_PX = 40;
@@ -125,7 +126,7 @@ function HeroSlideImage({ slide, isPriority }) {
   );
 }
 
-export default function HeroSlider({ slides = [] }) {
+export default function HeroSlider({ slides = [], storeName }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartXRef = useRef(null);
   const touchStartYRef = useRef(null);
@@ -214,7 +215,7 @@ export default function HeroSlider({ slides = [] }) {
       onTouchEnd={handleTouchEnd}
       aria-label="Featured Promotions"
     >
-      <h1 className="sr-only">China Unique Store — Exclusive Online Shopping in Pakistan</h1>
+      <h1 className="sr-only">{storeName || SITE_NAME} — Exclusive Online Shopping</h1>
       <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-muted/40 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => {
           const isActive = safeActiveIndex === index;

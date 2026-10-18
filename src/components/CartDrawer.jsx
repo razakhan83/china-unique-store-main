@@ -145,7 +145,7 @@ const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
 });
 CartItemRow.displayName = 'CartItemRow';
 
-export default function CartDrawer({ whatsappNumber = '', storeName = 'China Unique Store', hasAnnouncementBar = false }) {
+export default function CartDrawer({ whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', hasAnnouncementBar = false }) {
   const pathname = usePathname();
   const effectiveHasAnnouncementBar = pathname === '/' && Boolean(hasAnnouncementBar);
   const { cart } = useCartItems();

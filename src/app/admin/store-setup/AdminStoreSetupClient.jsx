@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { BellRing, ExternalLink, ImagePlus, LayoutGrid, Loader2, Pencil, Plus, Save } from 'lucide-react';
+import { BellRing, ExternalLink, ImagePlus, LayoutGrid, Loader2, Palette, Pencil, Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -216,6 +216,62 @@ export default function AdminStoreSetupClient({ initialSettings }) {
               </FieldDescription>
             </FieldContent>
           </Field>
+        </SettingSection>
+
+        <SettingSection
+          icon={Palette}
+          title="Brand Colors & Theme"
+          description="Customize primary and accent colors used across the storefront and admin panel."
+        >
+          <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
+            <Field>
+              <FieldLabel>Primary Brand Color</FieldLabel>
+              <FieldContent>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={form.primaryColor || '#015347'}
+                    onChange={(e) => handleChange('primaryColor', e.target.value)}
+                    className="size-10 rounded-lg border border-border cursor-pointer p-0.5"
+                  />
+                  <Input
+                    type="text"
+                    value={form.primaryColor || '#015347'}
+                    onChange={(e) => handleChange('primaryColor', e.target.value)}
+                    placeholder="#015347"
+                    className="font-mono text-sm uppercase"
+                  />
+                </div>
+                <FieldDescription className="mt-1.5">
+                  Used for main navigation, buttons, brand accents, and admin shell. Default is #015347.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel>Accent Color</FieldLabel>
+              <FieldContent>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={form.accentColor || '#10b981'}
+                    onChange={(e) => handleChange('accentColor', e.target.value)}
+                    className="size-10 rounded-lg border border-border cursor-pointer p-0.5"
+                  />
+                  <Input
+                    type="text"
+                    value={form.accentColor || '#10b981'}
+                    onChange={(e) => handleChange('accentColor', e.target.value)}
+                    placeholder="#10b981"
+                    className="font-mono text-sm uppercase"
+                  />
+                </div>
+                <FieldDescription className="mt-1.5">
+                  Used for highlights, badges, and secondary action touches. Default is #10b981.
+                </FieldDescription>
+              </FieldContent>
+            </Field>
+          </div>
         </SettingSection>
 
         <SettingSection

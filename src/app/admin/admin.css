@@ -148,7 +148,7 @@
   }
 
   .admin-cta-button {
-    height: 2rem;
+    height: 2.25rem;
     gap: 0.375rem;
     border-radius: 0.375rem;
     padding-inline: 0.75rem;
@@ -161,9 +161,18 @@
     transform: scale(0.98);
   }
 
+  .admin-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   @media (min-width: 768px) {
     .admin-touch-target {
       min-height: 34px;
+      min-width: 34px;
     }
   }
 
@@ -181,12 +190,21 @@
 }
 
 @media (max-width: 767px) {
+  body.admin-theme {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   .admin-page-stack {
     gap: 0.7rem;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .admin-page-header {
     gap: 0.5rem;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .admin-page-kicker {
@@ -196,29 +214,50 @@
 
   .admin-page-title {
     font-size: 1.15rem;
+    word-break: break-word;
   }
 
   .admin-page-subtitle {
     display: none;
   }
 
+  .admin-cta-button {
+    min-height: 44px;
+    height: auto;
+    padding-block: 0.5rem;
+    font-size: 0.8125rem;
+    justify-content: center;
+  }
+
   .admin-filter-shell {
     border-radius: 0.75rem;
     padding: 0.6rem;
     box-shadow: none;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .admin-stat-card,
   .admin-surface,
   .admin-panel {
     box-shadow: none;
+    max-width: 100%;
   }
 
-  .admin-shell-sidebar {
-    position: static;
-    height: auto;
-    width: 100%;
-    border-right: 0;
-    background: white;
+  /* Form controls touch size on 360px mobile */
+  .admin-theme input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.admin-compact-input),
+  .admin-theme select:not(.admin-compact-input),
+  .admin-theme textarea:not(.admin-compact-input) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Table horizontal scrolling containment on phone screens */
+  .admin-table-container,
+  [data-slot="table-container"],
+  table {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }

@@ -276,7 +276,7 @@ export default function OrderConfirmationEmail({ order, branding }) {
 
             {/* ─── Footer ────────────────────────────────────── */}
             <Section style={s.footer}>
-              <Text style={s.footerStore}>{branding?.storeName || 'China Unique Store'}</Text>
+              <Text style={s.footerStore}>{branding?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store'}</Text>
               {footerLinks.length > 0 ? (
                 <Text style={s.footerLinks}>
                   {footerLinks.map((item, i) => (

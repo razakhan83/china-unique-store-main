@@ -29,6 +29,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 function MobileNavButton({
   active = false,
@@ -277,7 +278,7 @@ export default function MobileBottomNav({
           <div className={mobileDrawerShellClassName}>
             <div className={mobileDrawerPanelClassName}>
               <DrawerHeader className="px-5 pb-3 pt-5 text-left">
-                <DrawerTitle>{session ? 'Your account' : 'Join China Unique'}</DrawerTitle>
+                <DrawerTitle>{session ? 'Your account' : `Join ${SITE_NAME}`}</DrawerTitle>
                 <DrawerDescription>
                   {session
                     ? 'Manage your orders, wishlist, and settings.'

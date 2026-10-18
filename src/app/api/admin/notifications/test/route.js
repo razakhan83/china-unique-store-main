@@ -19,7 +19,7 @@ export async function POST(req) {
     }
 
     const settings = await getStoreSettings();
-    const storeName = settings?.storeName || 'China Unique Store';
+    const storeName = settings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store';
 
     if (channel === 'email') {
       const apiKey = process.env.RESEND_API_KEY;
@@ -32,7 +32,7 @@ export async function POST(req) {
       }
 
       const resend = new Resend(apiKey);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@chinauniquestore.com';
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@store.com';
 
       // Convert line breaks to HTML paragraphs/breaks if plain text
       const htmlBody = bodyText.includes('<') && bodyText.includes('>')
@@ -46,7 +46,7 @@ export async function POST(req) {
               ${bodyText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
             </div>
             <div style="margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
-              This is a test notification generated from China Unique Store Admin Panel.
+              This is a test notification generated from ${storeName} Admin Panel.
             </div>
           </div>`;
 
