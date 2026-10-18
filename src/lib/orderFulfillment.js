@@ -70,7 +70,8 @@ export async function buildOrderItemsWithSourcing(items = []) {
   const dbItems = [];
 
   requestedItems.forEach(item => {
-    if (item.productId.startsWith('custom-') || item.productId.startsWith('unknown-')) {
+    const pid = String(item.productId || '').toLowerCase();
+    if (pid.startsWith('custom-') || pid.startsWith('unknown-')) {
       customItems.push({
         productId: item.productId,
         name: item.name,

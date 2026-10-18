@@ -158,6 +158,24 @@ export async function submitOrderAction(input) {
     }
     const validatedData = validation.data;
 
+    const hasDisallowedItem = validatedData.items.some((item) => {
+      const productId = String(item.productId || '').trim().toLowerCase();
+      const slug = String(item.slug || '').trim().toLowerCase();
+      return (
+        productId.startsWith('custom-') ||
+        productId.startsWith('unknown-') ||
+        slug.startsWith('custom-') ||
+        slug.startsWith('unknown-')
+      );
+    });
+
+    if (hasDisallowedItem) {
+      return {
+        success: false,
+        error: 'Custom or unverified items are not permitted in checkout.',
+      };
+    }
+
     await mongooseConnect();
     const Order = (await import('@/models/Order')).default;
     const Coupon = (await import('@/models/Coupon')).default;

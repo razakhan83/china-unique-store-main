@@ -9,7 +9,7 @@ const DEFAULT_BASE_URL = getSiteUrl();
 const DEFAULT_BRANDING = {
   baseUrl: DEFAULT_BASE_URL,
   storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
-  supportEmail: 'support@store.com',
+  supportEmail: process.env.SUPPORT_EMAIL || '',
   businessAddress: 'Karachi, Pakistan',
   // Matches admin store-setup: lightLogoUrl is the light-colored mark for dark surfaces.
   lightLogoUrl: '',
@@ -259,13 +259,24 @@ function renderSocialIconCell(href, src, label) {
 }
 
 function renderSocialIconRow(branding, { facebookUrl, instagramUrl, whatsappUrl, storeUrl }) {
+  const cells = [];
+  if (facebookUrl) {
+    cells.push(renderSocialIconCell(facebookUrl, emailAsset(branding, '/email-icons/facebook-green.png', EMAIL_CID.facebook), 'Facebook'));
+  }
+  if (instagramUrl) {
+    cells.push(renderSocialIconCell(instagramUrl, emailAsset(branding, '/email-icons/instagram-green.png', EMAIL_CID.instagram), 'Instagram'));
+  }
+  if (whatsappUrl) {
+    cells.push(renderSocialIconCell(whatsappUrl, emailAsset(branding, '/email-icons/whatsapp-green.png', EMAIL_CID.whatsapp), 'WhatsApp'));
+  }
+  if (storeUrl) {
+    cells.push(renderSocialIconCell(storeUrl, emailAsset(branding, '/email-icons/globe-green.png', EMAIL_CID.globe), 'Store'));
+  }
+
   return `
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 16px auto;">
                 <tr>
-                  ${renderSocialIconCell(facebookUrl || 'https://www.facebook.com', emailAsset(branding, '/email-icons/facebook-green.png', EMAIL_CID.facebook), 'Facebook')}
-                  ${renderSocialIconCell(instagramUrl || 'https://www.instagram.com', emailAsset(branding, '/email-icons/instagram-green.png', EMAIL_CID.instagram), 'Instagram')}
-                  ${renderSocialIconCell(whatsappUrl, emailAsset(branding, '/email-icons/whatsapp-green.png', EMAIL_CID.whatsapp), 'WhatsApp')}
-                  ${renderSocialIconCell(storeUrl, emailAsset(branding, '/email-icons/globe-green.png', EMAIL_CID.globe), 'Store')}
+                  ${cells.join('\n')}
                 </tr>
               </table>`;
 }
@@ -307,10 +318,12 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
   const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#CU-ORDER');
   const orderUrl = buildOrderUrl(order, branding.baseUrl);
   const orderDate = formatDate(order?.createdAt || new Date());
-  const supportEmail = getText(branding?.supportEmail, 'support@chinauniquestore.com');
-  const rawPhoneDigits = getText(branding?.whatsappNumber || '923001234567').replace(/\D/g, '');
-  const cleanWhatsAppNumber = rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits;
-  const whatsappUrl = `https://wa.me/${cleanWhatsAppNumber}`;
+  const supportEmail = getText(branding?.supportEmail, '');
+  const rawPhoneDigits = getText(branding?.whatsappNumber, '').replace(/\D/g, '');
+  const cleanWhatsAppNumber = rawPhoneDigits
+    ? (rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits)
+    : '';
+  const whatsappUrl = cleanWhatsAppNumber ? `https://wa.me/${cleanWhatsAppNumber}` : '';
   const storeUrl = branding.baseUrl || 'https://www.chinauniquestore.com';
   const unsubscribeUrl = `${storeUrl}/unsubscribe`;
 
@@ -479,7 +492,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
               <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
                 <tr>
                   <!-- Email Us Card (Lucide Mail Icon) -->
-                  <td class="stack-col" width="48%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
+                  <td class="stack-col" width="${cleanWhatsAppNumber ? '48%' : '100%'}" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
                       <tr>
                         <td width="36" valign="middle">
@@ -493,12 +506,16 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
                         </td>
                         <td style="padding-left: 8px; text-align: left;">
                           <div style="font-size: 11.5px; font-weight: 700; color: #0f172a;">Email Us</div>
-                          <a href="mailto:${esc(supportEmail)}" style="font-size: 10px; color: #059669; text-decoration: none; font-weight: 600; word-break: break-all;">${esc(supportEmail)}</a>
+                          ${supportEmail
+                            ? `<a href="mailto:${esc(supportEmail)}" style="font-size: 10px; color: #059669; text-decoration: none; font-weight: 600; word-break: break-all;">${esc(supportEmail)}</a>`
+                            : `<span style="font-size: 10px; color: #059669; font-weight: 600;">Reply to this email</span>`
+                          }
                         </td>
                       </tr>
                     </table>
                   </td>
 
+                  ${cleanWhatsAppNumber ? `
                   <td class="stack-col stack-gap" width="4%" style="font-size: 0;">&nbsp;</td>
 
                   <!-- Call / WhatsApp Card (Lucide Phone Icon) -->
@@ -520,7 +537,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
                         </td>
                       </tr>
                     </table>
-                  </td>
+                  </td>` : ''}
                 </tr>
               </table>
 
@@ -826,10 +843,14 @@ export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
   const orderUrl = buildOrderUrl(order, branding.baseUrl);
   const storeUrl = branding.baseUrl || 'https://www.chinauniquestore.com';
   const unsubscribeUrl = `${storeUrl}/unsubscribe`;
-  const rawPhoneDigits = getText(branding?.whatsappNumber || '923001234567').replace(/\D/g, '');
-  const cleanWhatsAppNumber = rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits;
-  const issueWhatsAppUrl = `https://wa.me/${cleanWhatsAppNumber}?text=${encodeURIComponent(`Salam, I have an issue with Order ${orderIdDisplay}`)}`;
-  const whatsappUrl = `https://wa.me/${cleanWhatsAppNumber}`;
+  const rawPhoneDigits = getText(branding?.whatsappNumber, '').replace(/\D/g, '');
+  const cleanWhatsAppNumber = rawPhoneDigits
+    ? (rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits)
+    : '';
+  const issueWhatsAppUrl = cleanWhatsAppNumber
+    ? `https://wa.me/${cleanWhatsAppNumber}?text=${encodeURIComponent(`Salam, I have an issue with Order ${orderIdDisplay}`)}`
+    : '';
+  const whatsappUrl = cleanWhatsAppNumber ? `https://wa.me/${cleanWhatsAppNumber}` : '';
 
   const deliveredItemsHtml = items.map((item) => `
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
@@ -974,6 +995,7 @@ export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
                       If anything arrived damaged or missing, you are covered by our <strong>7-Day Free Replacement Guarantee</strong>.
                     </p>
 
+                    ${issueWhatsAppUrl ? `
                     <table border="0" cellpadding="0" cellspacing="0" align="center">
                       <tr>
                         <td align="center" style="background-color: #064e3b; border-radius: 20px;">
@@ -982,7 +1004,10 @@ export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
                           </a>
                         </td>
                       </tr>
-                    </table>
+                    </table>` : `
+                    <div style="color: #064e3b; font-size: 12px; font-weight: 700;">
+                      Reply to this email for replacement assistance
+                    </div>`}
 
                   </td>
                 </tr>
