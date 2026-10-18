@@ -133,6 +133,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
     const router = useRouter();
     const packOptions = Array.isArray(product?.packOptions) ? product.packOptions : [];
     const [selectedPack, setSelectedPack] = useState(packOptions.length > 0 ? packOptions[0] : null);
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    const [selectedVariant, setSelectedVariant] = useState(variants.length > 0 ? variants[0] : null);
     const addLock = useActionLock();
     const buyLock = useActionLock();
     const [didJustAdd, setDidJustAdd] = useState(false);
@@ -218,19 +220,17 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         const startedAt = performance.now();
         try {
             const finalPackPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : 0;
-            const productToAdd = selectedPack ? {
+            const effectivePrice = selectedPack 
+                ? selectedPack.price 
+                : (selectedVariant ? Number(selectedVariant.price) : product.Price);
+            const productToAdd = {
                 ...product,
-                Price: selectedPack.price,
-                discountedPrice: discountOn ? finalPackPrice : null,
+                Price: effectivePrice,
+                compareAtPrice: selectedVariant?.compareAtPrice ? Number(selectedVariant.compareAtPrice) : product.compareAtPrice,
+                discountedPrice: discountOn ? (selectedPack ? finalPackPrice : product.discountedPrice) : null,
                 discountPercentage: discountOn ? product.discountPercentage : 0,
                 isDiscounted: discountOn,
-                packLabel: selectedPack.label,
-                isFreeDelivery: Boolean(product?.isFreeDelivery),
-            } : {
-                ...product,
-                discountedPrice: discountOn ? product.discountedPrice : null,
-                discountPercentage: discountOn ? product.discountPercentage : 0,
-                isDiscounted: discountOn,
+                packLabel: selectedPack ? selectedPack.label : (selectedVariant ? selectedVariant.name : ''),
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 
@@ -351,11 +351,12 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         return packPrice;
     };
 
-    const listPrice = Number(product.Price || product.price || basePrice || 0);
+    const listPrice = selectedVariant ? Number(selectedVariant.price) : Number(product.Price || product.price || basePrice || 0);
     const salePrice = product.discountedPrice != null ? Number(product.discountedPrice) : basePrice;
-    const displayPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : (discountOn ? salePrice : listPrice);
+    const displayPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : (selectedVariant ? Number(selectedVariant.price) : (discountOn ? salePrice : listPrice));
+    const effectiveCompareAt = selectedVariant?.compareAtPrice ? Number(selectedVariant.compareAtPrice) : compareAtPrice;
     const displayComparePrice = (() => {
-        if (!compareAtPrice) {
+        if (!effectiveCompareAt) {
             // If no compare price is set globally but pack option is discounted, show original pack price as compare price
             if (selectedPack && discountOn && product.discountPercentage > 0) {
                 return selectedPack.price > displayPrice ? selectedPack.price : null;
@@ -363,11 +364,11 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
             return null;
         }
         
-        if (!selectedPack) return discountOn && compareAtPrice > displayPrice ? compareAtPrice : null;
+        if (!selectedPack) return effectiveCompareAt > displayPrice ? effectiveCompareAt : null;
         
         const match = selectedPack.label.match(/\d+/);
         const quantity = match ? parseInt(match[0], 10) : 1;
-        const calculatedCompare = compareAtPrice * quantity;
+        const calculatedCompare = effectiveCompareAt * quantity;
         
         return calculatedCompare > displayPrice ? calculatedCompare : null;
     })();
@@ -444,9 +445,48 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                     </div>
                 </div>
 
+                {/* Variant Options Selector */}
+                {variants.length > 0 && (
+                    <div className="space-y-2 mt-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs sm:text-[13px] font-semibold text-muted-foreground">Select Variant:</span>
+                            {selectedVariant && (
+                                <span className="text-xs font-semibold text-foreground">
+                                    {selectedVariant.name} {Number(selectedVariant.stockQuantity || 0) <= 0 ? '(Out of stock)' : `(${selectedVariant.stockQuantity} available)`}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                            {variants.map((variant, idx) => {
+                                const isSelected = selectedVariant?.id ? selectedVariant.id === variant.id : selectedVariant?.name === variant.name;
+                                const isOutOfStock = Number(variant.stockQuantity || 0) <= 0;
+                                return (
+                                    <button
+                                        key={variant.id || idx}
+                                        type="button"
+                                        onClick={() => setSelectedVariant(variant)}
+                                        className={cn(
+                                            "flex h-9 min-w-[70px] items-center justify-center whitespace-nowrap rounded-lg px-4 text-xs sm:text-[13.5px] font-bold transition-all duration-200 active:scale-[0.96] outline-none cursor-pointer border shadow-xs gap-1.5",
+                                            isSelected
+                                                ? "bg-foreground text-background border-foreground shadow-sm ring-1 ring-foreground ring-offset-1"
+                                                : "bg-card text-foreground/80 border-border hover:border-foreground/50 hover:text-foreground hover:bg-muted/30",
+                                            isOutOfStock && "opacity-60 border-dashed"
+                                        )}
+                                    >
+                                        <span>{variant.name}</span>
+                                        <span className="text-[11px] font-normal opacity-80 font-mono">
+                                            Rs. {Number(variant.price || 0).toLocaleString('en-PK')}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {packOptions.length > 1 && (
                     <div className="space-y-2 mt-2">
-                        <span className="text-xs sm:text-[13px] font-semibold text-muted-foreground">Select Option:</span>
+                        <span className="text-xs sm:text-[13px] font-semibold text-muted-foreground">Select Pack:</span>
                         <div className="flex flex-wrap gap-2.5">
                             {packOptions.map((pack, idx) => {
                                 const isSelected = selectedPack?.label === pack.label;

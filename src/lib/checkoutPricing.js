@@ -55,11 +55,16 @@ export function calculateCheckoutPricing({
   }
 
   const shipping = isFreeShipping ? 0 : Math.max(0, shippingBase);
-  const total = Math.max(0, safeSubtotal - discountAmount) + shipping;
+  const taxableSubtotal = Math.max(0, safeSubtotal - discountAmount);
+  const taxRatePercent = settings?.taxEnabled === true ? Math.max(0, toSafeNumber(settings?.taxRatePercent, 0)) : 0;
+  const taxAmount = taxRatePercent > 0 ? Math.round((taxableSubtotal * taxRatePercent) / 100) : 0;
+  const total = taxableSubtotal + shipping + taxAmount;
 
   return {
     subtotal: safeSubtotal,
     shipping,
+    taxAmount,
+    taxRatePercent,
     total,
     isFreeShipping,
     freeShippingThreshold,

@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache';
-import { notFound } from 'next/navigation';
+import { notFound, redirect, permanentRedirect } from 'next/navigation';
 
 import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
@@ -39,6 +39,22 @@ export default async function DynamicCustomPage({ params }) {
   ]);
 
   if (!page || page.isEnabled === false) {
+    const rawRedirects = Array.isArray(settings?.urlRedirects) ? settings.urlRedirects : [];
+    const normalizedSlug = String(slug || '').toLowerCase().trim();
+    const match = rawRedirects.find((r) => {
+      if (r.isEnabled === false) return false;
+      const cleanSource = String(r.sourcePath || '').trim().toLowerCase().replace(/^\/+/, '');
+      return cleanSource === normalizedSlug;
+    });
+
+    if (match?.targetPath) {
+      if (match.statusCode === 302) {
+        redirect(match.targetPath);
+      } else {
+        permanentRedirect(match.targetPath);
+      }
+    }
+
     notFound();
   }
 

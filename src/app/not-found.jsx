@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import NotFoundRedirectChecker from '@/components/NotFoundRedirectChecker';
 
 export const metadata = {
   title: '404 - Page Not Found | China Unique Store',
@@ -9,6 +10,7 @@ export const metadata = {
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center bg-background px-4 py-12 text-center">
+      <NotFoundRedirectChecker />
       <div className="mb-5 flex items-center justify-center select-none">
         <Image
           src="/undraw_page-not-found_6wni (1).svg"

@@ -7,6 +7,8 @@ import { useState, useMemo, useEffect, startTransition, useTransition } from "re
 import dynamic from 'next/dynamic';
 import {
   ArrowDownWideNarrow,
+  Copy,
+  DollarSign,
   ImageIcon,
   Minus,
   MoreHorizontal,
@@ -28,6 +30,7 @@ import {
 import { toast } from "sonner";
 
 import BulkImportModal from "@/components/admin/BulkImportModal";
+import BulkPriceStockDialog from "./BulkPriceStockDialog";
 import AppPagination from "@/components/AppPagination";
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
 import {
@@ -323,6 +326,7 @@ export default function AdminProductsClient({
   initialSortOption,
   categoryOptions,
   summary,
+  lowStockThreshold = 5,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -341,6 +345,8 @@ export default function AdminProductsClient({
   // Modals State
   const [deleteModal, setDeleteModal] = useState({ open: false, product: null, isBulk: false });
   const [deleting, setDeleting] = useState(false);
+  const [cloningId, setCloningId] = useState(null);
+  const [bulkPriceStockModalOpen, setBulkPriceStockModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
   const [togglingStockId, setTogglingStockId] = useState(null);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -503,6 +509,29 @@ export default function AdminProductsClient({
     });
   }
 
+  // Clone / Duplicate Product
+  async function handleCloneProduct(product) {
+    setCloningId(product._id);
+    try {
+      const res = await fetch(`/api/admin/products/${product._id}/clone`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to duplicate product");
+      }
+      toast.success(data.message || `Duplicated "${product.Name}" as draft.`);
+      if (data.product) {
+        setProducts((prev) => [data.product, ...prev]);
+      }
+      router.refresh();
+    } catch (err) {
+      toast.error(err.message || "Could not duplicate product.");
+    } finally {
+      setCloningId(null);
+    }
+  }
+
   // Bulk Actions
   async function handleBulkAction(action) {
     if (selectedProducts.length === 0) {
@@ -634,6 +663,29 @@ export default function AdminProductsClient({
         saving={isSavingStock}
         onOpenChange={(open) => setStockModal((prev) => ({ ...prev, open }))}
         onSave={handleSaveStock}
+      />
+
+      <BulkPriceStockDialog
+        open={bulkPriceStockModalOpen}
+        onOpenChange={setBulkPriceStockModalOpen}
+        selectedCount={selectedProducts.length}
+        selectedProductIds={selectedProducts}
+        onSuccess={(payload) => {
+          setProducts((prev) =>
+            prev.map((p) => {
+              if (!selectedProducts.includes(p._id)) return p;
+              return {
+                ...p,
+                ...(payload.price !== undefined ? { Price: payload.price } : {}),
+                ...(payload.compareAtPrice !== undefined ? { compareAtPrice: payload.compareAtPrice } : {}),
+                ...(payload.stockQuantity !== undefined ? { stockQuantity: payload.stockQuantity } : {}),
+                ...(payload.StockStatus !== undefined ? { StockStatus: payload.StockStatus } : {}),
+              };
+            })
+          );
+          setSelectedProducts([]);
+          router.refresh();
+        }}
       />
 
       {/* Delete Confirmation Alert Dialog */}
@@ -775,6 +827,7 @@ export default function AdminProductsClient({
                 <SelectItem value="all">All Stock</SelectItem>
                 <SelectItem value="in-stock">In Stock</SelectItem>
                 <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                <SelectItem value="low-stock">Low Stock (≤{lowStockThreshold})</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -876,6 +929,18 @@ export default function AdminProductsClient({
             >
               <XCircle className="mr-1 size-3 text-muted-foreground" />
               Out of Stock
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-[11px] font-medium bg-background hover:bg-muted transition-colors cursor-pointer"
+              onClick={() => setBulkPriceStockModalOpen(true)}
+              disabled={isBulkUpdating}
+            >
+              <DollarSign className="mr-1 size-3 text-emerald-600" />
+              Edit Price & Stock
             </Button>
 
             <Button
@@ -1048,11 +1113,21 @@ export default function AdminProductsClient({
                         />
                       </td>
 
-                      {/* Quantity */}
+                      {/* Quantity & Low Stock alert */}
                       <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                        <span className="text-[12px] font-bold tabular-nums text-foreground">
-                          Qty: {qty}
-                        </span>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="text-[12px] font-bold tabular-nums text-foreground">
+                            Qty: {qty}
+                          </span>
+                          {qty <= lowStockThreshold && (
+                            <span
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30"
+                              title={`Low stock alert (threshold: ${lowStockThreshold})`}
+                            >
+                              Low Stock
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Visibility 1-Click Interactive Button */}
@@ -1111,6 +1186,16 @@ export default function AdminProductsClient({
                                 >
                                   <Package className="mr-2 size-3.5" />
                                   Adjust Quantity
+                                </DropdownMenuItem>
+
+                                {/* 4. Duplicate / Clone Product */}
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-xs"
+                                  disabled={cloningId === product._id}
+                                  onClick={() => handleCloneProduct(product)}
+                                >
+                                  <Copy className="mr-2 size-3.5" />
+                                  {cloningId === product._id ? "Duplicating..." : "Duplicate Product"}
                                 </DropdownMenuItem>
 
                                 <DropdownMenuSeparator />
@@ -1228,6 +1313,14 @@ export default function AdminProductsClient({
                         >
                           <Package className="mr-2 size-3.5" />
                           Adjust Quantity
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-xs"
+                          disabled={cloningId === product._id}
+                          onClick={() => handleCloneProduct(product)}
+                        >
+                          <Copy className="mr-2 size-3.5" />
+                          {cloningId === product._id ? "Duplicating..." : "Duplicate Product"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

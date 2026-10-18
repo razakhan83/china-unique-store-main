@@ -253,6 +253,7 @@ function NavbarContent({
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
+  navigationMenuItems = [],
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -734,6 +735,22 @@ function NavbarContent({
                 >
                   <Phone className="size-3.5" strokeWidth={pathname === '/contact' ? 2.5 : 2.2} /> Contact Us
                 </Link>
+
+                {/* Dynamic Storefront Menu Items (Configured in Admin Navigation) */}
+                {Array.isArray(navigationMenuItems) && navigationMenuItems.filter(i => i?.isEnabled !== false && !['Home', 'Categories', 'All Products', 'Wishlist', 'My Orders', 'Track Order', 'Contact Us'].includes(i.label)).map((item, idx) => (
+                  <Link 
+                    key={idx}
+                    href={item.url}
+                    target={item.openInNewTab ? '_blank' : undefined}
+                    rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                    className={cn(
+                      "flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full transition-[background-color,color] duration-200 ease-out group select-none hover:bg-primary/10 hover:text-primary",
+                      pathname === item.url ? "font-bold text-primary" : "font-semibold text-foreground/85"
+                    )}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
@@ -896,6 +913,7 @@ export default function Navbar({
   announcementBarEnabled = true,
   announcementBarText = '',
   announcementBarMessages = [],
+  navigationMenuItems = [],
 }) {
   return (
     <Suspense
@@ -920,6 +938,7 @@ export default function Navbar({
         announcementBarEnabled={announcementBarEnabled}
         announcementBarText={announcementBarText}
         announcementBarMessages={announcementBarMessages}
+        navigationMenuItems={navigationMenuItems}
       />
     </Suspense>
   );

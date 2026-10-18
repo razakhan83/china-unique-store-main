@@ -244,6 +244,11 @@ export async function submitOrderAction(input) {
       items: normalizedItems,
     });
 
+    const chosenPaymentMethod = validatedData.paymentMethod || 'cod';
+    if (chosenPaymentMethod === 'cod' && settings?.codEnabled === false) {
+      return { success: false, error: 'Cash on Delivery (COD) is currently disabled. Please select Bank Deposit or contact support.' };
+    }
+
     // STRICT VALIDATION
     if (session?.user && !userEmail) {
       return { success: false, error: 'Unable to capture user email.' };
@@ -266,10 +271,13 @@ export async function submitOrderAction(input) {
         items: normalizedItems,
         totalAmount: pricing.total,
         status: DEFAULT_ORDER_STATUS,
+        paymentStatus: chosenPaymentMethod === 'bank' ? 'Pending Bank Verification' : 'COD',
         notes,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         discountAmount: pricing.discountAmount || 0,
         shippingAmount: pricing.shipping || 0,
+        taxAmount: pricing.taxAmount || 0,
+        taxRatePercent: pricing.taxRatePercent || 0,
         inventoryAdjusted: true,
         statusHistory: [{ status: DEFAULT_ORDER_STATUS, timestamp: new Date() }],
       });

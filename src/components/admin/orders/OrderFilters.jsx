@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { Calendar, Search, X, PackageCheck, Printer, Download, Truck, RotateCcw, Trash2, Zap, Upload, AlertTriangle, UserCog, Globe, Check, Edit, FileText, Send, MoreHorizontal } from 'lucide-react';
+import { Calendar, Search, X, PackageCheck, Printer, Download, Truck, RotateCcw, Trash2, Zap, Upload, AlertTriangle, UserCog, Globe, Check, Edit, FileText, Send, MoreHorizontal, FileSpreadsheet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -399,6 +399,20 @@ export function OrderFilters(props) {
                     >
                       <Download className="size-3.5" />
                       PDF (.pdf)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 focus:text-emerald-600 cursor-pointer"
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        params.set('format', 'csv');
+                        if (startDate) params.set('startDate', startDate);
+                        if (endDate) params.set('endDate', endDate);
+                        if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+                        window.open(`/api/admin/reports/sales?${params.toString()}`, '_blank');
+                      }}
+                    >
+                      <FileSpreadsheet className="size-3.5" />
+                      Sales Report (.csv)
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </DropdownMenuContent>

@@ -40,6 +40,49 @@ const PackOptionSchema = new mongoose.Schema(
     }
 );
 
+const ProductVariantSchema = new mongoose.Schema(
+    {
+        id: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        options: {
+            type: Map,
+            of: String,
+            default: {},
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        compareAtPrice: {
+            type: Number,
+            default: null,
+            min: 0,
+        },
+        stockQuantity: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        sku: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
 const ProductVendorSchema = new mongoose.Schema(
     {
         vendorId: {
@@ -189,6 +232,10 @@ const ProductSchema = new mongoose.Schema(
             type: [PackOptionSchema],
             default: [],
         },
+        variants: {
+            type: [ProductVariantSchema],
+            default: [],
+        },
         stockQuantity: {
             type: Number,
             default: 0,
@@ -308,6 +355,7 @@ if (
         !cachedProduct.schema.path('vendors').schema?.path('email') ||
         !cachedProduct.schema.path('vendors').schema?.path('address') ||
         !cachedProduct.schema.path('packOptions') ||
+        !cachedProduct.schema.path('variants') ||
         !cachedProduct.schema.path('tags') ||
         !cachedProduct.schema.path('primaryTag') ||
         !cachedProduct.schema.path('isFeatured') ||

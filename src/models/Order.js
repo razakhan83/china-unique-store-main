@@ -217,6 +217,31 @@ const OrderSchema = new mongoose.Schema(
             type: Number,
             required: false,
         },
+        taxAmount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        taxRatePercent: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        refundedAmount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        refunds: [
+            {
+                amount: { type: Number, required: true, min: 0 },
+                reason: { type: String, default: '', trim: true },
+                method: { type: String, default: 'COD Adjustment', trim: true },
+                notes: { type: String, default: '', trim: true },
+                processedBy: { type: String, default: 'Staff', trim: true },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
         isDeleted: {
             type: Boolean,
             default: false,
@@ -261,8 +286,10 @@ if (cachedOrder) {
     const hasNocFields = !!cachedOrder.schema.paths.nocLabelUrl;
     const hasNocAccountId = !!cachedOrder.schema.paths.nocAccountId;
     const hasOrderType = !!cachedOrder.schema.paths.orderType;
+    const hasRefunds = !!cachedOrder.schema.paths.refundedAmount;
+    const hasTax = !!cachedOrder.schema.paths.taxAmount;
     
-    if (!hasExpectedStatuses || !hasTracking || !hasNocFields || !hasNocAccountId || !hasOrderType) {
+    if (!hasExpectedStatuses || !hasTracking || !hasNocFields || !hasNocAccountId || !hasOrderType || !hasRefunds || !hasTax) {
         delete mongoose.models.Order;
     }
 }

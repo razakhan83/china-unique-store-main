@@ -69,6 +69,8 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
   const [discountEndsAt, setDiscountEndsAt] = useState("");
   const [packOptions, setPackOptions] = useState([{ label: "1 pcs", price: "" }]);
   const [enablePackOptions, setEnablePackOptions] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [enableVariants, setEnableVariants] = useState(false);
   const [stockQuantity, setStockQuantity] = useState("1");
   const [stockStatus, setStockStatus] = useState("In Stock");
   const [Categories, setCategories] = useState([]);
@@ -118,6 +120,21 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
       setDiscountEndsAt(initialData.discountEndsAt ? new Date(initialData.discountEndsAt).toISOString().slice(0, 16) : '');
       setPackOptions(initialData.packOptions || [{ label: "1 pcs", price: "" }]);
       setEnablePackOptions(initialData.enablePackOptions || false);
+      
+      if (Array.isArray(initialData.variants) && initialData.variants.length > 0) {
+        setEnableVariants(true);
+        setVariants(initialData.variants.map((v, i) => ({
+          id: v.id || `v-${i + 1}`,
+          name: v.name || '',
+          price: v.price != null ? String(v.price) : '',
+          compareAtPrice: v.compareAtPrice != null ? String(v.compareAtPrice) : '',
+          stockQuantity: v.stockQuantity != null ? String(v.stockQuantity) : '0',
+          sku: v.sku || '',
+        })));
+      } else {
+        setEnableVariants(false);
+        setVariants([]);
+      }
       
       const sourceCategories = initialData.Category || initialData.Categories;
       const catIds = Array.isArray(sourceCategories)
@@ -195,6 +212,8 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
     setFeaturedPriority(0);
     setTags([]);
     setPrimaryTag("");
+    setEnableVariants(false);
+    setVariants([]);
   }, []);
 
   useEffect(() => {
@@ -430,6 +449,18 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
         Category: Categories,
         vendors: vendorAssignments,
         packOptions: enablePackOptions ? packOptions.filter(p => p.label && p.price) : [],
+        variants: enableVariants
+          ? variants
+              .filter(v => v.name && v.name.trim() && v.price)
+              .map((v, i) => ({
+                id: v.id || `v-${i + 1}-${Date.now()}`,
+                name: v.name.trim(),
+                price: Number(v.price),
+                compareAtPrice: v.compareAtPrice ? Number(v.compareAtPrice) : null,
+                stockQuantity: Math.max(0, Number(v.stockQuantity) || 0),
+                sku: v.sku ? v.sku.trim() : '',
+              }))
+          : [],
         showOnStore,
         isNewArrival,
         isBestSelling,
@@ -724,6 +755,148 @@ export default function ProductForm({ initialData = null, onSubmit, isEditing = 
                   Add More Pack Option
                 </Button>
               </>
+            )}
+          </div>
+
+          {/* Product Variants (Size / Color with individual price and stock) */}
+          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Product Variants</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Define size, color, or style variations each with its own price, compare-at price, stock quantity, and SKU.
+                </p>
+              </div>
+              <Switch
+                checked={enableVariants}
+                onCheckedChange={(checked) => {
+                  setEnableVariants(checked);
+                  if (checked && variants.length === 0) {
+                    setVariants([
+                      { id: `v-1-${Date.now()}`, name: "Default Variant", price: Price || "", compareAtPrice: compareAtPrice || "", stockQuantity: stockQuantity || "1", sku: "" }
+                    ]);
+                  }
+                }}
+              />
+            </div>
+            {enableVariants && (
+              <div className="space-y-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/80 text-muted-foreground text-left font-semibold">
+                        <th className="pb-2">Variant Name (e.g. Size / Color)</th>
+                        <th className="pb-2 w-28">Price (PKR)</th>
+                        <th className="pb-2 w-28">Compare At</th>
+                        <th className="pb-2 w-24">Stock Qty</th>
+                        <th className="pb-2 w-28">SKU</th>
+                        <th className="pb-2 w-10 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {variants.map((v, index) => (
+                        <tr key={v.id || index}>
+                          <td className="py-2 pr-2">
+                            <Input
+                              type="text"
+                              value={v.name}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[index].name = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="e.g. Red / M"
+                              className="h-9 text-xs"
+                              required
+                            />
+                          </td>
+                          <td className="py-2 pr-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={v.price}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[index].price = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="Price"
+                              className="h-9 text-xs"
+                              required
+                            />
+                          </td>
+                          <td className="py-2 pr-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={v.compareAtPrice}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[index].compareAtPrice = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="Optional"
+                              className="h-9 text-xs"
+                            />
+                          </td>
+                          <td className="py-2 pr-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={v.stockQuantity}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[index].stockQuantity = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="0"
+                              className="h-9 text-xs"
+                            />
+                          </td>
+                          <td className="py-2 pr-2">
+                            <Input
+                              type="text"
+                              value={v.sku}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[index].sku = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="SKU"
+                              className="h-9 text-xs"
+                            />
+                          </td>
+                          <td className="py-2 text-right">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive hover:bg-destructive/10"
+                              onClick={() => setVariants(variants.filter((_, i) => i !== index))}
+                              title="Delete variant"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVariants([...variants, { id: `v-${Date.now()}-${variants.length + 1}`, name: "", price: Price || "", compareAtPrice: "", stockQuantity: "1", sku: "" }])}
+                  className="w-full rounded-xl border-dashed text-xs"
+                >
+                  <PlusCircle className="mr-1.5 size-3.5" />
+                  Add Variant
+                </Button>
+              </div>
             )}
           </div>
 

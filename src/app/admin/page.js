@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare, FileText, CheckCircle2, Package, Truck } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Box, CircleDollarSign, ExternalLink, Images, Inbox, LayoutGrid, Settings, ShoppingBag, Store, Users, Plus, Trophy, Star, MessageSquare, FileText, CheckCircle2, Package, Truck } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
@@ -130,6 +130,8 @@ async function DashboardContent({ session }) {
     topProducts = [],
     topCustomers = [],
     recentReviews = [],
+    lowStockProducts = [],
+    lowStockThreshold = 5,
     hasError = false,
   } = await loadDashboardDataSafely();
 
@@ -336,6 +338,74 @@ async function DashboardContent({ session }) {
               </Link>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Low-Stock Inventory Alerts Widget */}
+      <section className="mb-4">
+        <div className="admin-surface rounded-[0.5rem] p-4 border border-amber-500/30 bg-amber-500/5">
+          <div className="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+              <h2 className="text-[13px] font-bold text-foreground">Low-Stock Alerts</h2>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                Threshold: ≤ {lowStockThreshold} units
+              </span>
+            </div>
+            <Link
+              href="/admin/products?stock=low-stock"
+              className="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1"
+            >
+              <span>View All Low-Stock ({summary.lowStockCount || lowStockProducts.length})</span>
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
+
+          {lowStockProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {lowStockProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border/80 bg-card shadow-2xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="relative size-10 rounded-md border border-border overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                      {product.image ? (
+                        <Image src={product.image} alt={product.name} fill className="object-cover" sizes="40px" />
+                      ) : (
+                        <Box className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate" title={product.name}>
+                        {product.name}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Rs. {product.price.toLocaleString('en-PK')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="inline-block text-xs font-bold text-destructive bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded tabular-nums">
+                      {product.stockQuantity} left
+                    </span>
+                    <div className="mt-1">
+                      <Link
+                        href={`/admin/products/edit/${product._id}`}
+                        className="text-[10px] font-medium text-foreground underline hover:text-primary"
+                      >
+                        Restock
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-2 text-center text-xs text-muted-foreground">
+              All live catalog items have healthy stock levels above {lowStockThreshold} units.
+            </div>
+          )}
         </div>
       </section>
 

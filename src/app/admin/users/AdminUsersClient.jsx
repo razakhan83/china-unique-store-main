@@ -435,6 +435,13 @@ export default function AdminUsersClient({
                             {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}
                           </span>
                         </div>
+                        <Link
+                          href={`/admin/users/${encodeURIComponent(user._id)}`}
+                          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-8 gap-1.5 shrink-0')}
+                        >
+                          <User className="size-3.5" />
+                          <span>Profile</span>
+                        </Link>
                         <Button
                           variant="secondary"
                           size="sm"
@@ -453,10 +460,15 @@ export default function AdminUsersClient({
                             <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-52">
                           <DropdownMenuGroup>
                             <DropdownMenuLabel>User Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/users/${encodeURIComponent(user._id)}`} className="cursor-pointer flex items-center">
+                                <User className="mr-2 size-4" /> View Customer Detail
+                              </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className={user.disabled ? 'text-foreground focus:text-foreground' : 'text-destructive focus:text-destructive'}
                               onClick={() => handleUserAction(user, { disabled: !user.disabled })}

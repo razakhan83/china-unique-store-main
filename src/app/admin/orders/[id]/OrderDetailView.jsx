@@ -130,6 +130,21 @@ export default function OrderDetailView({
   const [trashModalOpen, setTrashModalOpen] = useState(false);
   const [isTrashing, setIsTrashing] = useState(false);
 
+  // Timeline Logs & Internal Notes State
+  const [timelineLogs, setTimelineLogs] = useState(logs || []);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [isSubmittingNote, setIsSubmittingNote] = useState(false);
+
+  // Refunds State
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('Customer Return');
+  const [refundMethod, setRefundMethod] = useState('COD Adjustment / Cash Handover');
+  const [refundNotes, setRefundNotes] = useState('');
+  const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
+  const [refundedAmount, setRefundedAmount] = useState(order.refundedAmount || 0);
+  const [orderRefunds, setOrderRefunds] = useState(order.refunds || []);
+
   // Edit Order State
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -449,6 +464,77 @@ export default function OrderDetailView({
     }
   };
 
+  const handleAddNote = async (e) => {
+    e?.preventDefault();
+    const text = newNoteText.trim();
+    if (!text) return;
+    setIsSubmittingNote(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order._id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: text }),
+      });
+      const data = await safeReadJson(res);
+      if (data.success && data.log) {
+        setTimelineLogs((prev) => [data.log, ...prev]);
+        setNewNoteText('');
+        toast.success('Internal note added to order timeline');
+        router.refresh();
+      } else {
+        toast.error(data.error || 'Failed to add note');
+      }
+    } catch {
+      toast.error('An error occurred while adding note');
+    } finally {
+      setIsSubmittingNote(false);
+    }
+  };
+
+  const handleProcessRefund = async (e) => {
+    e?.preventDefault();
+    const amount = Number(refundAmount);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid refund amount');
+      return;
+    }
+    const maxRefundable = Math.max(0, Number(order.totalAmount || 0) - Number(refundedAmount || 0));
+    if (amount > maxRefundable) {
+      toast.error(`Refund amount cannot exceed remaining balance of Rs. ${maxRefundable.toLocaleString('en-PK')}`);
+      return;
+    }
+    setIsSubmittingRefund(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order._id}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount,
+          reason: refundReason,
+          method: refundMethod,
+          notes: refundNotes,
+        }),
+      });
+      const data = await safeReadJson(res);
+      if (data.success) {
+        if (data.refundedAmount != null) setRefundedAmount(data.refundedAmount);
+        if (data.refund) setOrderRefunds((prev) => [data.refund, ...prev]);
+        if (data.log) setTimelineLogs((prev) => [data.log, ...prev]);
+        setRefundModalOpen(false);
+        setRefundAmount('');
+        setRefundNotes('');
+        toast.success(data.message || 'Refund recorded successfully');
+        router.refresh();
+      } else {
+        toast.error(data.error || 'Failed to process refund');
+      }
+    } catch {
+      toast.error('An error occurred while processing refund');
+    } finally {
+      setIsSubmittingRefund(false);
+    }
+  };
+
   // Print Invoice Popup
   const handlePrintInvoice = () => {
     const printWindow = openPrintWindow(`Invoice - ${order.orderId}`);
@@ -587,17 +673,18 @@ export default function OrderDetailView({
     });
   }
 
-  // 2. Add Order Activity Logs
-  if (Array.isArray(logs) && logs.length > 0) {
-    logs.forEach((log) => {
+  // 2. Add Order Activity Logs (including internal notes and refunds)
+  if (Array.isArray(timelineLogs) && timelineLogs.length > 0) {
+    timelineLogs.forEach((log) => {
       combinedTimeline.push({
         id: `log-${log._id}`,
         type: 'log',
-        title: log.action ? log.action.replace(/_/g, ' ') : 'Order Update',
+        title: log.action === 'INTERNAL_NOTE' ? 'Internal Note' : (log.action === 'REFUND' ? 'Refund Processed' : (log.action ? log.action.replace(/_/g, ' ') : 'Order Update')),
         time: log.createdAt ? new Date(log.createdAt).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' }) : '',
         remarks: log.details || '',
-        author: log.adminName || log.adminEmail ? `By ${log.adminName || log.adminEmail}` : 'System',
+        author: log.adminName || log.adminEmail ? `By ${log.adminName || log.adminEmail}` : 'Staff Member',
         timestamp: log.createdAt ? new Date(log.createdAt).getTime() : 0,
+        action: log.action || '',
       });
     });
   }
@@ -612,8 +699,12 @@ export default function OrderDetailView({
       remarks: `Order created for Rs. ${order.totalAmount.toLocaleString('en-PK')}`,
       author: order.sourceTag ? `Source: ${order.sourceTag}` : 'Store Checkout',
       timestamp: new Date(order.createdAt).getTime(),
+      action: 'ORDER_PLACED',
     });
   }
+
+  // Sort descending by timestamp so latest events appear first
+  combinedTimeline.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
   // Calculate items count and cost
   const totalItemsCount = (order.items || []).reduce((acc, item) => acc + Number(item.quantity || 1), 0);
@@ -1010,12 +1101,35 @@ export default function OrderDetailView({
                 </div>
               ) : null}
 
+              {order.taxAmount ? (
+                <div className="flex justify-between text-muted-foreground text-sm">
+                  <span>Sales Tax ({order.taxRatePercent || 0}%):</span>
+                  <span className="font-semibold text-foreground">+Rs. {Number(order.taxAmount).toLocaleString('en-PK')}</span>
+                </div>
+              ) : null}
+
               <div className="pt-3 border-t border-border flex justify-between items-baseline">
                 <span className="text-base font-bold text-foreground">Total Order Amount:</span>
                 <span className="text-xl font-black text-foreground font-mono">
                   Rs. {Number(order.totalAmount || 0).toLocaleString('en-PK')}
                 </span>
               </div>
+
+              {Number(refundedAmount || 0) > 0 && (
+                <div className="flex justify-between text-rose-600 dark:text-rose-400 text-sm font-semibold">
+                  <span>Total Refunded:</span>
+                  <span className="font-mono">-Rs. {Number(refundedAmount).toLocaleString('en-PK')}</span>
+                </div>
+              )}
+
+              {Number(refundedAmount || 0) > 0 && (
+                <div className="flex justify-between text-foreground text-sm font-bold border-t border-dashed border-border pt-1.5">
+                  <span>Net Paid / Collected:</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                    Rs. {Math.max(0, Number(order.totalAmount || 0) - Number(refundedAmount)).toLocaleString('en-PK')}
+                  </span>
+                </div>
+              )}
 
               {/* Clean COD Highlight Row */}
               <div className="pt-2 flex justify-between items-baseline text-sm">
@@ -1047,6 +1161,51 @@ export default function OrderDetailView({
                   >
                     {isReconcilingCod ? 'Reconciling...' : 'Reconcile to Total'}
                   </Button>
+                </div>
+              )}
+
+              {/* Refund Action Bar */}
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-medium">Financial Actions</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRefundModalOpen(true)}
+                  className="h-8 text-xs px-3 font-semibold rounded-lg gap-1.5 border-border hover:bg-muted text-foreground cursor-pointer"
+                >
+                  <RotateCcw className="size-3.5 text-muted-foreground" />
+                  <span>Process Refund</span>
+                </Button>
+              </div>
+
+              {/* Recorded Refunds List */}
+              {orderRefunds.length > 0 && (
+                <div className="pt-2 space-y-2 border-t border-border">
+                  <span className="text-xs font-bold text-foreground block">Refund History ({orderRefunds.length})</span>
+                  <div className="space-y-2">
+                    {orderRefunds.map((ref, rIdx) => (
+                      <div key={rIdx} className="p-3 rounded-xl border border-border bg-muted/20 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between font-bold">
+                          <span className="text-rose-600 dark:text-rose-400 font-mono text-sm">
+                            -Rs. {Number(ref.amount || 0).toLocaleString('en-PK')}
+                          </span>
+                          <span className="text-muted-foreground text-[11px] font-normal">
+                            {ref.createdAt ? new Date(ref.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>{ref.reason || 'Customer Refund'} • {ref.method}</span>
+                          <span className="font-medium text-foreground">{ref.processedBy}</span>
+                        </div>
+                        {ref.notes && (
+                          <p className="text-[11px] text-muted-foreground italic bg-background/50 p-1.5 rounded border border-border">
+                            &ldquo;{ref.notes}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1275,17 +1434,51 @@ export default function OrderDetailView({
               </div>
             )}
 
+            {/* Staff Internal Note Composer */}
+            <form onSubmit={handleAddNote} className="rounded-xl border border-border bg-muted/30 p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <FileText className="size-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>Internal Staff Note</span>
+                </span>
+                <span className="text-[10px] text-muted-foreground">Private • Staff Only</span>
+              </div>
+              <textarea
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Write an internal note or customer update..."
+                rows={2}
+                className="w-full text-xs p-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground resize-none"
+              />
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!newNoteText.trim() || isSubmittingNote}
+                  className="h-7 text-xs px-3 font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 cursor-pointer"
+                >
+                  {isSubmittingNote ? 'Saving...' : 'Add Note'}
+                </Button>
+              </div>
+            </form>
+
             {/* Vertical Timeline Steps (Clean, unboxed flow) */}
             <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
               {combinedTimeline.map((step, idx) => {
                 const isDelivered = step.title.toLowerCase().includes('deliver') || step.title.toLowerCase().includes('payment');
+                const isNote = step.action === 'INTERNAL_NOTE';
+                const isRefund = step.action === 'REFUND';
                 const stepRelative = step.timestamp ? formatSmartTimeAgo(step.timestamp) : (step.time ? formatSmartTimeAgo(step.time) : '');
 
                 return (
                   <div key={step.id || idx} className="relative group">
                     {/* Bullet icon */}
                     <div className="absolute -left-6 top-1 flex size-5 items-center justify-center rounded-full border border-border bg-background">
-                      {isDelivered ? (
+                      {isNote ? (
+                        <FileText className="size-3 text-amber-600 dark:text-amber-400" />
+                      ) : isRefund ? (
+                        <RotateCcw className="size-3 text-rose-600 dark:text-rose-400" />
+                      ) : isDelivered ? (
                         <CheckCircle2 className="size-3.5 text-emerald-600" />
                       ) : (
                         <div className="size-1.5 rounded-full bg-foreground" />
@@ -1293,11 +1486,24 @@ export default function OrderDetailView({
                     </div>
 
                     {/* Step Content */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-bold text-foreground">
-                          {step.title}
-                        </span>
+                    <div className={cn("space-y-1", isNote && "bg-amber-500/5 p-2.5 rounded-lg border border-amber-500/20")}>
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn("text-sm font-bold", isNote ? "text-amber-800 dark:text-amber-300" : isRefund ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>
+                            {step.title}
+                          </span>
+                          {isNote && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                              Note
+                            </span>
+                          )}
+                          {isRefund && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-700 dark:text-rose-300">
+                              Refund
+                            </span>
+                          )}
+                        </div>
+
                         {step.time && (
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-xs text-muted-foreground font-mono">
@@ -1313,7 +1519,7 @@ export default function OrderDetailView({
                       </div>
 
                       {step.remarks && step.remarks !== '---' && (
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className={cn("text-xs leading-relaxed", isNote ? "text-foreground font-medium" : "text-muted-foreground")}>
                           {step.remarks}
                         </p>
                       )}
@@ -1331,6 +1537,125 @@ export default function OrderDetailView({
           </section>
         </div>
       </div>
+
+      {/* ── Dialog 0: Refund Dialog ── */}
+      <Dialog open={refundModalOpen} onOpenChange={setRefundModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <RotateCcw className="size-4 text-rose-600" />
+              Process Order Refund
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Record a full or partial refund against Order {order.orderId}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleProcessRefund} className="space-y-4 py-2">
+            <div className="rounded-xl bg-muted/40 p-3.5 text-xs space-y-1.5 border border-border">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order Total:</span>
+                <span className="font-semibold text-foreground">Rs. {Number(order.totalAmount || 0).toLocaleString('en-PK')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Already Refunded:</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400">Rs. {Number(refundedAmount || 0).toLocaleString('en-PK')}</span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-1.5 font-bold">
+                <span className="text-foreground">Max Refundable:</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                  Rs. {Math.max(0, Number(order.totalAmount || 0) - Number(refundedAmount || 0)).toLocaleString('en-PK')}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Refund Amount (Rs.)</label>
+                <button
+                  type="button"
+                  onClick={() => setRefundAmount(String(Math.max(0, Number(order.totalAmount || 0) - Number(refundedAmount || 0))))}
+                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
+                >
+                  Refund Full Remaining Balance
+                </button>
+              </div>
+              <input
+                type="number"
+                min="1"
+                max={Math.max(0, Number(order.totalAmount || 0) - Number(refundedAmount || 0))}
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                placeholder="e.g. 500"
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm font-mono text-foreground focus:outline-none focus:border-foreground"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">Reason for Refund</label>
+              <Select value={refundReason} onValueChange={setRefundReason}>
+                <SelectTrigger className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground shadow-none">
+                  <SelectValue placeholder="Select Reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Customer Return">Customer Return</SelectItem>
+                  <SelectItem value="Damaged / Defective Item">Damaged / Defective Item</SelectItem>
+                  <SelectItem value="Order Cancelled">Order Cancelled</SelectItem>
+                  <SelectItem value="Overcharged / Price Adjustment">Overcharged / Price Adjustment</SelectItem>
+                  <SelectItem value="Out of Stock Partial">Out of Stock Partial</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">Refund Method</label>
+              <Select value={refundMethod} onValueChange={setRefundMethod}>
+                <SelectTrigger className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground shadow-none">
+                  <SelectValue placeholder="Select Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="COD Adjustment / Cash Handover">COD Adjustment / Cash Handover</SelectItem>
+                  <SelectItem value="Online Bank Transfer / JazzCash / EasyPaisa">Online Bank Transfer / JazzCash / EasyPaisa</SelectItem>
+                  <SelectItem value="Store Credit / Voucher">Store Credit / Voucher</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground">Internal Notes (Optional)</label>
+              <textarea
+                rows={2}
+                value={refundNotes}
+                onChange={(e) => setRefundNotes(e.target.value)}
+                placeholder="e.g. Returned parcel tracking number, JazzCash TID..."
+                className="w-full p-2.5 rounded-lg border border-border bg-background text-xs text-foreground resize-none focus:outline-none focus:border-foreground"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setRefundModalOpen(false)}
+                className="h-8 text-xs font-semibold rounded-lg"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!refundAmount || Number(refundAmount) <= 0 || isSubmittingRefund}
+                className="h-8 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+              >
+                {isSubmittingRefund ? 'Recording...' : 'Record Refund'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Dialog 1: Edit Order Modal (Up to Packed status) ── */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

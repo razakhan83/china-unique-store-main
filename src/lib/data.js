@@ -286,6 +286,7 @@ function toProductDetailView(product) {
     discountType: resolveDiscountType(product),
     discountEndsAt: product.discountEndsAt ? new Date(product.discountEndsAt).toISOString() : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
+    variants: Array.isArray(product.variants) ? product.variants : [],
     tags: Array.isArray(product.tags) ? product.tags : [],
     primaryTag: product.primaryTag || '',
     isNewArrival: product.isNewArrival === true,
@@ -332,6 +333,7 @@ function toAdminProductRow(product) {
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
+    variants: Array.isArray(product.variants) ? product.variants : [],
     tags: Array.isArray(product.tags) ? product.tags : [],
     primaryTag: product.primaryTag || '',
   };
@@ -445,6 +447,19 @@ function toOrderSummaryRow(order) {
     totalAmount: Number(order.totalAmount || 0),
     shippingAmount: order.shippingAmount != null ? Number(order.shippingAmount) : null,
     discountAmount: order.discountAmount != null ? Number(order.discountAmount) : 0,
+    taxAmount: Number(order.taxAmount || 0),
+    taxRatePercent: Number(order.taxRatePercent || 0),
+    refundedAmount: Number(order.refundedAmount || 0),
+    refunds: Array.isArray(order.refunds)
+      ? order.refunds.map((r) => ({
+          amount: Number(r.amount || 0),
+          reason: r.reason || '',
+          method: r.method || 'COD Adjustment',
+          notes: r.notes || '',
+          processedBy: r.processedBy || 'Staff',
+          createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+        }))
+      : [],
     status: normalizeOrderStatus(order.status),
     notes: order.notes || '',
     courierName: order.courierName || '',
@@ -529,6 +544,15 @@ async function getSettingsRaw() {
     announcementBarMessages: [],
     bankDepositEnabled: false,
     bankDepositAccountDetails: '',
+    codEnabled: true,
+    taxEnabled: false,
+    taxRatePercent: 0,
+    lowStockThreshold: 5,
+    whatsappTemplates: {},
+    emailTemplates: {},
+    staffMembers: [],
+    navigationMenuItems: [],
+    urlRedirects: [],
     homepageSectionOrder: [],
     customPages: DEFAULT_CUSTOM_PAGES,
   };
@@ -567,8 +591,17 @@ async function getSettingsRaw() {
         announcementBarEnabled: settings.announcementBarEnabled ?? true,
         announcementBarText: settings.announcementBarText || '',
         announcementBarMessages: normalizeAnnouncementMessages(settings.announcementBarMessages, settings.announcementBarText),
+        codEnabled: settings.codEnabled !== false,
         bankDepositEnabled: settings.bankDepositEnabled === true,
         bankDepositAccountDetails: settings.bankDepositAccountDetails || '',
+        taxEnabled: settings.taxEnabled === true,
+        taxRatePercent: Number(settings.taxRatePercent || 0),
+        lowStockThreshold: Number(settings.lowStockThreshold ?? 5),
+        whatsappTemplates: settings.whatsappTemplates || {},
+        emailTemplates: settings.emailTemplates || {},
+        staffMembers: Array.isArray(settings.staffMembers) ? settings.staffMembers : [],
+        navigationMenuItems: Array.isArray(settings.navigationMenuItems) ? settings.navigationMenuItems : [],
+        urlRedirects: Array.isArray(settings.urlRedirects) ? settings.urlRedirects : [],
         homepageSectionOrder: Array.isArray(settings.homepageSectionOrder) ? settings.homepageSectionOrder : [],
         customPages: mergeCustomPages(settings.customPages),
         guestModeEnabled: false,
@@ -2016,6 +2049,7 @@ export async function getAdminProductsPage({
   sort = 'newest',
   page = 1,
   limit = 12,
+  lowStockThreshold = 5,
 } = {}) {
   await mongooseConnect();
 
@@ -2026,6 +2060,7 @@ export async function getAdminProductsPage({
   const safeSort = String(sort || 'newest').trim() || 'newest';
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.max(1, Number(limit) || 12);
+  const threshold = Math.max(0, Number(lowStockThreshold) || 5);
 
   const query = {};
 
@@ -2034,6 +2069,7 @@ export async function getAdminProductsPage({
 
   if (safeStock === 'in-stock') query.StockStatus = 'In Stock';
   if (safeStock === 'out-of-stock') query.StockStatus = { $ne: 'In Stock' };
+  if (safeStock === 'low-stock') query.stockQuantity = { $lte: threshold };
 
   if (safeCategory === 'special-offers') {
     query.isDiscounted = true;
@@ -2611,6 +2647,66 @@ export async function getCustomerOtherOrders(phone, currentOrderId) {
   return orders.map(toOrderSummaryRow);
 }
 
+export async function getCustomerDetail(idOrPhoneOrEmail) {
+  await mongooseConnect();
+  const rawId = decodeURIComponent(String(idOrPhoneOrEmail || '').trim());
+  if (!rawId) return null;
+
+  const matchConditions = [
+    { customerEmail: rawId },
+    { customerPhone: rawId },
+  ];
+
+  let userRecord = null;
+  if (mongoose.Types.ObjectId.isValid(rawId)) {
+    matchConditions.push({ userId: new mongoose.Types.ObjectId(rawId) });
+    matchConditions.push({ _id: new mongoose.Types.ObjectId(rawId) });
+    userRecord = await User.findById(rawId).lean();
+    if (userRecord) {
+      if (userRecord.email) matchConditions.push({ customerEmail: userRecord.email });
+      if (userRecord.phone) matchConditions.push({ customerPhone: userRecord.phone });
+    }
+  }
+
+  const orders = await Order.find({
+    isDeleted: { $ne: true },
+    $or: matchConditions,
+  }).sort({ createdAt: -1 }).lean();
+
+  if (orders.length === 0 && !userRecord) {
+    return null;
+  }
+
+  const firstOrder = orders[orders.length - 1];
+  const lastOrder = orders[0];
+  const totalSpent = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+  const totalOrders = orders.length;
+  const avgOrderValue = totalOrders > 0 ? Math.round(totalSpent / totalOrders) : 0;
+
+  const customerName = userRecord?.name || lastOrder?.customerName || 'Customer';
+  const customerEmail = userRecord?.email || lastOrder?.customerEmail || '';
+  const customerPhone = userRecord?.phone || lastOrder?.customerPhone || '';
+  const customerAddress = lastOrder?.customerAddress || '';
+  const customerCity = lastOrder?.customerCity || '';
+
+  return {
+    id: rawId,
+    name: customerName,
+    email: customerEmail,
+    phone: customerPhone,
+    address: customerAddress,
+    city: customerCity,
+    isRegisteredUser: Boolean(userRecord),
+    registeredAt: userRecord?.createdAt ? new Date(userRecord.createdAt).toISOString() : null,
+    totalSpent,
+    totalOrders,
+    avgOrderValue,
+    firstOrderDate: firstOrder?.createdAt ? new Date(firstOrder.createdAt).toISOString() : null,
+    lastOrderDate: lastOrder?.createdAt ? new Date(lastOrder.createdAt).toISOString() : null,
+    orders: orders.map(toOrderSummaryRow),
+  };
+}
+
 export async function getAdminDashboardData() {
   await mongooseConnect();
 
@@ -2619,7 +2715,7 @@ export async function getAdminDashboardData() {
   const startOfTomorrow = new Date(startOfToday);
   startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-  const [orderDashboardAgg, productDashboardAgg, recentReviewsAgg] = await Promise.all([
+  const [orderDashboardAgg, productDashboardAgg, recentReviewsAgg, settingsData] = await Promise.all([
     Order.aggregate([
       {
         $facet: {
@@ -2801,7 +2897,8 @@ export async function getAdminDashboardData() {
         },
       },
     ]),
-    Review.find().sort({ createdAt: -1 }).limit(5).populate('productId', 'Name images').lean()
+    Review.find().sort({ createdAt: -1 }).limit(5).populate('productId', 'Name images').lean(),
+    getSettingsRaw(),
   ]);
 
   const orderDashboard = orderDashboardAgg?.[0] || {};
@@ -2810,6 +2907,16 @@ export async function getAdminDashboardData() {
   const productCounts = productDashboard.counts?.[0] || {};
   const recentOrders = Array.isArray(orderDashboard.recentOrders) ? orderDashboard.recentOrders : [];
   const topVendorsAgg = Array.isArray(productDashboard.topVendors) ? productDashboard.topVendors : [];
+  const lowStockThreshold = Number(settingsData?.lowStockThreshold ?? 5);
+
+  const lowStockProductsAgg = await Product.find({
+    stockQuantity: { $lte: lowStockThreshold },
+    showOnStore: true,
+  })
+    .select('Name stockQuantity StockStatus Images Price slug')
+    .sort({ stockQuantity: 1 })
+    .limit(8)
+    .lean();
 
   return {
     summary: {
@@ -2824,6 +2931,7 @@ export async function getAdminDashboardData() {
       confirmedOrders: Number(orderDashboard.confirmedCount?.[0]?.count || 0),
       shippedOrders: Number(orderDashboard.shippedCount?.[0]?.count || 0),
       outForDeliveryOrders: Number(orderDashboard.outForDeliveryCount?.[0]?.count || 0),
+      lowStockCount: lowStockProductsAgg.length,
     },
     recentOrders: recentOrders.map(toOrderSummaryRow),
     topProducts: Array.isArray(orderDashboard.topProducts) ? orderDashboard.topProducts : [],
@@ -2834,6 +2942,16 @@ export async function getAdminDashboardData() {
       totalLiveItems: Number(entry?.totalLiveItems || 0),
     })).filter((entry) => entry.name),
     topCustomers: Array.isArray(orderDashboard.topCustomers) ? orderDashboard.topCustomers : [],
+    lowStockThreshold,
+    lowStockProducts: lowStockProductsAgg.map((p) => ({
+      _id: p._id.toString(),
+      name: p.Name,
+      slug: p.slug,
+      price: Number(p.Price || 0),
+      stockQuantity: Number(p.stockQuantity || 0),
+      stockStatus: p.StockStatus || 'Out of Stock',
+      image: p.Images?.[0]?.url || '',
+    })),
     recentReviews: (recentReviewsAgg || []).map(r => ({
       _id: r._id?.toString(),
       rating: r.rating,

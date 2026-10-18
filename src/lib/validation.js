@@ -45,6 +45,7 @@ export const submitOrderSchema = z.object({
   notes: notesSchema,
   whatsappNumber: phoneSchema.optional().or(z.literal('')),
   couponCode: z.string().trim().max(50).optional().or(z.literal('')),
+  paymentMethod: z.string().trim().max(50).optional().or(z.literal('')),
   totalAmount: z.number().positive('Total amount must be greater than zero'),
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
 });

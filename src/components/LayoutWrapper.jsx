@@ -52,6 +52,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
           announcementBarEnabled={settings.announcementBarEnabled}
           announcementBarText={settings.announcementBarText}
           announcementBarMessages={settings.announcementBarMessages}
+          navigationMenuItems={settings.navigationMenuItems}
         />
 
         <main id="store-main" className="flex-1 min-h-[80vh] overflow-x-clip store-fade">{children}</main>

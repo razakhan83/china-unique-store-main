@@ -477,6 +477,15 @@ function OrderSummaryContent({
               : <span className="text-xs italic font-normal text-muted-foreground">Select city</span>}
           </span>
         </div>
+        {pricing.taxAmount > 0 && (
+          <div className={styles.totalRow}>
+            <div className="flex flex-col">
+              <span className={styles.totalLabel}>Sales Tax ({pricing.taxRatePercent}%)</span>
+              <span className="text-[11px] text-muted-foreground font-normal">Standard store tax</span>
+            </div>
+            <span className={styles.totalValue}>{formatPrice(pricing.taxAmount)}</span>
+          </div>
+        )}
       </div>
 
       <div className={styles.summaryDivider} />
@@ -563,7 +572,8 @@ export default function CheckoutClient({ settings }) {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const isCodAllowed = settings?.codEnabled !== false;
+  const [paymentMethod, setPaymentMethod] = useState(isCodAllowed ? 'cod' : (settings?.bankDepositEnabled ? 'bank' : 'cod'));
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -995,6 +1005,7 @@ export default function CheckoutClient({ settings }) {
       landmark: formData.landmark,
       notes: formData.instructions,
       updateProfile: true,
+      paymentMethod,
       totalAmount: total,
       whatsappNumber: settings.whatsappNumber,
       couponCode: appliedCoupon?.code,
@@ -1420,25 +1431,27 @@ export default function CheckoutClient({ settings }) {
                 </div>
 
                 {/* Cash on Delivery */}
-                <div
-                  id="payment-cod"
-                  role="radio"
-                  aria-checked={paymentMethod === 'cod'}
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPaymentMethod('cod'); } }}
-                  className={styles.paymentOption}
-                  onClick={() => setPaymentMethod('cod')}
-                >
-                  <div className={cn(styles.paymentOptionHeader, paymentMethod === 'cod' && styles.paymentOptionSelectedBg)}>
-                    <div className={styles.paymentOptionLeft}>
-                      <div className={cn(styles.radioCircle, paymentMethod === 'cod' && styles.radioCircleActive)}>
-                        {paymentMethod === 'cod' && <div className={styles.radioDot} />}
+                {isCodAllowed && (
+                  <div
+                    id="payment-cod"
+                    role="radio"
+                    aria-checked={paymentMethod === 'cod'}
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPaymentMethod('cod'); } }}
+                    className={styles.paymentOption}
+                    onClick={() => setPaymentMethod('cod')}
+                  >
+                    <div className={cn(styles.paymentOptionHeader, paymentMethod === 'cod' && styles.paymentOptionSelectedBg)}>
+                      <div className={styles.paymentOptionLeft}>
+                        <div className={cn(styles.radioCircle, paymentMethod === 'cod' && styles.radioCircleActive)}>
+                          {paymentMethod === 'cod' && <div className={styles.radioDot} />}
+                        </div>
+                        <Banknote className="size-4 text-muted-foreground" aria-hidden />
+                        <span className={styles.paymentOptionLabel}>Cash on Delivery (COD)</span>
                       </div>
-                      <Banknote className="size-4 text-muted-foreground" aria-hidden />
-                      <span className={styles.paymentOptionLabel}>Cash on Delivery (COD)</span>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Bank Deposit */}
                 {settings?.bankDepositEnabled && (

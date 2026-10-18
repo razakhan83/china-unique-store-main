@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getAdminProductCategoryOptions, getAdminProductsPage } from '@/lib/data';
+import { getAdminProductCategoryOptions, getAdminProductsPage, getAdminSettings } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
 
 import AdminProductsClient from './AdminProductsClient';
@@ -14,8 +14,11 @@ export default async function AdminProductsPage({ searchParams }) {
   const category = String(params?.category || 'all').trim() || 'all';
   const sort = String(params?.sort || 'newest').trim() || 'newest';
   const page = Math.max(1, Number(params?.page) || 1);
+  const settings = await getAdminSettings();
+  const lowStockThreshold = Number(settings?.lowStockThreshold ?? 5);
+
   const [result, categoryOptions] = await Promise.all([
-    getAdminProductsPage({ search, status, stock, category, sort, page, limit: 12 }),
+    getAdminProductsPage({ search, status, stock, category, sort, page, limit: 12, lowStockThreshold }),
     getAdminProductCategoryOptions(),
   ]);
 
@@ -34,6 +37,7 @@ export default async function AdminProductsPage({ searchParams }) {
         initialSortOption={result.sort}
         categoryOptions={categoryOptions}
         summary={result.summary}
+        lowStockThreshold={lowStockThreshold}
       />
     </Suspense>
   );

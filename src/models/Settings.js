@@ -205,6 +205,10 @@ const SettingsSchema = new mongoose.Schema(
         },
 
         // Payment Methods
+        codEnabled: {
+            type: Boolean,
+            default: true,
+        },
         bankDepositEnabled: {
             type: Boolean,
             default: false,
@@ -212,6 +216,83 @@ const SettingsSchema = new mongoose.Schema(
         bankDepositAccountDetails: {
             type: String,
             default: '',
+        },
+
+        // Tax Configuration
+        taxEnabled: {
+            type: Boolean,
+            default: false,
+        },
+        taxRatePercent: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+
+        // Inventory Alerts
+        lowStockThreshold: {
+            type: Number,
+            default: 5,
+            min: 0,
+        },
+
+        // Notification Templates
+        whatsappTemplates: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+        emailTemplates: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+
+        // Staff Roles & Permissions
+        staffMembers: {
+            type: [
+                new mongoose.Schema(
+                    {
+                        email: { type: String, required: true, lowercase: true, trim: true },
+                        role: { type: String, default: 'Store Manager', trim: true },
+                        permissions: { type: [String], default: [] },
+                    },
+                    { _id: false }
+                ),
+            ],
+            default: [],
+        },
+
+        // Navigation Menu
+        navigationMenuItems: {
+            type: [
+                new mongoose.Schema(
+                    {
+                        label: { type: String, required: true, trim: true },
+                        url: { type: String, required: true, trim: true },
+                        openInNewTab: { type: Boolean, default: false },
+                        isEnabled: { type: Boolean, default: true },
+                        sortOrder: { type: Number, default: 0 },
+                    },
+                    { _id: false }
+                ),
+            ],
+            default: [],
+        },
+
+        // URL Redirects
+        urlRedirects: {
+            type: [
+                new mongoose.Schema(
+                    {
+                        sourcePath: { type: String, required: true, trim: true },
+                        targetPath: { type: String, required: true, trim: true },
+                        statusCode: { type: Number, default: 301, enum: [301, 302] },
+                        isEnabled: { type: Boolean, default: true },
+                    },
+                    { _id: false }
+                ),
+            ],
+            default: [],
         },
 
         // Dynamically managed admin emails (in addition to ADMIN_EMAIL / ADMIN_EMAILS env vars)
@@ -260,6 +341,15 @@ if (
         !cachedSettings.schema.path('invoiceLogoScalePercent') ||
         !cachedSettings.schema.path('customPages') ||
         !cachedSettings.schema.path('guestModeEnabled') ||
+        !cachedSettings.schema.path('codEnabled') ||
+        !cachedSettings.schema.path('taxEnabled') ||
+        !cachedSettings.schema.path('taxRatePercent') ||
+        !cachedSettings.schema.path('lowStockThreshold') ||
+        !cachedSettings.schema.path('whatsappTemplates') ||
+        !cachedSettings.schema.path('emailTemplates') ||
+        !cachedSettings.schema.path('staffMembers') ||
+        !cachedSettings.schema.path('navigationMenuItems') ||
+        !cachedSettings.schema.path('urlRedirects') ||
         !cachedSettings.schema.path('bankDepositEnabled') ||
         !cachedSettings.schema.path('bankDepositAccountDetails') ||
         !cachedSettings.schema.path('enableSecondaryNoc') ||

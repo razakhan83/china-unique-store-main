@@ -11,6 +11,7 @@ import {
   Box,
   ChartColumn,
   CirclePlus,
+  Compass,
   CreditCard,
   ExternalLink,
   Globe,
@@ -106,6 +107,7 @@ const marketingNavItems = [
 // 6. Website Management
 const websiteNavItems = [
   { href: '/admin/website/general', label: 'General Information', icon: FileText, match: (pathname) => pathname.startsWith('/admin/website/general') },
+  { href: '/admin/website/navigation', label: 'Navigation & Redirects', icon: Compass, match: (pathname) => pathname.startsWith('/admin/website/navigation') },
   { href: '/admin/home-page', label: 'Home Layout Settings', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/home-page') },
   { href: '/admin/store-setup', label: 'Store Setup', icon: Store, match: (pathname) => pathname.startsWith('/admin/store-setup') },
   { href: '/admin/cover-photos', label: 'Cover photo/Banner', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
