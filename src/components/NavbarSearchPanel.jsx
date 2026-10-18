@@ -1,13 +1,15 @@
 'use client';
 
-import { useDeferredValue, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import SearchField from '@/components/SearchField';
 import { trackSearchEvent } from '@/lib/clientTracking';
 
 export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'Search products', autoFocus, inlineSuggestions = false }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const containerRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -16,6 +18,38 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'S
   const [trending, setTrending] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const deferredSearchTerm = useDeferredValue(searchTerm);
+
+  // Close search suggestions when navigating to a new page
+  useEffect(() => {
+    setIsFocused(false);
+  }, [pathname]);
+
+  // Close search suggestions on click outside or Escape key
+  useEffect(() => {
+    if (!isFocused) return;
+
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsFocused(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsFocused(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFocused]);
 
   useEffect(() => {
     if (!open) return;
@@ -128,34 +162,39 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'S
     if (!searchTerm.trim()) return;
 
     trackSearchEvent({ searchString: searchTerm.trim() });
-    onOpenChange(false);
+    onOpenChange?.(false);
     setIsFocused(false);
     setSuggestions([]);
+    if (typeof document !== 'undefined') {
+      document.activeElement?.blur?.();
+    }
     router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
   }
 
   return (
-    <SearchField
-      value={searchTerm}
-      onChange={(event) => setSearchTerm(event.target.value)}
-      onSubmit={handleSearchSubmit}
-      onClear={() => {
-        setSearchTerm('');
-        setDebouncedSearch('');
-        setSuggestions([]);
-        setIsFocused(true);
-      }}
-      onFocus={() => setIsFocused(true)}
-      isFocused={isFocused}
-      suggestions={suggestions}
-      categories={categories}
-      trending={trending}
-      showSuggestions
-      isLoading={isLoadingSuggestions}
-      emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}
-      placeholder={placeholder}
-      autoFocus={autoFocus}
-      inlineSuggestions={inlineSuggestions}
-    />
+    <div ref={containerRef} className="relative w-full">
+      <SearchField
+        value={searchTerm}
+        onChange={(event) => setSearchTerm(event.target.value)}
+        onSubmit={handleSearchSubmit}
+        onClear={() => {
+          setSearchTerm('');
+          setDebouncedSearch('');
+          setSuggestions([]);
+          setIsFocused(true);
+        }}
+        onFocus={() => setIsFocused(true)}
+        isFocused={isFocused}
+        suggestions={suggestions}
+        categories={categories}
+        trending={trending}
+        showSuggestions
+        isLoading={isLoadingSuggestions}
+        emptyLabel={isLoadingSuggestions ? 'Searching...' : `No products found for "${debouncedSearch}"`}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        inlineSuggestions={inlineSuggestions}
+      />
+    </div>
   );
 }
