@@ -25,6 +25,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <h1 className="sr-only">{SITE_TITLE_DEFAULT}</h1>
       <HomeSectionRenderer sections={sections} />
       <div data-store-reveal>
         <Suspense fallback={null}>

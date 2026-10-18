@@ -1152,9 +1152,9 @@ export default function CheckoutClient({ settings }) {
             />
           </div>
 
-          <div className="text-[1.1rem] sm:text-[1.35rem] font-medium text-foreground tracking-tight z-10 flex items-center gap-2">
+          <h1 className="text-[1.1rem] sm:text-[1.35rem] font-medium text-foreground tracking-tight z-10 flex items-center gap-2">
             Checkout
-          </div>
+          </h1>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { getCatalogFeed } from '@/lib/data';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 function escapeXml(value) {
   return String(value || '')
@@ -28,9 +29,9 @@ function renderFeedItem(item) {
     </item>`;
 }
 
-export async function GET(request) {
-  const feed = await getCatalogFeed(request.nextUrl.origin);
-  const siteUrl = request.nextUrl.origin;
+export async function GET() {
+  const siteUrl = getSiteUrl();
+  const feed = await getCatalogFeed(siteUrl);
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">

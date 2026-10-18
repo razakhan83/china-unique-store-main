@@ -1796,24 +1796,39 @@ function formatFeedPrice(value) {
 
 function getCatalogSiteUrl(siteUrlOverride = '') {
   const normalizedOverride = String(siteUrlOverride || '').trim();
-  return normalizedOverride || getSiteUrl();
+  if (normalizedOverride && !/localhost|127\.0\.0\.1/i.test(normalizedOverride)) {
+    return normalizedOverride.replace(/\/$/, '');
+  }
+  return getSiteUrl().replace(/\/$/, '');
 }
 
 function buildCatalogFeedItem(product, siteUrl, storeName) {
-  const productUrl = `${siteUrl}/products/${product.slug || product._id}`;
-  const primaryImage = product.Images?.[0]?.url || `${siteUrl}/opengraph-image`;
-  const additionalImages = product.Images?.slice(1).map((image) => image.url).filter(Boolean) || [];
+  const rawSlug = String(product.slug || product.customSlug || product._id || '').trim();
+  const slug = rawSlug.startsWith('/') ? rawSlug.slice(1) : rawSlug;
+  const productUrl = `${siteUrl}/products/${slug}`;
+  const rawPrimaryImage = product.Images?.[0]?.url || `${siteUrl}/opengraph-image.png`;
+  const primaryImage = rawPrimaryImage.startsWith('http')
+    ? rawPrimaryImage
+    : `${siteUrl}${rawPrimaryImage.startsWith('/') ? '' : '/'}${rawPrimaryImage}`;
+
+  const additionalImages = (product.Images?.slice(1) || [])
+    .map((image) => image?.url)
+    .filter(Boolean)
+    .map((url) => (url.startsWith('http') ? url : `${siteUrl}${url.startsWith('/') ? '' : '/'}${url}`));
+
   const categoryNames = getProductCategoryNames(product);
   const basePrice = Number(product.Price || 0);
   const salePrice = isStorefrontDiscountVisible(product) && product.discountedPrice != null
     ? Number(product.discountedPrice)
     : null;
 
+  const isInStock = product.StockStatus === 'In Stock' || (!product.StockStatus && Number(product.Stock || 0) > 0);
+
   return {
     id: String(product._id),
     title: product.Name,
     description: stripHtml(product.Description || `Buy ${product.Name} from ${storeName}.`),
-    availability: product.StockStatus === 'In Stock' ? 'in stock' : 'out of stock',
+    availability: isInStock ? 'in_stock' : 'out_of_stock',
     condition: 'new',
     price: formatFeedPrice(basePrice),
     salePrice: salePrice != null ? formatFeedPrice(salePrice) : null,

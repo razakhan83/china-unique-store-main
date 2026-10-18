@@ -1,13 +1,15 @@
 import { getCatalogFeed } from '@/lib/data';
+import { getSiteUrl } from '@/lib/siteUrl';
 
-export async function GET(request) {
-  const feed = await getCatalogFeed(request.nextUrl.origin);
+export async function GET() {
+  const siteUrl = getSiteUrl();
+  const feed = await getCatalogFeed(siteUrl);
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
     <title><![CDATA[${feed.storeName}]]></title>
-    <link>${request.nextUrl.origin}</link>
+    <link>${siteUrl}</link>
     <description><![CDATA[Product Catalog for ${feed.storeName}]]></description>
     ${feed.items.map(item => `
     <item>

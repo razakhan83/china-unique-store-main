@@ -208,13 +208,12 @@ async function OrdersContent() {
   return (
     <main className="min-h-screen bg-white pb-16 pt-8">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="mb-8 hidden">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">My Orders</h1>
-          <p className="mt-2 text-muted-foreground">Track and manage your previous orders.</p>
-        </div>
-
         {orders.length === 0 ? (
           <div className="space-y-8">
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">My Orders</h1>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">Track and manage your previous orders.</p>
+            </div>
             <Empty className="surface-card rounded-xl border border-dashed border-border py-12">
               <EmptyHeader>
                 <EmptyMedia variant="icon" className="size-16 rounded-full bg-muted text-muted-foreground">

@@ -215,7 +215,7 @@ export default function HeroSlider({ slides = [], storeName }) {
       onTouchEnd={handleTouchEnd}
       aria-label="Featured Promotions"
     >
-      <h1 className="sr-only">{storeName || SITE_NAME} — Exclusive Online Shopping</h1>
+      <span className="sr-only">{storeName || SITE_NAME} — Featured Promotions</span>
       <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-muted/40 md:h-[460px] lg:h-[560px]">
         {resolvedSlides.map((slide, index) => {
           const isActive = safeActiveIndex === index;

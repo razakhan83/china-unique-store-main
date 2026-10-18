@@ -26,7 +26,7 @@ import { getProductBySlug, getProductPrerenderParams, getProductReviewSummary, g
 import { getProductCategories } from '@/lib/productCategories';
 import { formatRichTextDescriptionHtml, stripHtmlTags } from '@/lib/richText';
 import { getSiteUrl } from '@/lib/siteUrl';
-import { metadataTitle } from '@/lib/siteSeo';
+import { metadataTitle, SITE_NAME } from '@/lib/siteSeo';
 import { getProductSocialShareImage } from '@/lib/cloudinaryImage';
 
 import { formatPrice, getSellingPrice, getComparePrice } from '@/lib/pricing';
@@ -38,14 +38,16 @@ const EMPTY_REVIEW_SUMMARY = {
 };
 
 function getProductUrl(product) {
-  return `${siteUrl}/products/${product.slug || product._id}`;
+  const rawSlug = String(product.slug || product.customSlug || product._id || '').trim();
+  const slug = rawSlug.startsWith('/') ? rawSlug.slice(1) : rawSlug;
+  return `${getSiteUrl()}/products/${slug}`;
 }
 
 function getProductDescription(product) {
   return (
     product.seoDescription ||
     stripHtmlTags(product.Description) ||
-    `Buy ${product.Name} from China Unique Store.`
+    `Buy ${product.Name} from ${SITE_NAME}.`
   );
 }
 
@@ -56,7 +58,9 @@ function getProductTitle(product) {
 function getCanonicalUrl(product) {
   const canonicalUrl = product.seoCanonicalUrl?.trim();
   if (canonicalUrl) {
-    return canonicalUrl;
+    if (/^https?:\/\//i.test(canonicalUrl)) return canonicalUrl;
+    const clean = canonicalUrl.startsWith('/') ? canonicalUrl.slice(1) : canonicalUrl;
+    return `${getSiteUrl()}/${clean}`;
   }
 
   return getProductUrl(product);
@@ -82,7 +86,7 @@ function getShareDescription(product) {
   const sellingPrice = getSellingPrice(product);
   const plainDescription = product.seoDescription?.trim() || stripHtmlTags(product.Description);
   if (sellingPrice > 0) {
-    return `Price: ${formatPrice(sellingPrice)}. ${plainDescription || 'Buy online from China Unique Store.'}`;
+    return `Price: ${formatPrice(sellingPrice)}. ${plainDescription || `Buy online from ${SITE_NAME}.`}`;
   }
   return getProductDescription(product);
 }
@@ -134,7 +138,7 @@ function getProductJsonLd({ product, reviewSummary = null }) {
     keywords: keywords.join(', '),
     brand: {
       '@type': 'Brand',
-      name: 'China Unique Store',
+      name: SITE_NAME,
     },
     offers: {
       '@type': 'Offer',
@@ -292,7 +296,7 @@ export async function generateMetadata({ params }) {
       description: shareDescription,
       type: 'website',
       url: productUrl,
-      siteName: 'China Unique Store',
+      siteName: SITE_NAME,
       images: [
         {
           url: productImage,
