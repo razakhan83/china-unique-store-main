@@ -9,85 +9,85 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PALETTES = [
-  // 0 – Mint Green  (kitchen, fresh, food)
+  // 0 – Fresh Mint
   {
     bg: 'bg-[#edf7f2]',
     style: { backgroundColor: '#edf7f2' },
     text: 'text-emerald-800',
     badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     border: 'border-emerald-200',
-    accent: '#10b981',
+    accent: '#015347',
     hex: '#edf7f2',
   },
-  // 1 – Soft Lavender  (home decor, lifestyle)
+  // 1 – Soft Sage
   {
-    bg: 'bg-[#f3f0fb]',
-    style: { backgroundColor: '#f3f0fb' },
-    text: 'text-violet-800',
-    badge: 'bg-violet-50 text-violet-700 border-violet-200',
-    border: 'border-violet-200',
-    accent: '#7c3aed',
-    hex: '#f3f0fb',
+    bg: 'bg-[#f0f6f3]',
+    style: { backgroundColor: '#f0f6f3' },
+    text: 'text-emerald-900',
+    badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    border: 'border-emerald-200/70',
+    accent: '#059669',
+    hex: '#f0f6f3',
   },
-  // 2 – Powder Blue  (health, beauty, personal care)
+  // 2 – Frosted Mint
   {
-    bg: 'bg-[#eaf4fb]',
-    style: { backgroundColor: '#eaf4fb' },
-    text: 'text-sky-800',
-    badge: 'bg-sky-50 text-sky-700 border-sky-200',
-    border: 'border-sky-200',
-    accent: '#0ea5e9',
-    hex: '#eaf4fb',
+    bg: 'bg-[#e8f5ee]',
+    style: { backgroundColor: '#e8f5ee' },
+    text: 'text-emerald-900',
+    badge: 'bg-emerald-100/60 text-emerald-800 border-emerald-200',
+    border: 'border-emerald-200',
+    accent: '#10b981',
+    hex: '#e8f5ee',
   },
-  // 3 – Warm Peach  (fashion, apparel, gifts)
+  // 3 – Cool Gray-Mint Neutral
   {
-    bg: 'bg-[#fef3ee]',
-    style: { backgroundColor: '#fef3ee' },
-    text: 'text-orange-800',
-    badge: 'bg-orange-50 text-orange-700 border-orange-200',
-    border: 'border-orange-200',
-    accent: '#f97316',
-    hex: '#fef3ee',
+    bg: 'bg-[#f2f6f4]',
+    style: { backgroundColor: '#f2f6f4' },
+    text: 'text-slate-800',
+    badge: 'bg-slate-100 text-slate-700 border-slate-200',
+    border: 'border-slate-200',
+    accent: '#475569',
+    hex: '#f2f6f4',
   },
-  // 4 – Soft Lemon  (toys, kids, fun)
+  // 4 – Subtle Pale Emerald
   {
-    bg: 'bg-[#fefce8]',
-    style: { backgroundColor: '#fefce8' },
-    text: 'text-yellow-800',
-    badge: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    border: 'border-yellow-200',
-    accent: '#eab308',
-    hex: '#fefce8',
+    bg: 'bg-[#edf5f1]',
+    style: { backgroundColor: '#edf5f1' },
+    text: 'text-emerald-800',
+    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    border: 'border-emerald-200',
+    accent: '#047857',
+    hex: '#edf5f1',
   },
-  // 5 – Light Teal  (electronics, tech)
+  // 5 – Clean Off-White Neutral
   {
-    bg: 'bg-[#edfafa]',
-    style: { backgroundColor: '#edfafa' },
-    text: 'text-teal-800',
-    badge: 'bg-teal-50 text-teal-700 border-teal-200',
-    border: 'border-teal-200',
-    accent: '#14b8a6',
-    hex: '#edfafa',
+    bg: 'bg-[#f6f8f7]',
+    style: { backgroundColor: '#f6f8f7' },
+    text: 'text-zinc-800',
+    badge: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    border: 'border-zinc-200',
+    accent: '#52525b',
+    hex: '#f6f8f7',
   },
-  // 6 – Rose Blush  (beauty, gifts, accessories)
+  // 6 – Light Eucalyptus
   {
-    bg: 'bg-[#fff0f4]',
-    style: { backgroundColor: '#fff0f4' },
-    text: 'text-rose-800',
-    badge: 'bg-rose-50 text-rose-700 border-rose-200',
-    border: 'border-rose-200',
-    accent: '#f43f5e',
-    hex: '#fff0f4',
+    bg: 'bg-[#eaf4ef]',
+    style: { backgroundColor: '#eaf4ef' },
+    text: 'text-emerald-900',
+    badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    border: 'border-emerald-200/80',
+    accent: '#0f766e',
+    hex: '#eaf4ef',
   },
-  // 7 – Cool Gray  (automotive, tools, sports)
+  // 7 – Slate Neutral
   {
-    bg: 'bg-[#f3f4f6]',
-    style: { backgroundColor: '#f3f4f6' },
-    text: 'text-gray-700',
-    badge: 'bg-gray-100 text-gray-600 border-gray-200',
-    border: 'border-gray-200',
-    accent: '#6b7280',
-    hex: '#f3f4f6',
+    bg: 'bg-[#f1f4f3]',
+    style: { backgroundColor: '#f1f4f3' },
+    text: 'text-slate-700',
+    badge: 'bg-slate-100 text-slate-600 border-slate-200',
+    border: 'border-slate-200',
+    accent: '#64748b',
+    hex: '#f1f4f3',
   },
 ];
 

@@ -90,7 +90,6 @@ function serializeSettings(settings) {
         lowStockThreshold: Number(settings.lowStockThreshold ?? 5),
         whatsappTemplates: settings.whatsappTemplates || {},
         emailTemplates: settings.emailTemplates || {},
-        staffMembers: Array.isArray(settings.staffMembers) ? settings.staffMembers : [],
         navigationMenuItems: Array.isArray(settings.navigationMenuItems) ? settings.navigationMenuItems : [],
         urlRedirects: Array.isArray(settings.urlRedirects) ? settings.urlRedirects : [],
         enableSecondaryNoc: settings.enableSecondaryNoc === true,
@@ -106,6 +105,7 @@ function serializeSettings(settings) {
 function serializeAdminSettings(settings) {
     return {
         ...serializeSettings(settings),
+        staffMembers: Array.isArray(settings.staffMembers) ? settings.staffMembers : [],
         facebookConversionsApiToken: settings.facebookConversionsApiToken || '',
         facebookTestEventCode: settings.facebookTestEventCode || '',
         tiktokAccessToken: settings.tiktokAccessToken || '',

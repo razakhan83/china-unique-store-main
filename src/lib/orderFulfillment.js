@@ -20,11 +20,25 @@ function toSafeNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function resolveCheckoutUnitPrice(product, packLabel = '') {
-  if (packLabel && Array.isArray(product.packOptions)) {
-    const pack = product.packOptions.find(p => p.label === packLabel);
+function resolveCheckoutUnitPrice(product, { packLabel = '', variantId = '' } = {}) {
+  if (packLabel && Array.isArray(product?.packOptions)) {
+    const pack = product.packOptions.find((p) => p.label === packLabel);
     if (pack) {
-      return Math.max(0, toSafeNumber(pack.price));
+      const basePackPrice = toSafeNumber(pack.price);
+      if (isDiscountActive(product)) {
+        const percentage = Number(product?.discountPercentage) || 0;
+        if (percentage > 0) {
+          return Math.max(0, Math.round(basePackPrice * (1 - percentage / 100)));
+        }
+      }
+      return Math.max(0, basePackPrice);
+    }
+  }
+
+  if (variantId && Array.isArray(product?.variants)) {
+    const variant = product.variants.find((v) => String(v.id || v._id) === String(variantId));
+    if (variant && variant.price != null) {
+      return Math.max(0, toSafeNumber(variant.price));
     }
   }
 
@@ -32,7 +46,7 @@ function resolveCheckoutUnitPrice(product, packLabel = '') {
     return Math.max(0, toSafeNumber(getActiveSellingPrice(product)));
   }
 
-  return Math.max(0, toSafeNumber(product.Price));
+  return Math.max(0, toSafeNumber(product?.Price));
 }
 
 function buildProductLookupMap(products = []) {
@@ -56,6 +70,8 @@ export async function buildOrderItemsWithSourcing(items = []) {
       productId: toCleanId(item.slug || item.productId || item._id || item.id),
       quantity: Math.max(1, toSafeNumber(item.quantity, 1)),
       packLabel: toCleanString(item.packLabel || ''),
+      variantId: toCleanString(item.variantId || ''),
+      variantName: toCleanString(item.variantName || ''),
       name: toCleanString(item.name || ''),
       price: toSafeNumber(item.price, 0),
       image: toCleanString(item.image || ''),
@@ -77,6 +93,8 @@ export async function buildOrderItemsWithSourcing(items = []) {
         name: item.name,
         price: item.price,
         packLabel: item.packLabel,
+        variantId: item.variantId,
+        variantName: item.variantName,
         quantity: item.quantity,
         image: item.image,
         sourcingVendors: [],
@@ -94,7 +112,7 @@ export async function buildOrderItemsWithSourcing(items = []) {
       ...(objectIds.length > 0 ? [{ _id: { $in: objectIds } }] : []),
     ],
   })
-    .select('slug Name Price discountedPrice isDiscounted discountPercentage discountType discountEndsAt isFreeDelivery vendors Images packOptions')
+    .select('slug Name Price discountedPrice isDiscounted discountPercentage discountType discountEndsAt isFreeDelivery vendors Images packOptions variants')
     .lean();
   const productMap = buildProductLookupMap(products);
 
@@ -153,6 +171,8 @@ export async function buildOrderItemsWithSourcing(items = []) {
     let finalName = toCleanString(product.Name);
     if (item.packLabel && !finalName.includes(`(${item.packLabel})`)) {
       finalName = `${finalName} (${item.packLabel})`;
+    } else if (item.variantName && !finalName.includes(`(${item.variantName})`)) {
+      finalName = `${finalName} (${item.variantName})`;
     }
 
     return {
@@ -160,8 +180,10 @@ export async function buildOrderItemsWithSourcing(items = []) {
       _id: product._id ? product._id.toString() : item.productId,
       slug: product.slug || '',
       name: finalName,
-      price: resolveCheckoutUnitPrice(product, item.packLabel),
+      price: resolveCheckoutUnitPrice(product, { packLabel: item.packLabel, variantId: item.variantId }),
       packLabel: item.packLabel,
+      variantId: item.variantId || '',
+      variantName: item.variantName || '',
       quantity: item.quantity,
       image: toCleanString(images[0]?.url),
       sourcingVendors: sourcingMap.get(item.productId) || [],
@@ -182,50 +204,84 @@ export function calculateOrderTotal(orderItems = []) {
 export async function applyInventoryAdjustments(orderItems = []) {
   await mongooseConnect();
 
-  const requestedAdjustments = new Map();
+  const operations = [];
+  const productIds = new Set();
+
   for (const item of Array.isArray(orderItems) ? orderItems : []) {
-    const productId = toCleanId(item.productId);
+    const productId = toCleanId(item.productId || item._id);
     if (!mongoose.Types.ObjectId.isValid(productId)) continue;
-    requestedAdjustments.set(
-      productId,
-      (requestedAdjustments.get(productId) || 0) + Math.max(1, toSafeNumber(item.quantity, 1))
-    );
+    const quantity = Math.max(1, toSafeNumber(item.quantity, 1));
+    const variantId = toCleanString(item.variantId);
+
+    productIds.add(productId);
+
+    if (variantId) {
+      operations.push({
+        updateOne: {
+          filter: {
+            _id: new mongoose.Types.ObjectId(productId),
+          },
+          update: {
+            $inc: {
+              stockQuantity: -quantity,
+              'variants.$[elem].stockQuantity': -quantity,
+            },
+          },
+          arrayFilters: [{ 'elem.id': variantId }],
+        },
+      });
+    } else {
+      operations.push({
+        updateOne: {
+          filter: {
+            _id: new mongoose.Types.ObjectId(productId),
+          },
+          update: {
+            $inc: {
+              stockQuantity: -quantity,
+            },
+          },
+        },
+      });
+    }
   }
 
-  if (requestedAdjustments.size === 0) {
+  if (operations.length === 0) {
     return [];
   }
 
-  const operations = Array.from(requestedAdjustments.entries()).map(([productId, orderedQuantity]) => ({
-    updateOne: {
-      filter: { _id: new mongoose.Types.ObjectId(productId) },
-      update: [
-        {
-          $set: {
-            stockQuantity: {
-              $max: [
-                0,
-                {
-                  $subtract: [{ $ifNull: ['$stockQuantity', 0] }, orderedQuantity],
-                },
-              ],
-            },
-          },
-        },
-        {
-          $set: {
-            StockStatus: {
-              $cond: [{ $lte: ['$stockQuantity', 0] }, 'Out of Stock', 'In Stock'],
-            },
-          },
-        },
-      ],
-    },
-  }));
+  await Product.bulkWrite(operations, { ordered: false });
 
-  if (operations.length > 0) {
-    await Product.bulkWrite(operations, { ordered: false });
-  }
+  // Update StockStatus and clamp negative stock to 0
+  await Product.updateMany(
+    { _id: { $in: Array.from(productIds).map((id) => new mongoose.Types.ObjectId(id)) } },
+    [
+      {
+        $set: {
+          stockQuantity: { $max: [0, '$stockQuantity'] },
+          variants: {
+            $map: {
+              input: { $ifNull: ['$variants', []] },
+              as: 'v',
+              in: {
+                $mergeObjects: [
+                  '$$v',
+                  { stockQuantity: { $max: [0, { $ifNull: ['$$v.stockQuantity', 0] }] } },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $set: {
+          StockStatus: {
+            $cond: [{ $lte: ['$stockQuantity', 0] }, 'Out of Stock', 'In Stock'],
+          },
+        },
+      },
+    ]
+  );
 
   return operations;
 }

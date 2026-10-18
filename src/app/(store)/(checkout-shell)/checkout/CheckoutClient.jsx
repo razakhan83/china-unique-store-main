@@ -1013,6 +1013,8 @@ export default function CheckoutClient({ settings }) {
         productId: item.id || item._id || item.slug,
         slug: item.slug,
         packLabel: item.packLabel || '',
+        variantId: item.variantId || '',
+        variantName: item.variantName || '',
         name: item.Name || item.name,
         price: item.discountedPrice != null ? item.discountedPrice : item.Price || item.price,
         quantity: item.quantity,

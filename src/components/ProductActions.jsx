@@ -231,6 +231,8 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 discountPercentage: discountOn ? product.discountPercentage : 0,
                 isDiscounted: discountOn,
                 packLabel: selectedPack ? selectedPack.label : (selectedVariant ? selectedVariant.name : ''),
+                variantId: selectedVariant ? String(selectedVariant.id || selectedVariant._id || '') : undefined,
+                variantName: selectedVariant ? selectedVariant.name : undefined,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 
@@ -252,6 +254,9 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
         if (isOutOfStock) return;
         try {
             const finalPackPrice = selectedPack ? getPackDiscountedPrice(selectedPack.price) : 0;
+            const effectivePrice = selectedPack 
+                ? selectedPack.price 
+                : (selectedVariant ? Number(selectedVariant.price) : product.Price);
             const productToAdd = selectedPack ? {
                 ...product,
                 Price: selectedPack.price,
@@ -262,9 +267,14 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             } : {
                 ...product,
+                Price: effectivePrice,
+                compareAtPrice: selectedVariant?.compareAtPrice ? Number(selectedVariant.compareAtPrice) : product.compareAtPrice,
                 discountedPrice: discountOn ? product.discountedPrice : null,
                 discountPercentage: discountOn ? product.discountPercentage : 0,
                 isDiscounted: discountOn,
+                packLabel: selectedVariant ? selectedVariant.name : '',
+                variantId: selectedVariant ? String(selectedVariant.id || selectedVariant._id || '') : undefined,
+                variantName: selectedVariant ? selectedVariant.name : undefined,
                 isFreeDelivery: Boolean(product?.isFreeDelivery),
             };
 

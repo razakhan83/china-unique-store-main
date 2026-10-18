@@ -5,8 +5,8 @@ export const SITE_TITLE_DEFAULT = `${SITE_NAME} | Trending Products & Smart Gadg
 export const SITE_DESCRIPTION =
   'Shop the coolest unique products and trending items.';
 
-const escapedSiteName = (process.env.NEXT_PUBLIC_STORE_NAME || 'China Unique').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const TITLE_SUFFIX_PATTERN = new RegExp(`\\s*[|–—-]\\s*(?:${escapedSiteName}|China Unique)(?: Store)?\\s*$`, 'i');
+const escapedSiteName = (process.env.NEXT_PUBLIC_STORE_NAME || 'Store').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const TITLE_SUFFIX_PATTERN = new RegExp(`\\s*[|–—-]\\s*(?:${escapedSiteName}|Store)(?: Store)?\\s*$`, 'i');
 
 export function metadataTitle(value = '') {
   return String(value || '')

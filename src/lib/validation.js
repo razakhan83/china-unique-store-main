@@ -14,6 +14,8 @@ export const orderItemSchema = z.object({
   productId: z.string().min(1, 'Product ID is required').max(500),
   slug: z.string().max(500).optional(),
   packLabel: z.string().max(200).optional(),
+  variantId: z.string().max(200).optional(),
+  variantName: z.string().max(200).optional(),
   quantity: z.number().int().positive('Quantity must be positive').default(1),
   price: z.number().nonnegative('Price cannot be negative').optional(),
   name: z.string().max(500).optional(),

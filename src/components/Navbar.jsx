@@ -254,6 +254,10 @@ function NavbarContent({
   announcementBarText = '',
   announcementBarMessages = [],
   navigationMenuItems = [],
+  facebookPageUrl = '',
+  instagramUrl = '',
+  whatsappNumber = '',
+  tiktokPageUrl = '',
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -774,6 +778,10 @@ function NavbarContent({
                 setIsSidebarOpen={setIsSidebarOpen}
                 setIsAuthModalOpen={setIsAuthModalOpen}
                 mobileMenuButtonClass={mobileMenuButtonClass}
+                facebookPageUrl={facebookPageUrl}
+                instagramUrl={instagramUrl}
+                whatsappNumber={whatsappNumber}
+                tiktokPageUrl={tiktokPageUrl}
               />
             )}
           </SheetContent>
@@ -914,6 +922,10 @@ export default function Navbar({
   announcementBarText = '',
   announcementBarMessages = [],
   navigationMenuItems = [],
+  facebookPageUrl = '',
+  instagramUrl = '',
+  whatsappNumber = '',
+  tiktokPageUrl = '',
 }) {
   return (
     <Suspense
@@ -939,6 +951,10 @@ export default function Navbar({
         announcementBarText={announcementBarText}
         announcementBarMessages={announcementBarMessages}
         navigationMenuItems={navigationMenuItems}
+        facebookPageUrl={facebookPageUrl}
+        instagramUrl={instagramUrl}
+        whatsappNumber={whatsappNumber}
+        tiktokPageUrl={tiktokPageUrl}
       />
     </Suspense>
   );

@@ -48,7 +48,7 @@ export async function sendOrderDeliveredEmail({ order }) {
   try {
     if (!order?.customerEmail) return;
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
-    const emailFrom = process.env.EMAIL_FROM || 'China Unique <orders@chinauniquestore.com>';
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || 'Store'} <orders@store.com>`;
     const deliveredHtml = generateCustomerOrderDeliveredHtml(order, emailBranding);
     const customerEmailResult = await resend.emails.send({
       from: emailFrom,
@@ -71,7 +71,7 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
     const adminRecipients = getConfiguredAdminEmails();
-    const emailFrom = process.env.EMAIL_FROM || 'China Unique <orders@chinauniquestore.com>';
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || 'Store'} <orders@store.com>`;
     if (adminRecipients.length > 0) {
       const adminHtml = generateOrderEmailHtml(order, emailBranding);
       const adminEmailResult = await resend.emails.send({
@@ -204,7 +204,7 @@ export async function submitOrderAction(input) {
           secureToken: existing.secureToken || '',
           totalAmount: existing.totalAmount,
           whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent([
-            '*New Order from China Unique Store*',
+            `*New Order from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Store'}*`,
             '',
             '*Customer Details*',
             `Name: ${existing.customerName}`,
@@ -468,8 +468,9 @@ export async function submitOrderAction(input) {
       await Promise.allSettled(backgroundTasks);
     });
 
+    const storeDisplayName = settings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store';
     const lines = [
-      '*New Order from China Unique Store*',
+      `*New Order from ${storeDisplayName}*`,
       '',
       '*Customer Details*',
       `Name: ${customerName}`,
@@ -487,6 +488,24 @@ export async function submitOrderAction(input) {
     });
     lines.push('', `*Total:* Rs. ${pricing.total.toLocaleString('en-PK')}`);
     lines.push(`*Order ID:* ${order.orderId}`);
+
+    try {
+      const existingGuestCookie = cookieStore.get('cu_guest_orders')?.value || '';
+      const existingGuestIds = existingGuestCookie
+        ? existingGuestCookie.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      if (!existingGuestIds.includes(order.orderId)) {
+        existingGuestIds.push(order.orderId);
+      }
+      cookieStore.set('cu_guest_orders', existingGuestIds.slice(-20).join(','), {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    } catch {
+      // Ignore cookie setting failures in non-standard runtimes
+    }
 
     return {
       success: true,
@@ -587,13 +606,30 @@ export async function linkOrdersAction(phone) {
     { upsert: true }
   );
 
-  // 2. Link orders using fuzzy phone matching
+  // 2. Only link orders placed in the same browser session to prevent unauthorized claiming
+  const cookieStore = await cookies();
+  const guestCookie = cookieStore.get('cu_guest_orders')?.value || '';
+  const sessionOrderIds = guestCookie
+    ? guestCookie.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  if (sessionOrderIds.length === 0) {
+    return {
+      success: false,
+      message: 'No guest orders found from this session to link, but your phone has been saved to your profile.',
+    };
+  }
+
   const phoneRegex = getPhoneRegex(normalizedPhone);
   let modifiedCount = 0;
 
   if (phoneRegex) {
     const result = await Order.updateMany(
-      { customerPhone: { $regex: phoneRegex }, customerEmail: null },
+      {
+        orderId: { $in: sessionOrderIds },
+        customerPhone: { $regex: phoneRegex },
+        customerEmail: null,
+      },
       { customerEmail: userEmail }
     );
     modifiedCount = result.modifiedCount;
@@ -608,7 +644,7 @@ export async function linkOrdersAction(phone) {
   } else {
     return {
       success: false,
-      message: 'No unlinked orders found with this phone number, but your phone has been saved to your profile.'
+      message: 'No unlinked orders from this session matched this phone number, but your phone has been saved to your profile.'
     };
   }
 }
@@ -847,10 +883,12 @@ export async function updateOrderAction(id, updates) {
 
     if (validatedData.notes !== undefined) order.notes = validatedData.notes;
     if (validatedData.items !== undefined && Array.isArray(validatedData.items)) {
-      order.items = validatedData.items;
-      const subtotal = validatedData.items.reduce((s, i) => s + (Number(i.price || 0) * Number(i.quantity || 1)), 0);
-      order.totalAmount = Math.max(0, subtotal - (Number(order.discountAmount) || 0) + (Number(order.shippingAmount) || 0));
-      order.orderQuantity = validatedData.items.reduce((s, i) => s + Number(i.quantity || 1), 0);
+      const normalizedItems = await buildOrderItemsWithSourcing(validatedData.items);
+      order.items = normalizedItems;
+      const subtotal = calculateOrderTotal(normalizedItems);
+      const taxAmount = Number(order.taxAmount) || 0;
+      order.totalAmount = Math.max(0, subtotal - (Number(order.discountAmount) || 0) + (Number(order.shippingAmount) || 0) + taxAmount);
+      order.orderQuantity = normalizedItems.reduce((s, i) => s + Number(i.quantity || 1), 0);
       if (validatedData.manualCodAmount === undefined) {
         order.manualCodAmount = order.totalAmount;
       }

@@ -14,11 +14,12 @@ const CartUiContext = createContext(null);
 const CartActionsContext = createContext(null);
 
 function getCartItemId(item) {
-  if (item?.id && item?.packLabel && typeof item.id === 'string' && item.id.endsWith(item.packLabel)) {
+  const suffix = item?.variantId || item?.packLabel;
+  if (item?.id && suffix && typeof item.id === 'string' && item.id.endsWith(suffix)) {
     return item.id;
   }
   const baseId = item?.slug || item?._id || item?.id || item?.productId || item?.Name || item?.name;
-  return item?.packLabel ? `${baseId}-${item.packLabel}` : baseId;
+  return suffix ? `${baseId}-${suffix}` : baseId;
 }
 
 function normalizeCartItem(item) {
@@ -31,10 +32,15 @@ function normalizeCartItem(item) {
     : (item.discountedPrice != null ? Number(item.discountedPrice) : null);
 
   const packLabel = item.packLabel || '';
+  const variantId = item.variantId ? String(item.variantId).trim() : '';
+  const variantName = item.variantName ? String(item.variantName).trim() : '';
   const originalName = item.originalName || item.Name || item.name || 'Untitled Product';
-  const finalName = packLabel && !originalName.includes(`(${packLabel})`) 
-      ? `${originalName} (${packLabel})` 
-      : originalName;
+  let finalName = originalName;
+  if (packLabel && !originalName.includes(`(${packLabel})`)) {
+    finalName = `${originalName} (${packLabel})`;
+  } else if (variantName && !originalName.includes(`(${variantName})`)) {
+    finalName = `${originalName} (${variantName})`;
+  }
 
   const resolvedCatalogId = String(item._id || item.productId || item.id || item.slug || '').trim();
 
@@ -46,6 +52,8 @@ function normalizeCartItem(item) {
     Name: finalName,
     originalName,
     packLabel,
+    variantId,
+    variantName,
     Price: basePrice,
     discountedPrice,
     discountPercentage,

@@ -59,9 +59,8 @@ function toAbsoluteEmailUrl(url, baseUrl = DEFAULT_BASE_URL) {
   if (cleanUrl.startsWith('//')) return `https:${cleanUrl}`;
   
   let cleanBase = String(baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
-  // When running locally, Gmail proxy cannot reach localhost, so use live production domain for emails
-  if (/localhost|127\.0\.0\.1/i.test(cleanBase) || !cleanBase) {
-    cleanBase = 'https://www.chinauniquestore.com';
+  if (!cleanBase) {
+    cleanBase = process.env.NEXT_PUBLIC_SITE_URL || '';
   }
   const cleanPath = cleanUrl.replace(/^\/+/, '');
   return `${cleanBase}/${cleanPath}`;
@@ -123,8 +122,8 @@ function getCleanAddressHtml(address, city, landmark, phone) {
   return lines.length > 0 ? lines.join('<br/>') : 'Address provided at checkout';
 }
 
-const DARK_BRAND_LOGO = '/china-unique-logo-cropped.png';
-const WHITE_BRAND_LOGO = '/china-unique-logo-dark.png';
+const DARK_BRAND_LOGO = '';
+const WHITE_BRAND_LOGO = '';
 
 function isWhiteWordmark(url) {
   return /logo-dark|white-logo|logo_white/i.test(String(url || ''));
@@ -136,18 +135,18 @@ function emailAsset(branding, relativePath, cid) {
 }
 
 function getLogoForEmailSurface(branding, surface = 'light') {
-  const lightColored = getText(branding?.lightLogoUrl, WHITE_BRAND_LOGO);
-  const darkColored = getText(branding?.darkLogoUrl, DARK_BRAND_LOGO);
+  const lightColored = getText(branding?.lightLogoUrl, '');
+  const darkColored = getText(branding?.darkLogoUrl, '');
 
   if (surface === 'dark') {
     if (isWhiteWordmark(lightColored)) return lightColored;
     if (isWhiteWordmark(darkColored)) return darkColored;
-    return WHITE_BRAND_LOGO;
+    return lightColored || darkColored || '';
   }
 
-  if (!isWhiteWordmark(darkColored)) return darkColored || DARK_BRAND_LOGO;
-  if (!isWhiteWordmark(lightColored)) return lightColored || DARK_BRAND_LOGO;
-  return DARK_BRAND_LOGO;
+  if (!isWhiteWordmark(darkColored)) return darkColored || '';
+  if (!isWhiteWordmark(lightColored)) return lightColored || '';
+  return darkColored || lightColored || '';
 }
 
 function renderSharedEmailStyles() {
@@ -196,19 +195,35 @@ function scaledLogoWidth(branding, baseWidth) {
 }
 
 function renderBrandLogo(branding, { width, variant = 'header' } = {}) {
-  const lightSrc = emailAsset(branding, getLogoForEmailSurface(branding, 'light'), EMAIL_CID.logoLight);
-  const darkSrc = emailAsset(branding, getLogoForEmailSurface(branding, 'dark'), EMAIL_CID.logoDark);
+  const lightLogoUrl = getLogoForEmailSurface(branding, 'light');
+  const darkLogoUrl = getLogoForEmailSurface(branding, 'dark');
   const storeName = esc(branding.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store');
   const storeUrl = branding.baseUrl || (process.env.NEXT_PUBLIC_SITE_URL || '');
+  const bottom = variant === 'footer' ? '10px' : '8px';
+
+  if (!lightLogoUrl && !darkLogoUrl) {
+    return `
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="100%" style="margin: 0 auto ${bottom} auto;">
+      <tr>
+        <td align="center" style="padding: 0;">
+          <a href="${esc(storeUrl || '#')}" target="_blank" style="text-decoration: none; border: 0; font-family: ${FONT}; font-size: ${variant === 'footer' ? '18px' : '22px'}; font-weight: 800; color: #015347;">
+            ${storeName}
+          </a>
+        </td>
+      </tr>
+    </table>`;
+  }
+
+  const lightSrc = emailAsset(branding, lightLogoUrl, EMAIL_CID.logoLight);
+  const darkSrc = emailAsset(branding, darkLogoUrl, EMAIL_CID.logoDark);
   const logoClass = variant === 'footer' ? 'footer-logo' : 'header-logo';
   const maxWidth = variant === 'footer' ? '48%' : '62%';
-  const bottom = variant === 'footer' ? '10px' : '8px';
 
   return `
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" width="100%" style="margin: 0 auto ${bottom} auto;">
       <tr>
         <td align="center" style="padding: 0;">
-          <a href="${esc(storeUrl)}" target="_blank" style="text-decoration: none; border: 0;">
+          <a href="${esc(storeUrl || '#')}" target="_blank" style="text-decoration: none; border: 0;">
             <img class="light-logo ${logoClass}" src="${esc(lightSrc)}" alt="${storeName}" width="${width}" style="display: block; width: ${width}px; max-width: ${maxWidth}; height: auto; margin: 0 auto; border: 0; outline: none;" />
             <!--[if !mso]><!-->
             <div class="dark-logo-wrap" style="display: none; overflow: hidden; float: left; width: 0; max-height: 0; line-height: 0; visibility: hidden; mso-hide: all;">
@@ -315,7 +330,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
   const items = getItems(order, branding.baseUrl);
   const pricing = getPricing(order, items);
   const customerName = getText(order?.customerName, 'Valued Customer');
-  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#CU-ORDER');
+  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#ORDER');
   const orderUrl = buildOrderUrl(order, branding.baseUrl);
   const orderDate = formatDate(order?.createdAt || new Date());
   const supportEmail = getText(branding?.supportEmail, '');
@@ -324,7 +339,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
     ? (rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits)
     : '';
   const whatsappUrl = cleanWhatsAppNumber ? `https://wa.me/${cleanWhatsAppNumber}` : '';
-  const storeUrl = branding.baseUrl || 'https://www.chinauniquestore.com';
+  const storeUrl = branding.baseUrl || process.env.NEXT_PUBLIC_SITE_URL || '';
   const unsubscribeUrl = `${storeUrl}/unsubscribe`;
 
   const addressHtml = getCleanAddressHtml(order?.customerAddress, order?.customerCity, order?.landmark, order?.customerPhone);
@@ -589,7 +604,7 @@ export function generateCustomerOrderConfirmationHtml(order, brandingInput = {})
                       Want to talk business with us?
                     </div>
                     <div style="font-size: 11px; line-height: 1.4; color: #475569;">
-                      Wholesale, corporate gifts &amp; partnerships: <a href="mailto:partner@chinauniquestore.com" style="color: #064e3b; font-weight: 700; text-decoration: none;">partner@chinauniquestore.com</a>
+                      ${supportEmail ? `Wholesale, corporate gifts &amp; partnerships: <a href="mailto:${esc(supportEmail)}" style="color: #015347; font-weight: 700; text-decoration: none;">${esc(supportEmail)}</a>` : `For wholesale, corporate gifts &amp; partnerships, reply to this email.`}
                     </div>
                   </td>
                 </tr>
@@ -648,7 +663,7 @@ export function generateOrderEmailHtml(order, brandingInput = {}) {
   const branding = { ...DEFAULT_BRANDING, ...brandingInput };
   const items = getItems(order, branding.baseUrl);
   const pricing = getPricing(order, items);
-  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#CU-ORDER');
+  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#ORDER');
   const adminUrl = order?._id 
     ? `${branding.baseUrl}/admin/orders/${order._id}`
     : `${branding.baseUrl}/admin/orders`;
@@ -839,10 +854,11 @@ export function generateOrderEmailHtml(order, brandingInput = {}) {
 export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
   const branding = { ...DEFAULT_BRANDING, ...brandingInput };
   const items = getItems(order, branding.baseUrl);
-  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#CU-ORDER');
+  const orderIdDisplay = getText(order?.orderId ? `#${order.orderId}` : '#ORDER');
   const orderUrl = buildOrderUrl(order, branding.baseUrl);
-  const storeUrl = branding.baseUrl || 'https://www.chinauniquestore.com';
+  const storeUrl = branding.baseUrl || process.env.NEXT_PUBLIC_SITE_URL || '';
   const unsubscribeUrl = `${storeUrl}/unsubscribe`;
+  const supportEmail = getText(branding?.supportEmail, '');
   const rawPhoneDigits = getText(branding?.whatsappNumber, '').replace(/\D/g, '');
   const cleanWhatsAppNumber = rawPhoneDigits
     ? (rawPhoneDigits.startsWith('03') ? `92${rawPhoneDigits.slice(1)}` : rawPhoneDigits)
@@ -1035,7 +1051,7 @@ export function generateCustomerOrderDeliveredHtml(order, brandingInput = {}) {
                       Want to talk business with us?
                     </div>
                     <div style="font-size: 11px; line-height: 1.4; color: #475569;">
-                      Wholesale, corporate gifts &amp; partnerships: <a href="mailto:partner@chinauniquestore.com" style="color: #064e3b; font-weight: 700; text-decoration: none;">partner@chinauniquestore.com</a>
+                      ${supportEmail ? `Wholesale, corporate gifts &amp; partnerships: <a href="mailto:${esc(supportEmail)}" style="color: #015347; font-weight: 700; text-decoration: none;">${esc(supportEmail)}</a>` : `For wholesale, corporate gifts &amp; partnerships, reply to this email.`}
                     </div>
                   </td>
                 </tr>
