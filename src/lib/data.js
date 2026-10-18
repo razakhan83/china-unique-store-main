@@ -71,7 +71,6 @@ const HOME_PAGE_PRODUCT_COLLECTION_CONFIG = {
 const PRODUCT_CATEGORY_POPULATE = { path: 'Category', select: 'name slug bgColor' };
 const PRODUCT_CARD_PROJECTION = [
   'Name',
-  'Description',
   'shortDescription',
   'Price',
   'compareAtPrice',
@@ -96,6 +95,7 @@ const PRODUCT_CARD_PROJECTION = [
 ].join(' ');
 const PRODUCT_DETAIL_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
+  'Description',
   'stockQuantity',
   'seoTitle',
   'seoDescription',
@@ -113,11 +113,54 @@ const PRODUCT_DETAIL_PROJECTION = [
 ].join(' ');
 const PRODUCT_ADMIN_PROJECTION = [
   PRODUCT_CARD_PROJECTION,
+  'Description',
   'stockQuantity',
   'vendors',
   'packOptions',
   'bulletPoints',
   'specifications',
+].join(' ');
+const ORDER_SUMMARY_PROJECTION = [
+  'orderId',
+  'isDraft',
+  'sourceTag',
+  'customerName',
+  'customerEmail',
+  'customerPhone',
+  'customerAddress',
+  'customerCity',
+  'landmark',
+  'paymentStatus',
+  'weight',
+  'manualCodAmount',
+  'itemType',
+  'orderQuantity',
+  'totalAmount',
+  'shippingAmount',
+  'discountAmount',
+  'taxAmount',
+  'taxRatePercent',
+  'refundedAmount',
+  'refunds',
+  'status',
+  'notes',
+  'courierName',
+  'trackingNumber',
+  'nocAccountId',
+  'nocLabelUrl',
+  'courierBookingStatus',
+  'nocStatus',
+  'nocStatusTime',
+  'nocParcelNo',
+  'nocThirdPartyNo',
+  'nocRemarks',
+  'nocLastTrackedAt',
+  'nocTrackingEvents',
+  'courierBookingDate',
+  'courierResponseDetails',
+  'items',
+  'createdAt',
+  'updatedAt',
 ].join(' ');
 let hasLoggedSettingsFetchFailure = false;
 const SLOW_DATA_LOG_MS = 700;
@@ -228,7 +271,6 @@ function toProductCardItem(product) {
     Name: product.Name,
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
-    Description: product.Description || '',
     shortDescription: product.shortDescription || '',
     Category: product.Category,
     Images: product.Images,
@@ -500,6 +542,8 @@ function toOrderSummaryRow(order) {
   };
 }
 
+const LIVE_PRODUCTS_CAP = 250;
+
 async function getLiveProductsRaw() {
   'use cache';
   cacheLife('foreverish');
@@ -512,6 +556,7 @@ async function getLiveProductsRaw() {
       .select(PRODUCT_CARD_PROJECTION)
       .populate(PRODUCT_CATEGORY_POPULATE)
       .sort({ createdAt: -1 })
+      .limit(LIVE_PRODUCTS_CAP)
       .lean();
     return products.map(serializeProduct);
   });
@@ -1542,7 +1587,11 @@ export async function getStorefrontHomePage() {
 
 export async function getProductsList({ category = 'all', search = '', sort = 'newest', page = 1, limit = 12, price = 'all' } = {}) {
   'use cache';
-  cacheLife('foreverish');
+  if (search && String(search).trim()) {
+    cacheLife('minutes');
+  } else {
+    cacheLife('foreverish');
+  }
   cacheTag('products', 'categories');
 
   await mongooseConnect();
@@ -1551,7 +1600,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const safeSearch = String(search || '').trim();
   const safeSort = String(sort || 'newest').trim() || 'newest';
   const safePage = Math.max(1, Number(page) || 1);
-  const safeLimit = Math.max(1, Number(limit) || 12);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 12));
 
   const query = { showOnStore: true };
 
@@ -1827,7 +1876,7 @@ function buildCatalogFeedItem(product, siteUrl, storeName) {
   return {
     id: String(product._id),
     title: product.Name,
-    description: stripHtml(product.Description || `Buy ${product.Name} from ${storeName}.`),
+    description: stripHtml(product.shortDescription || `Buy ${product.Name} from ${storeName}.`),
     availability: isInStock ? 'in_stock' : 'out_of_stock',
     condition: 'new',
     price: formatFeedPrice(basePrice),
@@ -2256,7 +2305,13 @@ export async function getAdminOrdersPage({
   const skip = (safePage - 1) * safeLimit;
 
   const [items, total, statusCounts, draftCount, trashCount, deliveredPaidCount] = await Promise.all([
-    Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().then((orders) => orders.map(toOrderSummaryRow)),
+    Order.find(query)
+      .select(ORDER_SUMMARY_PROJECTION)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .lean()
+      .then((orders) => orders.map(toOrderSummaryRow)),
     Order.countDocuments(query),
     Order.aggregate([
       {
@@ -2729,6 +2784,10 @@ export async function getCustomerDetail(idOrPhoneOrEmail) {
 }
 
 export async function getAdminDashboardData() {
+  'use cache';
+  cacheLife('adminDashboard');
+  cacheTag('admin-dashboard');
+
   await mongooseConnect();
 
   const startOfToday = new Date();
