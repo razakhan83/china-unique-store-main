@@ -116,16 +116,10 @@ async function DashboardChartSection() {
   );
 }
 
-export const instant = false;
-
 export default async function AdminDashboardPage() {
   const session = await requireAdmin();
 
-  return (
-    <Suspense fallback={<AdminDashboardSkeleton />}>
-      <DashboardContent session={session} />
-    </Suspense>
-  );
+  return <DashboardContent session={session} />;
 }
 
 async function DashboardContent({ session }) {

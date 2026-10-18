@@ -214,21 +214,32 @@ export default function OrderDetailView({
   // Move to Trash
   const handleTrashOrder = async () => {
     setIsTrashing(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch('/api/admin/orders/bulk-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderIds: [order._id || order.orderId] }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const data = await safeReadJson(res);
       if (data.success) {
         toast.success('Order moved to trash');
+        setTrashModalOpen(false);
         router.push('/admin/orders');
       } else {
         toast.error(data.error || 'Failed to move order to trash');
       }
     } catch (err) {
-      toast.error('Network error moving order to trash');
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        toast.error('Request timed out after 10s. Please check if the order was moved to trash.');
+      } else {
+        toast.error('Network error moving order to trash');
+      }
     } finally {
       setIsTrashing(false);
       setTrashModalOpen(false);

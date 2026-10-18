@@ -8,10 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingSection } from '@/app/admin/settings/settingsShared';
 
-export default function AdminAccessSectionClient({ isConfiguredAdmin }) {
-  const [configuredAdmins, setConfiguredAdmins] = useState([]);
-  const [dynamicAdmins, setDynamicAdmins] = useState([]);
-  const [loadingList, setLoadingList] = useState(true);
+export default function AdminAccessSectionClient({
+  isConfiguredAdmin,
+  initialConfiguredAdmins = null,
+  initialDynamicAdmins = null,
+}) {
+  const [configuredAdmins, setConfiguredAdmins] = useState(() => initialConfiguredAdmins || []);
+  const [dynamicAdmins, setDynamicAdmins] = useState(() => initialDynamicAdmins || []);
+  const [loadingList, setLoadingList] = useState(() => !initialConfiguredAdmins && isConfiguredAdmin);
   const [newEmail, setNewEmail] = useState('');
   const [adding, setAdding] = useState(false);
   const [removingEmail, setRemovingEmail] = useState(null);
@@ -32,12 +36,12 @@ export default function AdminAccessSectionClient({ isConfiguredAdmin }) {
       }
     }
 
-    if (isConfiguredAdmin) {
+    if (isConfiguredAdmin && !initialConfiguredAdmins) {
       fetchAdmins();
     } else {
       setLoadingList(false);
     }
-  }, [isConfiguredAdmin]);
+  }, [isConfiguredAdmin, initialConfiguredAdmins]);
 
   async function handleAddAdmin(event) {
     event.preventDefault();

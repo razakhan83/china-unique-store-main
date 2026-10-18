@@ -1187,6 +1187,53 @@ export async function getAdminHomePageBuilderData() {
   };
 }
 
+export async function getAdminCategories() {
+  await mongooseConnect();
+
+  const [categories, counts] = await Promise.all([
+    Category.find({
+      slug: { $nin: ['special-offers', 'new-arrivals', 'featured', 'best-sellers'] },
+    }).sort({ sortOrder: 1, name: 1 }).lean(),
+    Product.aggregate([
+      { $unwind: "$Category" },
+      {
+        $group: {
+          _id: "$Category",
+          productCount: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  const productCountMap = new Map(counts.map((entry) => [String(entry._id), Number(entry.productCount || 0)]));
+
+  return categories.map((category, index) => ({
+    _id: category._id.toString(),
+    name: category.name,
+    slug: category.slug,
+    bgColor: category.bgColor || '',
+    image: optimizeCloudinaryUrl(category.image || ''),
+    imagePublicId: category.imagePublicId || '',
+    blurDataURL: category.blurDataURL || '',
+    secondaryImage: optimizeCloudinaryUrl(category.secondaryImage || ''),
+    secondaryImagePublicId: category.secondaryImagePublicId || '',
+    secondaryBlurDataURL: category.secondaryBlurDataURL || '',
+    tertiaryImage: optimizeCloudinaryUrl(category.tertiaryImage || ''),
+    tertiaryImagePublicId: category.tertiaryImagePublicId || '',
+    tertiaryBlurDataURL: category.tertiaryBlurDataURL || '',
+    sortOrder: Number(category.sortOrder ?? index) || 0,
+    isEnabled: category.isEnabled !== false,
+    showOnHome: category.showOnHome !== false,
+    productCount: productCountMap.get(String(category._id)) || 0,
+    storefrontProductLimit: Math.min(24, Math.max(1, Number(category.storefrontProductLimit || 8))),
+    featuredProductIds: Array.isArray(category.featuredProductIds)
+      ? category.featuredProductIds.map((id) => (id?._id ? id._id.toString() : id.toString())).filter(Boolean)
+      : [],
+    showcaseSelectionMode: category.showcaseSelectionMode || 'pinned_first',
+  }));
+}
+
+
 async function getLimitedOfferCards() {
   const settings = await getSettingsRaw();
   const ids = Array.isArray(settings.limitedOfferProductIds)

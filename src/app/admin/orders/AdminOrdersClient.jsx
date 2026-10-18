@@ -742,7 +742,10 @@ export default function AdminOrdersClient({
     if (selectedOrders.length === 0) return;
     setIsBulkDeleting(true);
     try {
-      const res = await bulkDeleteOrdersAction(selectedOrders);
+      const res = await Promise.race([
+        bulkDeleteOrdersAction(selectedOrders),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Bulk deletion timed out after 10s.')), 10000)),
+      ]);
       if (res.success) {
         const deletedSet = new Set(res.deletedIds || selectedOrders.map(String));
         const deletedObjs = orders.filter((o) => deletedSet.has(String(o._id)) || deletedSet.has(String(o.orderId)));
@@ -769,9 +772,10 @@ export default function AdminOrdersClient({
       }
     } catch (err) {
       console.error('Bulk trash error:', err);
-      toast.error('Failed to move selected orders to Trash.');
+      toast.error(err.message || 'Failed to move selected orders to Trash.');
     } finally {
       setIsBulkDeleting(false);
+      setBulkDeleteConfirmOpen(false);
     }
   };
 
@@ -1168,7 +1172,10 @@ export default function AdminOrdersClient({
     if (!deleteConfirm) return;
     setIsDeleting(true);
     try {
-      const res = await deleteOrderAction(deleteConfirm.id);
+      const res = await Promise.race([
+        deleteOrderAction(deleteConfirm.id),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Deletion timed out after 10s.')), 10000)),
+      ]);
       if (res.success) {
         toast.success(`Order ${deleteConfirm.orderId} moved to Trash.`);
         setOrders((prev) => prev.filter((o) => o._id !== deleteConfirm.id));
@@ -1185,8 +1192,12 @@ export default function AdminOrdersClient({
       } else {
         toast.error(res.error || 'Failed to delete order.');
       }
+    } catch (err) {
+      console.error('Delete order error:', err);
+      toast.error(err.message || 'Network error moving order to trash.');
     } finally {
       setIsDeleting(false);
+      setDeleteConfirm(null);
     }
   };
 

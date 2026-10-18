@@ -278,6 +278,7 @@ const ProductSchema = new mongoose.Schema(
     }
 );
 
+ProductSchema.index({ Category: 1 });
 ProductSchema.index({ showOnStore: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, Category: 1, createdAt: -1 });
 ProductSchema.index({ showOnStore: 1, slug: 1 });

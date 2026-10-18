@@ -257,9 +257,15 @@ function CategoryCard({ category, onEdit, onDelete, onToggleEnabled, onManageSho
   );
 }
 
-export default function AdminCategoriesClient() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function AdminCategoriesClient({ initialCategories = null }) {
+  const [categories, setCategories] = useState(() =>
+    Array.isArray(initialCategories)
+      ? initialCategories
+          .filter((category) => category.slug !== "special-offers")
+          .map((category, index) => mapCategory(category, index))
+      : []
+  );
+  const [loading, setLoading] = useState(() => !Array.isArray(initialCategories));
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newImage, setNewImage] = useState("");
@@ -305,8 +311,10 @@ export default function AdminCategoriesClient() {
   }, [categories]);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (!initialCategories) {
+      fetchCategories();
+    }
+  }, [initialCategories]);
 
   async function fetchCategories() {
     try {
