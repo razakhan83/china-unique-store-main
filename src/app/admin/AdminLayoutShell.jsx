@@ -464,13 +464,19 @@ export default function AdminLayoutShell({ children, sessionUser, settings }) {
           <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
             <div className="flex min-h-12 items-center justify-between gap-2 px-2.5 py-1.5 sm:px-3 md:min-h-13 md:px-5 xl:px-6">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="admin-touch-target min-h-[44px] min-w-[44px] size-11 p-0 md:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open navigation menu">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="min-h-[44px] min-w-[44px] size-11 p-0 md:!hidden"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="Open navigation menu"
+                >
                   <Menu className="size-6" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden size-8 md:inline-flex"
+                  className="hidden size-8 md:!inline-flex"
                   onClick={toggleDesktopSidebar}
                   title={desktopSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
