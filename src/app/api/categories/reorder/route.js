@@ -32,6 +32,7 @@ export async function PATCH(req) {
       await Category.bulkWrite(bulkOps);
     }
 
+    revalidateTag('home-page-v3');
     revalidateTag('categories');
     revalidateTag('products');
 

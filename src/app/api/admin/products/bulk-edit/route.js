@@ -68,7 +68,8 @@ export async function PATCH(req) {
 
         revalidateTag('products');
         revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
+                revalidateTag('home-page-v3');
+revalidateTag('home-sections');
 
         return NextResponse.json({
             success: true,

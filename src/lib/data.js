@@ -121,7 +121,7 @@ const PRODUCT_ADMIN_PROJECTION = [
   'bulletPoints',
   'specifications',
 ].join(' ');
-const ORDER_SUMMARY_PROJECTION = [
+export const ORDER_SUMMARY_PROJECTION = [
   'orderId',
   'isDraft',
   'sourceTag',
@@ -243,7 +243,7 @@ function normalizeMediaItem(item, sortOrder = 0, fallbackItem = null) {
 }
 
 function serializeProduct(product) {
-  const { Image, ImageURL, ...safeProduct } = product;
+  const { Image, ImageURL, vendors, ...safeProduct } = product;
 
   return {
     ...safeProduct,
@@ -252,9 +252,6 @@ function serializeProduct(product) {
     slug: safeProduct.slug || safeProduct._id.toString(),
     Category: getProductCategories(safeProduct),
     Images: normalizeProductImages(safeProduct.Images),
-    vendors: Array.isArray(safeProduct.vendors)
-      ? safeProduct.vendors.map(normalizeVendorSnapshot).filter(Boolean)
-      : [],
     createdAt: safeProduct.createdAt ? new Date(safeProduct.createdAt).toISOString() : null,
     updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
     isNewArrival: safeProduct.isNewArrival === true,
@@ -328,9 +325,6 @@ function toProductDetailView(product) {
     showOnStore: product.showOnStore !== false,
     stockQuantity: Number(product.stockQuantity || 0),
     createdAt: product.createdAt,
-    vendors: Array.isArray(product.vendors)
-      ? product.vendors.map(normalizeVendorSnapshot).filter(Boolean)
-      : [],
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: isStorefrontDiscountVisible(product),
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,

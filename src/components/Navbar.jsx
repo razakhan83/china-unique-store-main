@@ -832,6 +832,16 @@ export function NavbarStaticShell({
       <div className="relative z-50">
         <header className="relative z-[60] mx-auto flex h-14 md:h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 xl:px-10">
           <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+            <Button variant="ghost" size="icon" aria-label="Open menu" className="md:hidden relative">
+              <span className="relative flex size-6 items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 size-full opacity-100 scale-100 rotate-0">
+                  <line x1="4" y1="6" x2="16" y2="6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                  <line x1="4" y1="18" x2="18" y2="18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </span>
+            </Button>
+
             <StoreLogo
               storeName={storeName}
               lightLogoUrl={lightLogoUrl}
@@ -839,7 +849,6 @@ export function NavbarStaticShell({
               logoScalePercent={logoScalePercent * 0.85}
               variant="light-surface"
               priority
-              isLink={false}
               className="absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0 cursor-pointer"
             />
           </div>
@@ -857,7 +866,8 @@ export function NavbarStaticShell({
               variant="ghost"
               size="icon-lg"
               className="relative rounded-full md:border border-transparent md:border-border/60 bg-transparent md:bg-background p-0 text-foreground"
-              aria-label="Cart"
+              aria-label="Open cart"
+              title="Cart"
             >
               <span className="relative flex size-5 md:size-[1.65rem] items-center justify-center">
                 <ShoppingBag strokeWidth={1.5} className="size-full" />
@@ -880,30 +890,30 @@ export function NavbarStaticShell({
           </div>
         </header>
 
-        <div className="hidden md:flex relative z-40 bg-muted/30 py-2.5 border-y border-border/50">
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 sm:px-6 xl:px-10 text-[14px] font-semibold text-foreground/85">
-            <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
-              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <Home className="size-4" strokeWidth={2.2} /> Home
+        <div className="hidden md:flex relative z-40 bg-muted/30 py-1.5 border-y border-border/50">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 sm:px-6 xl:px-10 text-[13px] font-semibold text-foreground/85">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 xl:gap-2.5">
+              <Link href="/" className="inline-flex relative z-50 items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <Home className="size-3.5" strokeWidth={2.2} /> Home
               </Link>
-              <Link href="/categories" className="inline-flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <LayoutGrid className="size-4" strokeWidth={2.2} /> Categories
+              <Link href="/categories" className="inline-flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <LayoutGrid className="size-3.5" strokeWidth={2.2} /> Categories
                 <ChevronDown className="size-3.5" />
               </Link>
-              <Link href="/products" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <ShoppingBag className="size-4" strokeWidth={2.2} /> All Products
+              <Link href="/products" className="flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <ShoppingBag className="size-3.5" strokeWidth={2.2} /> All Products
               </Link>
-              <Link href="/orders" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <MapPin className="size-4" strokeWidth={2.2} /> Track Order
+              <Link href="/orders" className="flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <MapPin className="size-3.5" strokeWidth={2.2} /> Track Order
               </Link>
-              <Link href="/wishlist" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <Heart className="size-4" strokeWidth={2.2} /> Wishlist
+              <Link href="/wishlist" className="flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <Heart className="size-3.5" strokeWidth={2.2} /> Wishlist
               </Link>
-              <Link href="/products?price=under300" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <Tag className="size-4" strokeWidth={2.2} /> Dollar Store
+              <Link href="/products?price=under300" className="flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <Tag className="size-3.5" strokeWidth={2.2} /> Dollar Store
               </Link>
-              <Link href="/contact" className="flex items-center justify-center h-[38px] gap-1.5 px-4 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
-                <Phone className="size-4" strokeWidth={2.2} /> Contact Us
+              <Link href="/contact" className="flex items-center justify-center h-[32px] gap-1.5 px-3 rounded-full font-semibold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                <Phone className="size-3.5" strokeWidth={2.2} /> Contact Us
               </Link>
             </div>
           </div>

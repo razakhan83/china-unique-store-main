@@ -29,7 +29,8 @@ function triggerProductRevalidations(product, previousSlug = null) {
         revalidatePath(`/products/${product._id.toString()}`);
     }
     revalidateTag('admin-dashboard');
-    revalidateTag('home-sections');
+        revalidateTag('home-page-v3');
+revalidateTag('home-sections');
     
     // Also revalidate generic paths just in case
     revalidatePath('/admin/products');
@@ -72,14 +73,14 @@ export async function GET(_request, { params }) {
         const { id } = await params;
         const query = resolveProductQuery(id);
         let product = await Product.findOne(query)
-            .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions variants tags primaryTag')
+            .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority packOptions variants tags primaryTag')
             .populate({ path: 'Category', select: 'name slug bgColor' })
             .lean();
 
         if (!product && typeof id === 'string' && id.trim()) {
             const escaped = id.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             product = await Product.findOne({ slug: { $regex: new RegExp(`^${escaped}$`, 'i') } })
-                .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority vendors packOptions variants tags primaryTag')
+                .select('Name Description shortDescription bulletPoints specifications seoTitle seoDescription seoKeywords seoCanonicalUrl seoOgTitle seoOgDescription seoOgImage seoOgImageRatio seoOgImageFit Price compareAtPrice Images Category StockStatus slug showOnStore createdAt updatedAt stockQuantity discountPercentage isDiscounted discountedPrice isNewArrival isBestSelling isFeatured isFreeDelivery featuredPriority packOptions variants tags primaryTag')
                 .populate({ path: 'Category', select: 'name slug bgColor' })
                 .lean();
         }
@@ -88,7 +89,7 @@ export async function GET(_request, { params }) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        const { Image, ImageURL, ...safeProduct } = product;
+        const { Image, ImageURL, vendors, ...safeProduct } = product;
 
         return NextResponse.json({
             success: true,
@@ -98,7 +99,6 @@ export async function GET(_request, { params }) {
                 id: safeProduct.slug || safeProduct._id.toString(),
                 Category: getProductCategories(safeProduct),
                 Images: normalizeProductImages(safeProduct.Images),
-                vendors: Array.isArray(safeProduct.vendors) ? safeProduct.vendors.map(normalizeVendorSnapshot).filter(Boolean) : [],
             },
         });
     } catch (error) {

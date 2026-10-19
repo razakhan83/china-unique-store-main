@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApiAdmin } from '@/lib/requireAdmin';
 import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
+import { ORDER_SUMMARY_PROJECTION } from '@/lib/data';
 
 export async function GET(request) {
   try {
@@ -17,6 +18,7 @@ export async function GET(request) {
 
     const [orders, total] = await Promise.all([
       Order.find({ isDeleted: { $ne: true } })
+        .select(ORDER_SUMMARY_PROJECTION)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

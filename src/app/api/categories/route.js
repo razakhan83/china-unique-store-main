@@ -147,7 +147,8 @@ export async function POST(req) {
       showOnHome: body.showOnHome !== false,
     });
     revalidateTag('categories', 'max');
-    revalidateTag('home-sections');
+        revalidateTag('home-page-v3');
+revalidateTag('home-sections');
     revalidatePath('/');
     return NextResponse.json(
       {

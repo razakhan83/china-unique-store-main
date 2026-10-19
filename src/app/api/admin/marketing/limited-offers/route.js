@@ -105,7 +105,8 @@ export async function PUT(request) {
   );
 
   revalidateTag('settings', 'max');
-  revalidateTag('home-page', 'max');
+    revalidateTag('home-page-v3');
+revalidateTag('home-page', 'max');
   revalidateTag('products', 'max');
 
   return NextResponse.json({

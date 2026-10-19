@@ -77,7 +77,8 @@ export async function PATCH(req) {
       revalidateTag(`reviews-${result.productId?.toString?.() || result.productId}`);
       revalidateTag('all-reviews');
       revalidateTag('storefront-testimonials');
-      revalidateTag('home-page');
+            revalidateTag('home-page-v3');
+revalidateTag('home-page');
 
       return NextResponse.json({
         success: true,

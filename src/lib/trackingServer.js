@@ -11,6 +11,30 @@ const SETTINGS_KEY = 'site-settings';
 const META_GRAPH_VERSION = 'v20.0';
 const META_MISSING_CONFIG_REASON = 'missing_meta_config';
 
+const ENV_META_TOKEN = (
+  process.env.META_CONVERSIONS_API_ACCESS_TOKEN ||
+  process.env.META_PIXEL_ACCESS_TOKEN ||
+  process.env.FACEBOOK_CONVERSIONS_API_TOKEN ||
+  ''
+).trim();
+
+const ENV_META_PIXEL_ID = (
+  process.env.META_PIXEL_ID ||
+  process.env.FACEBOOK_PIXEL_ID ||
+  process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ||
+  ''
+).trim();
+
+// Startup validation: log loudly if Meta Conversions API token is missing from environment
+if (!ENV_META_TOKEN) {
+  console.error(
+    '[Meta CAPI] CRITICAL: META_CONVERSIONS_API_ACCESS_TOKEN environment variable is missing! ' +
+    'Server events will fail or depend on DB settings. Please define META_CONVERSIONS_API_ACCESS_TOKEN in env.'
+  );
+} else {
+  console.log('[Meta CAPI] Access token configured from environment.');
+}
+
 function sha256(value) {
   return crypto.createHash('sha256').update(String(value || '').trim().toLowerCase()).digest('hex');
 }
@@ -49,13 +73,20 @@ async function getTrackingSettings() {
   await mongooseConnect();
 
   const settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+  const facebookPixelId = ENV_META_PIXEL_ID || String(settings?.facebookPixelId || '').trim();
+  const facebookConversionsApiToken = ENV_META_TOKEN || String(settings?.facebookConversionsApiToken || '').trim();
+
+  if (!facebookConversionsApiToken) {
+    console.error('[Meta CAPI] Error: Meta Conversions API token is missing in both environment and database settings.');
+  }
+
   return {
     trackingEnabled: settings?.trackingEnabled === true,
-    facebookPixelId: String(settings?.facebookPixelId || '').trim(),
-    facebookConversionsApiToken: String(settings?.facebookConversionsApiToken || '').trim(),
-    facebookTestEventCode: String(settings?.facebookTestEventCode || '').trim(),
-    tiktokPixelId: String(settings?.tiktokPixelId || '').trim(),
-    tiktokAccessToken: String(settings?.tiktokAccessToken || '').trim(),
+    facebookPixelId,
+    facebookConversionsApiToken,
+    facebookTestEventCode: String(settings?.facebookTestEventCode || process.env.META_TEST_EVENT_CODE || '').trim(),
+    tiktokPixelId: String(settings?.tiktokPixelId || process.env.TIKTOK_PIXEL_ID || '').trim(),
+    tiktokAccessToken: String(settings?.tiktokAccessToken || process.env.TIKTOK_ACCESS_TOKEN || '').trim(),
   };
 }
 
@@ -67,7 +98,11 @@ async function sendMetaEvent({
   customData,
   settings,
 }) {
-  if (!settings.facebookPixelId || !settings.facebookConversionsApiToken) {
+  const pixelId = settings?.facebookPixelId || ENV_META_PIXEL_ID;
+  const accessToken = settings?.facebookConversionsApiToken || ENV_META_TOKEN;
+
+  if (!pixelId || !accessToken) {
+    console.error('[Meta CAPI] Dispatch skipped: missing pixel ID or access token.');
     return {
       skipped: true,
       reason: META_MISSING_CONFIG_REASON,
@@ -90,7 +125,7 @@ async function sendMetaEvent({
   };
 
   const response = await fetch(
-    `https://graph.facebook.com/${META_GRAPH_VERSION}/${settings.facebookPixelId}/events?access_token=${encodeURIComponent(settings.facebookConversionsApiToken)}`,
+    `https://graph.facebook.com/${META_GRAPH_VERSION}/${pixelId}/events?access_token=${encodeURIComponent(accessToken)}`,
     {
       method: 'POST',
       headers: {

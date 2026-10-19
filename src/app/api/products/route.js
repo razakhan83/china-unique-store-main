@@ -255,7 +255,8 @@ export async function POST(req) {
         revalidateTag(`product-${uniqueSlug}`);
         revalidateTag(`product-${product._id.toString()}`);
         revalidateTag('admin-dashboard');
-        revalidateTag('home-sections');
+                revalidateTag('home-page-v3');
+revalidateTag('home-sections');
         return NextResponse.json({
             success: true,
             data: {

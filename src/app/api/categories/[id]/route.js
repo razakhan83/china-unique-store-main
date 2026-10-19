@@ -136,7 +136,8 @@ export async function PATCH(req, { params }) {
 
     await existingCategory.save();
     revalidateTag('categories');
-    revalidateTag('home-page');
+        revalidateTag('home-page-v3');
+revalidateTag('home-page');
     revalidateTag('products');
 
     const productCount = await Product.countDocuments({ Category: existingCategory._id });

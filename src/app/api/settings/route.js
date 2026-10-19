@@ -236,7 +236,8 @@ export async function PUT(req) {
             { new: true, upsert: true, runValidators: true }
         ).lean();
 
-        revalidateTag('settings', 'max');
+                revalidateTag('home-page-v3');
+revalidateTag('settings', 'max');
         revalidateTag('home-sections');
         revalidatePath('/');
 

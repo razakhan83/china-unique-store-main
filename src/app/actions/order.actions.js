@@ -49,11 +49,13 @@ export async function sendOrderDeliveredEmail({ order }) {
   try {
     if (!order?.customerEmail) return;
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
-    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <orders@store.com>`;
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <onboarding@resend.dev>`;
+    const replyTo = emailBranding.supportEmail || undefined;
     const deliveredHtml = generateCustomerOrderDeliveredHtml(order, emailBranding);
     const customerEmailResult = await resend.emails.send({
       from: emailFrom,
       to: order.customerEmail,
+      replyTo,
       subject: `Your Order Has Been Delivered! - ${order.orderId}`,
       html: deliveredHtml,
       attachments: getEmailInlineAttachments(deliveredHtml),
@@ -72,12 +74,14 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
     const adminRecipients = getConfiguredAdminEmails();
-    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <orders@store.com>`;
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <onboarding@resend.dev>`;
+    const replyTo = emailBranding.supportEmail || undefined;
     if (adminRecipients.length > 0) {
       const adminHtml = generateOrderEmailHtml(order, emailBranding);
       const adminEmailResult = await resend.emails.send({
         from: emailFrom,
         to: adminRecipients,
+        replyTo: order.customerEmail || replyTo,
         subject: `New Order Received - ${customerName}`,
         html: adminHtml,
         attachments: getEmailInlineAttachments(adminHtml),
@@ -93,6 +97,7 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
       const customerEmailResult = await resend.emails.send({
         from: emailFrom,
         to: userEmail,
+        replyTo,
         subject: `Thank You for Your Order! - ${order.orderId}`,
         html: customerHtml,
         attachments: getEmailInlineAttachments(customerHtml),
