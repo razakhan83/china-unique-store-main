@@ -3,6 +3,10 @@ import HeroSlider from '@/components/HeroSlider';
 import HomeCategoriesGrid from '@/components/home/HomeCategoriesGrid';
 import HomeProductGridSection from '@/components/home/HomeProductGridSection';
 
+const LazyHomeProductGridSection = dynamic(() => import('@/components/home/HomeProductGridSection'), {
+  loading: () => <div className="h-64 my-8 rounded-xl bg-muted/20 animate-pulse" />,
+});
+
 const HomeTestimonialsCarousel = dynamic(() => import('@/components/HomeTestimonialsCarousel'), {
   loading: () => null,
 });
@@ -24,6 +28,8 @@ export default function HomeSectionRenderer({ sections = [] }) {
   const firstProductSectionId = safeSections.find(
     (section) => section?.type === 'ProductGridByCategory' || section?.type === 'ProductCollection'
   )?.id;
+
+  let productGridIndex = 0;
 
   return (
     <>
@@ -80,8 +86,10 @@ export default function HomeSectionRenderer({ sections = [] }) {
 
         if (section.type === 'LimitedTimeOffers') {
           if (!section.products?.length) return null;
+          const isBelowFold = productGridIndex++ >= 2;
+          const GridComponent = isBelowFold ? LazyHomeProductGridSection : HomeProductGridSection;
           return (
-            <HomeProductGridSection
+            <GridComponent
               key={section.id}
               title={section.title || 'Limited Time Offers'}
               products={section.products}
@@ -92,8 +100,10 @@ export default function HomeSectionRenderer({ sections = [] }) {
 
         if (section.type === 'ProductGridByCategory' || section.type === 'ProductCollection') {
           const priorityCount = !hasHero && section.id === firstProductSectionId ? 2 : 0;
+          const isBelowFold = productGridIndex++ >= 2;
+          const GridComponent = isBelowFold ? LazyHomeProductGridSection : HomeProductGridSection;
           return (
-            <HomeProductGridSection
+            <GridComponent
               key={section.id}
               title={section.title}
               category={section.category}

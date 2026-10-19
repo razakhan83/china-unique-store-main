@@ -233,7 +233,10 @@ function normalizeMediaItem(item, sortOrder = 0, fallbackItem = null) {
   return {
     url: optimizeCloudinaryUrl(url),
     publicId: String(source.publicId || source.public_id || fallback.publicId || fallback.public_id || '').trim(),
-    blurDataURL: String(source.blurDataURL || fallback.blurDataURL || '').trim(),
+    blurDataURL: (() => {
+      const b = String(source.blurDataURL || fallback.blurDataURL || '').trim();
+      return b.length > 1024 ? '' : b;
+    })(),
     sortOrder: Number(source.sortOrder ?? sortOrder) || 0,
   };
 }

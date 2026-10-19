@@ -105,7 +105,7 @@ const nextConfig = {
           "frame-src 'self' https://www.facebook.com https://www.google.com https://maps.google.com",
           "object-src 'none'",
           "base-uri 'self'",
-          "form-action 'self'",
+          "form-action 'self' https://www.facebook.com https://*.facebook.com",
           "frame-ancestors 'self'",
         ].join('; '),
       },

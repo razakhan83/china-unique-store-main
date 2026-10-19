@@ -82,7 +82,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
           {isFlashSale ? (
             <FlashSaleCardBadge percentage={product.discountPercentage} endsAt={product.discountEndsAt} />
           ) : discountLabel ? (
-            <Badge className="pointer-events-auto rounded bg-destructive text-destructive-foreground px-2 py-0.5 text-[10.5px] sm:text-[11.5px] font-bold tracking-wide shadow-sm border-none">
+            <Badge className="pointer-events-auto rounded bg-red-600 text-white px-2 py-0.5 text-[10.5px] sm:text-[11.5px] font-bold tracking-wide shadow-sm border-none">
               {product.discountPercentage}% OFF
             </Badge>
           ) : (
@@ -242,7 +242,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
                               {formatPrice(compareAtPrice)}
                             </p>
                             {Boolean(product.isDiscounted && product.discountPercentage > 0) && (
-                              <Badge className="pointer-events-auto w-fit rounded-md bg-red-100/80 px-1.5 py-0 text-[10px] font-bold text-red-700 dark:bg-red-950/60 dark:text-red-300 tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
+                              <Badge className="pointer-events-auto w-fit rounded-md bg-red-100 px-1.5 py-0 text-[10px] font-bold text-red-800 tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
                                 Save {formatPrice(compareAtPrice - sellingPrice)}
                               </Badge>
                             )}

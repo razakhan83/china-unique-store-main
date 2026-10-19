@@ -7,7 +7,14 @@ const FALLBACK_BLUR_DATA_URL =
  * @returns {{ placeholder: "blur", blurDataURL: string }}
  */
 export function getBlurPlaceholderProps(blurDataURL = "") {
-  const source = String(blurDataURL || '').trim() || FALLBACK_BLUR_DATA_URL;
+  const source = String(blurDataURL || '').trim();
+  // Safe blur placeholders are tiny data URIs (< 1KB). Reject bloated or oversized blur strings.
+  if (!source || source.length > 1024) {
+    return {
+      placeholder: "blur",
+      blurDataURL: FALLBACK_BLUR_DATA_URL,
+    };
+  }
 
   return {
     placeholder: "blur",
