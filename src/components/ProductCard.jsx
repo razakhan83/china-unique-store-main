@@ -132,6 +132,7 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
         <Link
           href={productHref}
           scroll={true}
+          aria-label={productName}
           className="relative block aspect-square w-full overflow-hidden rounded-t-[11px]"
           style={{ backgroundColor: resolvedBg }}
           draggable={false}

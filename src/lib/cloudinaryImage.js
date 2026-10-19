@@ -11,7 +11,7 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   productCard: { width: 320, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
 
   // Category circles: small fixed-size icons in the horizontal carousel
-  categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
+  categoryCircle: { width: 144, height: 144, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
 
   // Hero slider: full-width banner images
   heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
