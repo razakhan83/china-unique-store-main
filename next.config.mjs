@@ -32,7 +32,6 @@ const nextConfig = {
       'lucide-react',
       'recharts',
       'date-fns',
-      'framer-motion',
       'embla-carousel-react',
       '@radix-ui/react-dialog',
       '@radix-ui/react-select',

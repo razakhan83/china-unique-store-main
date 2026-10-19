@@ -164,7 +164,7 @@ export default function ProductGallery({ images, primaryTag, product }) {
                 onClick={() => handleThumbnailClick(index)}
                 aria-label={`Go to slide ${index + 1}`}
                 aria-pressed={index === selectedIndex}
-                className="group relative inline-flex items-center justify-center p-1 pointer-events-auto cursor-pointer focus:outline-none"
+                className="group relative inline-flex size-7 min-w-7 min-h-7 items-center justify-center p-0 pointer-events-auto cursor-pointer focus:outline-none"
               >
                 <span
                   className={cn(

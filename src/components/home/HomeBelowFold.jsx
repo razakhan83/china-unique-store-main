@@ -1,10 +1,18 @@
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import AnimatedStats from '@/components/AnimatedStats';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
-import TiltedProductMarquee from '@/components/TiltedProductMarquee';
-import HomeFaqSection from '@/components/HomeFaqSection';
 import { getStoreSettings, getStoreStats } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
+
+const AnimatedStats = dynamic(() => import('@/components/AnimatedStats'), {
+  loading: () => null,
+});
+const TiltedProductMarquee = dynamic(() => import('@/components/TiltedProductMarquee'), {
+  loading: () => <div className="h-[700px] w-full bg-background" />,
+});
+const HomeFaqSection = dynamic(() => import('@/components/HomeFaqSection'), {
+  loading: () => null,
+});
 
 export default async function HomeBelowFold() {
   const [settings, stats] = await Promise.all([

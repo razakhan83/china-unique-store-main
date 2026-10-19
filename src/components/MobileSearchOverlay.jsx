@@ -115,6 +115,10 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
               <Search className="absolute left-3.5 size-4.5 text-muted-foreground/70" />
               <input 
                 ref={inputRef}
+                id="mobile-search-input"
+                name="search"
+                type="search"
+                aria-label="Search products"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search products"

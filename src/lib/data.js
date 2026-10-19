@@ -1347,6 +1347,10 @@ async function getLimitedOfferCards() {
 }
 
 export async function getStorefrontHomePage() {
+  'use cache';
+  cacheLife('foreverish');
+  cacheTag('home-page', 'categories', 'products');
+
   try {
     const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
     const activeCategories = categories.filter(

@@ -67,61 +67,44 @@ function isNearbySlide(index, activeIndex, total) {
 function HeroSlideImage({ slide, isPriority }) {
   const desktopSrc = slide.images.desktopSrc || slide.images.mobileSrc;
   const mobileSrc = slide.images.mobileSrc || slide.images.desktopSrc;
-  const hasDistinct =
-    Boolean(slide.images.desktopSrc && slide.images.mobileSrc && slide.images.desktopSrc !== slide.images.mobileSrc);
-
-  if (!hasDistinct) {
-    const src = optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
-    const blur = slide.images.desktopBlur || slide.images.mobileBlur;
-    return (
-      <Image
-        src={src}
-        alt={slide.alt}
-        fill
-        sizes="100vw"
-        priority={isPriority}
-        fetchPriority={isPriority ? 'high' : 'auto'}
-        loading={isPriority ? 'eager' : 'lazy'}
-        className="object-cover"
-        quality={80}
-        {...getBlurPlaceholderProps(blur)}
-      />
-    );
-  }
 
   const desktopOptimized = optimizeCloudinaryUrl(desktopSrc, CLOUDINARY_IMAGE_PRESETS.heroFull);
   const mobileOptimized = optimizeCloudinaryUrl(mobileSrc, CLOUDINARY_IMAGE_PRESETS.heroMobile);
 
   return (
     <>
-      <div className="relative h-full w-full block md:hidden">
-        <Image
-          src={mobileOptimized}
-          alt={slide.alt}
-          fill
-          sizes="100vw"
-          priority={isPriority}
-          fetchPriority={isPriority ? 'high' : 'auto'}
-          loading={isPriority ? 'eager' : 'lazy'}
-          className="object-cover"
-          quality={80}
-          {...getBlurPlaceholderProps(slide.images.mobileBlur)}
-        />
-      </div>
-      <div className="relative h-full w-full hidden md:block">
-        <Image
+      {isPriority ? (
+        <>
+          <link
+            rel="preload"
+            as="image"
+            href={mobileOptimized}
+            media="(max-width: 767px)"
+            fetchPriority="high"
+          />
+          <link
+            rel="preload"
+            as="image"
+            href={desktopOptimized}
+            media="(min-width: 768px)"
+            fetchPriority="high"
+          />
+        </>
+      ) : null}
+      <picture className="block h-full w-full">
+        <source media="(max-width: 767px)" srcSet={mobileOptimized} />
+        <source media="(min-width: 768px)" srcSet={desktopOptimized} />
+        <img
           src={desktopOptimized}
-          alt={slide.alt}
-          fill
-          sizes="100vw"
-          priority={isPriority}
-          fetchPriority={isPriority ? 'high' : 'auto'}
+          alt={slide.alt || 'Promotional Banner'}
+          width={1400}
+          height={560}
           loading={isPriority ? 'eager' : 'lazy'}
-          className="object-cover"
-          quality={80}
-          {...getBlurPlaceholderProps(slide.images.desktopBlur)}
+          fetchPriority={isPriority ? 'high' : 'auto'}
+          decoding={isPriority ? 'sync' : 'async'}
+          className="h-full w-full object-cover"
         />
-      </div>
+      </picture>
     </>
   );
 }
@@ -137,10 +120,10 @@ export default function HeroSlider({ slides = [], storeName }) {
         .map((slide, index) => ({
           ...slide,
           images: extractSlideImages(slide),
-          alt: slide?.alt || `Slide ${index + 1}`,
+          alt: slide?.alt || slide?.title || `${storeName || SITE_NAME || 'Store'} Promotional Banner ${index + 1}`,
         }))
         .filter((slide) => slide.images.mobileSrc || slide.images.desktopSrc),
-    [slides]
+    [slides, storeName]
   );
 
   const safeActiveIndex =
@@ -267,7 +250,7 @@ export default function HeroSlider({ slides = [], storeName }) {
                 type="button"
                 aria-label={`Go to slide ${index + 1}`}
                 onClick={() => goToSlide(index)}
-                className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
+                className="inline-flex size-7 min-w-7 min-h-7 items-center justify-center p-0 cursor-pointer border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full shadow-md transition-[transform,background-color] duration-300 pointer-events-none block ${

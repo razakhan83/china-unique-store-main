@@ -44,7 +44,10 @@ export default function FooterNewsletter() {
           ) : (
             <form onSubmit={handleSubmit} className="mt-4 flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:max-w-md mx-auto md:mx-0">
               <input
+                id="newsletter-email"
+                name="email"
                 type="email"
+                aria-label="Email address for newsletter"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"

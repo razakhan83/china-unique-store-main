@@ -1,10 +1,20 @@
+import dynamic from 'next/dynamic';
 import HeroSlider from '@/components/HeroSlider';
 import HomeCategoriesGrid from '@/components/home/HomeCategoriesGrid';
 import HomeProductGridSection from '@/components/home/HomeProductGridSection';
-import HomeTestimonialsCarousel from '@/components/HomeTestimonialsCarousel';
-import HomeProductBanner from '@/components/home/HomeProductBanner';
-import HomeScrollableBannerCarousel from '@/components/home/HomeScrollableBannerCarousel';
-import HomeVideoCatalog from '@/components/home/HomeVideoCatalog';
+
+const HomeTestimonialsCarousel = dynamic(() => import('@/components/HomeTestimonialsCarousel'), {
+  loading: () => null,
+});
+const HomeProductBanner = dynamic(() => import('@/components/home/HomeProductBanner'), {
+  loading: () => null,
+});
+const HomeScrollableBannerCarousel = dynamic(() => import('@/components/home/HomeScrollableBannerCarousel'), {
+  loading: () => null,
+});
+const HomeVideoCatalog = dynamic(() => import('@/components/home/HomeVideoCatalog'), {
+  loading: () => null,
+});
 
 export default function HomeSectionRenderer({ sections = [] }) {
   const safeSections = Array.isArray(sections) ? sections : [];

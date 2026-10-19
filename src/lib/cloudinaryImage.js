@@ -15,8 +15,8 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
   // Hero slider: full-width banner images
-  heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
-  heroMobile: { width: 640, crop: 'fill', gravity: 'auto', format: 'avif', quality: 78 },
+  heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
+  heroMobile: { width: 640, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
 
   // Product detail gallery — main image (Next.js srcset handles DPR; keep master modest)
   productGalleryMain: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },

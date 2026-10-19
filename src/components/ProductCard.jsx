@@ -236,13 +236,13 @@ const ProductCard = memo(function ProductCard({ product, className = "", imageBg
                         {compareAtPrice ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p
-                              className="text-[10px] font-normal leading-none text-muted-foreground/60 line-through @min-[260px]:text-[11px] sm:text-[13px]"
+                              className="text-[10px] font-normal leading-none text-muted-foreground line-through @min-[260px]:text-[11px] sm:text-[13px]"
                               draggable={false}
                             >
                               {formatPrice(compareAtPrice)}
                             </p>
                             {Boolean(product.isDiscounted && product.discountPercentage > 0) && (
-                              <Badge className="pointer-events-auto w-fit rounded-md bg-destructive/10 px-1.5 py-0 text-[10px] font-bold text-destructive tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
+                              <Badge className="pointer-events-auto w-fit rounded-md bg-red-100/80 px-1.5 py-0 text-[10px] font-bold text-red-700 dark:bg-red-950/60 dark:text-red-300 tracking-tight border-none shadow-none h-[20px] inline-flex items-center whitespace-nowrap sm:px-2 sm:text-[11.5px] sm:h-[24px]">
                                 Save {formatPrice(compareAtPrice - sellingPrice)}
                               </Badge>
                             )}

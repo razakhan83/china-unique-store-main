@@ -94,7 +94,7 @@ function CarouselDots({ slideCount }) {
           type="button"
           aria-label={`Go to slide page ${idx + 1}`}
           onClick={() => handleGoTo(idx)}
-          className="inline-flex items-center justify-center p-1 cursor-pointer border-0 bg-transparent outline-none rounded-full"
+          className="inline-flex size-7 min-w-7 min-h-7 items-center justify-center p-0 cursor-pointer border-0 bg-transparent outline-none rounded-full"
         >
           <span
             className={cn(

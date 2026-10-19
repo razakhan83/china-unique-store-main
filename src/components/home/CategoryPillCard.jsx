@@ -83,7 +83,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
             <>
               {/* Left Image (Spreads left with clean separation) */}
               <div className="absolute -left-4 sm:-left-3.5 top-1/2 -translate-y-[38%] z-10 w-[58%] h-[58%] -rotate-12 transition-transform duration-300 ease-out group-hover:-translate-x-2 group-hover:-rotate-22 group-hover:scale-105 pointer-events-none">
-                <Image src={img2} alt={category.name || 'Category'} fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
+                <Image src={img2} alt="" aria-hidden="true" fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
               </div>
               
               {/* Center Image (Elevated slightly for 3D depth) */}
@@ -93,7 +93,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
 
               {/* Right Image (Spreads right with clean separation) */}
               <div className="absolute -right-4 sm:-right-3.5 top-1/2 -translate-y-[38%] z-10 w-[58%] h-[58%] rotate-12 transition-transform duration-300 ease-out group-hover:translate-x-2 group-hover:rotate-22 group-hover:scale-105 pointer-events-none">
-                <Image src={img3} alt={category.name || 'Category'} fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
+                <Image src={img3} alt="" aria-hidden="true" fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
               </div>
             </>
           ) : hasTwoImages ? (
@@ -104,7 +104,7 @@ export default function CategoryPillCard({ category, index = 0, href }) {
               </div>
               {/* Right Image */}
               <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 w-[60%] h-[60%] rotate-6 transition-transform duration-300 ease-out group-hover:translate-x-2 group-hover:rotate-15 group-hover:scale-105 pointer-events-none">
-                <Image src={img2 || images[1]} alt={category.name || 'Category'} fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
+                <Image src={img2 || images[1]} alt="" aria-hidden="true" fill sizes="(max-width: 768px) 20vw, 120px" className="object-contain drop-shadow-sm" loading="lazy" />
               </div>
             </>
           ) : hasOneImage ? (

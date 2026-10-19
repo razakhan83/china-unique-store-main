@@ -1,36 +1,13 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import {
-  GoogleGenAI,
-  HarmBlockThreshold,
-  HarmCategory,
-} from "@google/genai";
 import { authOptions } from "@/lib/auth";
 import { formatSeoKeywords, normalizeSeoKeywords } from "@/lib/seoKeywords";
 
 const SYSTEM_PROMPT =
   "You are an Elite E-commerce SEO Specialist and Copywriter for 'China Unique / Aam Samaan'. Create high-conversion, SEO-optimized metadata for Pakistani shoppers. SEO Title must be catchy, include the primary keyword, and mention 'Best Price in Pakistan' only if it fits naturally. Meta Description must use a problem-solution angle, persuasive premium tone, and end with a strong call to action. Keywords must include 10 latent semantic keywords with at least 2 local-search-intent phrases. Avoid AI-sounding fluff and keep the writing direct, premium, and sales-focused. Return results ONLY in valid JSON format with this structure: {\"seoTitle\":\"...\",\"seoDescription\":\"...\",\"keywords\":\"keyword1, keyword2, ...\"}.";
-const GEMINI_MODEL = "gemini-3-flash-preview";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const RETRY_DELAYS_MS = [1500];
 const REQUEST_TIMEOUT_MS = 60000;
-const SEO_SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-];
 
 function clampText(value, maxLength) {
   return String(value ?? "")
@@ -142,22 +119,42 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function generateContentWithRetry(model, prompt) {
+async function generateContentWithRetry(apiKey, prompt) {
   let lastError;
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      return await model.models.generateContent({
-        model: GEMINI_MODEL,
-        systemInstruction: SYSTEM_PROMPT,
-        contents: prompt,
-        timeout: REQUEST_TIMEOUT_MS,
-        config: {
-          temperature: 1.0,
-          responseMimeType: "application/json",
-          safetySettings: SEO_SAFETY_SETTINGS,
-        },
-      });
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: SYSTEM_PROMPT }],
+            },
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 1.0,
+              responseMimeType: "application/json",
+            },
+          }),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Gemini API error (${response.status}): ${errorBody}`);
+      }
+
+      return await response.json();
     } catch (error) {
       lastError = error;
 
@@ -222,12 +219,10 @@ export async function POST(request) {
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-
     let result;
     try {
       result = await generateContentWithRetry(
-        ai,
+        apiKey,
         `Analyze this product: Title: ${title}, Category: ${category || "General"}, Description: ${description}. Generate the SEO package now.`
       );
     } catch (error) {

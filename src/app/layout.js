@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { getMetadataBase } from "@/lib/siteUrl";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE_DEFAULT } from "@/lib/siteSeo";
 import AuthProvider from "@/components/AuthProvider";
-import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import VisitorTracker from "@/components/VisitorTracker";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 
 const fontSans = Plus_Jakarta_Sans({
@@ -55,7 +55,9 @@ export const metadata = {
       { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
     ],
   },
-  alternates: {},
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: SITE_TITLE_DEFAULT,
     description: SITE_DESCRIPTION,
@@ -106,7 +108,7 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#064e3b',
+  themeColor: '#015347',
 };
 
 export default function RootLayout({ children }) {
@@ -145,7 +147,11 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
-      <head suppressHydrationWarning />
+      <head suppressHydrationWarning>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+      </head>
       <body className={`${fontSans.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <script
           type="application/ld+json"
