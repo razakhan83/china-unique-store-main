@@ -228,7 +228,7 @@ function normalizeMediaItem(item, sortOrder = 0, fallbackItem = null) {
   const source = item && typeof item === 'object' ? item : {};
   const fallback = fallbackItem && typeof fallbackItem === 'object' ? fallbackItem : {};
   const url = String(source.url || source.image || fallback.url || fallback.image || '').trim();
-  if (!url) return null;
+  if (!url || url.startsWith('data:') || url.length > 2048) return null;
 
   return {
     url: optimizeCloudinaryUrl(url),
@@ -1357,7 +1357,7 @@ async function getLimitedOfferCards() {
 export async function getStorefrontHomePage() {
   'use cache';
   cacheLife('foreverish');
-  cacheTag('home-page-v2', 'categories', 'products');
+  cacheTag('home-page-v3', 'categories', 'products');
 
   try {
     const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
