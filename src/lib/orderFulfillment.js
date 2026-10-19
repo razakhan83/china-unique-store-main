@@ -280,7 +280,8 @@ export async function applyInventoryAdjustments(orderItems = []) {
           },
         },
       },
-    ]
+    ],
+    { updatePipeline: true }
   );
 
   return operations;
