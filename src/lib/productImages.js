@@ -3,23 +3,28 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 export function normalizeProductImage(image) {
   if (!image) return null;
 
-  if (typeof image === "string") {
-    return {
-      url: optimizeCloudinaryUrl(image),
-      blurDataURL: "",
-      publicId: "",
-    };
+  let rawUrl = '';
+  let rawPublicId = '';
+  let rawBlur = '';
+
+  if (typeof image === 'string') {
+    rawUrl = image.trim();
+  } else if (typeof image === 'object') {
+    rawUrl = String(image.url || image.image || '').trim();
+    rawPublicId = String(image.publicId || image.public_id || '').trim();
+    rawBlur = String(image.blurDataURL || '').trim();
   }
 
-  if (typeof image === "object" && typeof image.url === "string") {
-    return {
-      url: optimizeCloudinaryUrl(image.url),
-      blurDataURL: image.blurDataURL || "",
-      publicId: image.publicId || image.public_id || "",
-    };
+  // Reject oversized data URIs or raw base64 blobs that bloat the HTML payload
+  if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.length > 2048) {
+    return null;
   }
 
-  return null;
+  return {
+    url: optimizeCloudinaryUrl(rawUrl),
+    blurDataURL: rawBlur.length > 1024 ? '' : rawBlur,
+    publicId: rawPublicId,
+  };
 }
 
 export function normalizeProductImages(images, fallbackImage = "") {

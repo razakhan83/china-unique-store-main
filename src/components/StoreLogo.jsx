@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Store } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 
 function BrandFallback({ storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', invert = false, compact = false }) {
   const title = String(storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store').trim() || 'Store';
@@ -47,14 +48,24 @@ export default function StoreLogo({
   const prefersLightLogo = variant === 'dark-surface';
   const preferredLogoUrl = prefersLightLogo ? lightLogoUrl : darkLogoUrl;
   const fallbackLogoUrl = prefersLightLogo ? darkLogoUrl : lightLogoUrl;
-  const logoUrl = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
-  const hasLogo = Boolean(String(logoUrl || '').trim()) && !imageError;
+  const rawLogo = String(preferredLogoUrl || '').trim() || String(fallbackLogoUrl || '').trim();
+  const logoUrl = rawLogo ? optimizeCloudinaryUrl(rawLogo, { width: 320, format: 'avif', quality: 'auto' }) : '';
+  const hasLogo = Boolean(logoUrl) && !imageError;
   const baseHeight = compact ? 52 : 48;
   const safeScalePercent = Math.min(200, Math.max(60, Number(logoScalePercent) || 100));
   const logoScale = 1 + ((safeScalePercent - 100) / 100) * 1.9;
 
   const innerContent = (
     <>
+      {priority && logoUrl ? (
+        <link
+          rel="preload"
+          as="image"
+          href={logoUrl}
+          type="image/avif"
+          fetchPriority="high"
+        />
+      ) : null}
       {hasLogo ? (
         <div
           className="flex shrink-0 items-center overflow-visible"
@@ -66,6 +77,8 @@ export default function StoreLogo({
             width={264}
             height={80}
             priority={priority}
+            fetchPriority={priority ? 'high' : 'auto'}
+            loading={priority ? 'eager' : 'lazy'}
             sizes={compact ? '208px' : '192px'}
             className="h-auto w-auto object-contain origin-left-center pointer-events-none"
             style={{ height: `${baseHeight}px`, transform: `translateY(3px) scale(${logoScale})` }}

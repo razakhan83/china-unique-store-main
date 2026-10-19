@@ -77,6 +77,7 @@ function HeroSlideImage({ slide, isPriority }) {
             rel="preload"
             as="image"
             href={mobileOptimized}
+            imageSrcSet={mobileOptimized}
             media="(max-width: 767px)"
             fetchPriority="high"
           />
@@ -84,6 +85,7 @@ function HeroSlideImage({ slide, isPriority }) {
             rel="preload"
             as="image"
             href={desktopOptimized}
+            imageSrcSet={desktopOptimized}
             media="(min-width: 768px)"
             fetchPriority="high"
           />
@@ -93,10 +95,10 @@ function HeroSlideImage({ slide, isPriority }) {
         <source media="(max-width: 767px)" srcSet={mobileOptimized} />
         <source media="(min-width: 768px)" srcSet={desktopOptimized} />
         <img
-          src={desktopOptimized}
+          src={mobileOptimized}
           alt={slide.alt || 'Promotional Banner'}
-          width={1400}
-          height={560}
+          width={540}
+          height={320}
           loading={isPriority ? 'eager' : 'lazy'}
           fetchPriority={isPriority ? 'high' : 'auto'}
           decoding={isPriority ? 'sync' : 'async'}

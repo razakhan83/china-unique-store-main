@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import { cacheLife, cacheTag } from 'next/cache';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { getStoreSettings, getStoreStats } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
@@ -15,6 +16,10 @@ const HomeFaqSection = dynamic(() => import('@/components/HomeFaqSection'), {
 });
 
 export default async function HomeBelowFold() {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('settings', 'orders');
+
   const [settings, stats] = await Promise.all([
     getStoreSettings(),
     getStoreStats(),

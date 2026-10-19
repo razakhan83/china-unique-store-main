@@ -7,16 +7,15 @@ export const CLOUDINARY_IMAGE_PRESETS = {
   // Mobile: 2-column grid → ~180px wide per card on a 360px screen
   // Tablet: 3-column grid → ~240px wide per card
   // Desktop: 4-column grid → ~285px wide per card
-  // We use 380px as the Cloudinary transform width to cover 2x DPR on mobile
-  // (180px × 2 = 360px ≈ 380px with some breathing room)
-  productCard: { width: 380, crop: 'fill', gravity: 'auto', format: 'avif', quality: 75 },
+  // We use 320px as the Cloudinary transform width to match 180px display at ~1.75x DPR
+  productCard: { width: 320, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
 
   // Category circles: small fixed-size icons in the horizontal carousel
   categoryCircle: { width: 216, height: 216, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
 
   // Hero slider: full-width banner images
   heroFull: { width: 1400, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
-  heroMobile: { width: 640, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
+  heroMobile: { width: 540, crop: 'fill', gravity: 'auto', format: 'avif', quality: 'auto' },
 
   // Product detail gallery — main image (Next.js srcset handles DPR; keep master modest)
   productGalleryMain: { width: 960, height: 960, crop: 'fill', gravity: 'auto', format: 'avif', quality: 80 },
