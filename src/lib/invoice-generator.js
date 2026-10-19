@@ -1,3 +1,5 @@
+import { SITE_NAME } from '@/lib/siteSeo';
+
 function getText(value, fallback = '') {
   const text = String(value ?? '').trim();
   return text || fallback;
@@ -243,7 +245,7 @@ export const generateInvoice = async (order, branding = {}) => {
 
   const paymentMethod = getText(order?.paymentStatus, 'COD');
   const invoiceNumber = getText(order?.orderId, 'Draft');
-  const storeName = getText(branding?.storeName || order?.storeName, process.env.NEXT_PUBLIC_STORE_NAME || 'Store');
+  const storeName = getText(branding?.storeName || order?.storeName, SITE_NAME);
   const supportEmail = getText(branding?.supportEmail);
   const businessAddress = getText(branding?.businessAddress, 'Business address not available');
   const customerName = getText(order?.customerName, 'Customer');

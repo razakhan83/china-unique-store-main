@@ -9,11 +9,12 @@ import { getProductCategoryNames } from '@/lib/productCategories';
 import { getPrimaryProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
+import { SITE_NAME } from '@/lib/siteSeo';
 import { X, ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { formatPrice, getSellingPrice, getComparePrice } from '@/lib/pricing';
 
-export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
+export default function ProductModal({ product, onClose, whatsappNumber = '', storeName = SITE_NAME }) {
     const { addToCart } = useCartActions();
 
     if (!product) return null;

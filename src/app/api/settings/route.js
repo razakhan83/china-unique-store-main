@@ -8,6 +8,7 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { mergeCustomPages } from '@/lib/customPages';
 import Settings from '@/models/Settings';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const SINGLETON_KEY = 'site-settings';
 
@@ -58,7 +59,7 @@ function normalizeLogoScalePercent(value, fallback = 100) {
 function serializeSettings(settings) {
     return {
         _id: settings._id.toString(),
-        storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+        storeName: settings.storeName || SITE_NAME,
         primaryColor: settings.primaryColor || '#015347',
         accentColor: settings.accentColor || '#10b981',
         marqueeText: settings.marqueeText || '',

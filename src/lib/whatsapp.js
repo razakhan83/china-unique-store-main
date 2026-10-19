@@ -1,4 +1,5 @@
 import { normalizePhone } from '@/lib/admin';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 export function normalizeWhatsappNumber(value) {
   return normalizePhone(value || '');
@@ -14,7 +15,7 @@ export function createWhatsAppUrl(number, message = '') {
     : `https://wa.me/${normalizedNumber}`;
 }
 
-export function buildProductWhatsAppMessage({ productName, productUrl, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
+export function buildProductWhatsAppMessage({ productName, productUrl, storeName = SITE_NAME }) {
   const lines = [
     `Hi ${storeName}, I'm interested in ${productName || 'this product'}.`,
   ];
@@ -26,7 +27,7 @@ export function buildProductWhatsAppMessage({ productName, productUrl, storeName
   return lines.join('\n');
 }
 
-export function buildCartWhatsAppMessage({ items = [], subtotal = 0, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store' }) {
+export function buildCartWhatsAppMessage({ items = [], subtotal = 0, storeName = SITE_NAME }) {
   const lines = [`*New Order Inquiry from ${storeName}*`, '', '*Items*'];
 
   items.forEach((item, index) => {

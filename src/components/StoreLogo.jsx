@@ -7,9 +7,10 @@ import { Store } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { SITE_NAME } from '@/lib/siteSeo';
 
-function BrandFallback({ storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', invert = false, compact = false }) {
-  const title = String(storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store').trim() || 'Store';
+function BrandFallback({ storeName = SITE_NAME, invert = false, compact = false }) {
+  const title = String(storeName || SITE_NAME).trim() || SITE_NAME;
   const shortName = title.replace(/\bstore\b/i, '').trim() || title;
   const iconClass = invert ? 'bg-white/10 text-white' : 'bg-primary/10 text-primary';
   const titleClass = invert ? 'text-primary-foreground' : 'text-primary';
@@ -32,7 +33,7 @@ function BrandFallback({ storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Stor
 
 export default function StoreLogo({
   href = '/',
-  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  storeName = SITE_NAME,
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,

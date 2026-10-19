@@ -14,6 +14,7 @@ import { BellRing, ShoppingCart, Share2, Minus, Plus, BadgeCheck, PackageCheck, 
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { toast } from 'sonner';
 import { buildProductWhatsAppMessage, createWhatsAppUrl } from '@/lib/whatsapp';
+import { SITE_NAME } from '@/lib/siteSeo';
 import { getProductTagById } from '@/lib/productTags';
 import { flyToCart } from '@/lib/flyToCart';
 import FlashSaleTimer, { useFlashSaleActive } from '@/components/FlashSaleTimer';
@@ -64,7 +65,7 @@ export function ProductSocialActions({ product, className = '' }) {
     );
 }
 
-export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', className = '' }) {
+export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', storeName = SITE_NAME, className = '' }) {
     const handleWhatsApp = () => {
         const name = product.Name || product.name || 'this product';
         const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -96,7 +97,7 @@ export function ProductWhatsAppOrderButton({ product, whatsappNumber = '', store
     );
 }
 
-export function ProductWhatsAppTextLink({ product, whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', className = '' }) {
+export function ProductWhatsAppTextLink({ product, whatsappNumber = '', storeName = SITE_NAME, className = '' }) {
     const handleWhatsApp = (e) => {
         e.preventDefault();
         const name = product.Name || product.name || 'this product';
@@ -128,7 +129,7 @@ export function ProductWhatsAppTextLink({ product, whatsappNumber = '', storeNam
     );
 }
 
-export default function ProductActions({ product, whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', basePrice = 0, compareAtPrice = null }) {
+export default function ProductActions({ product, whatsappNumber = '', storeName = SITE_NAME, basePrice = 0, compareAtPrice = null }) {
     const { addToCart, setIsCartOpen, setIsSidebarOpen } = useCartActions();
     const router = useRouter();
     const packOptions = Array.isArray(product?.packOptions) ? product.packOptions : [];

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), {
   ssr: false,
@@ -52,7 +53,7 @@ function scheduleDeferredMount(callback) {
   };
 }
 
-export default function StoreDeferredChrome({ whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', hasAnnouncementBar = false }) {
+export default function StoreDeferredChrome({ whatsappNumber = '', storeName = SITE_NAME, hasAnnouncementBar = false }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

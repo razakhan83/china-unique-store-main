@@ -120,7 +120,7 @@ export default function HeroSlider({ slides = [], storeName }) {
         .map((slide, index) => ({
           ...slide,
           images: extractSlideImages(slide),
-          alt: slide?.alt || slide?.title || `${storeName || SITE_NAME || 'Store'} Promotional Banner ${index + 1}`,
+          alt: slide?.alt || slide?.title || `${storeName || SITE_NAME} Promotional Banner ${index + 1}`,
         }))
         .filter((slide) => slide.images.mobileSrc || slide.images.desktopSrc),
     [slides, storeName]

@@ -2,13 +2,14 @@ import mongooseConnect from '@/lib/mongooseConnect';
 import { EMAIL_CID, cidSrc } from '@/lib/emailInlineAssets';
 import { getSiteUrl } from '@/lib/siteUrl';
 import Settings from '@/models/Settings';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const SETTINGS_KEY = 'site-settings';
 const DEFAULT_BASE_URL = getSiteUrl();
 
 const DEFAULT_BRANDING = {
   baseUrl: DEFAULT_BASE_URL,
-  storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  storeName: SITE_NAME,
   supportEmail: process.env.SUPPORT_EMAIL || '',
   businessAddress: 'Karachi, Pakistan',
   // Matches admin store-setup: lightLogoUrl is the light-colored mark for dark surfaces.
@@ -197,7 +198,7 @@ function scaledLogoWidth(branding, baseWidth) {
 function renderBrandLogo(branding, { width, variant = 'header' } = {}) {
   const lightLogoUrl = getLogoForEmailSurface(branding, 'light');
   const darkLogoUrl = getLogoForEmailSurface(branding, 'dark');
-  const storeName = esc(branding.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store');
+  const storeName = esc(branding.storeName || SITE_NAME);
   const storeUrl = branding.baseUrl || (process.env.NEXT_PUBLIC_SITE_URL || '');
   const bottom = variant === 'footer' ? '10px' : '8px';
 

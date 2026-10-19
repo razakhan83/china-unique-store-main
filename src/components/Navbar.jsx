@@ -29,6 +29,7 @@ import {
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { SITE_NAME } from '@/lib/siteSeo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -246,7 +247,7 @@ function CartBadge({ isCartBumping }) {
 
 function NavbarContent({
   categories,
-  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  storeName = SITE_NAME,
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,
@@ -810,7 +811,7 @@ function NavbarContent({
 }
 
 export function NavbarStaticShell({
-  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  storeName = SITE_NAME,
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,
@@ -914,7 +915,7 @@ export function NavbarStaticShell({
 
 export default function Navbar({
   categories = [],
-  storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+  storeName = SITE_NAME,
   lightLogoUrl = '',
   darkLogoUrl = '',
   logoScalePercent = 100,

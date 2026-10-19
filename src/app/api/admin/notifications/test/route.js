@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApiAdmin } from '@/lib/requireAdmin';
 import { Resend } from 'resend';
 import { getStoreSettings } from '@/lib/data';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 export async function POST(req) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req) {
     }
 
     const settings = await getStoreSettings();
-    const storeName = settings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store';
+    const storeName = settings?.storeName || SITE_NAME;
 
     if (channel === 'email') {
       const apiKey = process.env.RESEND_API_KEY;

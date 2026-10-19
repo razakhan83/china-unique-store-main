@@ -18,6 +18,7 @@ import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml, generate
 import { getEmailInlineAttachments } from '@/lib/emailInlineAssets';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -48,7 +49,7 @@ export async function sendOrderDeliveredEmail({ order }) {
   try {
     if (!order?.customerEmail) return;
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
-    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || 'Store'} <orders@store.com>`;
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <orders@store.com>`;
     const deliveredHtml = generateCustomerOrderDeliveredHtml(order, emailBranding);
     const customerEmailResult = await resend.emails.send({
       from: emailFrom,
@@ -71,7 +72,7 @@ async function sendOrderEmails({ order, customerName, userEmail }) {
   try {
     const emailBranding = { ...(await getEmailBranding()), inlineImages: true };
     const adminRecipients = getConfiguredAdminEmails();
-    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || 'Store'} <orders@store.com>`;
+    const emailFrom = process.env.EMAIL_FROM || `${emailBranding.storeName || SITE_NAME} <orders@store.com>`;
     if (adminRecipients.length > 0) {
       const adminHtml = generateOrderEmailHtml(order, emailBranding);
       const adminEmailResult = await resend.emails.send({
@@ -204,7 +205,7 @@ export async function submitOrderAction(input) {
           secureToken: existing.secureToken || '',
           totalAmount: existing.totalAmount,
           whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent([
-            `*New Order from ${process.env.NEXT_PUBLIC_STORE_NAME || 'Store'}*`,
+            `*New Order from ${SITE_NAME}*`,
             '',
             '*Customer Details*',
             `Name: ${existing.customerName}`,
@@ -468,7 +469,7 @@ export async function submitOrderAction(input) {
       await Promise.allSettled(backgroundTasks);
     });
 
-    const storeDisplayName = settings?.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store';
+    const storeDisplayName = settings?.storeName || SITE_NAME;
     const lines = [
       `*New Order from ${storeDisplayName}*`,
       '',

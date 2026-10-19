@@ -7,6 +7,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Minus, Plus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 import { useCartActions, useCartItems, useCartUi } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -145,7 +146,7 @@ const CartItemRow = memo(({ item, updateQuantity, scheduleRemove }) => {
 });
 CartItemRow.displayName = 'CartItemRow';
 
-export default function CartDrawer({ whatsappNumber = '', storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', hasAnnouncementBar = false }) {
+export default function CartDrawer({ whatsappNumber = '', storeName = SITE_NAME, hasAnnouncementBar = false }) {
   const pathname = usePathname();
   const effectiveHasAnnouncementBar = pathname === '/' && Boolean(hasAnnouncementBar);
   const { cart } = useCartItems();

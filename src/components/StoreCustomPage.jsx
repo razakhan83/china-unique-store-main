@@ -6,6 +6,7 @@ import { getStoreSettings } from '@/lib/data';
 import { createWhatsAppUrl } from '@/lib/whatsapp';
 import { formatStorePhone, resolveStorePhone, storePhoneTelHref } from '@/lib/storeContact';
 import { sanitizeRichTextHtml } from '@/lib/richText';
+import { SITE_NAME } from '@/lib/siteSeo';
 
 const PAGE_META = {
   'about-us': { Icon: Store, label: 'Our Story' },
@@ -141,7 +142,7 @@ function SectionHeading({ children }) {
   );
 }
 
-export default async function StoreCustomPage({ page, storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Store', whatsappNumber = '' }) {
+export default async function StoreCustomPage({ page, storeName = SITE_NAME, whatsappNumber = '' }) {
   const settings = await getStoreSettings().catch(() => null);
   const phone = resolveStorePhone(whatsappNumber || settings?.whatsappNumber);
   const displayPhone = formatStorePhone(phone);

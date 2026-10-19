@@ -24,6 +24,7 @@ import {
 import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
 import { normalizeVendorSnapshot } from '@/lib/vendors';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { SITE_NAME } from '@/lib/siteSeo';
 import {
   DEFAULT_ORDER_STATUS,
   getOrderStatusQueryValue,
@@ -573,7 +574,7 @@ async function getLiveProductsRaw() {
 async function getSettingsRaw() {
   const defaultSettings = {
     _id: 'default',
-    storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+    storeName: SITE_NAME,
     primaryColor: '#015347',
     accentColor: '#10b981',
     marqueeText: '',
@@ -625,7 +626,7 @@ async function getSettingsRaw() {
 
       return {
         _id: settings._id.toString(),
-        storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+        storeName: settings.storeName || SITE_NAME,
         primaryColor: settings.primaryColor || '#015347',
         accentColor: settings.accentColor || '#10b981',
         marqueeText: settings.marqueeText || '',
@@ -2068,7 +2069,7 @@ export async function getCatalogFeed(siteUrlOverride = '') {
       console.warn('[BUILD] MongoDB connection failed while building catalog feed, returning an empty feed.');
       return {
         generatedAt: new Date().toISOString(),
-        storeName: process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+        storeName: SITE_NAME,
         currency: 'PKR',
         items: [],
       };
@@ -3154,7 +3155,7 @@ export async function getAdminSettings() {
 
   return {
     _id: settings._id.toString(),
-    storeName: settings.storeName || process.env.NEXT_PUBLIC_STORE_NAME || 'Store',
+    storeName: settings.storeName || SITE_NAME,
     primaryColor: settings.primaryColor || '#015347',
     accentColor: settings.accentColor || '#10b981',
     marqueeText: settings.marqueeText || '',
