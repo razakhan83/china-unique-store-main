@@ -18,7 +18,7 @@ export const metadata = {
 export default async function HomePage() {
   'use cache';
   cacheLife('foreverish');
-  cacheTag('home-page', 'settings', 'products');
+  cacheTag('home-page-v2', 'settings', 'products');
 
   const homeData = await getStorefrontHomePage().catch(() => ({ sections: [] }));
   const sections = homeData?.sections || [];

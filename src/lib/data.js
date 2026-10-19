@@ -267,6 +267,13 @@ function serializeProduct(product) {
 }
 
 function toProductCardItem(product) {
+  const images = Array.isArray(product.Images)
+    ? product.Images.slice(0, 2).map((img) => ({
+        url: img.url,
+        blurDataURL: img.blurDataURL && img.blurDataURL.length < 1024 ? img.blurDataURL : '',
+      }))
+    : [];
+
   return {
     id: product.id,
     _id: product._id,
@@ -274,11 +281,9 @@ function toProductCardItem(product) {
     Name: product.Name,
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
-    shortDescription: product.shortDescription || '',
     Category: product.Category,
-    Images: product.Images,
+    Images: images,
     StockStatus: product.StockStatus || 'Out of Stock',
-    createdAt: product.createdAt,
     showOnStore: product.showOnStore !== false,
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
@@ -1352,7 +1357,7 @@ async function getLimitedOfferCards() {
 export async function getStorefrontHomePage() {
   'use cache';
   cacheLife('foreverish');
-  cacheTag('home-page', 'categories', 'products');
+  cacheTag('home-page-v2', 'categories', 'products');
 
   try {
     const [homePage, categories] = await Promise.all([getHomePageRaw(), getCategoriesRaw()]);
