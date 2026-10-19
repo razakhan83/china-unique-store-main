@@ -1,10 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { optimizeCloudinaryUrl, CLOUDINARY_IMAGE_PRESETS } from '@/lib/cloudinaryImage';
 import { useAutoplayInView } from '@/hooks/useAutoplayInView';
 import { SITE_NAME } from '@/lib/siteSeo';
