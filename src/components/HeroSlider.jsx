@@ -39,14 +39,14 @@ function extractSlideImages(slide) {
 }
 
 function SlideFrame({ href, isActive, children }) {
-  if (!href) return <>{children}</>;
+  const targetHref = href || '/products';
   return (
     <Link
-      href={href}
+      href={targetHref}
       prefetch={false}
       tabIndex={isActive ? 0 : -1}
       aria-hidden={!isActive}
-      className="block h-full w-full"
+      className="block h-full w-full cursor-pointer group"
     >
       {children}
     </Link>
@@ -213,6 +213,7 @@ export default function HeroSlider({ slides = [], storeName }) {
                   {isNearbySlide(index, safeActiveIndex, resolvedSlides.length) ? (
                     <HeroSlideImage slide={slide} isPriority={index === 0} />
                   ) : null}
+                  <span className="sr-only">Buy Now — {slide.alt || 'Shop Featured Collection'}</span>
                 </div>
               </SlideFrame>
             </div>

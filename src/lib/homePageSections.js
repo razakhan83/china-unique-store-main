@@ -88,6 +88,13 @@ function normalizeHeroSlides(slides = []) {
     }));
 }
 
+function cleanStoreCopy(value = '') {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/Must-Haves Gadgets/gi, 'Must-Have Gadgets')
+    .replace(/Rechagable/gi, 'Rechargeable');
+}
+
 export function normalizeHomePageSection(section, index = 0) {
   const type = HOME_PAGE_SECTION_TYPES.includes(section?.type)
     ? section.type
@@ -98,10 +105,10 @@ export function normalizeHomePageSection(section, index = 0) {
     type,
     order: safeNumber(section?.order, index),
     isEnabled: section?.isEnabled !== false,
-    title: cleanText(section?.title),
-    description: cleanText(section?.description),
+    title: cleanStoreCopy(cleanText(section?.title)),
+    description: cleanStoreCopy(cleanText(section?.description)),
     link: cleanText(section?.link),
-    alt: cleanText(section?.alt),
+    alt: cleanStoreCopy(cleanText(section?.alt)),
   };
 
   if (type === 'HeroSlider') {

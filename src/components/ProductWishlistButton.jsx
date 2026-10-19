@@ -8,17 +8,19 @@ import { useWishlist } from '@/context/WishlistContext';
 import { cn } from '@/lib/utils';
 
 export default function ProductWishlistButton({ product, mode = 'grid', className = '' }) {
-  const { isWishlisted, toggleWishlist, isLoading = false } = useWishlist() || {};
+  const { isWishlisted, toggleWishlist } = useWishlist() || {};
   const [isSubmitting, setIsSubmitting] = useState(false);
   const productId = String(product?._id || product?.id || product?.slug || '').trim();
   const active = typeof isWishlisted === 'function' ? isWishlisted(productId) : false;
   const productName = product?.Name || product?.name || 'Item';
 
   async function handleToggle(event) {
-    event.preventDefault();
-    event.stopPropagation();
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
 
-    if (!productId || typeof toggleWishlist !== 'function' || isSubmitting || isLoading) return;
+    if (!productId || typeof toggleWishlist !== 'function' || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -30,6 +32,8 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
         return;
       }
 
+      toast.error(`Unable to update wishlist for ${productName} right now.`);
+    } catch {
       toast.error(`Unable to update wishlist for ${productName} right now.`);
     } finally {
       setIsSubmitting(false);
@@ -44,11 +48,11 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
         aria-checked={active}
         aria-label={active ? 'Remove from wishlist' : 'Add to wishlist'}
         onClick={handleToggle}
-        disabled={isSubmitting || isLoading}
+        disabled={isSubmitting}
         className={cn(
           'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[color:color-mix(in_oklab,var(--color-primary)_16%,var(--color-border))] bg-[color:color-mix(in_oklab,var(--color-input)_92%,white)] px-4 text-sm font-medium text-foreground shadow-[0_1px_0_color-mix(in_oklab,var(--color-background)_65%,white)] transition-[border-color,background-color,box-shadow,color,transform] duration-200 hover:bg-[color:color-mix(in_oklab,var(--color-muted)_74%,white)] hover:text-foreground active:scale-[0.96]',
           active && 'border-destructive/25 text-destructive',
-          (isSubmitting || isLoading) && 'pointer-events-none opacity-70',
+          isSubmitting && 'pointer-events-none opacity-70',
           className,
         )}
       >
@@ -71,14 +75,18 @@ export default function ProductWishlistButton({ product, mode = 'grid', classNam
       data-slot="checkbox"
       data-state={active ? 'checked' : 'unchecked'}
       value="on"
-      onClick={handleToggle}
-      disabled={isSubmitting || isLoading}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleToggle(e);
+      }}
+      disabled={isSubmitting}
       className={cn(
-        "group/wishlist absolute right-2.5 top-2.5 z-10 flex size-8 md:size-9 items-center justify-center rounded-full border border-border/60 bg-background p-0 text-foreground shadow-xs outline-none transition-[background-color,color,border-color,opacity] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring/50 md:hover:border-red-500 md:hover:bg-red-50 md:hover:text-red-500 after:absolute after:-inset-2 after:content-['']",
+        "group/wishlist absolute right-2.5 top-2.5 z-20 pointer-events-auto flex size-8 md:size-9 items-center justify-center rounded-full border border-border/60 bg-background/95 p-0 text-foreground shadow-xs outline-none transition-[background-color,color,border-color,opacity,transform] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring/50 hover:scale-105 active:scale-95 md:hover:border-red-500 md:hover:bg-red-50 md:hover:text-red-500 cursor-pointer",
         active
-          ? 'border-red-500/30 bg-background text-red-500 opacity-100'
-          : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100',
-        (isSubmitting || isLoading) && 'pointer-events-none opacity-60',
+          ? 'border-red-500/40 bg-background text-red-500 opacity-100 shadow-sm'
+          : 'opacity-90 md:opacity-80 md:hover:opacity-100',
+        isSubmitting && 'pointer-events-none opacity-60',
         className,
       )}
     >

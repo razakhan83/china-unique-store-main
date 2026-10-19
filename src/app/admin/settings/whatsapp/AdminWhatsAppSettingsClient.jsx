@@ -14,9 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 
 const DEFAULT_WHATSAPP_TEMPLATES = {
-  order_placed: 'Salam {customerName}! Thank you for your order {orderId} at China Unique Items. Total amount: Rs. {totalAmount}. We are preparing your parcel for dispatch.',
+  order_placed: 'Salam {customerName}! Thank you for your order {orderId} at China Unique Store. Total amount: Rs. {totalAmount}. We are preparing your parcel for dispatch.',
   order_shipped: 'Salam {customerName}! Good news, your Order {orderId} has been shipped via {courierName}. Tracking CN: {trackingNumber}. Expected delivery within 2-4 business days.',
-  order_delivered: 'Salam {customerName}! Your Order {orderId} from China Unique Items has been successfully delivered. We hope you love your items! If you need any assistance, reply here.',
+  order_delivered: 'Salam {customerName}! Your Order {orderId} from China Unique Store has been successfully delivered. We hope you love your items! If you need any assistance, reply here.',
   order_cancelled: 'Salam {customerName}, your Order {orderId} has been cancelled. If this was a mistake or you wish to re-order, please let us know.',
 };
 

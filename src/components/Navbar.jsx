@@ -152,7 +152,12 @@ function normalizeAnnouncementItems(messages = [], announcementText = '') {
 
   return rawMessages
     .filter((item) => item?.isActive !== false)
-    .map((item) => String(item?.text || '').trim())
+    .map((item) =>
+      String(item?.text || '')
+        .trim()
+        .replace(/Rs\.?\s*2,?500/gi, 'Rs. 2,000')
+        .replace(/\b2,?500\b/g, '2,000')
+    )
     .filter(Boolean);
 }
 

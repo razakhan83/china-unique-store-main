@@ -126,14 +126,25 @@ export function normalizeCustomPageSlug(value = '') {
 
 function normalizeCustomPageEntry(page = {}, index = 0) {
   const slug = normalizeCustomPageSlug(page.slug || page.title || `custom-page-${index + 1}`) || `custom-page-${index + 1}`;
-  const title = String(page.title || page.label || slug).trim() || slug;
+  let title = String(page.title || page.label || slug).trim() || slug;
+  let description = String(page.description || '').trim();
+  let content = String(page.content || '').trim();
+
+  // Copy fixes: Replace outdated brand name and placeholder tags
+  title = title.replace(/China Unique Items/gi, 'China Unique Store');
+  description = description.replace(/China Unique Items/gi, 'China Unique Store');
+  content = content
+    .replace(/China Unique Items/gi, 'China Unique Store')
+    .replace(/\[Your WhatsApp Number\]/gi, '+92 318 0211186')
+    .replace(/\[Your Support Email\]/gi, 'support@chinauniquestore.com')
+    .replace(/\[Your Brand Name\]/gi, 'China Unique Store');
 
   return {
     slug,
     title,
     label: String(page.label || title).trim() || title,
-    description: String(page.description || '').trim(),
-    content: String(page.content || '').trim(),
+    description,
+    content,
     seoTitle: String(page.seoTitle || '').trim(),
     seoDescription: String(page.seoDescription || '').trim(),
     isEnabled: page.isEnabled !== false,

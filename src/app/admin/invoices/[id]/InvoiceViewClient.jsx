@@ -243,7 +243,7 @@ export default function InvoiceViewClient({ invoice }) {
           paymentStatus: currentInvoice.status === 'PAID' ? 'PAID' : 'UNPAID',
         },
         {
-          storeName: 'China Unique Items',
+          storeName: 'China Unique Store',
           businessAddress: 'Shop No - G29, Ghaziani Mall, Sadar Karachi • 03228252592',
           supportEmail: 'chinaunique.pk@gmail.com',
           darkLogoUrl: currentInvoice.storeLogoUrl || '/email-footer-logo-dark-cropped.png',
@@ -920,7 +920,7 @@ export default function InvoiceViewClient({ invoice }) {
                                       />
                                     ) : null}
                                     <div className="min-w-0 flex-1">
-                                      <p className="font-medium text-gray-900 text-xs sm:text-[12px] leading-snug">{item.name}</p>
+                                      <p className="font-medium text-gray-900 text-xs sm:text-[12px] leading-snug">{(item.name || '').replace(/Rechagable/gi, 'Rechargeable')}</p>
                                       {(item.description || item.note) && (
                                         <p className="text-[10px] sm:text-[10.5px] text-gray-600 font-normal mt-0.5 whitespace-pre-line leading-tight">
                                           {item.description || item.note}

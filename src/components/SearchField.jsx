@@ -61,6 +61,12 @@ export default function SearchField({
             value={value}
             onChange={onChange}
             onFocus={onFocus}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                onSubmit?.(e);
+              }
+            }}
             autoFocus={autoFocus}
             aria-label={placeholder || "Search products"}
             className={cn(
@@ -88,6 +94,9 @@ export default function SearchField({
             ) : null}
           </InputGroupAddon>
         </InputGroup>
+        <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true">
+          {buttonLabel}
+        </button>
       </form>
 
       {showDiscovery ? (

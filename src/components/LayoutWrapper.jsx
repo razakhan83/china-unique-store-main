@@ -142,30 +142,33 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   <ul className="flex flex-col gap-3 text-muted-foreground">
 
                     {quickLinks.length > 0 ? (
-                      quickLinks.map((item) => (
-                        <li key={item.slug}>
-                          <Link href={`/${item.slug}`} prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
-                            <ChevronRight className="size-4" />
-                            {item.label || item.title}
-                          </Link>
-                        </li>
-                      ))
+                      quickLinks.map((item) => {
+                        const cleanSlug = String(item.slug || '').replace(/^\/+/, '');
+                        return (
+                          <li key={item.slug}>
+                            <Link href={`/${cleanSlug}`} scroll={true} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                              <ChevronRight className="size-4" />
+                              {item.label || item.title}
+                            </Link>
+                          </li>
+                        );
+                      })
                     ) : (
                       <>
                         <li>
-                          <Link href="/products" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products" scroll={true} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             All Products
                           </Link>
                         </li>
                         <li>
-                          <Link href="/products?category=new-arrivals" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products?category=new-arrivals" scroll={true} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             New Arrivals
                           </Link>
                         </li>
                         <li>
-                          <Link href="/products?category=special-offers" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                          <Link href="/products?category=special-offers" scroll={true} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                             <ChevronRight className="size-4" />
                             Special Offers
                           </Link>
@@ -173,7 +176,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                       </>
                     )}
                     <li>
-                      <Link href="/contact-us" prefetch={false} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                      <Link href="/contact-us" scroll={true} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
                         <ChevronRight className="size-4" />
                         Contact Support
                       </Link>
@@ -212,7 +215,7 @@ export default function LayoutWrapper({ children, categories, settings }) {
                     <li className="pt-1">
                       <Link
                         href="/contact-us"
-                        prefetch={false}
+                        scroll={true}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
                       >
                         View all contact channels →
@@ -227,15 +230,15 @@ export default function LayoutWrapper({ children, categories, settings }) {
                   <p>&copy; {new Date().getFullYear()} {settings.storeName || SITE_NAME}. All rights reserved.</p>
                   <span className="hidden sm:inline text-border">·</span>
                   <div className="flex items-center gap-3">
-                      <Link href="/terms-of-service" prefetch={false} className="transition-colors hover:text-foreground">
+                    <Link href="/terms-of-service" scroll={true} className="transition-colors hover:text-foreground">
                       Terms of Service
                     </Link>
                     <span className="size-1 rounded-full bg-border" />
-                    <Link href="/privacy-policy" prefetch={false} className="transition-colors hover:text-foreground">
+                    <Link href="/privacy-policy" scroll={true} className="transition-colors hover:text-foreground">
                       Privacy Policy
                     </Link>
                     <span className="size-1 rounded-full bg-border" />
-                    <Link href="/contact-us" prefetch={false} className="transition-colors hover:text-foreground">
+                    <Link href="/contact-us" scroll={true} className="transition-colors hover:text-foreground">
                       Contact Us
                     </Link>
                   </div>

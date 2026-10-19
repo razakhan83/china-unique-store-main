@@ -402,7 +402,7 @@ export default function ProductActions({ product, whatsappNumber = '', storeName
                                 {formatPrice(displayComparePrice)}
                             </span>
                             <Badge className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 tracking-tight border-none shadow-none hover:bg-emerald-500/15 transition-colors">
-                                Save {formatPrice(displayComparePrice - displayPrice)}
+                                {`Save ${formatPrice(displayComparePrice - displayPrice)}`}
                             </Badge>
                         </div>
                     ) : null}

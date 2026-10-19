@@ -5,15 +5,42 @@ import StoreCustomPage from '@/components/StoreCustomPage';
 import { getStoreCustomPageBySlug, getStoreSettings } from '@/lib/data';
 import { pageMetadata } from '@/lib/siteSeo';
 
+const RESERVED_STATIC_SLUGS = new Set([
+  'faq',
+  'faqs',
+  'about-us',
+  'contact',
+  'contact-us',
+  'privacy',
+  'privacy-policy',
+  'shipping-policy',
+  'terms',
+  'terms-of-service',
+  'refund-policy',
+  'cart',
+  'categories',
+  'orders',
+  'settings',
+  'wishlist',
+]);
+
 export async function generateStaticParams() {
   const settings = await getStoreSettings();
   const pages = settings?.customPages || [];
-  return pages.map((page) => ({ slug: page.slug })).filter((p) => Boolean(p.slug));
+  const filtered = pages
+    .map((page) => ({ slug: page.slug }))
+    .filter((p) => Boolean(p.slug) && !RESERVED_STATIC_SLUGS.has(String(p.slug).toLowerCase().trim()));
+
+  return filtered.length > 0 ? filtered : [{ slug: '__default__' }];
 }
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
-  const page = await getStoreCustomPageBySlug(resolvedParams?.slug);
+  const slug = resolvedParams?.slug;
+  if (!slug || RESERVED_STATIC_SLUGS.has(String(slug).toLowerCase().trim())) {
+    return {};
+  }
+  const page = await getStoreCustomPageBySlug(slug);
 
   if (!page || page.isEnabled === false) {
     return {};
@@ -32,6 +59,10 @@ export default async function DynamicCustomPage({ params }) {
 
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
+
+  if (!slug || RESERVED_STATIC_SLUGS.has(String(slug).toLowerCase().trim())) {
+    notFound();
+  }
 
   const [page, settings] = await Promise.all([
     getStoreCustomPageBySlug(slug),

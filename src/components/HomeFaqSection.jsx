@@ -64,7 +64,7 @@ export default function HomeFaqSection() {
 
             <Link
               href="/faq"
-              prefetch={false}
+              scroll={true}
               className="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               <span>View all FAQs</span>

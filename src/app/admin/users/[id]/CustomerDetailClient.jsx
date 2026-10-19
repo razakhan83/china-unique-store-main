@@ -45,7 +45,7 @@ function formatPakistaniPhone(phone) {
 export default function CustomerDetailClient({ customer }) {
   const formattedPhone = formatPakistaniPhone(customer.phone);
   const whatsappUrl = formattedPhone
-    ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`Salam ${customer.name || 'Customer'}, regarding your account with China Unique Items:`)}`
+    ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`Salam ${customer.name || 'Customer'}, regarding your account with China Unique Store:`)}`
     : null;
   const callUrl = customer.phone ? `tel:${customer.phone}` : null;
 

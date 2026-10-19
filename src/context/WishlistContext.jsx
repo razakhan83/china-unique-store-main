@@ -88,10 +88,23 @@ function clearGuestWishlistSnapshot() {
 }
 
 function getInitialWishlistState() {
+  if (typeof window !== 'undefined') {
+    try {
+      const guestIds = readGuestWishlistIds();
+      const guestItems = readGuestWishlistItems();
+      return {
+        items: guestItems,
+        ids: guestIds,
+        isLoading: false,
+      };
+    } catch {
+      // fallback
+    }
+  }
   return {
     items: [],
     ids: [],
-    isLoading: true,
+    isLoading: false,
   };
 }
 

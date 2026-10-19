@@ -549,7 +549,7 @@ export default function OrderDetailView({
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">${idx + 1}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-          <strong>${escapeHtml(item.name === 'Unknown item' || !item.name ? 'Custom Item' : (item.name || 'Product'))}</strong>
+          <strong>${escapeHtml((item.name === 'Unknown item' || !item.name ? 'Custom Item' : (item.name || 'Product')).replace(/Rechagable/gi, 'Rechargeable'))}</strong>
           ${item.productId && item.productId !== 'unknown-default' ? `<div style="font-size: 12px; color: #64748b;">ID: ${escapeHtml(item.productId)}</div>` : ''}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; text-align: center;">${item.quantity || 1}</td>
@@ -564,7 +564,7 @@ export default function OrderDetailView({
       <div class="print-shell" style="max-width: 800px; margin: 0 auto; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
         <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 24px; margin-bottom: 28px;">
           <div>
-            <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">CHINA UNIQUE ITEMS</h1>
+            <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">CHINA UNIQUE STORE</h1>
             <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Customer Sales Invoice</p>
           </div>
           <div style="text-align: right;">
@@ -624,7 +624,7 @@ export default function OrderDetailView({
         </div>
 
         <footer style="border-top: 1px dashed #cbd5e1; padding-top: 20px; text-align: center; font-size: 13px; color: #64748b;">
-          Thank you for shopping with China Unique Items!
+          Thank you for shopping with China Unique Store!
         </footer>
       </div>
     `;
@@ -641,7 +641,7 @@ export default function OrderDetailView({
 
   const formattedPhone = formatPakistaniPhone(order.customerPhone);
   const whatsappUrl = formattedPhone
-    ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`Salam ${order.customerName || 'Customer'}, regarding your Order ${order.orderId} from China Unique Items:`)}`
+    ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`Salam ${order.customerName || 'Customer'}, regarding your Order ${order.orderId} from China Unique Store:`)}`
     : null;
   const callUrl = order.customerPhone ? `tel:${order.customerPhone}` : null;
 
@@ -1022,7 +1022,7 @@ export default function OrderDetailView({
                             <h4 className="text-base font-bold text-foreground leading-snug">
                               {item.name === 'Unknown item' || !item.name
                                 ? (order.notes ? `Custom Order (${order.notes.slice(0, 30)})` : 'Custom Item')
-                                : item.name}
+                                : item.name.replace(/Rechagable/gi, 'Rechargeable')}
                             </h4>
                             {item.productId && item.productId !== 'unknown-default' ? (
                               <span className="text-xs text-muted-foreground font-mono mt-0.5 block">

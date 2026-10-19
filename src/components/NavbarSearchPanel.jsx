@@ -1,7 +1,7 @@
 'use client';
 
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import SearchField from '@/components/SearchField';
 import { trackSearchEvent } from '@/lib/clientTracking';
@@ -9,15 +9,26 @@ import { trackSearchEvent } from '@/lib/clientTracking';
 export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'Search products', autoFocus, inlineSuggestions = false }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const containerRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const currentUrlQuery = pathname === '/search' ? (searchParams.get('q') || searchParams.get('search') || '') : '';
+  const [searchTerm, setSearchTerm] = useState(currentUrlQuery);
+  const [debouncedSearch, setDebouncedSearch] = useState(currentUrlQuery);
   const [suggestions, setSuggestions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [trending, setTrending] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const deferredSearchTerm = useDeferredValue(searchTerm);
+
+  // Sync searchTerm when URL query changes on /search
+  useEffect(() => {
+    if (pathname === '/search') {
+      const q = searchParams.get('q') || searchParams.get('search') || '';
+      setSearchTerm(q);
+      setDebouncedSearch(q);
+    }
+  }, [pathname, searchParams]);
 
   // Close search suggestions when navigating to a new page
   useEffect(() => {
@@ -158,17 +169,19 @@ export default function NavbarSearchPanel({ open, onOpenChange, placeholder = 'S
   }, [debouncedSearch, onOpenChange, open, router]);
 
   function handleSearchSubmit(event) {
-    event.preventDefault();
-    if (!searchTerm.trim()) return;
+    event?.preventDefault?.();
+    const query = searchTerm.trim();
+    if (!query) return;
 
-    trackSearchEvent({ searchString: searchTerm.trim() });
+    trackSearchEvent({ searchString: query });
     onOpenChange?.(false);
     setIsFocused(false);
     setSuggestions([]);
     if (typeof document !== 'undefined') {
       document.activeElement?.blur?.();
     }
-    router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
+    router.push(`/search?q=${encodeURIComponent(query)}`, { scroll: true });
+    router.refresh();
   }
 
   return (

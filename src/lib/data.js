@@ -179,6 +179,13 @@ function sanitizeSectionOrder(order, fallbackOrder = []) {
   return Array.from(new Set([...(Array.isArray(order) ? order : []), ...fallbackOrder].filter(Boolean)));
 }
 
+function cleanStoreCopy(value = '') {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/Must-Haves Gadgets/gi, 'Must-Have Gadgets')
+    .replace(/Rechagable/gi, 'Rechargeable');
+}
+
 function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
   const rawMessages = Array.isArray(messages) && messages.length > 0
     ? messages
@@ -190,7 +197,10 @@ function normalizeAnnouncementMessages(messages = [], fallbackText = '') {
   return rawMessages
     .map((entry, index) => ({
       id: String(entry?.id || `announcement-${index + 1}`).trim(),
-      text: String(entry?.text || '').trim(),
+      text: String(entry?.text || '')
+        .trim()
+        .replace(/Rs\.?\s*2,?500/gi, 'Rs. 2,000')
+        .replace(/\b2,?500\b/g, '2,000'),
       isActive: entry?.isActive !== false,
     }))
     .filter((entry) => entry.text);
@@ -250,6 +260,9 @@ function serializeProduct(product) {
     _id: safeProduct._id.toString(),
     id: safeProduct.slug || safeProduct._id.toString(),
     slug: safeProduct.slug || safeProduct._id.toString(),
+    Name: cleanStoreCopy(safeProduct.Name),
+    shortDescription: cleanStoreCopy(safeProduct.shortDescription),
+    Description: cleanStoreCopy(safeProduct.Description),
     Category: getProductCategories(safeProduct),
     Images: normalizeProductImages(safeProduct.Images),
     createdAt: safeProduct.createdAt ? new Date(safeProduct.createdAt).toISOString() : null,
@@ -259,8 +272,8 @@ function serializeProduct(product) {
     isFeatured: safeProduct.isFeatured === true,
     isFreeDelivery: safeProduct.isFreeDelivery === true,
     featuredPriority: Number(safeProduct.featuredPriority || 0),
-    tags: Array.isArray(safeProduct.tags) ? safeProduct.tags : [],
-    primaryTag: safeProduct.primaryTag || '',
+    tags: Array.isArray(safeProduct.tags) ? safeProduct.tags.map(cleanStoreCopy) : [],
+    primaryTag: cleanStoreCopy(safeProduct.primaryTag || ''),
   };
 }
 
@@ -276,7 +289,7 @@ function toProductCardItem(product) {
     id: product.id,
     _id: product._id,
     slug: product.slug,
-    Name: product.Name,
+    Name: cleanStoreCopy(product.Name),
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,
@@ -295,8 +308,8 @@ function toProductCardItem(product) {
     discountedPrice: isStorefrontDiscountVisible(product) && product.discountedPrice != null ? Number(product.discountedPrice) : null,
     discountType: resolveDiscountType(product),
     discountEndsAt: product.discountEndsAt ? new Date(product.discountEndsAt).toISOString() : null,
-    tags: Array.isArray(product.tags) ? product.tags : [],
-    primaryTag: product.primaryTag || '',
+    tags: Array.isArray(product.tags) ? product.tags.map(cleanStoreCopy) : [],
+    primaryTag: cleanStoreCopy(product.primaryTag || ''),
   };
 }
 
@@ -305,16 +318,16 @@ function toProductDetailView(product) {
     id: product.id,
     _id: product._id,
     slug: product.slug,
-    Name: product.Name,
-    Description: product.Description || '',
-    shortDescription: product.shortDescription || '',
+    Name: cleanStoreCopy(product.Name),
+    Description: cleanStoreCopy(product.Description || ''),
+    shortDescription: cleanStoreCopy(product.shortDescription || ''),
     bulletPoints: Array.isArray(product.bulletPoints) 
-      ? product.bulletPoints.map(bp => String(bp || ''))
+      ? product.bulletPoints.map(bp => cleanStoreCopy(String(bp || '')))
       : [],
     specifications: Array.isArray(product.specifications) 
       ? product.specifications.map(s => ({
-          name: String(s?.name || ''),
-          value: String(s?.value || '')
+          name: cleanStoreCopy(String(s?.name || '')),
+          value: cleanStoreCopy(String(s?.value || ''))
         }))
       : [],
     Price: Number(product.Price || 0),
@@ -332,19 +345,19 @@ function toProductDetailView(product) {
     discountEndsAt: product.discountEndsAt ? new Date(product.discountEndsAt).toISOString() : null,
     packOptions: Array.isArray(product.packOptions) ? product.packOptions : [],
     variants: Array.isArray(product.variants) ? product.variants : [],
-    tags: Array.isArray(product.tags) ? product.tags : [],
-    primaryTag: product.primaryTag || '',
+    tags: Array.isArray(product.tags) ? product.tags.map(cleanStoreCopy) : [],
+    primaryTag: cleanStoreCopy(product.primaryTag || ''),
     isNewArrival: product.isNewArrival === true,
     isBestSelling: product.isBestSelling === true,
     isFeatured: product.isFeatured === true,
     isFreeDelivery: product.isFreeDelivery === true,
     featuredPriority: Number(product.featuredPriority || 0),
-    seoTitle: product.seoTitle || '',
-    seoDescription: product.seoDescription || '',
-    seoKeywords: product.seoKeywords || '',
+    seoTitle: cleanStoreCopy(product.seoTitle || ''),
+    seoDescription: cleanStoreCopy(product.seoDescription || ''),
+    seoKeywords: cleanStoreCopy(product.seoKeywords || ''),
     seoCanonicalUrl: product.seoCanonicalUrl || '',
-    seoOgTitle: product.seoOgTitle || '',
-    seoOgDescription: product.seoOgDescription || '',
+    seoOgTitle: cleanStoreCopy(product.seoOgTitle || ''),
+    seoOgDescription: cleanStoreCopy(product.seoOgDescription || ''),
     seoOgImage: product.seoOgImage || '',
     seoOgImageRatio: product.seoOgImageRatio || '1.91:1',
     seoOgImageFit: product.seoOgImageFit || 'cover',
@@ -356,7 +369,7 @@ function toAdminProductRow(product) {
     id: product.id,
     _id: product._id,
     slug: product.slug,
-    Name: product.Name,
+    Name: cleanStoreCopy(product.Name),
     Price: Number(product.Price || 0),
     compareAtPrice: product.compareAtPrice != null ? Number(product.compareAtPrice) : null,
     Category: product.Category,
@@ -722,7 +735,7 @@ async function getCategoriesRaw() {
     return dbCategories.map((category) => ({
       _id: category._id.toString(),
       id: category.slug || normalizeCategoryId(category.name),
-      label: category.name,
+      label: cleanStoreCopy(category.name),
       image: optimizeCloudinaryUrl(category.image || ''),
       imagePublicId: category.imagePublicId || '',
       blurDataURL: category.blurDataURL || '',
@@ -1612,11 +1625,11 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const query = { showOnStore: true };
 
   if (price === 'under300' || price === 'under-300' || price === 'dollar-store' || price === 'dollar') {
-    query.Price = { $lte: 300 };
+    query.Price = { $lt: 300 };
   } else if (price === 'under500') {
-    query.Price = { $lte: 500 };
+    query.Price = { $lt: 500 };
   } else if (price === 'under1000') {
-    query.Price = { $lte: 1000 };
+    query.Price = { $lt: 1000 };
   } else if (price === '500-1500') {
     query.Price = { $gte: 500, $lte: 1500 };
   } else if (price === '1500-5000') {

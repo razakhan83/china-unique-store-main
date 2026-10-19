@@ -8,13 +8,20 @@ function normalizeCategoryId(value = "") {
     .replace(/^-|-$/g, "");
 }
 
+function cleanCopy(str = '') {
+  return String(str || '')
+    .replace(/Must-Haves Gadgets/gi, 'Must-Have Gadgets')
+    .replace(/Rechagable/gi, 'Rechargeable');
+}
+
 function normalizeCategoryEntry(category) {
   if (!category) return null;
 
   if (typeof category === "string") {
-    const name = category.trim();
-    if (!name) return null;
-    const slug = normalizeCategoryId(name);
+    const rawName = category.trim();
+    if (!rawName) return null;
+    const name = cleanCopy(rawName);
+    const slug = normalizeCategoryId(rawName);
     return {
       _id: "",
       id: slug,
@@ -26,18 +33,21 @@ function normalizeCategoryEntry(category) {
 
   if (typeof category === "object") {
     const rawId = category._id?.toString?.() || category._id || "";
-    const name = String(category.name || category.label || "").trim();
-    const slug = String(category.slug || category.id || normalizeCategoryId(name || rawId)).trim();
+    const rawName = String(category.name || category.label || "").trim();
+    const name = cleanCopy(rawName);
+    const slug = String(category.slug || category.id || normalizeCategoryId(rawName || rawId)).trim();
     const id = slug || rawId;
 
     if (!id && !name) return null;
 
+    const fallbackLabel = cleanCopy(String(category.label || category.slug || rawId || "").trim());
+
     return {
       _id: String(rawId || ""),
-      id: id || normalizeCategoryId(name),
-      slug: slug || normalizeCategoryId(name),
-      name: name || String(category.label || category.slug || rawId || "").trim(),
-      label: name || String(category.label || category.slug || rawId || "").trim(),
+      id: id || normalizeCategoryId(rawName),
+      slug: slug || normalizeCategoryId(rawName),
+      name: name || fallbackLabel,
+      label: name || fallbackLabel,
       bgColor: category.bgColor || "",
     };
   }

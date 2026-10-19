@@ -93,11 +93,13 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
 
   function handleSearchSubmit(event) {
     event?.preventDefault();
-    if (!searchTerm.trim()) return;
+    const query = searchTerm.trim();
+    if (!query) return;
 
-    trackSearchEvent({ searchString: searchTerm.trim() });
+    trackSearchEvent({ searchString: query });
     onOpenChange(false);
-    router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`, { scroll: true });
+    router.push(`/search?q=${encodeURIComponent(query)}`, { scroll: true });
+    router.refresh();
   }
 
   function handleProductClick() {
@@ -121,6 +123,12 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
                 aria-label="Search products"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearchSubmit(e);
+                  }
+                }}
                 placeholder="Search products"
                 className="w-full h-11 pl-10 pr-9 bg-muted/40 border border-transparent focus:bg-background focus:border-primary/30 focus:ring-[3px] focus:ring-primary/10 rounded-full text-[15px] transition-all outline-none"
               />
@@ -129,6 +137,7 @@ export default function MobileSearchOverlay({ open, onOpenChange }) {
                   <X className="size-4.5" />
                 </button>
               )}
+              <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true">Search</button>
             </form>
             <button onClick={() => onOpenChange(false)} className="text-[15px] font-medium px-1 py-2 text-foreground active:opacity-70 transition-opacity">
               Cancel

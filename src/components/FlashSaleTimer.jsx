@@ -202,7 +202,7 @@ export function FlashSaleDetailPrice({ basePrice, salePrice, endsAt, compareAtPr
         ) : null}
         {active && compare && Number(compare) > Number(price) ? (
           <Badge className="rounded border-none bg-success/10 px-2 py-0 text-[11px] font-medium text-success shadow-none">
-            Save {formatRupee(Number(compare) - Number(price))}
+            {`Save ${formatRupee(Number(compare) - Number(price))}`}
           </Badge>
         ) : null}
       </div>
